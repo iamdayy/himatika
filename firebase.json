@@ -1,5 +1,8 @@
 {
-  "functions": { "source": ".output/server" },
+  "functions": {
+    "source": ".output/server",
+  "runtime": "nodejs20"
+},
   "hosting": {
     "public": ".output/public",
     "ignore": [
