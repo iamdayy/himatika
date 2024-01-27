@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   modules: [
     'nuxt-mongoose',
     '@nuxtjs/color-mode',
-    '@nuxtjs/tailwindcss'
+    '@nuxtjs/tailwindcss',
+    'nuxt-icon'
   ],
   nitro: {
     firebase: {
