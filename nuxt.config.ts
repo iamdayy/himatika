@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     }
   },
   mongoose: {
-    uri: 'mongodb://127.0.0.1:27017/himatika',
+    uri: 'mongodb+srv://iamdayy14:admin123@pct-shop.a7lkvlf.mongodb.net/?retryWrites=true&w=majority/himatika',
     options: {
 
     },
