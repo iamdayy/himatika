@@ -17,9 +17,8 @@
     "vue-router": "^4.2.5"
   },
   "dependencies": {
-    "@headlessui/vue": "^1.7.17",
-    "@heroicons/vue": "^2.1.1",
     "@nuxt/kit": "^3.9.3",
+    "flowbite": "^2.2.1",
     "nuxt-icon": "^0.6.8",
     "nuxt-mongoose": "^1.0.4"
   }

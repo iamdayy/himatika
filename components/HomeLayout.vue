@@ -1,112 +1,97 @@
 <template>
-    <div class="min-h-full">
-      <Disclosure as="nav" class="bg-gray-800" v-slot="{ open }">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="flex h-16 items-center justify-between">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <img class="h-8 w-10" :src="HimatikaLogo" alt="Your Company" />
-              </div>
-              <div class="hidden md:block">
-                <div class="ml-10 flex items-baseline space-x-4">
-                  <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'rounded-md px-3 py-2 text-sm font-medium']" :aria-current="item.current ? 'page' : undefined">{{ item.name }}</a>
-                </div>
-              </div>
+  <div class="min-h-full">
+    <nav class="absolute bg-white md:bg-transparent bg-opacity-35 backdrop-blur-md border-gray-200 md:border-none dark:bg-gray-900 w-full z-10">
+      <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+          <img :src="HimatikaLogo" class="h-8" alt="Flowbite Logo" />
+        </a>
+        <div class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
+          <button type="button"
+            class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+            id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
+            data-dropdown-placement="bottom">
+            <span class="sr-only">Open user menu</span>
+            <img class="w-8 h-8 rounded-full" :src="user.imageUrl" alt="user photo">
+          </button>
+          <!-- Dropdown menu -->
+          <div
+            class="z-50 hidden my-4 text-base list-none bg-white md:bg-transparent divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600"
+            id="user-dropdown">
+            <div class="px-4 py-3">
+              <span class="block text-sm text-gray-900 dark:text-white">{{ user.name }}</span>
+              <span class="block text-sm  text-gray-500 truncate dark:text-gray-400">{{ user.email }}</span>
             </div>
-            <div class="hidden md:block">
-              <div class="ml-4 flex items-center md:ml-6">
-                <button type="button" class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                  <span class="absolute -inset-1.5" />
-                  <span class="sr-only">View notifications</span>
-                  <BellIcon class="h-6 w-6" aria-hidden="true" />
-                </button>
-  
-                <!-- Profile dropdown -->
-                <Menu as="div" class="relative ml-3">
-                  <div>
-                    <MenuButton class="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                      <span class="absolute -inset-1.5" />
-                      <span class="sr-only">Open user menu</span>
-                      <img class="h-8 w-8 rounded-full" :src="user.imageUrl" alt="" />
-                    </MenuButton>
-                  </div>
-                  <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                    <MenuItems class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                      <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
-                        <a :href="item.href" :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']">{{ item.name }}</a>
-                      </MenuItem>
-                    </MenuItems>
-                  </transition>
-                </Menu>
-              </div>
-            </div>
-            <div class="-mr-2 flex md:hidden">
-              <!-- Mobile menu button -->
-              <DisclosureButton class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                <span class="absolute -inset-0.5" />
-                <span class="sr-only">Open main menu</span>
-                <Bars3Icon v-if="!open" class="block h-6 w-6" aria-hidden="true" />
-                <XMarkIcon v-else class="block h-6 w-6" aria-hidden="true" />
-              </DisclosureButton>
-            </div>
+            <ul class="py-2" aria-labelledby="user-menu-button">
+              <li>
+                <a href="#"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</a>
+              </li>
+              <li>
+                <a href="#"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</a>
+              </li>
+              <li>
+                <a href="#"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Earnings</a>
+              </li>
+              <li>
+                <a href="#"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
+                  out</a>
+              </li>
+            </ul>
           </div>
+          <button data-collapse-toggle="navbar-user" type="button"
+            class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+            aria-controls="navbar-user" aria-expanded="false">
+            <span class="sr-only">Open main menu</span>
+            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M1 1h15M1 7h15M1 13h15" />
+            </svg>
+          </button>
         </div>
-  
-        <DisclosurePanel class="md:hidden">
-          <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
-            <DisclosureButton v-for="item in navigation" :key="item.name" as="a" :href="item.href" :class="[item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'block rounded-md px-3 py-2 text-base font-medium']" :aria-current="item.current ? 'page' : undefined">{{ item.name }}</DisclosureButton>
-          </div>
-          <div class="border-t border-gray-700 pb-3 pt-4">
-            <div class="flex items-center px-5">
-              <div class="flex-shrink-0">
-                <img class="h-10 w-10 rounded-full" :src="user.imageUrl" alt="" />
-              </div>
-              <div class="ml-3">
-                <div class="text-base font-medium leading-none text-white">{{ user.name }}</div>
-                <div class="text-sm font-medium leading-none text-gray-400">{{ user.email }}</div>
-              </div>
-              <button type="button" class="relative ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                <span class="absolute -inset-1.5" />
-                <span class="sr-only">View notifications</span>
-                <BellIcon class="h-6 w-6" aria-hidden="true" />
-              </button>
-            </div>
-            <div class="mt-3 space-y-1 px-2">
-              <DisclosureButton v-for="item in userNavigation" :key="item.name" as="a" :href="item.href" class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white">{{ item.name }}</DisclosureButton>
-            </div>
-          </div>
-        </DisclosurePanel>
-      </Disclosure>
-      <main>
-        <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          <slot />
+        <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
+          <ul
+            class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-300 rounded-lg md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-transparent shadow-md md:shadow-none">
+            <li v-for="nav,i in navigation" :key="i">
+              <a :href="nav.href"
+                class="block py-2 px-3 rounded bg-transparent text-slate-700 md:p-0 dark:text-slate-800"
+                aria-current="page">{{ nav.name  }}</a>
+            </li>
+          </ul>
         </div>
-      </main>
-      <CoreFooter :links="navigation" />
-    </div>
-  </template>
+      </div>
+    </nav>
+
+    <main>
+      <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+        <slot />
+      </div>
+    </main>
+    <CoreFooter :links="navigation" />
+  </div>
+</template>
   
-  <script setup lang="ts">
-  import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
-  import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+<script setup lang="ts">
 import type { ILink } from "~/types"
-  import HimatikaLogo from '~/assets/image/himatika-logo.png'
-  
-  const user = {
-    name: 'Tom Cook',
-    email: 'tom@example.com',
-    imageUrl:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  }
-  const navigation : ILink[] = [
-    { name: 'Home', href: '/', current: true },
-    { name: 'About', href: '', current: false },
-    { name: 'Projects', href: '#', current: false },
-    { name: 'Events', href: '#', current: false },
-  ] as ILink[]
-  const userNavigation : ILink[] = [
-    { name: 'Your Profile', href: '#' },
-    { name: 'Settings', href: '#' },
-    { name: 'Sign out', href: '#' },
-  ] as ILink[]
-  </script>
+import HimatikaLogo from '~/assets/image/himatika-logo.png'
+
+const user = {
+  name: 'Tom Cook',
+  email: 'tom@example.com',
+  imageUrl:
+    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+}
+const navigation: ILink[] = [
+  { name: 'Home', href: '/', current: true },
+  { name: 'About', href: '#about', current: false },
+  { name: 'Projects', href: '#', current: false },
+  { name: 'Events', href: '#', current: false },
+] as ILink[]
+const userNavigation: ILink[] = [
+  { name: 'Your Profile', href: '#' },
+  { name: 'Settings', href: '#' },
+  { name: 'Sign out', href: '#' },
+] as ILink[]
+</script>
