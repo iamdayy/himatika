@@ -22,22 +22,9 @@
               <span class="block text-sm  text-gray-500 truncate dark:text-gray-400">{{ user.email }}</span>
             </div>
             <ul class="py-2" aria-labelledby="user-menu-button">
-              <li>
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</a>
-              </li>
-              <li>
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</a>
-              </li>
-              <li>
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Earnings</a>
-              </li>
-              <li>
-                <a href="#"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
-                  out</a>
+              <li v-for="nav, i in userNavigation" :key="i">
+                <a :href="nav.href"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">{{ nav.name }}</a>
               </li>
             </ul>
           </div>
@@ -57,7 +44,7 @@
             <li v-for="nav,i in navigation" :key="i">
               <a :href="nav.href"
                 class="block py-2 px-3 rounded bg-transparent text-slate-700 md:p-0 dark:text-slate-800"
-                aria-current="page">{{ nav.name  }}</a>
+              >{{ nav.name  }}</a>
             </li>
           </ul>
         </div>
@@ -86,11 +73,12 @@ const user = {
 const navigation: ILink[] = [
   { name: 'Home', href: '/', current: true },
   { name: 'About', href: '#about', current: false },
-  { name: 'Projects', href: '#', current: false },
   { name: 'Events', href: '#', current: false },
+  { name: 'Projects', href: '#', current: false },
 ] as ILink[]
 const userNavigation: ILink[] = [
   { name: 'Your Profile', href: '#' },
+  { name: 'Dashboard', href: '#' },
   { name: 'Settings', href: '#' },
   { name: 'Sign out', href: '#' },
 ] as ILink[]

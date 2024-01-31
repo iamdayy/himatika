@@ -15,5 +15,4 @@ onMounted(() => {
   });
   console.log(user.data);
 })
-
 </script>

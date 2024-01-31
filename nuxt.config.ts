@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   modules: [
     'nuxt-mongoose',
     '@nuxtjs/color-mode',
+    "@nuxt/image",
     '@nuxtjs/tailwindcss',
     'nuxt-icon'
   ],
