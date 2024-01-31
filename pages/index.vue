@@ -27,8 +27,8 @@
       </div>
     </div>
     <section class="min-h-screen py-8" id="about" data-accordion="collapse">
-      <CoreCard title="Himatika">
-        <div class="flex py-4 items-center">
+      <CoreCard title="About Us">
+        <div class="flex py-8 items-center px-3">
           <div class="w-1/2 dark:text-white px-2">
             <p>Himpunan Mahasiswa Informatika atau yang sering disebut HIMATIKA merupakan suatu organisasi yang menghimpun
               Mahasiswa Informatika untuk mengembangkan, dan mempraktekkan ilmu nya dalam bidang komputer.</p> <br />
@@ -44,7 +44,7 @@
             <NuxtImg src="/img/fobar.jpg" loading="lazy" class="rounded-tr-2xl rounded-bl-3xl shadow-md" />
           </div>
         </div>
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center py-8 px-3">
           <div id="about-expand" class="hidden" aria-labelledby="about">
             <div class="w-full flex flex-col justify-center items-center">
               <div>
@@ -95,8 +95,32 @@
         </div>
       </CoreCard>
     </section>
-  </HomeLayout>
-</template>
+    <section class="min-h-screen py-8" id="about">
+      <CoreCard title="Events">
+        <div class="py-8 px-3">
+          <CoreCalendar></CoreCalendar>
+        </div>
+      </CoreCard>
+    </section>
+    <section class="min-h-screen py-8" id="project">
+      <CoreCard title="Projects">
+        <div class="py-8 px-3">
+          <ol class="relative border-s border-gray-200 dark:border-gray-700">
+            <li class="mb-10 ms-4">
+              <div
+                class="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-700">
+              </div>
+              <time class="mb-1 text-sm font-normal leading-none text-gray-400 dark:text-gray-500">February 2022</time>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Application UI code in Tailwind CSS</h3>
+              <p class="mb-4 text-base font-normal text-gray-500 dark:text-gray-400">Get access to over 20+ pages
+                including a dashboard layout, charts, kanban board, calendar, and pre-order E-commerce & Marketing pages.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </CoreCard>
+  </section>
+</HomeLayout></template>
 <script setup lang='ts'>
 import Fobar from "~/assets/image/fobar.jpg";
 definePageMeta({
