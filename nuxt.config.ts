@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     "@nuxt/image",
     '@nuxtjs/tailwindcss',
-    'nuxt-icon'
+    'nuxt-icon',
+    '@samk-dev/nuxt-vcalendar'
   ],
   nitro: {
     firebase: {
