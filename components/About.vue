@@ -13,8 +13,8 @@
 
             </p>
           </div>
-          <div class="md:w-1/2">
-            <NuxtImg src="/img/fobar.jpg" loading="lazy" class="rounded-tr-2xl rounded-bl-3xl shadow-md" />
+          <div class="md:w-1/2 overflow-hidden rounded-tr-2xl rounded-bl-3xl shadow-md">
+            <NuxtImg src="/img/fobar.jpg" loading="lazy" class="hover:scale-125 transition duration-500 ease-out cursor-pointer" />
           </div>
         </div>
         <div class="flex flex-col justify-center py-8 px-3">

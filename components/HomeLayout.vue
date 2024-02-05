@@ -3,7 +3,7 @@
     <nav class="absolute bg-white md:bg-transparent bg-opacity-35 backdrop-blur-md border-gray-200 md:border-none dark:bg-gray-900 w-full z-10">
       <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-          <img :src="HimatikaLogo" class="h-8" alt="Flowbite Logo" />
+          <img :src="HimatikaLogo" class="h-8" alt="Himatika Logo" />
         </a>
         <div
         class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse" 
@@ -103,7 +103,7 @@
   
 <script setup lang="ts">
 import type { ILink } from "~/types"
-import HimatikaLogo from '~/assets/image/himatika-logo.png'
+import HimatikaLogo from '~/assets/image/himatika-logo.png';
 const loged = false;
 const user = {
   name: 'Tom Cook',

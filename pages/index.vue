@@ -29,10 +29,10 @@
     <section class="min-h-screen py-8" id="about">
       <About />
     </section>
-    <section class="min-h-screen py-8" id="about">
+    <section class="min-h-screen py-8" id="events">
       <Events />
     </section>
-    <section class="min-h-screen py-8" id="project">
+    <section class="min-h-screen py-8" id="projects">
       <Projects />
   </section>
 </HomeLayout></template>
