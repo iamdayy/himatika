@@ -76,7 +76,8 @@ const user = {
       </div>
       <div>
         <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Email Address</span>
-        <h3 class="self-center text-lg font-semibold text-gray-500 whitespace-nowrap dark:text-white">{{ user.email }}</h3>
+        <h3 class="self-center text-lg font-semibold text-gray-500 whitespace-nowrap dark:text-white">{{ user.email }}
+        </h3>
       </div>
       <div>
         <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Nik</span>
@@ -87,16 +88,98 @@ const user = {
         <h3 class="self-center text-xl font-semibold text-gray-500 whitespace-nowrap dark:text-white">{{ 'Class' }}</h3>
       </div>
     </div>
-    <div class="grid w-full h-screen grid-cols-2 grid-rows-4 gap-4 p-4 md:grid-cols-4 md:w-3/4">
-      <!-- component -->
-      <div v-for="i in 8" :key="i" class="h-24 transition-all duration-200 ease-out bg-white rounded-lg shadow-lg cursor-pointer hover:bg-gray-300 hover:scale-105 hover:shadow-xl">
-        <div class="p-4 px-8">
-          <Icon name="solar:home-2-bold" class="w-8 h-8" />
-          <div class="flex items-center justify-center">
-            <h1 class="text-4xl font-bold text-gray-800">InVision</h1>
+    <div class="w-full md:w-3/4">
+      <!-- Events section -->
+      <div class="p-6 bg-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+        <div class="flex justify-between">
+          <div class="flex gap-2">
+            <Icon name="solar:calendar-bold" class="w-7 h-7 text-gray-500 dark:text-gray-400 mb-3" />
+            <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-600 dark:text-gray-500">Events</h5>
           </div>
+          <a href="#" class="inline-flex items-center text-blue-600 hover:underline">
+            See more
+            <svg class="w-3 h-3 ms-2.5 rtl:rotate-[270deg]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 18 18">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 11v4.833A1.166 1.166 0 0 1 13.833 17H2.167A1.167 1.167 0 0 1 1 15.833V4.167A1.166 1.166 0 0 1 2.167 3h4.618m4.447-2H17v5.768M9.111 8.889l7.778-7.778" />
+            </svg>
+          </a>
+        </div>
+        <div id="events-carousel" class="relative w-full" data-carousel="static">
+          <div class="relative h-80 overflow-hidden md:h-72">
+            <div v-for="i in 4" :key="i" class="hidden duration-700 ease-in-out" data-carousel-item>
+              <div class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+                <div>
+                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
+                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Mubes</h3>
+
+                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
+                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">12 - February - 2024
+                  </h3>
+
+                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
+                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Organization</h3>
+
+                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Urgently</span>
+                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">
+                    <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" />
+                    <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" />
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slider indicators -->
+          <div class="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
+            <button v-for="i in 4" :key="i" type="button" class="w-3 h-3 rounded-full" aria-current="true"
+              :aria-label="`Slide ${i + 1}`" :data-carousel-slide-to="i"></button>
+          </div>
+          <!-- Slider controls -->
+          <button type="button"
+            class="absolute top-0 start-0 z-30 flex items-end justify-center h-full px-4 cursor-pointer group focus:outline-none"
+            data-carousel-prev>
+            <span
+              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+              <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 1 1 5l4 4" />
+              </svg>
+              <span class="sr-only">Previous</span>
+            </span>
+          </button>
+          <button type="button"
+            class="absolute top-0 end-0 z-30 flex items-end justify-center h-full px-4 cursor-pointer group focus:outline-none"
+            data-carousel-next>
+            <span
+              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+              <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="m1 9 4-4-4-4" />
+              </svg>
+              <span class="sr-only">Next</span>
+            </span>
+          </button>
         </div>
       </div>
+      <div class="mt-4 p-6 bg-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+        <div class="flex justify-between">
+          <div class="flex gap-2">
+            <Icon name="solar:programming-bold" class="w-7 h-7 text-gray-500 dark:text-gray-400 mb-3" />
+            <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-600 dark:text-gray-500">Projects</h5>
+          </div>
+          <a href="#" class="inline-flex items-center text-blue-600 hover:underline">
+            See more
+            <svg class="w-3 h-3 ms-2.5 rtl:rotate-[270deg]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 18 18">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 11v4.833A1.166 1.166 0 0 1 13.833 17H2.167A1.167 1.167 0 0 1 1 15.833V4.167A1.166 1.166 0 0 1 2.167 3h4.618m4.447-2H17v5.768M9.111 8.889l7.778-7.778" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
