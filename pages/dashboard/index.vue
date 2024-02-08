@@ -109,13 +109,16 @@ const user = {
           <div class="relative h-80 overflow-hidden md:h-72">
             <div v-for="i in 4" :key="i" class="hidden duration-700 ease-in-out" data-carousel-item>
               <div class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                <div>
+                <div class="px-8">
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
                   <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Mubes</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
                   <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">12 - February - 2024
                   </h3>
+
+                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
+                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Selopajang</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
                   <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Organization</h3>
@@ -136,10 +139,10 @@ const user = {
           </div>
           <!-- Slider controls -->
           <button type="button"
-            class="absolute top-0 start-0 z-30 flex items-end justify-center h-full px-4 cursor-pointer group focus:outline-none"
+            class="absolute top-0 start-0 z-30 flex items-end justify-center h-full cursor-pointer group focus:outline-none"
             data-carousel-prev>
             <span
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
               <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -149,10 +152,10 @@ const user = {
             </span>
           </button>
           <button type="button"
-            class="absolute top-0 end-0 z-30 flex items-end justify-center h-full px-4 cursor-pointer group focus:outline-none"
+            class="absolute top-0 end-0 z-30 flex items-end justify-center h-full cursor-pointer group focus:outline-none"
             data-carousel-next>
             <span
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
               <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -163,6 +166,7 @@ const user = {
           </button>
         </div>
       </div>
+      <!-- Projects Section -->
       <div class="mt-4 p-6 bg-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
         <div class="flex justify-between">
           <div class="flex gap-2">
@@ -177,6 +181,43 @@ const user = {
                 d="M15 11v4.833A1.166 1.166 0 0 1 13.833 17H2.167A1.167 1.167 0 0 1 1 15.833V4.167A1.166 1.166 0 0 1 2.167 3h4.618m4.447-2H17v5.768M9.111 8.889l7.778-7.778" />
             </svg>
           </a>
+        </div>
+        <div class="px-8 my-4">
+          <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
+          <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Mubes</h3>
+
+          <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Periode</span>
+          <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">12 - February - 2024
+          </h3>
+
+          <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Worker</span>
+          <div class="flex items-center">
+            <div v-for="i in 4" :key="i" class="-mx-1">
+              <img :data-tooltip-target="`tooltip-${i}`" class="object-cover w-6 h-6 rounded-full shadow-md border border-white/30"
+                src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=4&w=880&h=880&q=100"
+                alt="">
+              <div :id="`tooltip-${i}`" role="tooltip"
+                class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
+                Tooltip {{ i }}
+                <div class="tooltip-arrow" data-popper-arrow></div>
+              </div>
+            </div>
+          </div>
+
+          <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Public</span>
+          <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">
+            <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" />
+            <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" />
+          </h3>
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-base font-medium text-blue-700 dark:text-white">Flowbite</span>
+              <span class="text-sm font-medium text-blue-700 dark:text-white">45%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+              <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
+            </div>
+          </div>
         </div>
       </div>
 
