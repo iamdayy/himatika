@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import type { ILink } from '~/types'
 definePageMeta({
   layout: false
 })
@@ -12,6 +13,12 @@ const user = {
   imageUrl:
     'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
 }
+const navigation: ILink[] = [
+  { name: 'Dashboard', href: '/', current: true },
+  { name: 'Events', href: '/dashboard/events', current: false },
+  { name: 'Projects', href: '/dashboard/projects', current: false },
+  { name: 'Profile', href: '/dashboard/profile', current: false },
+] as ILink[]
 </script>
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900">
@@ -69,31 +76,46 @@ const user = {
     </div>
   </nav>
   <div class="flex flex-col w-full gap-3 p-4 md:flex-row">
-    <div class="w-full p-3 bg-gray-200 shadow-md md:w-1/4 rounded-xl">
-      <NuxtImg :src="user.imageUrl" sizes="250px" class="rounded-full" />
-      <div>
-        <h2 class="self-center mt-4 text-3xl font-bold whitespace-nowrap dark:text-white">{{ user.name }}</h2>
-      </div>
-      <div>
-        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Email Address</span>
-        <h3 class="self-center text-lg font-semibold text-gray-500 whitespace-nowrap dark:text-white">{{ user.email }}
-        </h3>
-      </div>
-      <div>
-        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Nik</span>
-        <h3 class="self-center text-xl font-semibold text-gray-500 whitespace-nowrap dark:text-white">{{ 'Nik' }}</h3>
-      </div>
-      <div>
-        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">CLass</span>
-        <h3 class="self-center text-xl font-semibold text-gray-500 whitespace-nowrap dark:text-white">{{ 'Class' }}</h3>
+    <div class="relative w-full p-3 shadow-md bg-slate-200 md:w-1/4 rounded-xl">
+      <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+        <div class="max-w-sm py-1">
+          <NuxtImg :src="user.imageUrl" sizes="250px" class="rounded-full" />
+        </div>
+        <div class="flex flex-col py-1">
+          <dd class="text-lg font-semibold text-gray-600">{{ user.name }}</dd>
+        </div>
+        <div class="flex flex-col py-1">
+          <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Email address</dt>
+          <dd class="text-lg font-semibold text-gray-500">{{ user.email }}</dd>
+        </div>
+        <div class="flex flex-col py-1">
+          <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Nik</dt>
+          <dd class="text-lg font-semibold text-gray-500">Nik</dd>
+        </div>
+        <div class="flex flex-col py-1">
+          <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Class</dt>
+          <dd class="text-lg font-semibold text-gray-500">Class</dd>
+        </div>
+      </dl>
+      <div class="absolute bottom-0 p-2">
+        <h2 class="mb-2 text-lg font-semibold text-gray-400">Tools</h2>
+        <ul class="space-y-2 font-medium">
+          <li>
+            <a href="#"
+              class="flex items-center p-2 text-gray-400 rounded-lg hover:text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+              <Icon name="solar:file-text-outline" class="w-5 h-5 text-gray-400 hover:text-gray-800" />
+              <span class="ms-3">Surat Keaktifan</span>
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
     <div class="w-full md:w-3/4">
       <!-- Events section -->
-      <div class="p-6 bg-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+      <div class="p-6 bg-gray-100 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
         <div class="flex justify-between">
           <div class="flex gap-2">
-            <Icon name="solar:calendar-bold" class="w-7 h-7 text-gray-500 dark:text-gray-400 mb-3" />
+            <Icon name="solar:calendar-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
             <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-600 dark:text-gray-500">Events</h5>
           </div>
           <a href="#" class="inline-flex items-center text-blue-600 hover:underline">
@@ -106,25 +128,25 @@ const user = {
           </a>
         </div>
         <div id="events-carousel" class="relative w-full" data-carousel="static">
-          <div class="relative h-80 overflow-hidden md:h-72">
+          <div class="relative overflow-hidden h-80 md:h-72">
             <div v-for="i in 4" :key="i" class="hidden duration-700 ease-in-out" data-carousel-item>
               <div class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
                 <div class="px-8">
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
-                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Mubes</h3>
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">Mubes</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
-                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">12 - February - 2024
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">12 - February - 2024
                   </h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
-                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Selopajang</h3>
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">Selopajang</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
-                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Organization</h3>
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">Organization</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Urgently</span>
-                  <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">
                     <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" />
                     <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" />
                   </h3>
@@ -133,13 +155,13 @@ const user = {
             </div>
           </div>
           <!-- Slider indicators -->
-          <div class="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
+          <div class="absolute z-30 flex space-x-3 -translate-x-1/2 bottom-5 left-1/2 rtl:space-x-reverse">
             <button v-for="i in 4" :key="i" type="button" class="w-3 h-3 rounded-full" aria-current="true"
               :aria-label="`Slide ${i + 1}`" :data-carousel-slide-to="i"></button>
           </div>
           <!-- Slider controls -->
           <button type="button"
-            class="absolute top-0 start-0 z-30 flex items-end justify-center h-full cursor-pointer group focus:outline-none"
+            class="absolute top-0 z-30 flex items-end justify-center h-full cursor-pointer start-0 group focus:outline-none"
             data-carousel-prev>
             <span
               class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
@@ -152,7 +174,7 @@ const user = {
             </span>
           </button>
           <button type="button"
-            class="absolute top-0 end-0 z-30 flex items-end justify-center h-full cursor-pointer group focus:outline-none"
+            class="absolute top-0 z-30 flex items-end justify-center h-full cursor-pointer end-0 group focus:outline-none"
             data-carousel-next>
             <span
               class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
@@ -167,10 +189,10 @@ const user = {
         </div>
       </div>
       <!-- Projects Section -->
-      <div class="mt-4 p-6 bg-gray-100 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+      <div class="p-6 mt-4 bg-gray-100 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
         <div class="flex justify-between">
           <div class="flex gap-2">
-            <Icon name="solar:programming-bold" class="w-7 h-7 text-gray-500 dark:text-gray-400 mb-3" />
+            <Icon name="solar:programming-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
             <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-600 dark:text-gray-500">Projects</h5>
           </div>
           <a href="#" class="inline-flex items-center text-blue-600 hover:underline">
@@ -184,16 +206,17 @@ const user = {
         </div>
         <div class="px-8 my-4">
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
-          <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">Mubes</h3>
+          <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">Mubes</h3>
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Periode</span>
-          <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">12 - February - 2024
+          <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">12 - February - 2024
           </h3>
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Worker</span>
           <div class="flex items-center">
             <div v-for="i in 4" :key="i" class="-mx-1">
-              <img :data-tooltip-target="`tooltip-${i}`" class="object-cover w-6 h-6 rounded-full shadow-md border border-white/30"
+              <img :data-tooltip-target="`tooltip-${i}`"
+                class="object-cover w-6 h-6 border rounded-full shadow-md border-white/30"
                 src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=4&w=880&h=880&q=100"
                 alt="">
               <div :id="`tooltip-${i}`" role="tooltip"
@@ -205,7 +228,7 @@ const user = {
           </div>
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Public</span>
-          <h3 class="self-center text-md text-gray-500 whitespace-nowrap dark:text-white">
+          <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">
             <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" />
             <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" />
           </h3>
@@ -220,8 +243,8 @@ const user = {
           </div>
         </div>
       </div>
-
-    </div>
   </div>
+</div>
+<CoreFooter :links="navigation" />
 </template>
 <style scoped></style>
