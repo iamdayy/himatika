@@ -243,8 +243,8 @@ const navigation: ILink[] = [
           </div>
         </div>
       </div>
+    </div>
   </div>
-</div>
-<CoreFooter :links="navigation" />
+  <CoreFooter :links="navigation" />
 </template>
 <style scoped></style>
