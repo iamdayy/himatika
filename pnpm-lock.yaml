@@ -11,6 +11,9 @@ dependencies:
   '@nuxt/kit':
     specifier: ^3.10.1
     version: 3.10.1
+  change-case:
+    specifier: ^5.4.2
+    version: 5.4.2
   flowbite:
     specifier: ^2.2.1
     version: 2.2.1
@@ -19,7 +22,7 @@ dependencies:
     version: 0.6.8(nuxt@3.10.1)(vite@5.1.1)(vue@3.4.18)
   nuxt-mongoose:
     specifier: ^1.0.5
-    version: 1.0.5(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1)
+    version: 1.0.5(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(change-case@5.4.2)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1)
 
 devDependencies:
   '@nuxtjs/color-mode':
@@ -1290,7 +1293,7 @@ packages:
       - rollup
       - supports-color
 
-  /@nuxt/devtools-ui-kit@1.0.8(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1):
+  /@nuxt/devtools-ui-kit@1.0.8(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(change-case@5.4.2)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1):
     resolution: {integrity: sha512-oPkyQ+nkvCvveWxHWAHpZt9uEycHFD00Rh46KYKe5KLl81Wr/L3KacIIYpiocPog0YZZhjvX5CmrIe8zXopNOA==}
     peerDependencies:
       '@nuxt/devtools': 1.0.8
@@ -1310,7 +1313,7 @@ packages:
       '@unocss/preset-mini': 0.58.5
       '@unocss/reset': 0.58.5
       '@vueuse/core': 10.7.2(vue@3.4.18)
-      '@vueuse/integrations': 10.7.2(focus-trap@7.5.4)(vue@3.4.18)
+      '@vueuse/integrations': 10.7.2(change-case@5.4.2)(focus-trap@7.5.4)(vue@3.4.18)
       '@vueuse/nuxt': 10.7.2(nuxt@3.10.1)(vue@3.4.18)
       defu: 6.1.4
       focus-trap: 7.5.4
@@ -2573,7 +2576,7 @@ packages:
       - vue
     dev: false
 
-  /@vueuse/integrations@10.7.2(focus-trap@7.5.4)(vue@3.4.18):
+  /@vueuse/integrations@10.7.2(change-case@5.4.2)(focus-trap@7.5.4)(vue@3.4.18):
     resolution: {integrity: sha512-+u3RLPFedjASs5EKPc69Ge49WNgqeMfSxFn+qrQTzblPXZg6+EFzhjarS5edj2qAf6xQ93f95TUxRwKStXj/sQ==}
     peerDependencies:
       async-validator: '*'
@@ -2616,6 +2619,7 @@ packages:
     dependencies:
       '@vueuse/core': 10.7.2(vue@3.4.18)
       '@vueuse/shared': 10.7.2(vue@3.4.18)
+      change-case: 5.4.2
       focus-trap: 7.5.4
       vue-demi: 0.14.7(vue@3.4.18)
     transitivePeerDependencies:
@@ -3151,6 +3155,10 @@ packages:
   /chalk@5.3.0:
     resolution: {integrity: sha512-dLitG79d+GV1Nb/VYcCDFivJeK1hiukt9QjRNVOsUtTy1rR1YJsmpGGTZ3qJos+uw7WmWF4wUwBd9jxjocFC2w==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+
+  /change-case@5.4.2:
+    resolution: {integrity: sha512-WB3UiTDpT+vrTilAWaJS4gaIH/jc1He4H9f6erQvraUYas90uWT0JOYFkG1imdNv710XJ6gJvqynrgOHc4ihDA==}
+    dev: false
 
   /chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
@@ -5423,11 +5431,11 @@ packages:
       - vue
     dev: false
 
-  /nuxt-mongoose@1.0.5(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1):
+  /nuxt-mongoose@1.0.5(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(change-case@5.4.2)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1):
     resolution: {integrity: sha512-0R4uVCgjam0ZpwTk6i/KqOH1GuPZRF8yBWgFEbYINfID7qE/WlNsPwl8R9gq21Rqh/6KTh2IXnej4CPEKIOuCQ==}
     dependencies:
       '@nuxt/devtools-kit': 1.0.8(nuxt@3.10.1)(vite@5.1.1)
-      '@nuxt/devtools-ui-kit': 1.0.8(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1)
+      '@nuxt/devtools-ui-kit': 1.0.8(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(change-case@5.4.2)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1)
       '@nuxt/kit': 3.10.1
       '@vueuse/core': 10.7.2(vue@3.4.18)
       defu: 6.1.4
