@@ -5,17 +5,12 @@ export interface ILink {
 }
 
 export interface ICommittee {
-    chief: string;
-    viceChief: string;
-    secretary: string;
-    viceSecretary: string;
-    treasurer: string;
-    viceTreasurer: string;
-    [key: string]: string;
+    job: string;
+    name: string;
 }
 export interface IEvent {
     title: string;
     date: Date;
     description: string;
-    committee?: ICommittee
+    committee?: ICommittee[];
 }

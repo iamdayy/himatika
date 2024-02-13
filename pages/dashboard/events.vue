@@ -9,18 +9,71 @@ const Events = ref<IEvent[]>([
         title: "Musyawarah Besar",
         date: new Date(2024, 1, 10),
         description: "Bahas Ngidul Ngalor",
-        committee: {
-            chief: "Jackson",
-            viceChief: "Andreas",
-            secretary: "Hilda",
-            viceSecretary: "Dephay",
-            treasurer: "Emma Watson",
-            viceTreasurer: "Siri"
-        }
+        committee: [
+            {
+                job: "chief",
+                name: "Jackson",
+            },
+            {
+                job: "Vice Chief",
+                name: "Olivier"
+            },
+            {
+                job: "Secretary",
+                name: "Hilda"
+            },
+            {
+                job: "Vice Secretary",
+                name: "Airlangga"
+            },
+            {
+                job: "Treasurer",
+                name: "Zee"
+            },
+            {
+                job: "Vice Treasurer",
+                name: "Isabel"
+            }
+        ]
     }
 ]);
 
 const Event = ref<IEvent | null>(null);
+const newEvent = ref<IEvent>({
+    title: "",
+    date: new Date(),
+    description: "",
+    committee: [
+        {
+            job: "chief",
+            name: ""
+        }
+    ]
+});
+
+const addCommittee = () => {
+    if (!newEvent.value.committee) {
+        newEvent.value.committee = [
+            {
+                job: "",
+                name: ""
+            }
+        ]
+    } else {
+        newEvent.value.committee?.push({
+            job: "",
+            name: ""
+        });
+    }
+}
+
+const deleteCommittee = (i: number) => {
+    if (newEvent.value.committee?.length === 1) {
+        newEvent.value.committee = undefined
+    } else {
+        newEvent.value.committee?.splice(i, 1);
+    }
+}
 const pickDetail = (id: number) => {
     Event.value = Events.value[id];
 }
@@ -40,26 +93,92 @@ const attributes = ref([
 ]);
 </script>
 <template>
-    <div class=" justify-center items-center mb-24">
+    <div class="items-center justify-center mb-24 ">
         <div class="mx-auto text-center">
             <h2 class="text-4xl font-extrabold leading-tight tracking-tight text-gray-600 dark:text-white">
                 Agenda
             </h2>
             <div class="mt-4">
-                <button
-                    class="inline-flex items-center text-lg font-medium text-gray-100 bg-green-500 hover:bg-green-400 px-4 rounded-full py-2">
-                    Add Agenda
-                </button>
+                <CoreModal name="Add Agenda">
+                    <div class="px-2 py-4 text-start">
+                        <form class="space-y-4" action="#">
+                            <div>
+                                <label for="title"
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Title</label>
+                                <input type="title" name="title" id="title" v-model="newEvent.title"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                                    required>
+                            </div>
+                            <div>
+                                <label for="date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date
+                                    & Time</label>
+                                <VDatePicker id="date" v-model="newEvent.date" mode="dateTime">
+                                    <template #default="{ togglePopover }">
+                                        <button class="px-3 py-2 text-sm font-semibold text-white bg-blue-500 rounded-md"
+                                            @click="togglePopover">
+                                            Select date
+                                        </button>
+                                    </template>
+                                </VDatePicker>
+                            </div>
+                            <div>
+                                <label for="description"
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
+                                <textarea id="description" rows="4"
+                                    class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"></textarea>
+                            </div>
+                            <div>
+                                <label for="committee"
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Committe</label>
+                                <div id="committee" class="ms-2">
+                                    <div v-for="committee, i in newEvent.committee" :key="i" class="flex justify-between mb-2">
+                                        <div class="flex w-full gap-2">
+                                            <div>
+                                                <label :for="`${committee.job}-job`"
+                                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Job</label>
+                                                <input :type="`${committee.job}-job`" :name="`${committee.job}-job`"
+                                                    :id="`${committee.job}-job`" v-model="newEvent.committee[i].job"
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                                                    required>
+                                            </div>
+                                            <div>
+                                                <label :for="`${committee.job}-name`"
+                                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+                                                <input :type="`${committee.job}-name`" :name="`${committee.job}-name`"
+                                                    :id="`${committee.job}-name`" v-model="newEvent.committee[i].name"
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                                                    required>
+                                            </div>
+                                        </div>
+                                        <button @click="deleteCommittee(i)">
+                                            <Icon name="solar:trash-bin-trash-outline" class="text-red-500" />
+                                        </button>
+                                    </div>
+                                    <button @click="addCommittee"
+                                        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                        Add Committee
+                                        <Icon name="solar:user-plus-outline" class="w-3.5 h-3.5 ms-2" />
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                Create Agenda
+                            </button>
+                        </form>
+                    </div>
+                </CoreModal>
             </div>
         </div>
-        <div class="flex py-4 px-8 gap-3 w-full">
-            <VCalendar :attributes="attributes" class="shadow-lg max-w-sm" @dayclick="pickDay">
+        <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
+            <VCalendar :attributes="attributes" class="mx-auto shadow-lg md:max-w-sm" @dayclick="pickDay">
                 <template #footer>
                     <div class="px-2 pb-3">
                         <div class="mx-auto">
                             <div class="divide-y divide-gray-400 dark:divide-gray-700">
                                 <div v-for="event, i in Events.filter((event) => event.date.getDate() == pickDate?.getDate())"
-                                    :key="i" class="flex flex-col gap-2 py-4 px-2 sm:gap-6 sm:flex-row sm:items-center cursor-pointer hover:bg-gray-200 rounded-3xl"
+                                    :key="i"
+                                    class="flex flex-col gap-2 px-2 py-4 cursor-pointer sm:gap-6 sm:flex-row sm:items-center hover:bg-gray-200 rounded-3xl"
                                     @click="pickDetail(i)">
                                     <p class="text-sm font-normal text-gray-500 sm:text-right dark:text-gray-400 shrink-0">
                                         {{ event.date.toLocaleTimeString() }}
@@ -73,9 +192,9 @@ const attributes = ref([
                     </div>
                 </template>
             </VCalendar>
-            <div class="w-full bg-gray-100 border border-gray-400 rounded-lg shadow-lg px-8 py-4">
+            <div class="w-full px-8 py-4 bg-gray-100 border border-gray-400 rounded-lg shadow-lg">
                 <h5 v-if="!Event"
-                    class="mb-4 text-center my-24 text-3xl font-semibold text-yellow-300 dark:text-yellow-200">No Agenda
+                    class="my-24 mb-4 text-3xl font-semibold text-center text-yellow-300 dark:text-yellow-200">No Agenda
                     Selected</h5>
                 <div v-else>
                     <h5 class="mb-4 text-2xl font-medium text-gray-500 dark:text-gray-400">{{ Event?.title }}</h5>
@@ -106,16 +225,17 @@ const attributes = ref([
                                     Committee</span>
                             </span>
                             <dl
-                                class="space-y-3 my-3 mt-6 ps-8 list-inside divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-                                <div v-for="[i,v] in Object.entries(Event.committee!)" class="flex flex-col">
-                                    <dt class="mb-1 text-gray-500 text-sm dark:text-gray-400">{{ changeCase.capitalCase(i) }}</dt>
-                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{ v }}</dd>
+                                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
+                                <div v-for="event, i in Event.committee" class="flex flex-col" :key="i">
+                                    <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ event.job
+                                    }}</dt>
+                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{ event.name }}</dd>
                                 </div>
-                        </dl>
-                    </li>
-                </ul>
+                            </dl>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
     </div>
 </div></template>
 <style scoped></style>
