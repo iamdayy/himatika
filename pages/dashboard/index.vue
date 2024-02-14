@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { ILink } from '~/types'
+import type { ILink, IEvent } from '~/types'
 definePageMeta({
   layout: false
 })
@@ -7,6 +7,7 @@ useHead({
   title: "Dashboard | Himatika"
 });
 import HimatikaLogo from '~/assets/image/himatika-logo.png';
+import { initCarousels } from 'flowbite';
 const user = {
   name: 'Tom Cook',
   email: 'tom@example.com',
@@ -18,7 +19,55 @@ const navigation: ILink[] = [
   { name: 'Events', href: '/dashboard/events', current: false },
   { name: 'Projects', href: '/dashboard/projects', current: false },
   { name: 'Profile', href: '/dashboard/profile', current: false },
-] as ILink[]
+] as ILink[];
+
+const Events = ref<IEvent[]>([
+    {
+      id: 1,
+        title: "Musyawarah Besar",
+        date: new Date(2024, 1, 10),
+        at: "Selopajang",
+        accessbility: "Organization",
+        description: "Bahas Ngidul Ngalor",
+        committee: [
+            {
+                job: "chief",
+                name: "Jackson",
+            },
+            {
+                job: "Vice Chief",
+                name: "Olivier"
+            },
+            {
+                job: "Secretary",
+                name: "Hilda"
+            },
+            {
+                job: "Vice Secretary",
+                name: "Airlangga"
+            },
+            {
+                job: "Treasurer",
+                name: "Zee"
+            },
+            {
+                job: "Vice Treasurer",
+                name: "Isabel"
+            }
+        ]
+    },
+    {
+      id: 2,
+        title: "Ngopsanss",
+        date: new Date(2024, 5, 10),
+        at: "Markazz",
+        accessbility: "All",
+        description: "Sharing & Fun",
+    },
+]);
+onMounted(() => {
+  initCarousels();
+})
 </script>
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900">
@@ -97,7 +146,7 @@ const navigation: ILink[] = [
           <dd class="text-lg font-semibold text-gray-500">Class</dd>
         </div>
       </dl>
-      <div class="absolute bottom-0 p-2">
+      <div class="bottom-0 mt-10 md:absolute">
         <h2 class="mb-2 text-lg font-semibold text-gray-400">Tools</h2>
         <ul class="space-y-2 font-medium">
           <li>
@@ -118,32 +167,32 @@ const navigation: ILink[] = [
             <Icon name="solar:calendar-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
             <h5 class="mb-2 text-2xl font-semibold tracking-tight text-gray-600 dark:text-gray-500">Events</h5>
           </div>
-          <a href="#" class="inline-flex items-center text-blue-600 hover:underline">
+          <NuxtLink to="/dashboard/events" class="inline-flex items-center text-blue-600 hover:underline">
             See more
             <svg class="w-3 h-3 ms-2.5 rtl:rotate-[270deg]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
               fill="none" viewBox="0 0 18 18">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M15 11v4.833A1.166 1.166 0 0 1 13.833 17H2.167A1.167 1.167 0 0 1 1 15.833V4.167A1.166 1.166 0 0 1 2.167 3h4.618m4.447-2H17v5.768M9.111 8.889l7.778-7.778" />
             </svg>
-          </a>
+          </NuxtLink>
         </div>
-        <div id="events-carousel" class="relative w-full" data-carousel="static">
+        <div v-if="Events.length !== 0" id="events-carousel" class="relative w-full" data-carousel="static">
           <div class="relative overflow-hidden h-80 md:h-72">
-            <div v-for="i in 4" :key="i" class="hidden duration-700 ease-in-out" data-carousel-item>
+            <div v-for="event,i in Events" :key="i" class="hidden duration-700 ease-in-out" data-carousel-item>
               <div class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
                 <div class="px-8">
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">Mubes</h3>
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.title }}</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">12 - February - 2024
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.date.toDateString() }}
                   </h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">Selopajang</h3>
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.at }}</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">Organization</h3>
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.accessbility }}</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Urgently</span>
                   <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">
@@ -156,7 +205,7 @@ const navigation: ILink[] = [
           </div>
           <!-- Slider indicators -->
           <div class="absolute z-30 flex space-x-3 -translate-x-1/2 bottom-5 left-1/2 rtl:space-x-reverse">
-            <button v-for="i in 4" :key="i" type="button" class="w-3 h-3 rounded-full" aria-current="true"
+            <button v-for="event,i in Events" :key="i" type="button" class="w-3 h-3 rounded-full" aria-current="true"
               :aria-label="`Slide ${i + 1}`" :data-carousel-slide-to="i"></button>
           </div>
           <!-- Slider controls -->

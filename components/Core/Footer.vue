@@ -7,10 +7,10 @@ const props = defineProps({
 })
 </script>
 <template>
-    <footer class="relative pt-8 pb-6 bg-blueGray-200">
+    <footer class="relative pt-8 pb-6">
         <div class="container px-4 mx-auto">
             <div class="flex flex-wrap text-left lg:text-left">
-                <div class="w-full px-4 lg:w-6/12">
+                <div class="w-full px-4">
                     <img class="object-contain w-24" :src="HimatikaLogo" alt="">
                     <h4 class="text-3xl font-bold text-gray-600 text-uppercase">Himpunan Mahasiswa Informatika</h4>
                     <h5 class="mt-0 mb-2 text-lg text-gray-500">

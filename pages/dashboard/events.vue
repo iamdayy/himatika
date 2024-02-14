@@ -6,8 +6,11 @@ useHead({
 });
 const Events = ref<IEvent[]>([
     {
+        id: 1,
         title: "Musyawarah Besar",
         date: new Date(2024, 1, 10),
+        at: "Selopajang",
+        accessbility: "Organization",
         description: "Bahas Ngidul Ngalor",
         committee: [
             {
@@ -35,14 +38,25 @@ const Events = ref<IEvent[]>([
                 name: "Isabel"
             }
         ]
-    }
+    },
+    {
+        id: 2,
+        title: "Ngopsanss",
+        date: new Date(2024, 5, 10),
+        at: "Markazz",
+        accessbility: "All",
+        description: "Sharing & Fun",
+    },
 ]);
 
 const Event = ref<IEvent | null>(null);
 const newEvent = ref<IEvent>({
+    id: Events.value.length + 1,
     title: "",
     date: new Date(),
+    at: "",
     description: "",
+    accessbility: "",
     committee: [
         {
             job: "chief",
@@ -75,13 +89,14 @@ const deleteCommittee = (i: number) => {
     }
 }
 const pickDetail = (id: number) => {
-    Event.value = Events.value[id];
+    const index = Events.value.findIndex((event) => event.id === id);
+    Event.value = Events.value[index];
 }
 
 const pickDay = (day: any) => {
     pickDate.value = day.date;
 }
-const pickDate = ref<Date | null>(null);
+const pickDate = ref<Date>(new Date());
 
 const attributes = ref([
     {
@@ -115,12 +130,26 @@ const attributes = ref([
                                 <VDatePicker id="date" v-model="newEvent.date" mode="dateTime">
                                     <template #default="{ togglePopover }">
                                         <button class="px-3 py-2 text-sm font-semibold text-white bg-blue-500 rounded-md"
-                                            @click="togglePopover">
-                                            Select date
-                                        </button>
-                                    </template>
-                                </VDatePicker>
-                            </div>
+                                        @click="togglePopover">
+                                        Select date
+                                    </button>
+                                </template>
+                            </VDatePicker>
+                        </div>
+                        <div>
+                            <label for="at"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">At</label>
+                            <input type="at" name="at" id="at" v-model="newEvent.at"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                                required>
+                        </div>
+                        <div>
+                            <label for="accessbility"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Accessbility</label>
+                            <input type="accessbility" name="accessbility" id="accessbility" v-model="newEvent.accessbility"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                                required>
+                        </div>
                             <div>
                                 <label for="description"
                                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
@@ -175,11 +204,11 @@ const attributes = ref([
                 <template #footer>
                     <div class="px-2 pb-3">
                         <div class="mx-auto">
-                            <div class="divide-y divide-gray-400 dark:divide-gray-700">
-                                <div v-for="event, i in Events.filter((event) => event.date.getDate() == pickDate?.getDate())"
+                            <div class="pt-2 border-t border-gray-800 dark:border-gray-700">
+                                <div v-for="event, i in Events.filter((event) => event.date.toDateString() == pickDate.toDateString())"
                                     :key="i"
-                                    class="flex flex-col gap-2 px-2 py-4 cursor-pointer sm:gap-6 sm:flex-row sm:items-center hover:bg-gray-200 rounded-3xl"
-                                    @click="pickDetail(i)">
+                                    class="flex flex-col gap-2 px-4 py-2 cursor-pointer sm:gap-6 sm:flex-row sm:items-center hover:bg-gray-200 rounded-3xl"
+                                    @click="pickDetail(event.id)">
                                     <p class="text-sm font-normal text-gray-500 sm:text-right dark:text-gray-400 shrink-0">
                                         {{ event.date.toLocaleTimeString() }}
                                     </p>
@@ -207,9 +236,21 @@ const attributes = ref([
                         </li>
                         <li class="flex items-center">
                             <Icon name="solar:clock-circle-outline"
-                                class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                            class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
                                 Event?.date.toLocaleTimeString() }}</span>
+                        </li>
+                        <li class="flex">
+                            <Icon name="solar:map-point-outline"
+                                class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                            <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                                Event?.at }}</span>
+                        </li>
+                        <li class="flex">
+                            <Icon name="solar:lock-keyhole-unlocked-outline"
+                                class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                            <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                                Event?.accessbility }}</span>
                         </li>
                         <li class="flex">
                             <Icon name="solar:document-outline"

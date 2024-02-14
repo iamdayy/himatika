@@ -9,8 +9,11 @@ export interface ICommittee {
     name: string;
 }
 export interface IEvent {
+    id: number;
     title: string;
     date: Date;
+    at: string;
+    accessbility: string;
     description: string;
     committee?: ICommittee[];
 }
