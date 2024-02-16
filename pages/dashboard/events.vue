@@ -278,5 +278,6 @@ const attributes = ref([
                 </div>
             </div>
     </div>
-</div></template>
+</div>
+</template>
 <style scoped></style>

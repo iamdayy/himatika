@@ -109,7 +109,7 @@ const user = {
                     Tools
                     <div class="tooltip-arrow" data-popper-arrow></div>
                 </div>
-                <NuxtLink to="/dashboard/projects" data-tooltip-target="tooltip-projects" type="button"
+                <NuxtLink to="/dashboard/projects" data-tooltip-target="tooltip-projects"
                     class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
                     <Icon name="solar:programming-bold" class="w-6 h-6 text-gray-500 hover:text-gray-800" />
                     <span class="sr-only">Projects</span>
@@ -119,7 +119,7 @@ const user = {
                     Projects
                     <div class="tooltip-arrow" data-popper-arrow></div>
                 </div>
-                <NuxtLink to="/dashboard" data-tooltip-target="tooltip-profile" type="button"
+                <NuxtLink to="/dashboard" data-tooltip-target="tooltip-profile"
                     class="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
                     <Icon name="solar:user-bold" class="w-6 h-6 text-gray-500 hover:text-gray-800" />
                     <span class="sr-only">Profile</span>
