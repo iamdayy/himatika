@@ -4,6 +4,43 @@ export interface ILink {
     current?: boolean;
 }
 
+export interface IAddress {
+    fullAddress: string;
+    village: string;
+    district: string;
+    city: string;
+    province: string;
+    country: string;
+    zip: number;
+}
+
+export interface IProfile {
+    NIM: number;
+    fullName: string;
+    avatar: string;
+    class: string;
+    semester: number;
+    birth: {
+        place: string,
+        date: Date,
+    };
+    sex: 'Laki-Laki' | 'Perempuan';
+    relegion: string;
+    citizen: string;
+    phone: string;
+    email: string;
+    address: IAddress;
+    isRegistered: boolean;
+}
+
+export interface IUser  {
+    profile: IProfile;
+    username: string;
+    password: string;
+    key?: string;
+    token?: string;
+}
+
 export interface ICommittee {
     job: string;
     name: string;
@@ -28,5 +65,5 @@ export interface IProject {
     deadline: Date;
     description: string;
     hidden: boolean;
-    contributors: IContributor[];
+    contributors?: IContributor[];
 }

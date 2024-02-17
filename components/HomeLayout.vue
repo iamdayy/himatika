@@ -14,7 +14,7 @@
             id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
             data-dropdown-placement="bottom">
             <span class="sr-only">Open user menu</span>
-            <img class="w-8 h-8 rounded-full" :src="user.imageUrl" alt="user photo">
+            <img class="w-8 h-8 rounded-full" :src="user.profile.avatar" alt="user photo">
           </button>
           <!-- Dropdown menu -->
           <div
@@ -22,8 +22,8 @@
             id="user-dropdown"
             >
             <div class="px-4 py-3">
-              <span class="block text-sm text-gray-900 dark:text-white">{{ user.name }}</span>
-              <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user.email }}</span>
+              <span class="block text-sm text-gray-900 dark:text-white">{{ user.username }}</span>
+              <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user.profile.email }}</span>
             </div>
             <ul class="py-2" aria-labelledby="user-menu-button">
               <li v-for="nav, i in userNavigation" :key="i">
@@ -102,14 +102,38 @@
 </template>
   
 <script setup lang="ts">
-import type { ILink } from "~/types"
+import type { ILink, IUser } from "~/types"
 import HimatikaLogo from '~/assets/image/himatika-logo.png';
 const loged = false;
-const user = {
-  name: 'Tom Cook',
-  email: 'tom@example.com',
-  imageUrl:
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+const user: IUser = {
+  username: 'Tom1Cook',
+  password: '',
+  profile: {
+    NIM: 2020230055,
+    fullName: 'Tom Lembong',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    class: 'IM23A',
+    semester: 2,
+    birth: {
+      place: 'Pekalongan',
+      date: new Date("14 02 2004")
+    },
+    sex: 'Laki-Laki',
+    relegion: 'Moslem',
+    citizen: 'Pekalongan',
+    phone: '+628546788823',
+    email: 'Tom1Cook@outlook.co.id',
+    address: {
+      fullAddress: "Banyuurip 3c no. 54",
+      village: "Banyuurip",
+      district: "Pekalongan Selatan",
+      city: "Pekalongan",
+      province: "Jawa Tengah",
+      country: "Indonesia",
+      zip: 51133
+    },
+    isRegistered: true
+  }
 }
 const navigation: ILink[] = [
   { name: 'Home', href: '/', current: true },
