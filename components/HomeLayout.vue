@@ -119,7 +119,7 @@ const user: IUser = {
       date: new Date("14 02 2004")
     },
     sex: 'Laki-Laki',
-    relegion: 'Moslem',
+    religion: 'Moslem',
     citizen: 'Pekalongan',
     phone: '+628546788823',
     email: 'Tom1Cook@outlook.co.id',
