@@ -41,6 +41,17 @@ export interface IUser  {
     token?: string;
 }
 
+export interface IPeriod {
+    start: Date;
+    end: Date;
+}
+
+export interface IAdministrator {
+    user_id: string;
+    division: string;
+    period: IPeriod;
+}
+
 export interface ICommittee {
     job: string;
     name: string;
