@@ -36,7 +36,6 @@ export interface IProfile {
 export interface IUser  {
     profile: IProfile;
     username: string;
-    password: string;
     key?: string;
     token?: string;
 }

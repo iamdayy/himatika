@@ -107,7 +107,6 @@ import HimatikaLogo from '~/assets/image/himatika-logo.png';
 const loged = false;
 const user: IUser = {
   username: 'Tom1Cook',
-  password: '',
   profile: {
     NIM: 2020230055,
     fullName: 'Tom Lembong',

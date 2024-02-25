@@ -171,7 +171,7 @@ useHead({
                                 <VDatePicker id="birth" mode="date">
                                     <template #default="{ togglePopover }">
                                         <button @click="togglePopover"
-                                            class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700">
+                                            class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700" disabled>
                                             <Icon name="solar:calendar-outline" class="w-5 h-5" />
                                         </button>
                                     </template>
@@ -188,7 +188,7 @@ useHead({
                                 <VDatePicker id="birth" mode="date">
                                     <template #default="{ togglePopover }">
                                         <button @click="togglePopover"
-                                            class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700">
+                                            class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700" disabled>
                                             <Icon name="solar:calendar-outline" class="w-5 h-5" />
                                         </button>
                                     </template>
