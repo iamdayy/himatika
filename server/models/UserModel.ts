@@ -21,7 +21,8 @@ export const UserModel = defineMongooseModel<IUserSchema>("User", {
     },
     profile: {
         type: Types.ObjectId,
-        ref: "Profiles"
+        ref: "Profile",
+        autopopulate: true
     }
 },
 {
@@ -39,4 +40,15 @@ export const UserModel = defineMongooseModel<IUserSchema>("User", {
           return next(error);
         }
       });
+      schema.methods.verifyPassword = async (fromBody: string, fromDb: string) => {
+        try {
+            const isMatch = await bcrypt.compare(fromBody, fromDb);
+            if (isMatch) {
+                return true;
+            }
+            return false;
+        } catch (error) {
+            return false;
+        }
+    };
 });
