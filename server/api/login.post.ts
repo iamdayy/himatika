@@ -4,7 +4,9 @@ import jwt from "jsonwebtoken";
 export default defineEventHandler(async (event) => {
     try {
         const body = await readBody(event);
-        const user = await UserModel.findOne({ 'identifier.value': body.identifier.value });
+        console.log(body)
+        const user = await UserModel.findOne({ username: body.username });
+        console.log(user)
         if (!user) {
             throw createError({
                 statusCode: 404,
