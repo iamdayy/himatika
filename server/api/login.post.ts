@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
         console.log(user)
         if (!user) {
             throw createError({
-                statusCode: 404,
+                statusCode: 401,
                 message: "User not found"
             });
         }
@@ -23,10 +23,10 @@ export default defineEventHandler(async (event) => {
         const jwt_payload = {
             username: user.username
         }
-        const token = jwt.sign(jwt_payload, "SimitnuPro", {
+        const token = jwt.sign(jwt_payload, "HimatikaUser", {
             expiresIn: "10h",
         });
-        const token_re = jwt.sign(jwt_payload, "SimitnuPro", {
+        const token_re = jwt.sign(jwt_payload, "HimatikaUser", {
             expiresIn: "30d"
         });
         user.token = token_re;

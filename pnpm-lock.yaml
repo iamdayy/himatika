@@ -38,6 +38,9 @@ dependencies:
   nuxt-mongoose:
     specifier: ^1.0.5
     version: 1.0.5(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(change-case@5.4.2)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1)
+  vue3-toastify:
+    specifier: ^0.2.1
+    version: 0.2.1(vue@3.4.18)
 
 devDependencies:
   '@nuxtjs/color-mode':
@@ -7704,6 +7707,18 @@ packages:
     dependencies:
       vue: 3.4.18
     dev: true
+
+  /vue3-toastify@0.2.1(vue@3.4.18):
+    resolution: {integrity: sha512-u4i5LCu1q5qs4L4Kbjb4u8NipCS8ox1fCHQ6XFS62676xnA6Q/AJRpZEkAurTMp723LeH6eQX6k9+24bKf1T4Q==}
+    engines: {node: '>=16', npm: '>=7'}
+    peerDependencies:
+      vue: '>=3.2.0'
+    peerDependenciesMeta:
+      vue:
+        optional: true
+    dependencies:
+      vue: 3.4.18
+    dev: false
 
   /vue@3.4.18:
     resolution: {integrity: sha512-0zLRYamFRe0wF4q2L3O24KQzLyLpL64ye1RUToOgOxuWZsb/FhaNRdGmeozdtVYLz6tl94OXLaK7/WQIrVCw1A==}

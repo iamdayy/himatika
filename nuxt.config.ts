@@ -1,5 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  runtimeConfig: {
+    public: {
+      mongodb_uri: process.env.MONGODB_URI,
+    },
+  },
   devtools: { enabled: true },
   modules: [
     'nuxt-mongoose',
@@ -15,7 +20,7 @@ export default defineNuxtConfig({
     }
   },
   mongoose: {
-    uri: 'mongodb+srv://iamdayy14:admin123@pct-shop.a7lkvlf.mongodb.net/?retryWrites=true&w=majority/himatika',
+    uri: process.env.MONGODB_URI,
     options: {
 
     },

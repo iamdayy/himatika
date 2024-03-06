@@ -6,4 +6,13 @@ export interface IReqRegister {
     password: string;
 }
 
+export interface IReqLogin {
+    username: string;
+    password: string;
+}
+
+export interface IReqAuth extends IReqRegister, IReqLogin {
+    password_confirmation: string;
+}
+
 export interface IReqProfile extends IProfile {}

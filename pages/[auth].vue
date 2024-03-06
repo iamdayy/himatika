@@ -1,63 +1,60 @@
 <script setup lang='ts'>
 import HimatikaLogo from "~/assets/image/himatika-logo.png";
+import type { IReqAuth } from "~/types/IRequestPost";
+const route = useRoute();
+const registerChecked = ref<boolean>(false);
+
+const Form = ref<IReqAuth>({
+    username: "",
+    password: "",
+    password_confirmation: "",
+    NIM: 0,
+});
+
+const login = async () => {
+    try {
+        const { data, error } = await useFetch("/api/login", {
+            method: "post",
+            body: Form.value
+        });
+        if (error) {
+            console.log(error)
+            useNuxtApp().$toast(error.value.message)
+        }
+    } catch (error: any) {
+        console.log(error)
+    }
+}
+
+const register = async () => {
+    try {
+        const { data } = await useFetch("/api/register", {
+            method: "post",
+            body: Form.value
+        })
+        console.log(data.value);
+    } catch (error: any) {
+
+    }
+}
+
 definePageMeta({
     layout: false,
+    validate: async (route) => {
+    return route.params.auth == "login" || route.params.auth == "register"
+  }
 });
 useHead({
     title: "Login | Himatika"
 });
+
+onMounted(() => {
+})
 </script>
+
 <template>
-    <!-- <div class="px-3 py-6 mx-auto my-16 max-w-xl sm:px-6 lg:px-8 shadow-lg rounded-xl"> -->
-    <!-- <div class="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-            <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img class="mx-auto h-10 w-auto" :src="HimatikaLogo" alt="Himatika" />
-                <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Sign in to your
-                    account</h2>
-            </div>
-
-            <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                <form class="space-y-6" action="#" method="POST">
-                    <div>
-                        <label for="username" class="block text-sm font-medium leading-6 text-gray-900">Username
-                            address</label>
-                        <div class="mt-2">
-                            <input id="username" name="username" type="text" autocomplete="username" required
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between">
-                            <label for="password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
-                            <div class="text-sm">
-                                <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <input id="password" name="password" type="password" autocomplete="current-password" required
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-
-                    <div>
-                        <button type="submit"
-                            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign
-                            in</button>
-                    </div>
-                </form>
-
-                <p class="mt-10 text-center text-sm text-gray-500">
-                    Not yet registered?
-                    {{ ' ' }}
-                    <a href="#" class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Register your
-                        account</a>
-                </p>
-            </div>
-        </div> -->
-    <!-- </div> -->
     <div class="section py-16">
-        <input class="pricing" type="checkbox" id="pricing" name="pricing" />
+        <input class="pricing" type="checkbox" id="pricing" name="pricing" v-model="registerChecked" />
         <label for="pricing"><span class="block-diff">Login<span class="float-right">Register</span></span></label>
         <div class="card-3d-wrap mx-auto">
             <div class="card-3d-wrapper h-full w-full">
@@ -69,38 +66,40 @@ useHead({
                         </div>
 
                         <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-sm overflow-y-scroll no-scrollbar max-h-96">
-                            <form class="space-y-6" action="#" method="POST">
+                            <div class="space-y-6">
                                 <div>
-                                    <label for="username"
+                                    <label for="username-login"
                                         class="block text-sm font-medium leading-6 text-gray-900">Username</label>
                                     <div class="mt-2">
-                                        <input id="username" name="username" type="text" autocomplete="username" required
+                                        <input id="username-login" name="username" type="text" autocomplete="username"
+                                            required v-model="Form.username"
                                             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
 
                                 <div>
                                     <div class="flex items-center justify-between">
-                                        <label for="password"
+                                        <label for="password-login"
                                             class="block text-sm font-medium leading-6 text-gray-900">Password</label>
                                         <div class="text-sm">
-                                            <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot
+                                            <a href="#"
+                                                class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot
                                                 password?</a>
                                         </div>
                                     </div>
                                     <div class="mt-2">
-                                        <input id="password" name="password" type="password" autocomplete="current-password"
-                                            required
+                                        <input id="password-login" name="password" type="password"
+                                            autocomplete="current-password" required v-model="Form.password"
                                             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <button type="submit"
+                                    <button @click="login"
                                         class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign
                                         in</button>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -112,47 +111,52 @@ useHead({
                         </div>
 
                         <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-sm overflow-y-scroll no-scrollbar max-h-96 pb-8">
-                            <form class="space-y-6" action="#" method="POST">
+                            <div class="space-y-6">
                                 <div>
-                                    <label for="NIM" class="block text-sm font-medium leading-6 text-gray-900">NIM</label>
+                                    <label for="NIM"
+                                        class="block text-sm font-medium leading-6 text-gray-900">NIM</label>
                                     <div class="mt-2">
                                         <input id="NIM" name="NIM" type="number" autocomplete="NIM" required
+                                            v-model="Form.NIM"
                                             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label for="username"
+                                    <label for="username-register"
                                         class="block text-sm font-medium leading-6 text-gray-900">Username</label>
                                     <div class="mt-2">
-                                        <input id="username" name="username" type="text" autocomplete="username" required
+                                        <input id="username-register" name="username" type="text"
+                                            autocomplete="username" required v-model="Form.username"
                                             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label for="password"
+                                    <label for="password-register"
                                         class="block text-sm font-medium leading-6 text-gray-900">Password</label>
                                     <div class="mt-2">
-                                        <input id="password" name="password" type="password" autocomplete="current-password"
-                                            required
+                                        <input id="password-register" name="password" type="password"
+                                            autocomplete="current-password" v-model="Form.password" required
                                             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
                                 <div>
                                     <label for="confirm-password"
-                                        class="block text-sm font-medium leading-6 text-gray-900">Confirm Password</label>
+                                        class="block text-sm font-medium leading-6 text-gray-900">Confirm
+                                        Password</label>
                                     <div class="mt-2">
                                         <input id="confirm-password" name="confirm-password" type="password"
-                                            autocomplete="current-password" required
+                                            v-model="Form.password_confirmation" autocomplete="current-password"
+                                            required
                                             class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <button type="submit"
+                                    <button @click="register"
                                         class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Register</button>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -160,6 +164,7 @@ useHead({
         </div>
     </div>
 </template>
+
 <style scoped>
 /* Please ❤ this if you like it! */
 
