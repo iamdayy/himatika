@@ -28,6 +28,8 @@ export default defineEventHandler(async (event): Promise<ILoginResponse> => {
         expiresIn: "30d"
     });
     user.token = token_re;
+    setCookie(event,'UserCanRrefresh', token_re);
+    setCookie(event,'UserCanAccess', token);
     user.save();
     return {
         token,

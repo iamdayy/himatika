@@ -1,8 +1,12 @@
 <script setup lang='ts'>
 import Logo from "~/assets/image/himatika-logo.png";
+import type { IUser } from "~/types";
 import type { IReqAuth } from "~/types/IRequestPost";
 import type { ILoginResponse } from "~/types/IResponse";
+
 const router = useRouter();
+const me = useState<IUser>('me');
+
 const Form = ref<IReqAuth>({
     username: "",
     password: "",
@@ -21,7 +25,10 @@ const login = async () => {
             return;
         } else {
             useNuxtApp().$toast("Success to login, welcome back " + data.value?.user.username);
-            router.push("/dashboard");
+            if (data.value?.user) {
+                me.value = data.value?.user;
+                router.push("/dashboard");
+            }
         }
     } catch (error: any) {
         useNuxtApp().$toast(error.message);
@@ -32,18 +39,27 @@ definePageMeta({
     pageTransition: {
         name: "flip"
     },
-    layout: "auth"
+    layout: "auth",
+    middleware: () => {
+        const token = useCookie('UserCanAccess');
+        if (token.value) {
+            return navigateTo("/");
+        }
+    }
+});
+useHead({
+    title: "Login | Himatika"
 })
 </script>
 <template>
-    <div class="card-front">
-        <div class="pricing-wrap">
+    <div class="card">
+        <div class="card-wrap">
             <h4 class="mb-5">Login</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img class="mx-auto h-10 w-auto" :src="Logo" alt="Himatika" />
+                <img class="w-auto h-10 mx-auto" :src="Logo" alt="Himatika" />
             </div>
 
-            <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-sm overflow-y-scroll no-scrollbar max-h-96">
+            <div class="mt-6 overflow-y-scroll sm:mx-auto sm:w-full sm:max-w-sm no-scrollbar max-h-96">
                 <div class="space-y-6">
                     <div>
                         <label for="username-login"
@@ -84,8 +100,7 @@ definePageMeta({
 <style scoped>
 @import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700,800,900');
 
-.card-front,
-.card-back {
+.card {
     width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 1);
@@ -101,7 +116,8 @@ definePageMeta({
     backface-visibility: hidden;
     box-shadow: 0 12px 35px 0 rgba(16, 39, 112, .07);
 }
-.pricing-wrap {
+
+.card-wrap {
     position: relative;
     width: 100%;
     display: block;
@@ -116,7 +132,7 @@ definePageMeta({
     backface-visibility: hidden;
 }
 
-.pricing-wrap h4 {
+.card-wrap h4 {
     position: relative;
     width: 100%;
     display: block;
@@ -130,7 +146,7 @@ definePageMeta({
     transform: translate3d(0, 0, 35px) perspective(100px);
 }
 
-.pricing-wrap h4:before {
+.card-wrap h4:before {
     position: absolute;
     content: '';
     z-index: -1;
@@ -178,7 +194,7 @@ definePageMeta({
     }
 }
 
-.pricing-wrap h2 {
+.card-wrap h2 {
     position: relative;
     width: 100%;
     display: block;

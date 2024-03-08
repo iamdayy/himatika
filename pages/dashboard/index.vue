@@ -9,36 +9,8 @@ useHead({
 });
 import HimatikaLogo from '~/assets/image/himatika-logo.png';
 import { initCarousels } from 'flowbite';
-const user: IUser = {
-  username: 'Tom1Cook',
-  password: '',
-  profile: {
-    NIM: 2020230055,
-    fullName: 'Tom Lembong',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-    class: 'IM23A',
-    semester: 2,
-    birth: {
-      place: 'Pekalongan',
-      date: new Date("14 02 2004")
-    },
-    sex: 'Laki-Laki',
-    religion: 'Moslem',
-    citizen: 'Pekalongan',
-    phone: '+628546788823',
-    email: 'Tom1Cook@outlook.co.id',
-    address: {
-      fullAddress: "Banyuurip 3c no. 54",
-      village: "Banyuurip",
-      district: "Pekalongan Selatan",
-      city: "Pekalongan",
-      province: "Jawa Tengah",
-      country: "Indonesia",
-      zip: 51133
-    },
-    isRegistered: true
-  }
-}
+const me = useState<IUser>('me');
+
 const navigation: ILink[] = [
   { name: 'Dashboard', href: '/', current: true },
   { name: 'Events', href: '/dashboard/events', current: false },
@@ -134,20 +106,19 @@ onMounted(() => {
       <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
         <button type="button"
           class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-          id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
-          data-dropdown-placement="bottom">
-          <span class="sr-only">Open user menu</span>
-          <img class="w-8 h-8 rounded-full" :src="user.profile.avatar" alt="user photo">
+          id="me-menu-button" aria-expanded="false" data-dropdown-toggle="me-dropdown" data-dropdown-placement="bottom">
+          <span class="sr-only">Open me menu</span>
+          <img class="w-8 h-8 rounded-full" :src="me.profile.avatar" alt="me photo">
         </button>
         <!-- Dropdown menu -->
         <div
           class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600"
-          id="user-dropdown">
+          id="me-dropdown">
           <div class="px-4 py-3">
-            <span class="block text-sm text-gray-900 dark:text-white">{{ user.username }}</span>
-            <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user.profile.email }}</span>
+            <span class="block text-sm text-gray-900 dark:text-white">{{ me.username }}</span>
+            <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ me.profile.email }}</span>
           </div>
-          <ul class="py-2" aria-labelledby="user-menu-button">
+          <ul class="py-2" aria-labelledby="me-menu-button">
             <li>
               <a href="#"
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</a>
@@ -167,9 +138,9 @@ onMounted(() => {
             </li>
           </ul>
         </div>
-        <button data-collapse-toggle="navbar-user" type="button"
+        <button data-collapse-toggle="navbar-me" type="button"
           class="inline-flex items-center justify-center w-10 h-10 p-2 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-          aria-controls="navbar-user" aria-expanded="false">
+          aria-controls="navbar-me" aria-expanded="false">
           <span class="sr-only">Open main menu</span>
           <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -183,34 +154,34 @@ onMounted(() => {
     <div class="relative w-full p-3 shadow-md bg-slate-200 md:w-1/4 rounded-xl">
       <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
         <div class="max-w-sm py-1">
-          <NuxtImg :src="user.profile.avatar" sizes="250px" class="rounded-full" />
+          <NuxtImg :src="me.profile.avatar" sizes="250px" class="rounded-full" />
         </div>
         <div class="flex flex-col py-1">
-          <dd class="text-lg font-semibold text-gray-600">{{ user.username }}</dd>
+          <dd class="text-lg font-semibold text-gray-600">{{ me.username }}</dd>
         </div>
         <div class="flex flex-col py-1">
           <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Full Name</dt>
-          <dd class="text-lg font-semibold text-gray-500">{{ user.profile.fullName }}</dd>
+          <dd class="text-lg font-semibold text-gray-500">{{ me.profile.fullName }}</dd>
         </div>
         <div class="flex flex-col py-1">
           <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Email address</dt>
-          <dd class="text-lg font-semibold text-gray-500">{{ user.profile.email }}</dd>
+          <dd class="text-lg font-semibold text-gray-500">{{ me.profile.email }}</dd>
         </div>
         <div class="flex flex-col py-1">
           <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Phone</dt>
-          <dd class="text-lg font-semibold text-gray-500">{{ user.profile.phone }}</dd>
+          <dd class="text-lg font-semibold text-gray-500">{{ me.profile.phone }}</dd>
         </div>
         <div class="flex flex-col py-1">
           <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Nik</dt>
-          <dd class="text-lg font-semibold text-gray-500">{{ user.profile.NIM }}</dd>
+          <dd class="text-lg font-semibold text-gray-500">{{ me.profile.NIM }}</dd>
         </div>
         <div class="flex flex-col py-1">
           <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Class</dt>
-          <dd class="text-lg font-semibold text-gray-500">{{ user.profile.class }}</dd>
+          <dd class="text-lg font-semibold text-gray-500">{{ me.profile.class }}</dd>
         </div>
         <div class="flex flex-col py-1">
           <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Semester</dt>
-          <dd class="text-lg font-semibold text-gray-500">{{ user.profile.semester }}</dd>
+          <dd class="text-lg font-semibold text-gray-500">{{ me.profile.semester }}</dd>
         </div>
       </dl>
       <div class="bottom-0 mt-10 md:absolute">
@@ -253,14 +224,15 @@ onMounted(() => {
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
                   <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
-                    event.date.toDateString() }}
+          event.date.toDateString() }}
                   </h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
                   <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.at }}</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.accessbility }}
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.accessbility
+                    }}
                   </h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Urgently</span>
@@ -328,7 +300,7 @@ onMounted(() => {
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Deadline</span>
           <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
-            Project?.deadline.toDateString() }}
+          Project?.deadline.toDateString() }}
           </h3>
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Contributors</span>
@@ -364,5 +336,6 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <CoreFooter :links="navigation" /></template>
+  <CoreFooter :links="navigation" />
+</template>
 <style scoped></style>

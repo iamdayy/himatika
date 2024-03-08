@@ -30,18 +30,24 @@ definePageMeta({
     pageTransition: {
         name: "flip"
     },
-    layout: "auth"
+    layout: "auth",
+    middleware: () => {
+        const token = useCookie('UserCanAccess');
+        if (token.value) {
+            return navigateTo("/");
+        }
+    }
 })
 </script>
 <template>
-    <div class="card-front">
-        <div class="pricing-wrap">
+    <div class="card">
+        <div class="card-wrap">
             <h4 class="mb-5">Register</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img class="mx-auto h-10 w-auto" :src="Logo" alt="Himatika" />
+                <img class="w-auto h-10 mx-auto" :src="Logo" alt="Himatika" />
             </div>
 
-            <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-sm max-h-96 pb-8">
+            <div class="pb-8 mt-6 sm:mx-auto sm:w-full sm:max-w-sm max-h-96">
                 <div class="space-y-2">
                     <div>
                         <label for="NIM" class="block text-sm font-medium leading-6 text-gray-900">NIM</label>
@@ -91,8 +97,7 @@ definePageMeta({
 <style scoped>
 @import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700,800,900');
 
-.card-front,
-.card-back {
+.card {
     width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 1);
@@ -109,7 +114,7 @@ definePageMeta({
     box-shadow: 0 12px 35px 0 rgba(16, 39, 112, .07);
 }
 
-.pricing-wrap {
+.card-wrap {
     position: relative;
     width: 100%;
     display: block;
@@ -124,7 +129,7 @@ definePageMeta({
     backface-visibility: hidden;
 }
 
-.pricing-wrap h4 {
+.card-wrap h4 {
     position: relative;
     width: 100%;
     display: block;
@@ -138,7 +143,7 @@ definePageMeta({
     transform: translate3d(0, 0, 35px) perspective(100px);
 }
 
-.pricing-wrap h4:before {
+.card-wrap h4:before {
     position: absolute;
     content: '';
     z-index: -1;
@@ -186,7 +191,7 @@ definePageMeta({
     }
 }
 
-.pricing-wrap h2 {
+.card-wrap h2 {
     position: relative;
     width: 100%;
     display: block;
