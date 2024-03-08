@@ -34,7 +34,10 @@ const user: IUser = {
 
 useHead({
     title: "Profile | Himatika"
-})
+});
+definePageMeta({
+  middleware: "auth"
+});
 </script>
 <template>
     <div class="px-4 pb-24">

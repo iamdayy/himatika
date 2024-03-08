@@ -12,7 +12,8 @@ export default defineNuxtConfig({
     "@nuxt/image",
     '@nuxtjs/tailwindcss',
     'nuxt-icon',
-    '@samk-dev/nuxt-vcalendar'
+    '@samk-dev/nuxt-vcalendar',
+    'nuxt-aos'
   ],
   nitro: {
     firebase: {

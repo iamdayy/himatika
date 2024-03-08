@@ -35,7 +35,10 @@ const pickDetail = (id: number) => {
 }
 useHead({
     title: "Projects | Himatika"
-})
+});
+definePageMeta({
+  middleware: "auth"
+});
 </script>
 <template>
     <div class="items-center justify-center pb-24">

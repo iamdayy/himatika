@@ -1,6 +1,9 @@
 <script setup lang='ts'>
 import type { IEvent } from "~/types"
 import * as changeCase from "change-case";
+definePageMeta({
+  middleware: "auth"
+})
 useHead({
     title: "Dashboard | Himatika"
 });

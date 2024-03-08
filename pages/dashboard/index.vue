@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import type { ILink, IEvent, IProject, IUser } from '~/types'
 definePageMeta({
-  layout: false
+  layout: false,
+  middleware: ["auth"]
 })
 useHead({
   title: "Dashboard | Himatika"
