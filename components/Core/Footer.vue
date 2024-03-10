@@ -1,17 +1,14 @@
 <script setup lang='ts'>
 import type { ILink } from '~/types';
-import HimatikaLogo from "~/assets/image/himatika-logo.png";
+import Logo from "~/assets/image/himatika-logo.png";
 
-const props = defineProps({
-    links: Array<ILink>
-})
 </script>
 <template>
     <footer class="relative pt-8 pb-6">
         <div class="container px-4 mx-auto">
             <div class="flex flex-wrap text-left lg:text-left">
                 <div class="w-full px-4">
-                    <img class="object-contain w-24" :src="HimatikaLogo" alt="">
+                    <img class="object-contain w-24" :src="Logo" alt="">
                     <h4 class="text-3xl font-bold text-gray-600 text-uppercase">Himpunan Mahasiswa Informatika</h4>
                     <h5 class="mt-0 mb-2 text-lg text-gray-500">
                         <span>
@@ -40,19 +37,6 @@ const props = defineProps({
                             type="button">
                             <Icon name="ion:logo-tiktok" />
                         </button>
-                    </div>
-                </div>
-                <div class="w-full px-4 lg:w-6/12">
-                    <div class="flex flex-wrap mb-6 items-top">
-                        <div class="w-full px-4 pt-8 ml-auto lg:w-4/12">
-                            <span class="block mb-2 text-sm font-semibold text-gray-500 uppercase">Useful Links</span>
-                            <ul class="list-unstyled">
-                                <li v-for="link, i in props.links" :key="i">
-                                    <a class="block pb-2 text-sm font-semibold text-gray-600 hover:text-blueGray-800"
-                                        :href="link.href">{{ link.name }}</a>
-                                </li>
-                            </ul>
-                        </div>
                     </div>
                 </div>
             </div>

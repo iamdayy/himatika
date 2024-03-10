@@ -1,43 +1,14 @@
 <script setup lang='ts'>
-import HimatikaLogo from '~/assets/image/himatika-logo.png';
+import Logo from '~/assets/image/himatika-logo.png';
 import type { IUser } from '~/types';
-const user: IUser = {
-  username: 'Tom1Cook',
-  password: '',
-  profile: {
-    NIM: 2020230055,
-    fullName: 'Tom Lembong',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-    class: 'IM23A',
-    semester: 2,
-    birth: {
-      place: 'Pekalongan',
-      date: new Date("14 02 2004")
-    },
-    sex: 'Laki-Laki',
-    religion: 'Moslem',
-    citizen: 'Pekalongan',
-    phone: '+628546788823',
-    email: 'Tom1Cook@outlook.co.id',
-    address: {
-      fullAddress: "Banyuurip 3c no. 54",
-      village: "Banyuurip",
-      district: "Pekalongan Selatan",
-      city: "Pekalongan",
-      province: "Jawa Tengah",
-      country: "Indonesia",
-      zip: 51133
-    },
-    isRegistered: true
-  }
-}
+const user = useState<IUser>('user');
 </script>
 <template>
     <div class="min-h-screen">
         <nav class="bg-white border-gray-200 dark:bg-gray-900">
             <div class="flex flex-wrap items-center justify-between max-w-screen-xl p-4 mx-auto">
                 <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-                    <img :src="HimatikaLogo" class="h-8" alt="Himatika Logo" />
+                    <img :src="Logo" class="h-8" alt="Himatika Logo" />
                     <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
                 </a>
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
@@ -53,7 +24,8 @@ const user: IUser = {
                         id="user-dropdown">
                         <div class="px-4 py-3">
                             <span class="block text-sm text-gray-900 dark:text-white">{{ user.username }}</span>
-                            <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user.profile.email }}</span>
+                            <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user.profile.email
+                                }}</span>
                         </div>
                         <ul class="py-2" aria-labelledby="user-menu-button">
                             <li>
@@ -121,10 +93,12 @@ const user: IUser = {
                     <!-- Dropdown menu -->
                     <div id="dropdown-tools"
                         class="z-50 hidden bg-white border border-gray-200 divide-y divide-gray-100 rounded-lg shadow-lg w-44 dark:bg-gray-700">
-                        <ul class="py-4 text-gray-700 text-md dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
+                        <ul class="py-4 text-gray-700 text-md dark:text-gray-200"
+                            aria-labelledby="dropdownDefaultButton">
                             <li>
                                 <a href="#"
-                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Surat Keaktifan</a>
+                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Surat
+                                    Keaktifan</a>
                             </li>
                         </ul>
                     </div>
@@ -155,7 +129,8 @@ const user: IUser = {
                     <div class="tooltip-arrow" data-popper-arrow></div>
                 </div>
             </div>
-    </div>
+        </div>
 
-</div></template>
+    </div>
+</template>
 <style scoped></style>

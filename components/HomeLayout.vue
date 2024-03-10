@@ -7,14 +7,15 @@
         </a>
         <div
         class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse" 
-        v-if="loged"
+        v-if="user"
         >
           <button type="button"
             class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
             id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
             data-dropdown-placement="bottom">
             <span class="sr-only">Open user menu</span>
-            <img class="w-8 h-8 rounded-full" :src="user.profile.avatar" alt="user photo">
+            <img class="w-8 h-8 rounded-full" :src="user.profile.avatar" v-if="user.profile.avatar" alt="user photo">
+            <Icon class="w-8 h-8 rounded-full" name="uil:user-circle" v-else />
           </button>
           <!-- Dropdown menu -->
           <div
@@ -51,7 +52,7 @@
             id="login-menu-button" aria-expanded="false" data-dropdown-toggle="login-dropdown"
             data-dropdown-placement="bottom">
             <span class="sr-only">Open user menu</span>
-            <Icon class="w-6 h-6" name="uil:user" />
+            <Icon class="w-6 h-6" name="uil:signin" />
           </button>
           <!-- Dropdown menu -->
           <div
@@ -97,7 +98,7 @@
         <slot />
       </div>
     </main>
-    <CoreFooter :links="navigation" />
+    <CoreFooter />
   </div>
 </template>
   
@@ -105,35 +106,7 @@
 import type { ILink, IUser } from "~/types"
 import HimatikaLogo from '~/assets/image/himatika-logo.png';
 const loged = false;
-const user: IUser = {
-  username: 'Tom1Cook',
-  profile: {
-    NIM: 2020230055,
-    fullName: 'Tom Lembong',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-    class: 'IM23A',
-    semester: 2,
-    birth: {
-      place: 'Pekalongan',
-      date: new Date("14 02 2004")
-    },
-    sex: 'Laki-Laki',
-    religion: 'Moslem',
-    citizen: 'Pekalongan',
-    phone: '+628546788823',
-    email: 'Tom1Cook@outlook.co.id',
-    address: {
-      fullAddress: "Banyuurip 3c no. 54",
-      village: "Banyuurip",
-      district: "Pekalongan Selatan",
-      city: "Pekalongan",
-      province: "Jawa Tengah",
-      country: "Indonesia",
-      zip: 51133
-    },
-    isRegistered: true
-  }
-}
+const user = useState<IUser>('user');
 const navigation: ILink[] = [
   { name: 'Home', href: '/', current: true },
   { name: 'About', href: '#about', current: false },
