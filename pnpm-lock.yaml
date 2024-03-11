@@ -41,6 +41,9 @@ dependencies:
   nuxt-mongoose:
     specifier: ^1.0.5
     version: 1.0.5(@nuxt/devtools@1.0.8)(@vue/compiler-core@3.4.18)(change-case@5.4.2)(nuxt@3.10.1)(postcss@8.4.35)(vite@5.1.1)(vue@3.4.18)(webpack@5.90.1)
+  vue3-easy-data-table:
+    specifier: ^1.5.47
+    version: 1.5.47
   vue3-toastify:
     specifier: ^0.2.1
     version: 0.2.1(vue@3.4.18)
@@ -7751,6 +7754,14 @@ packages:
     dependencies:
       vue: 3.4.18
     dev: true
+
+  /vue3-easy-data-table@1.5.47:
+    resolution: {integrity: sha512-q0bZBlWIwQ3FIhB+F98ylFPfBJWiS3Xv7QqBe3xS5MbRNZP96RFjaQn7C0Pi0J/aaucNW8gFWxPyh9NESS1ehw==}
+    dependencies:
+      vue: 3.4.18
+    transitivePeerDependencies:
+      - typescript
+    dev: false
 
   /vue3-toastify@0.2.1(vue@3.4.18):
     resolution: {integrity: sha512-u4i5LCu1q5qs4L4Kbjb4u8NipCS8ox1fCHQ6XFS62676xnA6Q/AJRpZEkAurTMp723LeH6eQX6k9+24bKf1T4Q==}

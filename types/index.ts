@@ -53,14 +53,13 @@ export interface IAdministrator {
 
 export interface ICommittee {
     job: string;
-    name: string;
+    person: IProfile
 }
 export interface IContributor {
     name: string;
     job: string;
 }
 export interface IEvent {
-    id: number;
     title: string;
     date: Date;
     at: string;

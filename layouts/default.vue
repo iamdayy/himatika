@@ -96,9 +96,12 @@ const user = useState<IUser>('user');
                         <ul class="py-4 text-gray-700 text-md dark:text-gray-200"
                             aria-labelledby="dropdownDefaultButton">
                             <li>
-                                <a href="#"
-                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Surat
-                                    Keaktifan</a>
+                                <NuxtLink to="/dashboard/tools/activity-letter"
+                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Activity Letter</NuxtLink>
+                            </li>
+                            <li>
+                                <NuxtLink to="/dashboard/tools/collegers-data"
+                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Collegers Data</NuxtLink>
                             </li>
                         </ul>
                     </div>
