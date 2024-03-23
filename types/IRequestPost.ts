@@ -1,4 +1,4 @@
-import type { IProfile } from ".";
+import type { IEvent, IProfile } from ".";
 
 export interface IReqRegister {
     username: string;
@@ -16,3 +16,5 @@ export interface IReqAuth extends IReqRegister, IReqLogin {
 }
 
 export interface IReqProfile extends IProfile {}
+
+export interface IReqEvent extends IEvent {}

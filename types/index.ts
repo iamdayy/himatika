@@ -1,3 +1,5 @@
+import { Types } from "mongoose"
+
 export interface ILink {
     name: string;
     href: string;
@@ -40,6 +42,12 @@ export interface IUser  {
     token?: string;
 }
 
+export interface ISession {
+    accessToken: string;
+    token: string;
+    user: Types.ObjectId | IUser;
+}
+
 export interface IPeriod {
     start: Date;
     end: Date;
@@ -53,7 +61,7 @@ export interface IAdministrator {
 
 export interface ICommittee {
     job: string;
-    person: IProfile
+    user: IProfile | string;
 }
 export interface IContributor {
     name: string;
@@ -65,7 +73,7 @@ export interface IEvent {
     at: string;
     accessbility: string;
     description: string;
-    committee?: ICommittee[];
+    committee: ICommittee[];
 }
 
 export interface IProject {

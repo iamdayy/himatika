@@ -1,21 +1,20 @@
 import { defineMongooseModel } from "#nuxt/mongoose";
 import { ICommitteeSchema, IEventSchema } from "~/types/ISchemas";
 import { Schema, Types } from "mongoose";
-import mongooseAutopopulate from "mongoose-autopopulate";
+import mongooseAutoPopulate from "mongoose-autopopulate";
 
 const CommitteeSchema = new Schema<ICommitteeSchema>({
     job: {
         type: String,
         required: true
     },
-    person: {
+    user: {
         type: Types.ObjectId,
+        required: true,
         ref: "Profile",
         autopopulate: true
     }
 });
-
-CommitteeSchema.plugin(mongooseAutopopulate);
 
 export const EventModel = defineMongooseModel<IEventSchema>("Event", {
     title: {
@@ -38,4 +37,9 @@ export const EventModel = defineMongooseModel<IEventSchema>("Event", {
         type: String
     },
     committee: [CommitteeSchema]
+},
+{
+},
+(schema) => {
+    schema.plugin(mongooseAutoPopulate)
 });

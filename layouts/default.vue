@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import Logo from '~/assets/image/himatika-logo.png';
 import type { IUser } from '~/types';
-const user = useState<IUser>('user');
+const { data: user } = useAuth();
 </script>
 <template>
     <div class="min-h-screen">
@@ -17,14 +17,15 @@ const user = useState<IUser>('user');
                         id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
                         data-dropdown-placement="bottom">
                         <span class="sr-only">Open user menu</span>
-                        <img class="w-8 h-8 rounded-full" :src="user.profile.avatar" alt="user photo">
+                        <NuxtImg :src="user?.profile.avatar || '/profile-blank.png'" sizes="40px"
+                            class="rounded-full" />
                     </button>
                     <!-- Dropdown menu -->
                     <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600"
                         id="user-dropdown">
                         <div class="px-4 py-3">
-                            <span class="block text-sm text-gray-900 dark:text-white">{{ user.username }}</span>
-                            <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user.profile.email
+                            <span class="block text-sm text-gray-900 dark:text-white">{{ user?.username }}</span>
+                            <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user?.profile.email
                                 }}</span>
                         </div>
                         <ul class="py-2" aria-labelledby="user-menu-button">
@@ -97,11 +98,13 @@ const user = useState<IUser>('user');
                             aria-labelledby="dropdownDefaultButton">
                             <li>
                                 <NuxtLink to="/dashboard/tools/activity-letter"
-                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Activity Letter</NuxtLink>
+                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    Activity Letter</NuxtLink>
                             </li>
                             <li>
                                 <NuxtLink to="/dashboard/tools/collegers-data"
-                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Collegers Data</NuxtLink>
+                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    Collegers Data</NuxtLink>
                             </li>
                         </ul>
                     </div>

@@ -8,7 +8,8 @@
 
 <script lang="ts" setup>
 import { initFlowbite } from "flowbite";
-onMounted(() => {
+
+onMounted(async () => {
   initFlowbite();
 })
 </script>

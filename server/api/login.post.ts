@@ -1,8 +1,10 @@
 import { UserModel } from "~/server/models/UserModel";
 import jwt from "jsonwebtoken";
-import { ILoginResponse } from "~/types/IResponse";
+import { setSession } from "../utils/Sessions";
 
-export default defineEventHandler(async (event): Promise<ILoginResponse> => {
+const refreshTokens: Record<number, Record<string, any>> = {}
+
+export default defineEventHandler(async (event) => {
     const body = await readBody(event);
     const user = await UserModel.findOne({ username: body.username });
     if (!user) {
@@ -18,22 +20,22 @@ export default defineEventHandler(async (event): Promise<ILoginResponse> => {
             message: "Please check your password"
         });
     }
-    const jwt_payload = {
-        username: user.username
-    }
-    const token = jwt.sign(jwt_payload, "HimatikaUser", {
+    const accessToken = jwt.sign({ user: user._id }, "HimatikaUser", {
         expiresIn: "10h",
     });
-    const token_re = jwt.sign(jwt_payload, "HimatikaUser", {
-        expiresIn: "30d"
+    const refreshToken = jwt.sign({user: user._id}, "HimatikaUser", {
+        expiresIn: "1w",
     });
-    user.token = token_re;
-    setCookie(event,'UserCanRrefresh', token_re);
-    setCookie(event,'UserCanAccess', token);
+    await setSession({
+        accessToken,
+        token: refreshToken,
+        user: user._id
+    })
     user.save();
     return {
-        token,
-        token_re,
-        user
+        token: {
+            accessToken,
+            refreshToken
+        }
     };
 })

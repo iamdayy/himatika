@@ -28,8 +28,8 @@
             </div>
             <ul class="py-2" aria-labelledby="user-menu-button">
               <li v-for="nav, i in userNavigation" :key="i">
-                <a :href="nav.href"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">{{ nav.name }}</a>
+                <NuxtLink :to="nav.href"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">{{ nav.name }}</NuxtLink>
               </li>
             </ul>
           </div>
@@ -105,8 +105,8 @@
 <script setup lang="ts">
 import type { ILink, IUser } from "~/types"
 import HimatikaLogo from '~/assets/image/himatika-logo.png';
-const loged = false;
-const user = useState<IUser>('user');
+
+const { data: user } = useAuth();
 const navigation: ILink[] = [
   { name: 'Home', href: '/', current: true },
   { name: 'About', href: '#about', current: false },
@@ -114,9 +114,9 @@ const navigation: ILink[] = [
   { name: 'Projects', href: '#projects', current: false },
 ] as ILink[]
 const userNavigation: ILink[] = [
-  { name: 'Your Profile', href: '#' },
-  { name: 'Dashboard', href: '#' },
-  { name: 'Settings', href: '#' },
-  { name: 'Sign out', href: '#' },
+  { name: 'Your Profile', href: '/dashboard/profile' },
+  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Settings', href: '/' },
+  { name: 'Sign out', href: '/' },
 ] as ILink[]
 </script>

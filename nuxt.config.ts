@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     'nuxt-mongoose',
     '@nuxtjs/color-mode',
     "@nuxt/image",
+    "@sidebase/nuxt-auth",
     '@nuxtjs/tailwindcss',
     'nuxt-icon',
     '@samk-dev/nuxt-vcalendar',
@@ -20,11 +21,32 @@ export default defineNuxtConfig({
       gen: 2
     }
   },
+  auth: {
+    provider: {
+        type: 'local',
+        endpoints: {
+          signIn: { path: "/login", method: "post" },
+          signUp: { path: "/register", method: "post" },
+          getSession: { path: "/session", method: "get" }
+        },
+        token: {
+          signInResponseTokenPointer: '/token/accessToken'
+        },
+        sessionDataType: { profile: 'IProfile', username: "string" },
+    },
+    baseURL: "/api",
+    globalAppMiddleware: {
+      isEnabled: true
+    }
+  },
   mongoose: {
     uri: process.env.MONGODB_URI,
     options: {
 
     },
     modelsDir: 'models'
+  },
+  image: {
+    dir: 'assets/image'
   }
 })

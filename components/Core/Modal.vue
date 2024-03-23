@@ -1,6 +1,10 @@
 <script setup lang='ts'>
+import { initModals } from "flowbite"
 const props = defineProps({
     name: String
+})
+onMounted(() => {
+    initModals()
 })
 </script>
 <template>

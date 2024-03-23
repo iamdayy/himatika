@@ -2,7 +2,8 @@
 import Logo from "~/assets/image/himatika-logo.png";
 import type { IUser } from "~/types";
 import type { IReqAuth } from "~/types/IRequestPost";
-import type { ILoginResponse } from "~/types/IResponse";
+
+const { signIn, status } = useAuth()
 
 const router = useRouter();
 const me = useState<IUser>('me');
@@ -14,37 +15,16 @@ const Form = ref<IReqAuth>({
     NIM: 0,
 });
 
-const login = async () => {
-    try {
-        const { data, error } = await useFetch<ILoginResponse>("/api/login", {
-            method: "post",
-            body: Form.value
-        });
-        if (error.value) {
-            useNuxtApp().$toast("Failed to login, please check username / password");
-            return;
-        } else {
-            useNuxtApp().$toast("Success to login, welcome back " + data.value?.user.username);
-            if (data.value?.user) {
-                me.value = data.value?.user;
-                router.push("/dashboard");
-            }
-        }
-    } catch (error: any) {
-        useNuxtApp().$toast(error.message);
-    }
-};
+
 
 definePageMeta({
     pageTransition: {
         name: "flip"
     },
     layout: "auth",
-    middleware: () => {
-        const token = useCookie('UserCanAccess');
-        if (token.value) {
-            return navigateTo("/");
-        }
+    auth: {
+        unauthenticatedOnly: true,
+        navigateAuthenticatedTo: '/'
     }
 });
 useHead({
@@ -88,7 +68,7 @@ useHead({
                     </div>
 
                     <div>
-                        <button @click="login"
+                        <button @click="signIn(Form, { callbackUrl: '/' })"
                             class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign
                             in</button>
                     </div>
