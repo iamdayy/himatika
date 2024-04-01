@@ -8,8 +8,8 @@ useHead({
   title: "Dashboard | Himatika"
 });
 import HimatikaLogo from '~/assets/image/himatika-logo.png';
-import { initCarousels } from 'flowbite';
-const { data: user } = useAuth();
+import { initCarousels, initDropdowns } from 'flowbite';
+const { data: user, signOut } = useAuth();
 
 const navigation: ILink[] = [
   { name: 'Dashboard', href: '/', current: true },
@@ -18,7 +18,7 @@ const navigation: ILink[] = [
   { name: 'Profile', href: '/dashboard/profile', current: false },
 ] as ILink[];
 
-const Events = useState<IEvent[]>("events");
+const { data: Events } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
 const Projects = ref<IProject[]>([
   {
     id: 1,
@@ -50,20 +50,21 @@ const Projects = ref<IProject[]>([
 const Project = ref<IProject | undefined>(Projects.value.find((project) => project.deadline > new Date(Date.now())))
 onMounted(async () => {
   initCarousels();
-  Events.value = await $fetch<IEvent[]>("/api/event");
+  initDropdowns();
 })
 </script>
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900">
     <div class="flex flex-wrap items-center justify-between max-w-screen-xl p-4 mx-auto">
-      <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+      <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
         <img :src="HimatikaLogo" class="h-8" alt="Himatika Logo" />
         <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
-      </a>
+      </NuxtLink>
       <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
         <button type="button"
           class="flex text-sm bg-gray-800 rounded-full md:user?-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-          id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
+          id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
+          data-dropdown-placement="bottom">
           <span class="sr-only">Open user? menu</span>
           <NuxtImg :src="user?.profile.avatar || '/profile-blank.png'" sizes="40px" class="rounded-full" />
         </button>
@@ -89,13 +90,13 @@ onMounted(async () => {
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Earnings</a>
             </li>
             <li>
-              <a href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
-                out</a>
+              <button @click="signOut({ callbackUrl: '/login' })"
+                class="block w-full px-4 py-2 text-sm text-gray-700 text-start hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
+                Out</button>
             </li>
           </ul>
         </div>
-        <button data-collapse-toggle="navbar-user?" type="button"
+        <!-- <button data-collapse-toggle="navbar-user?" type="button"
           class="inline-flex items-center justify-center w-10 h-10 p-2 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
           aria-controls="navbar-user?" aria-expanded="false">
           <span class="sr-only">Open main menu</span>
@@ -103,7 +104,7 @@ onMounted(async () => {
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M1 1h15M1 7h15M1 13h15" />
           </svg>
-        </button>
+        </button> -->
       </div>
     </div>
   </nav>

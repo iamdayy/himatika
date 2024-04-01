@@ -3,13 +3,14 @@ import type { IEvent } from "~/types"
 import { Modal } from "flowbite"
 import type { ModalOptions, ModalInterface } from 'flowbite';
 import type { InstanceOptions } from 'flowbite';
+const { $toast } = useNuxtApp()
 definePageMeta({
     middleware: "auth"
 })
 useHead({
     title: "Dashboard | Himatika"
 });
-const Events = useState<IEvent[]>("events");
+const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
 const Event = ref<IEvent | null>(null);
 const newEvent = ref<IEvent>({
     title: "",
@@ -59,9 +60,7 @@ const pickDate = ref<number | null>(null);
 const attributes = ref([
     {
         dot: true,
-        dates: [
-            ...(Events.value?.map((event) => event.date) as Date[])
-        ],
+        dates: Events.value?.map<Date>((event) => event.date),
     },
 ]);
 
@@ -77,10 +76,11 @@ const addEvent = async () => {
             override: true
         };
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
+        $toast("Success add new event at " + newEvent.value.date.toLocaleDateString());
         modal.hide();
-        Events.value.push(newEvent.value)
+        refresh();
     } catch (error: any) {
-        console.log(error)
+        $toast("Failed to add new Event");
     }
 }
 </script>

@@ -9,18 +9,11 @@ const Form = ref<IReqAuth>({
     password_confirmation: "",
     NIM: 0,
 });
-
+const { signUp } = useAuth()
 const register = async () => {
     try {
-        const { data, error } = await useFetch<IRegisterResponse>("/api/register", {
-            method: "post",
-            body: Form.value
-        });
-        if (error) {
-            useNuxtApp().$toast("Failed to register, please check your data");
-            return;
-        }
-        useNuxtApp().$toast("Success to register, welcome to himatika " + data.value?.username);
+        await signUp(Form.value)
+        useNuxtApp().$toast("Success to register, welcome to himatika " + Form.value.username);
     } catch (error: any) {
         useNuxtApp().$toast(error.message);
     }
@@ -31,11 +24,9 @@ definePageMeta({
         name: "flip"
     },
     layout: "auth",
-    middleware: () => {
-        const token = useCookie('UserCanAccess');
-        if (token.value) {
-            return navigateTo("/");
-        }
+    auth: {
+        unauthenticatedOnly: true,
+        navigateAuthenticatedTo: '/dashboard'
     }
 })
 </script>

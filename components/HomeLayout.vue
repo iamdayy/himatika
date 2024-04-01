@@ -31,6 +31,10 @@
                 <NuxtLink :to="nav.href"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">{{ nav.name }}</NuxtLink>
               </li>
+              <li>
+                <button @click="signOut({ callbackUrl: '/login' })"
+                  class="block w-full px-4 py-2 text-sm text-gray-700 text-start hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign Out</button>
+              </li>
             </ul>
           </div>
           <button data-collapse-toggle="navbar-user" type="button"
@@ -70,7 +74,7 @@
               </li>
             </ul>
           </div>
-          <button data-collapse-toggle="navbar-login" type="button"
+          <!-- <button data-collapse-toggle="navbar-login" type="button"
             class="inline-flex items-center justify-center w-10 h-10 p-2 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
             aria-controls="navbar-login" aria-expanded="false">
             <span class="sr-only">Open main menu</span>
@@ -78,7 +82,7 @@
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M1 1h15M1 7h15M1 13h15" />
             </svg>
-          </button>
+          </button> -->
         </div>
         <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
           <ul
@@ -104,9 +108,10 @@
   
 <script setup lang="ts">
 import type { ILink, IUser } from "~/types"
+import { initDropdowns } from "flowbite";
 import HimatikaLogo from '~/assets/image/himatika-logo.png';
 
-const { data: user } = useAuth();
+const { data: user, signOut } = useAuth();
 const navigation: ILink[] = [
   { name: 'Home', href: '/', current: true },
   { name: 'About', href: '#about', current: false },
@@ -117,6 +122,8 @@ const userNavigation: ILink[] = [
   { name: 'Your Profile', href: '/dashboard/profile' },
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Settings', href: '/' },
-  { name: 'Sign out', href: '/' },
 ] as ILink[]
+onMounted(() => {
+  initDropdowns()
+})
 </script>

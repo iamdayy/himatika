@@ -1,13 +1,8 @@
 <script setup lang='ts'>
 import Logo from "~/assets/image/himatika-logo.png";
-import type { IUser } from "~/types";
 import type { IReqAuth } from "~/types/IRequestPost";
-
-const { signIn, status } = useAuth()
-
-const router = useRouter();
-const me = useState<IUser>('me');
-
+const { signIn, data: user } = useAuth()
+const { $toast } = useNuxtApp()
 const Form = ref<IReqAuth>({
     username: "",
     password: "",
@@ -24,9 +19,17 @@ definePageMeta({
     layout: "auth",
     auth: {
         unauthenticatedOnly: true,
-        navigateAuthenticatedTo: '/'
+        navigateAuthenticatedTo: '/dashboard'
     }
 });
+const login = async () => {
+    try {
+        await signIn(Form.value, { callbackUrl: "/dashboard" });
+        $toast("Welcome back " + user.value?.username)
+    } catch (error: any) {
+        $toast("Failed to login, please chek username/password")
+    }
+}
 useHead({
     title: "Login | Himatika"
 })

@@ -32,3 +32,19 @@ export const setSession = async (payload: ISetSessionParams): Promise<true | H3E
         return error;
     }
 }
+export const clearSession = async (payload: string) => {
+    try {
+        const session = jwt.verify(payload, "HimatikaUser") as jwt.JwtPayload;
+        if (!session) {
+            throw createError({
+                statusMessage: "Unauthenticated!",
+                statusCode: 401
+            })
+        }
+        const s = await SessionModel.findOne({ user: session.user });
+        const deleted = s?.deleteOne();
+        return deleted;
+    } catch (error: any) {
+        return error;
+    }
+}
