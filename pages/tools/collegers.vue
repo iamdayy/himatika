@@ -1,8 +1,10 @@
 <script setup lang='ts'>
 import { Modal } from 'flowbite';
+
 import type { ModalOptions, ModalInterface } from 'flowbite';
 import type { InstanceOptions } from 'flowbite';
 import type { IProfile } from '~/types';
+
 const { $toast } = useNuxtApp();
 definePageMeta({
     middleware: "auth"
@@ -37,6 +39,28 @@ const colleger = ref<IProfile>({
     semester: 1,
     isRegistered: false
 });
+const DataFromCSV = ref<IProfile[] | null>(null);
+
+const getCollegersFromCSV = async (e: Event) => {
+    const file = (e.target as HTMLInputElement);
+    const form = new FormData();
+    form.append("file", file.files![0]);
+    const uploaded = await $fetch("/api/profile/batchFileUpload", {
+        method: "POST",
+        body: form
+    });
+    DataFromCSV.value = uploaded.data;
+}
+const drop = async (e: DragEvent) => {
+    const file = (e.dataTransfer?.files[0]);
+    const form = new FormData();
+    form.append("file", file!);
+    const uploaded = await $fetch("/api/profile/batchFileUpload", {
+        method: "POST",
+        body: form
+    });
+    DataFromCSV.value = uploaded.data;
+}
 const addColleger = async () => {
     try {
         const added = await $fetch("/api/profile", {
@@ -56,12 +80,34 @@ const addColleger = async () => {
         $toast("Failed to add new Colleger");
     }
 }
+const addCollegers = async () => {
+    try {
+        const added = await $fetch("/api/profile/batch", {
+            method: "post",
+            body: DataFromCSV.value
+        });
+        const modalElement: HTMLElement = document.querySelector('#import-csv-file') as HTMLElement;
+        const instanceOptions: InstanceOptions = {
+            id: 'import-csv-file',
+            override: true
+        };
+        const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
+        $toast(`Success add ${added} to collegers`);
+        modal.hide();
+        refresh();
+    } catch (error) {
+        $toast("Failed to add new Collegers");
+    }
+}
 </script>
 <template>
     <div class="max-w-6xl mx-auto overflow-x-auto shadow-md sm:rounded-lg px-2.5 py-3">
         <div
             class="flex flex-wrap items-center justify-between py-4 space-y-4 bg-white flex-column md:flex-row md:space-y-0 dark:bg-gray-900">
-            <div>
+            <div class="flex flex-wrap items-center space-x-4">
+                <!-- Add Collegers -->
+                <!--  -->
+                <!--  -->
                 <CoreModal name="add-colleger">
                     <div class="p-6 space-y-6">
                         <div class="grid grid-cols-6 gap-6">
@@ -141,8 +187,11 @@ const addColleger = async () => {
                             </div>
                             <div class="col-span-6">
                                 <label for="full-address"
-                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Address</label>
-                                    <textarea id="full-address" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g jl.kebayoran lama no. 32" required></textarea>
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full
+                                    Address</label>
+                                <textarea id="full-address" rows="4"
+                                    class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="e.g jl.kebayoran lama no. 32" required></textarea>
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="village"
@@ -181,7 +230,8 @@ const addColleger = async () => {
                             </div>
                             <div class="col-span-6 sm:col-span-3">
                                 <label for="zip"
-                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Zip Code</label>
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Zip
+                                    Code</label>
                                 <input type="number" name="zip" id="zip"
                                     class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                     placeholder="31100" v-model="colleger.address.zip" required>
@@ -221,6 +271,94 @@ const addColleger = async () => {
                         <button type="submit" @click="addColleger"
                             class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                             Add New Colleger
+                        </button>
+                    </div>
+                </CoreModal>
+                <!--  -->
+                <!--  -->
+                <!-- Add From CSV -->
+                <!--  -->
+                <!--  -->
+                <CoreModal name="import-csv-file">
+                    <div class="flex items-center justify-center max-w-sm mx-auto" @drop="drop">
+                        <label for="dropzone-file"
+                            class="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                                </svg>
+                                <p class="text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to
+                                        upload</span> or drag and drop</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX.
+                                    800x400px)</p>
+                            </div>
+                            <input id="dropzone-file" type="file" @change="getCollegersFromCSV" class="hidden" />
+                        </label>
+                    </div>
+                    <div class="w-full p-2 mx-auto">
+                        <a href="/template/template.csv" target="_blank" download
+                            class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                            Download Template
+                        </a>
+                    </div>
+                    <table class="w-full text-sm text-left text-gray-500 rtl:text-right dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="p-4">
+                                    <div class="flex items-center">
+                                        <input id="checkbox-all-search" type="checkbox"
+                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="checkbox-all-search" class="sr-only">checkbox</label>
+                                    </div>
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Name
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    NIM
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    Class
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                v-for="colleger, i in DataFromCSV" :key="i">
+                                <td class="w-4 p-4">
+                                    <div class="flex items-center">
+                                        <input id="checkbox-table-search-1" type="checkbox"
+                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                        <label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+                                    </div>
+                                </td>
+                                <th scope="row"
+                                    class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                                    <NuxtImg class="rounded-full" :src="colleger?.avatar || '/profile-blank.png'"
+                                        sizes="40" alt="Jese image" />
+                                    <div class="ps-3">
+                                        <div class="text-base font-semibold">{{ colleger.fullName }}</div>
+                                        <div class="font-normal text-gray-500">{{ colleger.email }}</div>
+                                    </div>
+                                </th>
+                                <td class="px-6 py-4">
+                                    {{ colleger.NIM }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        {{ colleger.class }}
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="w-full p-2">
+                        <button type="submit" @click="addCollegers"
+                            class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                            Add New Collegers
                         </button>
                     </div>
                 </CoreModal>

@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   },
   devtools: { enabled: true },
   modules: [
-    'nuxt-mongoose',
+    "nuxt-mongoose",
     '@nuxtjs/color-mode',
     "@nuxt/image",
     "@sidebase/nuxt-auth",
