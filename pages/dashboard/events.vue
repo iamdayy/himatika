@@ -215,13 +215,13 @@ const addEvent = async () => {
                             <Icon name="solar:calendar-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                    Event?.date }}</span>
+                                    new Date(Event.date).toLocaleDateString() }}</span>
                         </li>
                         <li class="flex items-center">
                             <Icon name="solar:clock-circle-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                    Event?.date }}</span>
+                                    new Date(Event?.date).toLocaleTimeString() }}</span>
                         </li>
                         <li class="flex">
                             <Icon name="solar:map-point-outline"

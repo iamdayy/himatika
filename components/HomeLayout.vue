@@ -14,8 +14,7 @@
             id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
             data-dropdown-placement="bottom">
             <span class="sr-only">Open user menu</span>
-            <img class="w-8 h-8 rounded-full" :src="user.profile.avatar" v-if="user.profile.avatar" alt="user photo">
-            <Icon class="w-8 h-8 rounded-full" name="uil:user-circle" v-else />
+            <NuxtImg class="w-8 h-8 rounded-full" :src="user.profile.avatar || '/img/profile-blank.png'" alt="user photo" />
           </button>
           <!-- Dropdown user -->
           <div

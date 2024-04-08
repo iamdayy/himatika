@@ -24,7 +24,7 @@ dependencies:
     specifier: ^5.1.1
     version: 5.1.1
   change-case:
-    specifier: ^5.4.3
+    specifier: ^5.4.4
     version: 5.4.4
   csvtojson:
     specifier: ^2.0.10

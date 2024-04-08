@@ -27,7 +27,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.6",
     "bcrypt": "^5.1.1",
-    "change-case": "^5.4.3",
+    "change-case": "^5.4.4",
     "csvtojson": "^2.0.10",
     "flowbite": "^2.3.0",
     "formidable": "^3.5.1",

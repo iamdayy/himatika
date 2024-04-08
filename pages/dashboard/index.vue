@@ -7,8 +7,8 @@ definePageMeta({
 useHead({
   title: "Dashboard | Himatika"
 });
-import HimatikaLogo from '~/assets/image/himatika-logo.png';
 import { initCarousels, initDropdowns } from 'flowbite';
+
 const { data: user, signOut } = useAuth();
 
 const navigation: ILink[] = [
@@ -19,6 +19,7 @@ const navigation: ILink[] = [
 ] as ILink[];
 
 const { data: Events } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
+
 const Projects = ref<IProject[]>([
   {
     id: 1,
@@ -55,9 +56,9 @@ onMounted(async () => {
 </script>
 <template>
   <nav class="bg-white border-gray-200 dark:bg-gray-900">
-    <div class="flex flex-wrap items-center justify-between max-w-screen-xl p-4 mx-auto">
+    <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
       <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-        <img :src="HimatikaLogo" class="h-8" alt="Himatika Logo" />
+        <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
         <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
       </NuxtLink>
       <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
@@ -66,7 +67,7 @@ onMounted(async () => {
           id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
           data-dropdown-placement="bottom">
           <span class="sr-only">Open user? menu</span>
-          <NuxtImg :src="user?.profile.avatar || '/profile-blank.png'" sizes="40px" class="rounded-full" />
+          <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="40px" class="rounded-full" />
         </button>
         <!-- Dropdown menu -->
         <div
@@ -78,8 +79,8 @@ onMounted(async () => {
           </div>
           <ul class="py-2" aria-labelledby="user?-menu-button">
             <li>
-              <a href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</a>
+              <NuxtLink to="/dashboard"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</NuxtLink>
             </li>
             <li>
               <a href="#"
@@ -96,23 +97,15 @@ onMounted(async () => {
             </li>
           </ul>
         </div>
-        <!-- <button data-collapse-toggle="navbar-user?" type="button"
-          class="inline-flex items-center justify-center w-10 h-10 p-2 text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-          aria-controls="navbar-user?" aria-expanded="false">
-          <span class="sr-only">Open main menu</span>
-          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M1 1h15M1 7h15M1 13h15" />
-          </svg>
-        </button> -->
       </div>
     </div>
   </nav>
+
   <div class="flex flex-col w-full gap-3 p-4 md:flex-row">
     <div class="relative w-full p-3 shadow-md bg-slate-200 md:w-1/4 rounded-xl">
       <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
         <div class="max-w-sm py-1">
-          <NuxtImg :src="user?.profile.avatar || '/profile-blank.png'" sizes="80px" class="rounded-full" />
+          <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="80px" class="rounded-full" />
         </div>
         <div class="flex flex-col py-1">
           <dd class="text-lg font-semibold text-gray-600">{{ user?.username }}</dd>
@@ -142,15 +135,22 @@ onMounted(async () => {
           <dd class="text-lg font-semibold text-gray-500">{{ user?.profile.semester }}</dd>
         </div>
       </dl>
-      <div class="bottom-0 mt-10 md:absolute">
+      <div class="mt-10">
         <h2 class="mb-2 text-lg font-semibold text-gray-400">Tools</h2>
         <ul class="space-y-2 font-medium">
           <li>
-            <a href="#"
+            <NuxtLink to="/tools/activity-letter"
               class="flex items-center p-2 text-gray-400 rounded-lg hover:text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
               <Icon name="solar:file-text-outline" class="w-5 h-5 text-gray-400 hover:text-gray-800" />
-              <span class="ms-3">Surat Keaktifan</span>
-            </a>
+              <span class="ms-3">Activity Letter</span>
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/tools/collegers"
+              class="flex items-center p-2 text-gray-400 rounded-lg hover:text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+              <Icon name="solar:file-text-outline" class="w-5 h-5 text-gray-400 hover:text-gray-800" />
+              <span class="ms-3">Collegers Data</span>
+            </NuxtLink>
           </li>
         </ul>
       </div>
@@ -182,7 +182,7 @@ onMounted(async () => {
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
                   <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
-          event.date }}
+          new Date(event.date).toLocaleDateString() }}
                   </h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>

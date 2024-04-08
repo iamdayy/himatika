@@ -11,7 +11,7 @@ onMounted(() => {
         <nav class="bg-white border-gray-200 dark:bg-gray-900">
             <div class="flex flex-wrap items-center justify-between max-w-screen-xl p-4 mx-auto">
                 <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-                    <img :src="Logo" class="h-8" alt="Himatika Logo" />
+                    <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
                     <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
                 </a>
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
@@ -20,7 +20,7 @@ onMounted(() => {
                         id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
                         data-dropdown-placement="bottom">
                         <span class="sr-only">Open user menu</span>
-                        <NuxtImg :src="user?.profile.avatar || '/profile-blank.png'" sizes="40px"
+                        <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="40px"
                             class="rounded-full" />
                     </button>
                     <!-- Dropdown menu -->
