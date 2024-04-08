@@ -48,6 +48,5 @@ export default defineNuxtConfig({
     modelsDir: 'models'
   },
   image: {
-    dir: 'assets/image'
   }
 })

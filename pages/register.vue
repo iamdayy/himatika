@@ -31,9 +31,9 @@ definePageMeta({
 })
 </script>
 <template>
-    <div class="card">
+    <div class="shadow-xl card bg-gradient-to-tr from-teal-100 via-white to-indigo-50">
         <div class="card-wrap">
-            <h4 class="mb-5">Register</h4>
+            <h4 class="mb-5">REGISTER</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
                 <img class="w-auto h-10 mx-auto" :src="Logo" alt="Himatika" />
             </div>
@@ -91,7 +91,6 @@ definePageMeta({
 .card {
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 1);
     position: absolute;
     border-radius: 6px;
     left: 0;
@@ -102,7 +101,6 @@ definePageMeta({
     -moz-backface-visibility: hidden;
     -o-backface-visibility: hidden;
     backface-visibility: hidden;
-    box-shadow: 0 12px 35px 0 rgba(16, 39, 112, .07);
 }
 
 .card-wrap {

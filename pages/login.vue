@@ -35,9 +35,9 @@ useHead({
 })
 </script>
 <template>
-    <div class="card">
+    <div class="shadow-xl card bg-gradient-to-bl from-indigo-50 via-white to-teal-100">
         <div class="card-wrap">
-            <h4 class="mb-5">Login</h4>
+            <h4 class="mb-5">LOGIN</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
                 <img class="w-auto h-10 mx-auto" :src="Logo" alt="Himatika" />
             </div>
@@ -86,9 +86,8 @@ useHead({
 .card {
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 1);
     position: absolute;
-    border-radius: 6px;
+    border-radius: 12px;
     left: 0;
     top: 0;
     -webkit-transform-style: preserve-3d;
@@ -97,7 +96,6 @@ useHead({
     -moz-backface-visibility: hidden;
     -o-backface-visibility: hidden;
     backface-visibility: hidden;
-    box-shadow: 0 12px 35px 0 rgba(16, 39, 112, .07);
 }
 
 .card-wrap {

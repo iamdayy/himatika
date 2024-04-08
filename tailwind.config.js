@@ -10,6 +10,17 @@ export default {
     "./node_modules/flowbite/**/*.{js,ts}"
   ],
   theme: {
+    screens: {
+      sm: '480px',
+      md: '768px',
+      lg: '976px',
+      xl: '1440px',
+    },
+    colors: {
+    },
+    fontFamily: {
+      sans: ['Graphik', 'sans-serif'],
+    },
     extend: {},
   },
   plugins: [

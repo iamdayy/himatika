@@ -1,8 +1,8 @@
 <script setup lang='ts'></script>
 <template>
     <CoreCard title="About Us" data-accordion="collapse">
-        <div class="flex flex-col-reverse items-center gap-2 px-3 py-8 md:flex-row">
-          <div class="md:w-1/2 dark:text-white md:px-2" data-aos="fade-right" data-aos-easing="ease-in-out"data-aos-duration="1000" data-aos-anchor=".about">
+        <div class="flex flex-col-reverse items-center gap-2 px-3 py-8 lg:flex-row">
+          <div class="lg:w-1/2 dark:text-white md:px-2" data-aos="fade-right" data-aos-easing="ease-in-out"data-aos-duration="1000" data-aos-anchor=".about">
             <p>Himpunan Mahasiswa Informatika atau yang sering disebut HIMATIKA merupakan suatu organisasi yang menghimpun
               Mahasiswa Informatika untuk mengembangkan, dan mempraktekkan ilmu nya dalam bidang komputer.</p> <br />
             <p>
@@ -13,7 +13,7 @@
 
             </p>
           </div>
-          <div class="overflow-hidden shadow-md md:w-1/2 rounded-tr-2xl rounded-bl-3xl" data-aos="fade-left"data-aos-easing="ease-in-out" data-aos-duration="800" data-aos-anchor=".about">
+          <div class="overflow-hidden shadow-md lg:w-1/2 rounded-tr-2xl rounded-bl-3xl" data-aos="fade-left"data-aos-easing="ease-in-out" data-aos-duration="800" data-aos-anchor=".about">
             <NuxtImg src="/img/fobar.jpg" loading="lazy" class="transition duration-500 ease-out cursor-pointer hover:scale-125" />
           </div>
         </div>
