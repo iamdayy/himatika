@@ -32,7 +32,7 @@ const updateColleger = async () => {
             override: true
         };
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
-        $toast(`Success update ${colleger.value.fullName} to collegers`);
+        $toast(updated.statusMessage!);
         modal.hide();
         emit("triggerRefresh");
     } catch (error) {

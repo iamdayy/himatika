@@ -12,7 +12,10 @@ export default defineEventHandler(async (event) => {
                 message: "Owhhh data not saved yet"
             })
         }
-        return saved;
+        return {
+            statusCode: 200,
+            statusMessage: `Profile ${profile.NIM} Saved!`
+        };
     } catch (error: any) {
         return createError({
             statusCode: error.statusCode,

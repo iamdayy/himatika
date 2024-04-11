@@ -9,10 +9,7 @@ export default defineEventHandler(async (event) => {
   file = await handleFile(event.node.req);
 
   const data = await csvtojson().fromFile(file);
-  return {
-    ok: true,
-    data,
-  };
+  return data;
 });
 
 function handleFile(req: IncomingMessage): Promise<string> {

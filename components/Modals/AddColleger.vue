@@ -47,7 +47,7 @@ const addColleger = async () => {
             override: true
         };
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
-        $toast(`Success add ${colleger.value.fullName} to collegers`);
+        $toast(added.statusMessage!);
         modal.hide();
         emit("triggerRefresh");
     } catch (error) {

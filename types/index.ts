@@ -53,9 +53,19 @@ export interface IPeriod {
     end: Date;
 }
 
+export interface IDepartement {
+    profile: Types.ObjectId | IProfile;
+    departement: string;
+    period: IPeriod;
+}
+
 export interface IAdministrator {
-    user_id: string;
-    division: string;
+    chairman: Types.ObjectId | IProfile | number;
+    viceChairman: Types.ObjectId | IProfile | number;
+    secretary: Types.ObjectId | IProfile | number;
+    viceSecretary: Types.ObjectId | IProfile | number;
+    treasurer: Types.ObjectId | IProfile | number;
+    viceTreasurer: Types.ObjectId | IProfile | number;
     period: IPeriod;
 }
 
