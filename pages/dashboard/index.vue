@@ -123,7 +123,7 @@ onMounted(async () => {
           <dd class="text-lg font-semibold text-gray-500">{{ user?.profile.phone }}</dd>
         </div>
         <div class="flex flex-col py-1">
-          <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">Nik</dt>
+          <dt class="mb-1 text-gray-400 md:text-md dark:text-gray-400">NIM</dt>
           <dd class="text-lg font-semibold text-gray-500">{{ user?.profile.NIM }}</dd>
         </div>
         <div class="flex flex-col py-1">
@@ -150,6 +150,20 @@ onMounted(async () => {
               class="flex items-center p-2 text-gray-400 rounded-lg hover:text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
               <Icon name="solar:file-text-outline" class="w-5 h-5 text-gray-400 hover:text-gray-800" />
               <span class="ms-3">Collegers Data</span>
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/tools/administrator"
+              class="flex items-center p-2 text-gray-400 rounded-lg hover:text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+              <Icon name="solar:file-text-outline" class="w-5 h-5 text-gray-400 hover:text-gray-800" />
+              <span class="ms-3">Administrator</span>
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/tools/departement"
+              class="flex items-center p-2 text-gray-400 rounded-lg hover:text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+              <Icon name="solar:file-text-outline" class="w-5 h-5 text-gray-400 hover:text-gray-800" />
+              <span class="ms-3">Departement</span>
             </NuxtLink>
           </li>
         </ul>

@@ -56,9 +56,6 @@ const addColleger = async () => {
 }
 </script>
 <template>
-    <!-- Add Collegers -->
-    <!--  -->
-    <!--  -->
     <CoreModal name="add-colleger">
         <div class="p-6 space-y-6">
             <div class="grid grid-cols-6 gap-6">

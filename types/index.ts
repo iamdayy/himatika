@@ -54,7 +54,7 @@ export interface IPeriod {
 }
 
 export interface IDepartement {
-    profile: Types.ObjectId | IProfile;
+    profile: Types.ObjectId | IProfile | number;
     departement: string;
     period: IPeriod;
 }

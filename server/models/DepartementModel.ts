@@ -9,7 +9,8 @@ export const DepartementModel = defineMongooseModel<IDepartementSchema>("Departe
         profile: {
             type: Types.ObjectId,
             required: true,
-            autopopulate: true
+            autopopulate: true,
+            ref: "Profile"
         },
         departement: {
             type: String,

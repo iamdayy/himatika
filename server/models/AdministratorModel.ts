@@ -19,27 +19,39 @@ export const PeriodSchema = new Schema<IPeriod>({
 export const AdministratorModel = defineMongooseModel<IAdministratorSchema>("Administrator", {
     chairman: {
         type: Types.ObjectId,
-        required: true
+        required: true,
+        autopopulate: true,
+        ref: "Profile"
     },
     viceChairman: {
         type: Types.ObjectId,
-        required: true
+        required: true,
+        autopopulate: true,
+        ref: "Profile"
     },
     secretary: {
         type: Types.ObjectId,
-        required: true
+        required: true,
+        autopopulate: true,
+        ref: "Profile"
     },
     viceSecretary: {
         type: Types.ObjectId,
-        required: true
+        required: true,
+        autopopulate: true,
+        ref: "Profile"
     },
     treasurer: {
         type: Types.ObjectId,
-        required: true
+        required: true,
+        autopopulate: true,
+        ref: "Profile"
     },
     viceTreasurer: {
         type: Types.ObjectId,
-        required: true
+        required: true,
+        autopopulate: true,
+        ref: "Profile"
     },
     period: {
         type: PeriodSchema,

@@ -1,51 +1,107 @@
 <script setup lang='ts'>
-import type { IEvent } from '~/types';
+import type { IEvent, IProfile } from '~/types';
 const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
-const date = ref<number|undefined>();
-const attributes = ref([
-  {
-    dot: true,
-    dates: Events.value?.map<Date>((event) => event.date),
-  },
+const date = ref<number | undefined>(new Date(Date.now()).getDate());
+const Event = ref<IEvent>(Events.value?.find(event => new Date(event.date).getDate() == date.value)! || Events.value![Events.value?.length! -1]);
+const attributes = computed(() => [
+  ...<[]>Events.value?.map(event => ({
+    dot: 'green',
+    content: 'green',
+    dates: event.date,
+    popover: {
+      label: event.title
+    }
+  }))
 ]);
 const pickDay = (day: any) => {
   date.value = day.day;
 }
+const pickDetail = (id: string) => {
+  if (Events.value) {
+    const index = Events.value.findIndex((event) => event.title === id);
+    Event.value = Events.value[index];
+  }
+}
 </script>
 <template>
   <CoreCard title="Events">
-    <div class="px-3 py-8">
-      <VCalendar expanded borderless @dayclick="pickDay">
+
+    <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
+      <VCalendar :attributes="attributes" class="mx-auto shadow-lg md:max-w-sm" @dayclick="pickDay">
         <template #footer>
-                    <div class="px-2 pb-3">
-                        <div class="mx-auto">
-                            <div class="pt-2 border-t border-gray-800 dark:border-gray-700">
-                                <div v-for="event, i in Events?.filter((event: IEvent) => new Date(event.date).getDate() == date)"
-                                    :key="i"
-                                    class="flex flex-col gap-2 px-4 py-2 cursor-pointer sm:gap-6 sm:flex-row sm:items-center hover:bg-gray-200 rounded-3xl">
-                                    <p
-                                        class="text-sm font-normal text-gray-500 sm:text-right dark:text-gray-400 shrink-0">
-                                        {{ `${new Date(event.date).getHours()}:${new Date(event.date).getMinutes()}` }}
-                                    </p>
-                                    <h3 class="text-lg font-semibold text-gray-600 dark:text-white">
-                                        {{ event.title }}
-                                    </h3>
-                                </div>
-                                <div v-if="!date || !Events?.filter((event: IEvent) => new Date(event.date).getDate() == date).length"
-                                    class="px-4 py-2">
-                                    <h3 class="text-lg font-semibold text-yellow-400 dark:text-white">
-                                    No data 
-                                    </h3>
-                                    <p
-                                        class="text-sm font-normal text-gray-500 dark:text-gray-400 shrink-0">
-                                        Please select date to show data
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
+          <div class="px-2 pb-3">
+            <div class="mx-auto">
+              <div class="pt-2 border-t border-gray-800 dark:border-gray-700">
+                <div v-for="event, i in Events?.filter((event: IEvent) => new Date(event.date).getDate() == date)"
+                  :key="i"
+                  class="flex flex-col gap-2 px-4 py-2 cursor-pointer sm:gap-6 sm:flex-row sm:items-center hover:bg-gray-200 rounded-3xl"
+                  @click="pickDetail(event.title)">
+                  <p class="text-sm font-normal text-gray-500 sm:text-right dark:text-gray-400 shrink-0">
+                    {{ `${new Date(event.date).getHours()}:${new Date(event.date).getMinutes()}` }}
+                  </p>
+                  <h3 class="text-lg font-semibold text-gray-600 dark:text-white">
+                    {{ event.title }}
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
       </VCalendar>
+      <div class="items-center justify-center w-full px-8 py-4 ml-2 border-gray-400">
+        <h5 v-if="!Event" class="my-24 mb-4 text-3xl font-semibold text-center text-yellow-300 dark:text-yellow-200">No
+          Agenda
+          Selected</h5>
+        <div v-else>
+          <h5 class="mb-4 text-2xl font-medium text-gray-500 dark:text-gray-400">{{ Event?.title }}</h5>
+          <ul role="list" class="space-y-5 my-7">
+            <li class="flex items-center">
+              <Icon name="solar:calendar-outline" class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+              <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                new Date(Event.date).toLocaleDateString() }}</span>
+            </li>
+            <li class="flex items-center">
+              <Icon name="solar:clock-circle-outline" class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+              <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                new Date(Event?.date).toLocaleTimeString() }}</span>
+            </li>
+            <li class="flex">
+              <Icon name="solar:map-point-outline" class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+              <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                Event?.at }}</span>
+            </li>
+            <li class="flex">
+              <Icon name="solar:lock-keyhole-unlocked-outline"
+                class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+              <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                Event?.accessbility }}</span>
+            </li>
+            <li class="flex">
+              <Icon name="solar:document-outline" class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+              <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                Event?.description }}</span>
+            </li>
+            <li v-if="Event.committee">
+              <span class="flex">
+                <Icon name="solar:users-group-two-rounded-outline"
+                  class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
+                  Committee</span>
+              </span>
+              <dl
+                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
+                <div v-for="event, i in Event.committee" class="flex flex-col" :key="i">
+                  <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ event.job
+                    }}</dt>
+                  <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
+                    (event.user as IProfile).fullName }}
+                  </dd>
+                </div>
+              </dl>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </CoreCard>
 </template>

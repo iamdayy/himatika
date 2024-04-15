@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IEvent } from "~/types"
+import type { IEvent, IProfile } from "~/types"
 import { Modal } from "flowbite"
 import type { ModalOptions, ModalInterface } from 'flowbite';
 import type { InstanceOptions } from 'flowbite';
@@ -57,11 +57,15 @@ const pickDay = (day: any) => {
 }
 const pickDate = ref<number | null>(null);
 
-const attributes = ref([
-    {
-        dot: true,
-        dates: Events.value?.map<Date>((event) => event.date),
-    },
+const attributes = computed(() => [
+    ...<[]>Events.value?.map(event => ({
+        dot: 'green',
+        content: 'green',
+        dates: event.date,
+        popover: {
+            label: event.title
+        }
+    }))
 ]);
 
 const addEvent = async () => {
@@ -215,31 +219,31 @@ const addEvent = async () => {
                             <Icon name="solar:calendar-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                    new Date(Event.date).toLocaleDateString() }}</span>
+                                new Date(Event.date).toLocaleDateString() }}</span>
                         </li>
                         <li class="flex items-center">
                             <Icon name="solar:clock-circle-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                    new Date(Event?.date).toLocaleTimeString() }}</span>
+                                new Date(Event?.date).toLocaleTimeString() }}</span>
                         </li>
                         <li class="flex">
                             <Icon name="solar:map-point-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                    Event?.at }}</span>
+                                Event?.at }}</span>
                         </li>
                         <li class="flex">
                             <Icon name="solar:lock-keyhole-unlocked-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                    Event?.accessbility }}</span>
+                                Event?.accessbility }}</span>
                         </li>
                         <li class="flex">
                             <Icon name="solar:document-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                    Event?.description }}</span>
+                                Event?.description }}</span>
                         </li>
                         <li v-if="Event.committee">
                             <span class="flex">
@@ -254,7 +258,7 @@ const addEvent = async () => {
                                     <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ event.job
                                         }}</dt>
                                     <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
-                                    event.user.fullName }}
+                                        (event.user as IProfile).fullName }}
                                     </dd>
                                 </div>
                             </dl>

@@ -27,10 +27,10 @@ const checkAll = () => {
         <div
             class="flex flex-wrap items-center justify-between py-4 space-y-4 bg-white flex-column md:flex-row md:space-y-0 dark:bg-gray-900">
             <div class="flex flex-wrap items-center space-x-4">
-                <ModalsAddColleger @trigger-refresh="refresh" />
+                <ModalsCollegersAdd @trigger-refresh="refresh" />
                 <!--  -->
                 <!--  -->
-                <ModalsExportCollegersModal @trigger-refresh="refresh" />
+                <ModalsCollegersExport @trigger-refresh="refresh" />
             </div>
             <label for="table-search" class="sr-only">Search</label>
             <div class="relative">
@@ -97,7 +97,7 @@ const checkAll = () => {
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <ModalsCollegersUpdateColleger :data="colleger" />
+                        <ModalCollegersUpdate :data="colleger" />
                     </td>
                 </tr>
             </tbody>
