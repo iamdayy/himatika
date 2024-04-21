@@ -74,7 +74,7 @@ export interface ICommittee {
     user: IProfile | string;
 }
 export interface IContributor {
-    name: string;
+    profile: IProfile | Types.ObjectId | number;
     job: string;
 }
 export interface IEvent {
@@ -87,7 +87,6 @@ export interface IEvent {
 }
 
 export interface IProject {
-    id: number;
     title: string;
     deadline: Date;
     description: string;

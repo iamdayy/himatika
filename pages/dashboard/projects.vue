@@ -1,37 +1,10 @@
 <script setup lang='ts'>
-import type { IProject } from '~/types';
-const Projects = ref<IProject[]>([
-    {
-        id: 1,
-        title: "Himatika Webapp",
-        deadline: new Date("20 May 2024"),
-        description: "lorem ipsum",
-        hidden: true,
-        contributors: [
-            {
-                name: "Andreas",
-                job: "Project Manager"
-            }
-        ]
-    },
-    {
-        id: 2,
-        title: "Simitnu Redesign",
-        deadline: new Date("20 May 2025"),
-        description: "lorem ipsum",
-        hidden: true,
-        contributors: [
-            {
-                name: "Jean",
-                job: "Project Manager"
-            }
-        ]
-    },
-]);
+import type { IProfile, IProject } from '~/types';
+const {data: Projects, refresh } = useAsyncData(() => $fetch<IProject[]>("/api/project"));
 const Project = ref<IProject|null>(null);
-const pickDetail = (id: number) => {
-    const index = Projects.value.findIndex((project) => project.id === id);
-    Project.value = Projects.value[index];
+const pickDetail = (title: string) => {
+    const index = Projects.value?.findIndex((project) => project.title === title);
+    Project.value = Projects.value![index!];
 }
 useHead({
     title: "Projects | Himatika"
@@ -46,20 +19,15 @@ definePageMeta({
             <h2 class="text-4xl font-extrabold leading-tight tracking-tight text-gray-600 dark:text-white">
                 Project
             </h2>
-            <div class="mt-4">
-                <CoreModal name="Add Project">
-                    <div class="px-2 py-4 text-start">
-                    </div>
-                </CoreModal>
-            </div>
+            <ModalsProjectsAdd @trigger-refresh="refresh" />
         </div>
         <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
             <div class="mx-auto shadow-lg rounded-lg w-full md:w-2/5 max-h-[60vh] overflow-y-scroll border border-gray-400 bg-gray-100 py-4 no-scrollbar">
                 <button
                 v-for="project,i in Projects" :key="i"
-                @click="pickDetail(project.id)"
-                    class="relative inline-flex items-center w-full px-4 py-2 text-sm font-medium border-b border-gray-200 rounded-t-lg hover:bg-gray-100 hover:text-blue-700 focus:border-blue-700 focus:z-10 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:text-white">
-                    {{ project.title }} | {{ project.deadline.toDateString() }}
+                @click="pickDetail(project.title)"
+                    class="relative inline-flex items-center w-full px-4 py-2 text-lg font-semibold border-b border-gray-200 rounded-t-lg hover:bg-gray-100 hover:text-blue-700 focus:border-blue-700 focus:z-10 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:text-white">
+                    {{ project.title }} | <span class="font-light text-md ms-2">{{ new Date(project.deadline).toDateString() }}</span>
                 </button>
             </div>
             <div class="w-full px-8 py-4 bg-gray-100 border border-gray-400 rounded-lg shadow-lg">
@@ -73,13 +41,7 @@ definePageMeta({
                             <Icon name="solar:calendar-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                             <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                Project?.deadline.toDateString() }}</span>
-                        </li>
-                        <li class="flex items-center">
-                            <Icon name="solar:clock-circle-outline"
-                            class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
-                            <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                Project?.deadline.toLocaleTimeString() }}</span>
+                                new Date(Project?.deadline).toDateString() }}</span>
                         </li>
                         <li class="flex">
                             <Icon name="solar:lock-keyhole-unlocked-outline"
@@ -105,7 +67,7 @@ definePageMeta({
                                 <div v-for="project, i in Project.contributors" class="flex flex-col" :key="i">
                                     <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ project.job
                                     }}</dt>
-                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{ project.name }}</dd>
+                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{ (project.profile as IProfile).fullName }}</dd>
                                 </div>
                             </dl>
                         </li>

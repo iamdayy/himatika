@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { ILink, IEvent, IProject, IUser } from '~/types'
+import type { ILink, IEvent, IProject, IUser, IProfile } from '~/types'
 definePageMeta({
   layout: false,
   middleware: ["auth"]
@@ -20,35 +20,8 @@ const navigation: ILink[] = [
 
 const { data: Events } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
 
-const Projects = ref<IProject[]>([
-  {
-    id: 1,
-    title: "Himatika Webapp",
-    deadline: new Date("20 May 2024"),
-    description: "lorem ipsum",
-    hidden: true,
-    contributors: [
-      {
-        name: "Andreas",
-        job: "Project Manager"
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: "Simitnu Redesign",
-    deadline: new Date("20 May 2025"),
-    description: "lorem ipsum",
-    hidden: true,
-    contributors: [
-      {
-        name: "Jean",
-        job: "Project Manager"
-      }
-    ]
-  },
-]);
-const Project = ref<IProject | undefined>(Projects.value.find((project) => project.deadline > new Date(Date.now())))
+const { data: Projects } = await useAsyncData(() => $fetch<IProject[]>("/api/project"));
+const Project = ref<IProject | undefined>(Projects.value?.find((project) => new Date(project.deadline) > new Date(Date.now())))
 onMounted(async () => {
   initCarousels();
   initDropdowns();
@@ -272,19 +245,19 @@ onMounted(async () => {
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Deadline</span>
           <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
-          Project?.deadline.toDateString() }}
+          new Date(Project?.deadline!).toDateString() }}
           </h3>
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Contributors</span>
           <div class="flex items-center">
-            <div v-for="i in 4" :key="i" class="-mx-1">
+            <div v-for="contributor,i in Project?.contributors" v-if="Project?.contributors" :key="i" class="-mx-1">
               <img :data-tooltip-target="`tooltip-${i}`"
                 class="object-cover w-6 h-6 border rounded-full shadow-md border-white/30"
                 src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=4&w=880&h=880&q=100"
                 alt="">
-              <div :id="`tooltip-${i}`" role="tooltip"
+              <div :id="`tooltip-${(contributor.profile as IProfile).NIM}`" role="tooltip"
                 class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-                Tooltip {{ i }}
+                {{ `${(contributor.profile as IProfile).fullName}` }}
                 <div class="tooltip-arrow" data-popper-arrow></div>
               </div>
             </div>
@@ -295,7 +268,7 @@ onMounted(async () => {
             <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" v-if="!Project?.hidden" />
             <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" v-else />
           </h3>
-          <div>
+          <!-- <div>
             <div class="flex justify-between mb-1">
               <span class="text-base font-medium text-blue-700 dark:text-white">Flowbite</span>
               <span class="text-sm font-medium text-blue-700 dark:text-white">45%</span>
@@ -303,7 +276,7 @@ onMounted(async () => {
             <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
               <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
