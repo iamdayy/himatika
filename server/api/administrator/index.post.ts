@@ -1,17 +1,13 @@
-import { IAdministrator } from "~/types";
+import { IAdministrator, IAdministratorMember } from "~/types";
 import { Types } from "mongoose";
 export default defineEventHandler(async (event) => {
     try {
         const body = await readBody<IAdministrator>(event);
         await checkExistAdministrator(body.period.start, body.period.end);
+        const AdministratorMembers = await Promise.all(body.AdministratorMembers.map(async member => ({ ...member, profile: await getIdByNim(member.profile as number) } as IAdministratorMember)))
         const administrator = new AdministratorModel({
-            chairman: await getIdByNim(body.chairman as number),
-            viceChairman: await getIdByNim(body.viceChairman as number),
-            secretary: await getIdByNim(body.secretary as number),
-            viceSecretary: await getIdByNim(body.viceSecretary as number),
-            treasurer: await getIdByNim(body.treasurer as number),
-            viceTreasurer: await getIdByNim(body.viceTreasurer as number),
-            period: body.period
+            period: body.period,
+            AdministratorMembers
         });
         const saved = await administrator.save();
         if (!saved) {

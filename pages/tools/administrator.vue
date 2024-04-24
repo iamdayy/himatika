@@ -32,12 +32,7 @@ const options = administrators.value?.map((administrator) => `${new Date(adminis
             <FormSelect placeholder="Select Period" :options="options" v-model="option" />
         </div>
         <div class="grid grid-cols-2 gap-3 py-8 justify-items-center" v-if="administrator">
-            <CoreProfileCard :profile="administrator?.chairman as IProfile" subtitle="Chairman" />
-            <CoreProfileCard :profile="administrator?.viceChairman as IProfile" subtitle="Vice Chairman" />
-            <CoreProfileCard :profile="administrator?.secretary as IProfile" subtitle="Secretary" />
-            <CoreProfileCard :profile="administrator?.viceSecretary as IProfile" subtitle="Vice Secretary" />
-            <CoreProfileCard :profile="administrator?.treasurer as IProfile" subtitle="Treasurer" />
-            <CoreProfileCard :profile="administrator?.viceTreasurer as IProfile" subtitle="Vice Treasurer" />
+            <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" :key="i" :profile="member.profile as IProfile" :subtitle="member.role" />
         </div>
     </div>
 </template>

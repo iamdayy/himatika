@@ -2,7 +2,7 @@ import { defineMongooseModel } from "#nuxt/mongoose";
 import { Types, Schema } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IPeriod } from "~/types";
-import { IAdministratorSchema } from "~/types/ISchemas";
+import { IAdministratorSchema, IAdministratorMemberSchema } from "~/types/ISchemas";
 
 export const PeriodSchema = new Schema<IPeriod>({
     start: {
@@ -15,43 +15,23 @@ export const PeriodSchema = new Schema<IPeriod>({
     }
 });
 
+export const AdministratorMemberSchema = new Schema<IAdministratorMemberSchema>({
+    role: {
+        type: String,
+        required: true,
+    },
+    profile: {
+        type: Types.ObjectId,
+        required: true,
+        ref: "Profile",
+        autopopulate: true
+    }
+})
 
 export const AdministratorModel = defineMongooseModel<IAdministratorSchema>("Administrator", {
-    chairman: {
-        type: Types.ObjectId,
-        required: true,
-        autopopulate: true,
-        ref: "Profile"
-    },
-    viceChairman: {
-        type: Types.ObjectId,
-        required: true,
-        autopopulate: true,
-        ref: "Profile"
-    },
-    secretary: {
-        type: Types.ObjectId,
-        required: true,
-        autopopulate: true,
-        ref: "Profile"
-    },
-    viceSecretary: {
-        type: Types.ObjectId,
-        required: true,
-        autopopulate: true,
-        ref: "Profile"
-    },
-    treasurer: {
-        type: Types.ObjectId,
-        required: true,
-        autopopulate: true,
-        ref: "Profile"
-    },
-    viceTreasurer: {
-        type: Types.ObjectId,
-        required: true,
-        autopopulate: true,
-        ref: "Profile"
+    AdministratorMembers: {
+        type: [AdministratorMemberSchema],
+        required: true
     },
     period: {
         type: PeriodSchema,

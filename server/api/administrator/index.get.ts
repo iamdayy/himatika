@@ -1,5 +1,12 @@
+import { Types } from "mongoose";
 export default defineEventHandler(async (event) => {
     try {
+        const query = getQuery(event);
+        if (query.NIM) {
+            const id = await getIdByNim(query.NIM as number)
+            const administrator = await AdministratorModel.findOne({ 'AdministratorMembers.profile': id });
+            return administrator;
+        }
         const administrators = await AdministratorModel.find();
         return administrators;
     } catch (error: any) {
@@ -9,3 +16,16 @@ export default defineEventHandler(async (event) => {
         });
     }
 });
+
+
+const getIdByNim = async (NIM: number): Promise<Types.ObjectId> => {
+    try {
+        const profile = await ProfileModel.findOne({ NIM });
+        return profile?._id;
+    } catch (error: any) {
+        throw createError({
+            statusCode: error.statusCode,
+            message: error.message
+        });
+    }
+}

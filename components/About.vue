@@ -3,7 +3,7 @@ import { initCollapses, initTabs } from 'flowbite';
 import type { IAdministrator, IProfile } from '~/types';
 const { data: administrators, refresh } = await useAsyncData(() => $fetch<IAdministrator[]>("/api/administrator"));
 const administrator = ref<IAdministrator | undefined>(administrators.value?.find((admin) => new Date(admin.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(admin.period.end).getFullYear() <= new Date(Date.now()).getFullYear()));
-onMounted(() => {
+onMounted(async () => {
   initTabs();
   initCollapses()
 })
@@ -74,12 +74,7 @@ onMounted(() => {
             <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="kepengurusan" role="tabpanel"
               aria-labelledby="kepengurusan-tab">
               <div class="grid grid-cols-2 py-8 space-y-16 justify-items-center" v-if="administrator">
-                <CoreProfileCard :profile="administrator?.chairman as IProfile" subtitle="Chairman" />
-                <CoreProfileCard :profile="administrator?.viceChairman as IProfile" subtitle="Vice Chairman" />
-                <CoreProfileCard :profile="administrator?.secretary as IProfile" subtitle="Secretary" />
-                <CoreProfileCard :profile="administrator?.viceSecretary as IProfile" subtitle="Vice Secretary" />
-                <CoreProfileCard :profile="administrator?.treasurer as IProfile" subtitle="Treasurer" />
-                <CoreProfileCard :profile="administrator?.viceTreasurer as IProfile" subtitle="Vice Treasurer" />
+                <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" :profile="member.profile as IProfile" :subtitle="member.role" />
               </div>
             </div>
             <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="departemen" role="tabpanel"

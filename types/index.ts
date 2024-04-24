@@ -59,13 +59,18 @@ export interface IDepartement {
     period: IPeriod;
 }
 
+export interface IAdministratorMember {
+    role: string;
+    profile: Types.ObjectId | IProfile | number;
+}
 export interface IAdministrator {
-    chairman: Types.ObjectId | IProfile | number;
-    viceChairman: Types.ObjectId | IProfile | number;
-    secretary: Types.ObjectId | IProfile | number;
-    viceSecretary: Types.ObjectId | IProfile | number;
-    treasurer: Types.ObjectId | IProfile | number;
-    viceTreasurer: Types.ObjectId | IProfile | number;
+    AdministratorMembers: IAdministratorMember[];
+    // chairman: Types.ObjectId | IProfile | number;
+    // viceChairman: Types.ObjectId | IProfile | number;
+    // secretary: Types.ObjectId | IProfile | number;
+    // viceSecretary: Types.ObjectId | IProfile | number;
+    // treasurer: Types.ObjectId | IProfile | number;
+    // viceTreasurer: Types.ObjectId | IProfile | number;
     period: IPeriod;
 }
 

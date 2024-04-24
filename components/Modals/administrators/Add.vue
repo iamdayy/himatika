@@ -10,12 +10,32 @@ const { $toast } = useNuxtApp();
 const emit  = defineEmits(["triggerRefresh"]);
 
 const administrator = ref<IAdministrator>({
-    chairman: 0,
-    viceChairman: 0,
-    secretary: 0,
-    viceSecretary: 0,
-    treasurer: 0,
-    viceTreasurer: 0,
+    AdministratorMembers: [
+        {
+            profile: 0,
+            role: "Chairman",
+        },
+        {
+            profile: 0,
+            role: "Vice Chairman",
+        },
+        {
+            profile: 0,
+            role: "Secretary"
+        },
+        {
+            profile: 0,
+            role: "Vice Secretary"
+        },
+        {
+            profile: 0,
+            role: "Treasurer"
+        },
+        {
+            profile: 0,
+            role: "Vice Treasurer"
+        },
+    ],
     period: {
         start: new Date(),
         end: new Date()
@@ -51,57 +71,14 @@ const addAdministrator = async () => {
     <CoreModal name="add-administrator">
         <div class="p-6 space-y-6">
             <div class="grid grid-cols-6 gap-6">
-                <div class="col-span-6 sm:col-span-3">
-                    <label for="Chairman"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Chairman</label>
-                        <input type="number" name="Chairman" id="Chairman"
+                <div class="col-span-6 sm:col-span-3" v-for="member, i in administrator.AdministratorMembers" :key="i">
+                    <label :for="member.role"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ member.role }}</label>
+                        <input type="number" :name="member.role" :id="member.role"
                         class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="102240033" v-model="administrator.chairman" required>
-                        <label for="Chairman"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ getNameFromNIM(administrator.chairman as number) }}</label>
-                </div>
-                <div class="col-span-6 sm:col-span-3">
-                    <label for="viceChairman" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Vice
-                        Chairman</label>
-                        <input type="number" name="viceChairman" id="viceChairman"
-                        class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="102240033" v-model="administrator.viceChairman" required>
-                        <label for="viceChairman" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ getNameFromNIM(administrator.viceChairman as number) }}</label>
-                </div>
-                <div class="col-span-6 sm:col-span-3">
-                    <label for="Secretary"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Secretary</label>
-                        <input type="number" name="Secretary" id="Secretary"
-                        class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="102240033" v-model="administrator.secretary" required>
-                        <label for="Secretary"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ getNameFromNIM(administrator.secretary as number) }}</label>
-                </div>
-                <div class="col-span-6 sm:col-span-3">
-                    <label for="viceSecretary" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Vice
-                        Secretary</label>
-                        <input type="number" name="viceSecretary" id="viceSecretary"
-                        class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="102240033" v-model="administrator.viceSecretary" required>
-                        <label for="viceSecretary" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ getNameFromNIM(administrator.viceSecretary as number) }}</label>
-                </div>
-                <div class="col-span-6 sm:col-span-3">
-                    <label for="Treasurer"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Treasurer</label>
-                        <input type="number" name="Treasurer" id="Treasurer"
-                        class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="102240033" v-model="administrator.treasurer" required>
-                        <label for="Treasurer"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ getNameFromNIM(administrator.treasurer as number) }}</label>
-                </div>
-                <div class="col-span-6 sm:col-span-3">
-                    <label for="viceTreasurer"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">viceTreasurer</label>
-                        <input type="number" name="viceTreasurer" id="viceTreasurer"
-                        class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="102240033" v-model="administrator.viceTreasurer" required>
-                        <label for="viceTreasurer"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ getNameFromNIM(administrator.viceTreasurer as number) }}</label>
+                        placeholder="102240033" v-model="administrator.AdministratorMembers[i].profile" required>
+                        <label :for="member.role"
+                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ getNameFromNIM(administrator.AdministratorMembers[i].profile as number) }}</label>
                 </div>
                 <div class="col-span-3">
                     <label for="start"

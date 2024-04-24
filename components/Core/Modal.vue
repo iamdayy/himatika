@@ -2,7 +2,9 @@
 import { capitalCase } from "change-case";
 import { initModals } from "flowbite"
 const props = defineProps({
-    name: String
+    name: String,
+    class: String,
+    headTitle: String
 })
 onMounted(() => {
     initModals()
@@ -10,7 +12,7 @@ onMounted(() => {
 </script>
 <template>
 <!-- Modal toggle -->
-<button :data-modal-target="`${props.name}-modal`" :data-modal-toggle="`${props.name}-modal`" class="inline-flex items-center px-4 py-2 text-lg font-medium text-gray-100 bg-green-500 rounded-full hover:bg-green-400" type="button">
+<button :data-modal-target="`${props.name}-modal`" :data-modal-toggle="`${props.name}-modal`" :class="props.class || `inline-flex items-center px-4 py-2 text-lg font-medium text-gray-100 bg-green-500 rounded-full hover:bg-green-400`" type="button">
   {{ capitalCase(props.name!) }}
 </button>
 <!-- Main modal -->
@@ -21,7 +23,7 @@ onMounted(() => {
             <!-- Modal header -->
             <div class="flex items-center justify-between p-4 rounded-t md:p-5">
                 <h3 class="text-2xl font-bold text-gray-600 dark:text-gray-400">
-                    {{ capitalCase(props.name!) }}
+                    {{ props.headTitle ? capitalCase(props.headTitle!) : capitalCase(props.name!) }}
                 </h3>
                 <button type="button" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" :data-modal-hide="`${props.name}-modal`">
                     <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
