@@ -42,6 +42,7 @@
 </template>
 <script setup lang='ts'>
 import { initDropdowns } from 'flowbite';
+const { access, dept } = useDept();
 
 definePageMeta({
   layout: false,
@@ -51,7 +52,7 @@ useHead({
   title: "Himatika"
 });
 onMounted(() => {
-  initDropdowns()
+  initDropdowns();
 })
 </script>
 <style scoped>
