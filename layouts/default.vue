@@ -10,10 +10,10 @@ onMounted(() => {
     <div class="min-h-screen">
         <nav class="bg-white border-gray-200 dark:bg-gray-900">
             <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
-                <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+                <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
                     <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
                     <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
-                </a>
+                </NuxtLink>
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <button type="button"
                         class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
@@ -33,16 +33,12 @@ onMounted(() => {
                         </div>
                         <ul class="py-2" aria-labelledby="user-menu-button">
                             <li>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</a>
+                                <NuxtLink to="/dashboard"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</NuxtLink>
                             </li>
                             <li>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Earnings</a>
+                                <NuxtLink to="/tools/setting"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</NuxtLink>
                             </li>
                             <li>
                                 <button @click="signOut({ callbackUrl: '/login' })"
@@ -98,6 +94,16 @@ onMounted(() => {
                                 <NuxtLink to="/tools/collegers"
                                     class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                     Collegers Data</NuxtLink>
+                            </li>
+                            <li>
+                                <NuxtLink to="/tools/administrator"
+                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    Administrators</NuxtLink>
+                            </li>
+                            <li>
+                                <NuxtLink to="/tools/departement"
+                                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    Departement</NuxtLink>
                             </li>
                         </ul>
                     </div>

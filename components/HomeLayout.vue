@@ -2,9 +2,9 @@
   <div class="min-h-full">
     <nav class="absolute z-10 w-full bg-white border-gray-200 md:bg-transparent bg-opacity-35 backdrop-blur-md md:border-none dark:bg-gray-900">
       <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
-        <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+        <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
           <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
-        </a>
+        </NuxtLink>
         <div
         class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse" 
         v-if="user"
@@ -120,7 +120,7 @@ const navigation: ILink[] = [
 const userNavigation: ILink[] = [
   { name: 'Your Profile', href: '/dashboard/profile' },
   { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Settings', href: '/' },
+  { name: 'Settings', href: '/tools/setting' },
 ] as ILink[]
 onMounted(() => {
   initDropdowns()

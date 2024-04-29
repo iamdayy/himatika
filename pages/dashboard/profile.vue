@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { IUser } from "~/types";
 
-const me = useState<IUser>('me');
+const { data: me } = useAuth();
 
 useHead({
     title: "Profile | Himatika"
@@ -12,9 +12,9 @@ definePageMeta({
 </script>
 <template>
     <div class="px-4 pb-24">
-        <div class="w-full p-3 shadow-md bg-slate-200 rounded-xl">
+        <div class="w-full p-3 shadow-md bg-slate-200 rounded-xl" v-if="me">
             <div class="max-w-sm py-1">
-                <NuxtImg :src="me.profile.avatar" sizes="350px" class="rounded-md" />
+                <NuxtImg :src="me.profile.avatar || '/img/profile-blank.png'" sizes="350px" class="rounded-md" />
             </div>
             <div class="flex flex-col py-1 mb-2">
                 <dd class="text-2xl font-semibold text-gray-600">{{ me.username }}</dd>
@@ -90,7 +90,7 @@ definePageMeta({
                                 </template>
                             </VDatePicker>
                             <dd class="font-semibold text-gray-400 text-md">{{
-                                me.profile.birth.date.toLocaleDateString('id-ID', {
+                                new Date(me.profile.birth.date).toLocaleDateString('id-ID', {
                                     year: 'numeric', month: 'long', day:
                                         'numeric'
                                 }) }}

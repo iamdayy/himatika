@@ -9,6 +9,8 @@ useHead({
     title: "Data Mahasiswa | Himatika"
 });
 
+const { access: canAccessAdd, role } = useRole(["Chairman"]);
+
 const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear()}`);
 
 const getStartYear = (opt: string): number => {
@@ -28,7 +30,7 @@ const options = administrators.value?.map((administrator) => `${new Date(adminis
     <div class="max-w-6xl py-3 mx-auto overflow-x-auto rounded-md shadow-md sm:rounded-lg">
         <div
             class="flex flex-wrap items-center justify-between py-4 space-y-4 bg-white flex-column md:flex-row md:space-y-0 dark:bg-gray-900 px-2.5 border-b border-gray-300 dark:border-gray-500 shadow-md">
-            <ModalsAdministratorsAdd @trigger-refresh="refresh" />
+            <ModalsAdministratorsAdd @trigger-refresh="refresh" v-if="canAccessAdd" />
             <FormSelect placeholder="Select Period" :options="options" v-model="option" />
         </div>
         <div class="grid grid-cols-2 gap-3 py-8 justify-items-center" v-if="administrator">

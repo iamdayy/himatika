@@ -50,23 +50,21 @@ onMounted(async () => {
             <span class="block text-sm text-gray-900 dark:text-white">{{ user?.username }}</span>
             <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user?.profile.email }}</span>
           </div>
-          <ul class="py-2" aria-labelledby="user?-menu-button">
+          <ul class="py-2" aria-labelledby="user-menu-button">
             <li>
               <NuxtLink to="/dashboard"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</NuxtLink>
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                Dashboard</NuxtLink>
             </li>
             <li>
-              <a href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</a>
-            </li>
-            <li>
-              <a href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Earnings</a>
+              <NuxtLink to="/tools/setting"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                Settings</NuxtLink>
             </li>
             <li>
               <button @click="signOut({ callbackUrl: '/login' })"
-                class="block w-full px-4 py-2 text-sm text-gray-700 text-start hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
-                Out</button>
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
+                out</button>
             </li>
           </ul>
         </div>
@@ -169,7 +167,7 @@ onMounted(async () => {
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
                   <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
-          new Date(event.date).toLocaleDateString() }}
+                    new Date(event.date).toLocaleDateString() }}
                   </h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
@@ -245,12 +243,12 @@ onMounted(async () => {
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Deadline</span>
           <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
-          new Date(Project?.deadline!).toDateString() }}
+            new Date(Project?.deadline!).toDateString() }}
           </h3>
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Contributors</span>
           <div class="flex items-center">
-            <div v-for="contributor,i in Project?.contributors" v-if="Project?.contributors" :key="i" class="-mx-1">
+            <div v-for="contributor, i in Project?.contributors" v-if="Project?.contributors" :key="i" class="-mx-1">
               <img :data-tooltip-target="`tooltip-${i}`"
                 class="object-cover w-6 h-6 border rounded-full shadow-md border-white/30"
                 src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=4&w=880&h=880&q=100"

@@ -1,12 +1,10 @@
 import type { IDepartement, IProfile } from "~/types";
 
-export const useDept = (canAccess?: string) => {
+export const useDept = (canAccess?: string[]) => {
     const { data: me, status } = useAuth();
     const dept = ref<string| null>(null);
-    const access = ref<boolean|null>(false);
     const fetchData = () => {
         dept.value = null;
-        access.value = false;
         if (status.value == 'authenticated') {
             const NIM = me.value?.profile.NIM;
             $fetch<IDepartement>("/api/departement", {
@@ -29,7 +27,7 @@ export const useDept = (canAccess?: string) => {
     watchEffect(() => {
         fetchData();
     })
-    access.value = dept.value == canAccess;
+    const access =  computed(() => canAccess?.includes(dept.value!)!)
     return {
         dept,
         access

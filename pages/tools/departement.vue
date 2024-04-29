@@ -14,6 +14,8 @@ interface IDepByDepartement {
     [key: string]: IDepartement[];
 }
 
+const { access: canAccessAdd, role } = useRole(["Chairman"]);
+
 const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear()}`);
 
 const getStartYear = (opt: string): number => {
@@ -45,7 +47,7 @@ const getObjIsFirst = (val: string) => {
     <div class="max-w-6xl py-3 mx-auto overflow-x-auto rounded-md shadow-md sm:rounded-lg">
         <div
             class="flex flex-wrap items-center justify-between py-4 space-y-4 bg-white flex-column md:flex-row md:space-y-0 dark:bg-gray-900 px-2.5 border-b border-gray-300 dark:border-gray-500 shadow-md">
-            <ModalsDepartementsAdd @trigger-refresh="refresh" />
+            <ModalsDepartementsAdd @trigger-refresh="refresh" v-fi="canAccessAdd" />
             <ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 dark:text-gray-400" id="about-tab"
                 data-tabs-toggle="#tab-content" role="tablist">
                 <li class="me-2" role="presentation"

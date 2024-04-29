@@ -1,5 +1,8 @@
 <script setup lang='ts'>
 import type { IProfile, IProject } from '~/types';
+
+const { access: canAccessAdd, role } = useRole(["Secretary", "viceSecretary"])
+
 const {data: Projects, refresh } = useAsyncData(() => $fetch<IProject[]>("/api/project"));
 const Project = ref<IProject|null>(null);
 const pickDetail = (title: string) => {
@@ -19,7 +22,7 @@ definePageMeta({
             <h2 class="text-4xl font-extrabold leading-tight tracking-tight text-gray-600 dark:text-white">
                 Project
             </h2>
-            <ModalsProjectsAdd @trigger-refresh="refresh" />
+            <ModalsProjectsAdd @trigger-refresh="refresh" v-if="canAccessAdd" />
         </div>
         <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
             <div class="mx-auto shadow-lg rounded-lg w-full md:w-2/5 max-h-[60vh] overflow-y-scroll border border-gray-400 bg-gray-100 py-4 no-scrollbar">

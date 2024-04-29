@@ -10,6 +10,9 @@ definePageMeta({
 useHead({
     title: "Dashboard | Himatika"
 });
+
+const { access: canAccessAdd, role } = useRole(["Chairman", "viceChairman"])
+
 const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
 const Event = ref<IEvent | null>(null);
 const newEvent = ref<IEvent>({
@@ -95,7 +98,7 @@ const addEvent = async () => {
                 Agenda
             </h2>
             <div class="mt-4">
-                <CoreModal name="add-agenda">
+                <CoreModal name="add-agenda" v-if="canAccessAdd">
                     <div class="px-2 py-4 text-start">
                         <form class="space-y-4">
                             <div>
