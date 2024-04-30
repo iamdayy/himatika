@@ -1,8 +1,9 @@
-import type { IDepartement, IProfile } from "~/types";
+import type { IDepartement, IPeriod, IProfile } from "~/types";
 
 export const useDept = (canAccess?: string[]) => {
     const { data: me, status } = useAuth();
     const dept = ref<string| null>(null);
+    const period = ref<IPeriod|null>(null);
     const fetchData = () => {
         dept.value = null;
         if (status.value == 'authenticated') {
@@ -19,7 +20,7 @@ export const useDept = (canAccess?: string[]) => {
                 }
                 if (data) {
                     dept.value = data.departement || 'Member';
-                    
+                    period.value = data.period;
                 }
             });
         }
@@ -30,6 +31,7 @@ export const useDept = (canAccess?: string[]) => {
     const access =  computed(() => canAccess?.includes(dept.value!)!)
     return {
         dept,
-        access
+        access,
+        period
     };
 }

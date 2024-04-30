@@ -4,7 +4,7 @@ import Logo from "~/assets/image/himatika-logo.png";
 
 </script>
 <template>
-    <footer class="w-full pt-8 mb-0">
+    <footer class="w-full pt-8 mb-4">
         <div class="container">
             <div class="flex flex-wrap">
                 <div class="w-full px-4">

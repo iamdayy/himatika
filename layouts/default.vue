@@ -135,7 +135,7 @@ onMounted(() => {
                 </div>
             </div>
         </div>
-
+        <CoreFooter />
     </div>
 </template>
 <style scoped></style>

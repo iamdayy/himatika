@@ -7,8 +7,10 @@ useHead({
     title: "Profile | Himatika"
 });
 definePageMeta({
-  middleware: "auth"
+    middleware: "auth"
 });
+const { role, period } = useRole();
+const { dept, period: DeptPeriod } = useDept();
 </script>
 <template>
     <div class="px-4 pb-24">
@@ -61,7 +63,7 @@ definePageMeta({
                             class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Semester</label>
                     </div>
                 </dl>
-                <dl class="w-full text-gray-900 divide-y divide-gray-200 md:w-1/3 dark:text-white dark:divide-gray-700">
+                <dl class="w-full text-gray-900 md:w-1/3 dark:text-white">
                     <div class="flex flex-col py-1">
                         <dd class="text-xl font-semibold text-gray-400">Personal</dd>
                         <hr class="w-2/3 h-px mb-2 bg-gray-400 border-0 rounded">
@@ -111,9 +113,12 @@ definePageMeta({
                         <select id="religion"
                             class="block px-2.5 pt-3 pb-1.5 w-fit text-sm font-semibold text-gray-500 bg-transparent border-0 border-b border-gray-400 appearance-none focus:outline-none focus:ring-0 peer"
                             v-model="me.profile.religion" :disabled="me.profile.religion ? true : false">
-                            <option value="Moslem">Moslem</option>
-                            <option value="Christ">Christ</option>
-                            <option value="Budhist">Budhist</option>
+                            <option value="Islam">Islam</option>
+                            <option value="Kristen">Kristen</option>
+                            <option value="Buddha">Buddha</option>
+                            <option value="Hindu">Hindu</option>
+                            <option value="Konghucu">Konghucu</option>
+                            <option value="Katolik">Katolik</option>
                         </select>
                         <label for="religion"
                             class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Religion</label>
@@ -126,58 +131,116 @@ definePageMeta({
                             class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Citizen</label>
                     </div>
                 </dl>
-                <dl class="w-full text-gray-900 divide-y divide-gray-200 md:w-1/3 dark:text-white dark:divide-gray-700">
-                    <div class="flex flex-col py-1">
-                        <dd class="text-xl font-semibold text-gray-400">Administrator</dd>
-                        <hr class="w-2/3 h-px mb-2 bg-gray-400 border-0 rounded">
-                    </div>
-                    <div class="relative py-1 mb-2">
-                        <input type="text" id="division"
-                            class="block px-2.5 pb-1.5 pt-3 w-fit text-sm font-semibold text-gray-500 bg-transparent  border-0 border-b border-gray-400 appearance-none focus:outline-none focus:ring-0 peer" />
-                        <label for="division"
-                            class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Division</label>
-                    </div>
-                    <div class="relative py-1 mb-2">
-                        <label for="period"
-                            class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Period</label>
-                        <div class="flex flex-row items-center py-2 ps-2.5" id="period">
-                            <div class="flex gap-2">
-                                <VDatePicker id="birth" mode="date">
-                                    <template #default="{ togglePopover }">
-                                        <button @click="togglePopover"
-                                            class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700" disabled>
-                                            <Icon name="solar:calendar-outline" class="w-5 h-5" />
-                                        </button>
-                                    </template>
-                                </VDatePicker>
-                                <dd class="font-semibold text-gray-400 text-md">{{
-                                    new Date().toLocaleDateString('id-ID', {
-                                        year: 'numeric', month: 'long', day:
-                                            'numeric'
-                                    }) }}
-                                </dd>
+                <dl class="w-full text-gray-900 md:w-1/3 dark:text-white" v-if="role || dept">
+                    <div class="w-full" v-if="role">
+                        <div class="flex flex-col py-1">
+                            <dd class="text-xl font-semibold text-gray-400">Administrator</dd>
+                            <hr class="w-2/3 h-px mb-2 bg-gray-400 border-0 rounded">
+                        </div>
+                        <div class="relative py-1 mb-2">
+                            <input type="text" id="division" v-model="role" disabled
+                                class="block px-2.5 pb-1.5 pt-3 w-fit text-sm font-semibold text-gray-500 bg-transparent  border-0 border-b border-gray-400 appearance-none focus:outline-none focus:ring-0 peer" />
+                            <label for="division"
+                                class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Division</label>
+                        </div>
+                        <div class="relative py-1 mb-2">
+                            <label for="period"
+                                class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Period</label>
+                            <div class="flex flex-row items-center py-2 ps-2.5" id="period">
+                                <div class="flex gap-2">
+                                    <VDatePicker id="birth" mode="date">
+                                        <template #default="{ togglePopover }">
+                                            <button @click="togglePopover"
+                                                class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700"
+                                                disabled>
+                                                <Icon name="solar:calendar-outline" class="w-5 h-5" />
+                                            </button>
+                                        </template>
+                                    </VDatePicker>
+                                    <dd class="font-semibold text-gray-400 text-md">{{
+                                        new Date(period?.start!).toLocaleDateString('id-ID', {
+                                            year: 'numeric', month: 'long', day:
+                                                'numeric'
+                                        }) }}
+                                    </dd>
+                                </div>
+                                <hr class="w-2 h-1 mx-3 bg-gray-500 border-0 rounded">
+                                <div class="flex gap-2">
+                                    <VDatePicker id="birth" mode="date">
+                                        <template #default="{ togglePopover }">
+                                            <button @click="togglePopover"
+                                                class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700"
+                                                disabled>
+                                                <Icon name="solar:calendar-outline" class="w-5 h-5" />
+                                            </button>
+                                        </template>
+                                    </VDatePicker>
+                                    <dd class="font-semibold text-gray-400 text-md">{{
+                                        new Date(period?.end!).toLocaleDateString('id-ID', {
+                                            year: 'numeric', month: 'long', day:
+                                                'numeric'
+                                        }) }}
+                                    </dd>
+                                </div>
                             </div>
-                            <hr class="w-2 h-1 mx-3 bg-gray-500 border-0 rounded">
-                            <div class="flex gap-2">
-                                <VDatePicker id="birth" mode="date">
-                                    <template #default="{ togglePopover }">
-                                        <button @click="togglePopover"
-                                            class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700" disabled>
-                                            <Icon name="solar:calendar-outline" class="w-5 h-5" />
-                                        </button>
-                                    </template>
-                                </VDatePicker>
-                                <dd class="font-semibold text-gray-400 text-md">{{
-                                    new Date().toLocaleDateString('id-ID', {
-                                        year: 'numeric', month: 'long', day:
-                                            'numeric'
-                                    }) }}
-                                </dd>
+                        </div>
+                    </div>
+                    <div class="w-full" v-if="dept">
+                        <div class="flex flex-col py-1">
+                            <dd class="text-xl font-semibold text-gray-400">Departement</dd>
+                            <hr class="w-2/3 h-px mb-2 bg-gray-400 border-0 rounded">
+                        </div>
+                        <div class="relative py-1 mb-2">
+                            <input type="text" id="division" v-model="dept" disabled
+                                class="block px-2.5 pb-1.5 pt-3 w-fit text-sm font-semibold text-gray-500 bg-transparent  border-0 border-b border-gray-400 appearance-none focus:outline-none focus:ring-0 peer" />
+                            <label for="division"
+                                class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Division</label>
+                        </div>
+                        <div class="relative py-1 mb-2">
+                            <label for="period"
+                                class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Period</label>
+                            <div class="flex flex-row items-center py-2 ps-2.5" id="period">
+                                <div class="flex gap-2">
+                                    <VDatePicker id="birth" mode="date">
+                                        <template #default="{ togglePopover }">
+                                            <button @click="togglePopover"
+                                                class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700"
+                                                disabled>
+                                                <Icon name="solar:calendar-outline" class="w-5 h-5" />
+                                            </button>
+                                        </template>
+                                    </VDatePicker>
+                                    <dd class="font-semibold text-gray-400 text-md">{{
+                                        new Date(DeptPeriod?.start!).toLocaleDateString('id-ID', {
+                                            year: 'numeric', month: 'long', day:
+                                                'numeric'
+                                        }) }}
+                                    </dd>
+                                </div>
+                                <hr class="w-2 h-1 mx-3 bg-gray-500 border-0 rounded">
+                                <div class="flex gap-2">
+                                    <VDatePicker id="birth" mode="date">
+                                        <template #default="{ togglePopover }">
+                                            <button @click="togglePopover"
+                                                class="text-sm font-medium text-gray-500 bg-transparent hover:text-blue-700"
+                                                disabled>
+                                                <Icon name="solar:calendar-outline" class="w-5 h-5" />
+                                            </button>
+                                        </template>
+                                    </VDatePicker>
+                                    <dd class="font-semibold text-gray-400 text-md">{{
+                                        new Date(DeptPeriod?.end!).toLocaleDateString('id-ID', {
+                                            year: 'numeric', month: 'long', day:
+                                                'numeric'
+                                        }) }}
+                                    </dd>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </dl>
             </div>
         </div>
-</div></template>
+    </div>
+</template>
 <style scoped></style>

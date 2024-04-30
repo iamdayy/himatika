@@ -7,7 +7,7 @@ definePageMeta({
 useHead({
   title: "Dashboard | Himatika"
 });
-import { initCarousels, initDropdowns } from 'flowbite';
+import { initCarousels, initDropdowns, initTooltips } from 'flowbite';
 
 const { data: user, signOut } = useAuth();
 
@@ -25,6 +25,7 @@ const Project = ref<IProject | undefined>(Projects.value?.find((project) => new 
 onMounted(async () => {
   initCarousels();
   initDropdowns();
+  initTooltips();
 })
 </script>
 <template>
@@ -178,11 +179,11 @@ onMounted(async () => {
                     }}
                   </h3>
 
-                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Urgently</span>
+                  <!-- <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Urgently</span>
                   <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">
                     <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" />
                     <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" />
-                  </h3>
+                  </h3> -->
                 </div>
               </div>
             </div>
@@ -251,9 +252,9 @@ onMounted(async () => {
             <div v-for="contributor, i in Project?.contributors" v-if="Project?.contributors" :key="i" class="-mx-1">
               <img :data-tooltip-target="`tooltip-${i}`"
                 class="object-cover w-6 h-6 border rounded-full shadow-md border-white/30"
-                src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=4&w=880&h=880&q=100"
+                :src="(contributor.profile as IProfile).avatar || '/img/profile-blank.png'"
                 alt="">
-              <div :id="`tooltip-${(contributor.profile as IProfile).NIM}`" role="tooltip"
+              <div :id="`tooltip-${i}`" role="tooltip"
                 class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
                 {{ `${(contributor.profile as IProfile).fullName}` }}
                 <div class="tooltip-arrow" data-popper-arrow></div>
