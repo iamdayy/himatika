@@ -4,6 +4,7 @@ export const useRole = (canAccess?: string[]) => {
     const { data: me, status } = useAuth();
     const role = ref<string| null>(null);
     const period = ref<IPeriod| null>(null);
+    const isAdmin = ref<boolean>(false);
     const fetchData = () => {
         role.value = null;
         if (status.value == 'authenticated') {
@@ -16,10 +17,10 @@ export const useRole = (canAccess?: string[]) => {
             }).then(data => {
                 if (!data) {
                     role.value = 'Member';
-                    
                 }
                 if (data) {
                     role.value = data.AdministratorMembers.find((member) => (member.profile as IProfile).NIM === NIM)?.role || 'Member';
+                    isAdmin.value = true;
                     period.value = data.period!;
                 }
             });
@@ -32,6 +33,7 @@ export const useRole = (canAccess?: string[]) => {
     return {
         role,
         access,
+        isAdmin,
         period
     };
 }

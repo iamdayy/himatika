@@ -1,7 +1,8 @@
 <script setup lang='ts'>
-import type { IProfile, IProject } from '~/types';
+import type { IProfile, IProject, TRole } from '~/types';
 
-const { access: canAccessAdd, role } = useRole(["Secretary", "viceSecretary", "Chairman"]);
+const { access: canAccessAdd, isAdmin } = useRole(["Secretary", "viceSecretary", "Chairman"]);
+const { isDept } = useDept();
 
 const {data: Projects, refresh } = useAsyncData(() => $fetch<IProject[]>("/api/project"));
 const Project = ref<IProject|null>(null);
@@ -9,6 +10,53 @@ const pickDetail = (title: string) => {
     const index = Projects.value?.findIndex((project) => project.title === title);
     Project.value = Projects.value![index!];
 }
+
+const canMeRegister = (canRegister: TRole) => {
+    switch (canRegister) {
+        case "All":
+            return true;
+            break;
+        case "No":
+            return false;
+            break;
+        case "Admin":
+            if (isAdmin) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        case "Departement":
+            if (isDept) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        case "Internal":
+            if (isAdmin || isDept) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        case "External":
+            if (!isAdmin || !isDept) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        default:
+            return false;
+            break;
+    }
+}
+
 useHead({
     title: "Projects | Himatika"
 });
@@ -107,7 +155,7 @@ definePageMeta({
                             </dl>
                         </li>
                     </ul>
-                    <button type="submit"
+                    <button type="submit" v-if="canMeRegister(Project.canRegister)"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         Register this
                     </button>

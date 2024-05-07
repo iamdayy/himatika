@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IEvent, IProfile } from "~/types"
+import type { IEvent, IProfile, TRole } from "~/types"
 import { Modal } from "flowbite"
 import type { ModalOptions, ModalInterface } from 'flowbite';
 import type { InstanceOptions } from 'flowbite';
@@ -11,7 +11,9 @@ useHead({
     title: "Dashboard | Himatika"
 });
 
-const { access: canAccessAdd, role } = useRole(["Chairman", "viceChairman"])
+const { access: canAccessAdd, isAdmin } = useRole(["Chairman", "viceChairman"]);
+
+const { isDept } = useDept();
 
 const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
 
@@ -97,6 +99,51 @@ const addEvent = async () => {
 
 const getNameFromNIM = (NIM?: number) => {
     return profiles.value?.find((profile) => profile.NIM == NIM)?.fullName;
+}
+const canMeRegister = (canRegister: TRole) => {
+    switch (canRegister) {
+        case "All":
+            return true;
+            break;
+        case "No":
+            return false;
+            break;
+        case "Admin":
+            if (isAdmin) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        case "Departement":
+            if (isDept) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        case "Internal":
+            if (isAdmin || isDept) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        case "External":
+            if (!isAdmin || !isDept) {
+                return true;
+                break;
+            } else {
+                return false;
+                break;
+            }
+        default:
+            return false;
+            break;
+    }
 }
 </script>
 <template>
@@ -305,7 +352,7 @@ const getNameFromNIM = (NIM?: number) => {
                             </dl>
                         </li>
                     </ul>
-                    <button type="submit"
+                    <button type="submit" v-if="canMeRegister(Event.canRegister)"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         Register this
                     </button>

@@ -4,6 +4,7 @@ export const useDept = (canAccess?: string[]) => {
     const { data: me, status } = useAuth();
     const dept = ref<string| null>(null);
     const period = ref<IPeriod|null>(null);
+    const isDept = ref<boolean>(false);
     const fetchData = () => {
         dept.value = null;
         if (status.value == 'authenticated') {
@@ -20,6 +21,7 @@ export const useDept = (canAccess?: string[]) => {
                 }
                 if (data) {
                     dept.value = data.departement || 'Member';
+                    isDept.value = true;
                     period.value = data.period;
                 }
             });
@@ -32,6 +34,7 @@ export const useDept = (canAccess?: string[]) => {
     return {
         dept,
         access,
+        isDept,
         period
     };
 }

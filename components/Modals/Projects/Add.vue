@@ -79,6 +79,7 @@ const deleteTask = (i: number) => {
 const deleteContributors = (i: number) => {
     project.value.contributors?.splice(i, 1);
 }
+
 onMounted(() => {
     initPopovers()
 })

@@ -25,11 +25,7 @@ export default defineEventHandler(async event => {
             }
         });
         const ev = new EventModel({
-            title: body.title,
-            date: body.date,
-            at: body.at,
-            accessbility: body.accessbility,
-            description: body.description,
+            ...body,
             committee: await Promise.all(committees!)
         });
         const saved = await ev.save();
