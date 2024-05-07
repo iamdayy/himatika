@@ -1,8 +1,8 @@
 import { defineMongooseModel } from "#nuxt/mongoose";
-import { ICommitteeSchema, IEventSchema } from "~/types/ISchemas";
+import { ICommitteeSchema, IEventSchema, IRegisteredSchema } from "~/types/ISchemas";
 import { Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
-
+import type { TRole } from "~/types";
 const CommitteeSchema = new Schema<ICommitteeSchema>({
     job: {
         type: String,
@@ -15,6 +15,18 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
         autopopulate: true
     }
 });
+
+const registeredSchema = new Schema<IRegisteredSchema>({
+    profile: {
+        type: Types.ObjectId,
+        required: true,
+        ref: "Profile",
+        autopopulate: true
+    },
+    task: {
+        type: String,
+    }
+})
 
 export const EventModel = defineMongooseModel<IEventSchema>("Event", {
     title: {
@@ -29,14 +41,21 @@ export const EventModel = defineMongooseModel<IEventSchema>("Event", {
         type: String,
         required: true
     },
-    accessbility: {
+    canSee: {
         type: String,
-        required: true
+        default: "All",
+        enum: ["Admin", "Departement", "Internal", "All", "External", "No"]
     },
     description: {
         type: String
     },
-    committee: [CommitteeSchema]
+    committee: [CommitteeSchema],
+    canRegister: {
+        type: String,
+        default: "No",
+        enum: ["Admin", "Departement", "Internal", "All", "External", "No"]
+    },
+    registered: [registeredSchema]
 },
 {
 },

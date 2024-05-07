@@ -25,16 +25,9 @@ const props = defineProps({
                 {{ profile?.email }}
             </p>
             <p class="mb-4 text-sm">Open-source contributor. Building.</p>
-            <ul class="flex text-sm">
-                <li class="me-2">
-                    <span class="font-semibold text-gray-900 dark:text-white">799</span>
-                    <span>Following</span>
-                </li>
-                <li>
-                    <span class="font-semibold text-gray-900 dark:text-white">3,758</span>
-                    <span>Followers</span>
-                </li>
-            </ul>
+            <div>
+                
+            </div>
         </div>
     </CoreModal>
 </template>

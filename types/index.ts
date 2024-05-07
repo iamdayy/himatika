@@ -1,5 +1,5 @@
 import { Types } from "mongoose"
-
+export type TRole = "Admin" | "Departement" | "Internal" | "All" | "External" | "No";
 export interface ILink {
     name: string;
     href: string;
@@ -65,36 +65,40 @@ export interface IAdministratorMember {
 }
 export interface IAdministrator {
     AdministratorMembers: IAdministratorMember[];
-    // chairman: Types.ObjectId | IProfile | number;
-    // viceChairman: Types.ObjectId | IProfile | number;
-    // secretary: Types.ObjectId | IProfile | number;
-    // viceSecretary: Types.ObjectId | IProfile | number;
-    // treasurer: Types.ObjectId | IProfile | number;
-    // viceTreasurer: Types.ObjectId | IProfile | number;
     period: IPeriod;
 }
 
 export interface ICommittee {
     job: string;
-    user: IProfile | string;
+    user: IProfile | string | number;
 }
+
 export interface IContributor {
     profile: IProfile | Types.ObjectId | number;
     job: string;
+}
+export interface IRegistered {
+    profile: Types.ObjectId | IProfile | number;
+    task?: string;
 }
 export interface IEvent {
     title: string;
     date: Date;
     at: string;
-    accessbility: string;
+    canSee: TRole;
     description: string;
     committee: ICommittee[];
+    canRegister: TRole;
+    registered?: IRegistered[];
 }
 
 export interface IProject {
     title: string;
     deadline: Date;
     description: string;
-    hidden: boolean;
+    canSee: TRole;
     contributors?: IContributor[];
+    canRegister: TRole;
+    tasks?: string[];
+    registered?: IRegistered[];
 }

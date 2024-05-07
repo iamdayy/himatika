@@ -37,9 +37,14 @@ onMounted(() => {
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</NuxtLink>
                             </li>
                             <li>
+                                <NuxtLink to="/dashboard/profile"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Profile</NuxtLink>
+                            </li>
+
+                            <!-- <li>
                                 <NuxtLink to="/tools/setting"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</NuxtLink>
-                            </li>
+                            </li> -->
                             <li>
                                 <button @click="signOut({ callbackUrl: '/login' })"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign

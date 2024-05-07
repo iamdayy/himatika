@@ -1,8 +1,11 @@
 <script setup lang='ts'>
 import { initCollapses, initTabs } from 'flowbite';
-import type { IAdministrator, IProfile } from '~/types';
-const { data: administrators, refresh } = await useAsyncData(() => $fetch<IAdministrator[]>("/api/administrator"));
+import type { IAdministrator, IDepartement, IProfile, IPeriod } from '~/types';
+const { data: administrators } = await useAsyncData(() => $fetch<IAdministrator[]>("/api/administrator"));
+const { data: departementsData } = await useAsyncData(() => $fetch<IDepartement[]>("/api/departement"));
 const administrator = ref<IAdministrator | undefined>(administrators.value?.find((admin) => new Date(admin.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(admin.period.end).getFullYear() <= new Date(Date.now()).getFullYear()));
+const departements = ref<IDepartement[] | undefined>(departementsData.value?.filter((departement) => new Date(departement.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(departement.period.end).getFullYear() <= new Date(Date.now()).getFullYear()));
+const departementPeriod = ref<IPeriod | undefined>(departements?.value![0].period)
 onMounted(async () => {
   initTabs();
   initCollapses()
@@ -54,15 +57,17 @@ onMounted(async () => {
             </ul>
           </div>
           <div id="tab-content" class="w-full">
-            <div class="hidden max-w-2xl p-4 mx-auto rounded-lg bg-gray-50 dark:bg-gray-800" id="visi" role="tabpanel"
+            <div class="hidden max-w-4xl p-4 mx-auto rounded-lg bg-gray-50 dark:bg-gray-800" id="visi" role="tabpanel"
               aria-labelledby="visi-tab">
-              <p class="text-center text-gray-500 dark:text-gray-400">Dengan Semangat kekeluargaan, HIMATIKA menjadi
+              <h1 class="mb-4 text-3xl font-bold text-center">VISI</h1>
+              <p class="text-2xl text-center text-gray-800 dark:text-gray-400">Dengan Semangat kekeluargaan, HIMATIKA menjadi
                 poros aktivitas kemahasiswaan Mahasiswa Informatika yang memberikan Kemanfaatan bagi mahasiswa
                 Teknologi Komputer</p>
             </div>
-            <div class="hidden max-w-2xl p-4 mx-auto rounded-lg bg-gray-50 dark:bg-gray-800" id="misi" role="tabpanel"
+            <div class="hidden max-w-4xl p-4 mx-auto rounded-lg bg-gray-50 dark:bg-gray-800" id="misi" role="tabpanel"
               aria-labelledby="misi-tab">
-              <ul class="max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+              <h1 class="mb-4 text-3xl font-bold text-center">MISI</h1>
+              <ul class="flex flex-col justify-center space-y-1 text-2xl text-center text-gray-800 dark:text-gray-400">
                 <li>Mewujudkan HIMATIKA yang bersahabat dan profesional.</li>
                 <li>Menjadikan sebuah wadah aspirasi mahasiswa Informatika.</li>
                 <li>Meningkatkan kualitas dibidang pendidikan,keilmuan teknologi dan keorganisasian.</li>
@@ -73,20 +78,19 @@ onMounted(async () => {
             </div>
             <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="kepengurusan" role="tabpanel"
               aria-labelledby="kepengurusan-tab">
-              <div class="grid grid-cols-2 py-8 space-y-16 justify-items-center" v-if="administrator">
-                <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" :profile="member.profile as IProfile" :subtitle="member.role" />
+              <h1 class="mb-2 text-3xl font-bold text-center">Kepengurusan</h1>
+              <h1 class="mb-4 text-xl font-bold text-center text-gray-400"><span>{{ new Date(administrator?.period.start!).getFullYear() }}</span> - <span>{{ new Date(administrator?.period.end!).getFullYear() }}</span> </h1>
+              <div class="grid max-w-4xl grid-cols-2 py-8 mx-auto justify-items-center" v-if="administrator">
+                <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" class="mb-8" :profile="member.profile as IProfile" :subtitle="member.role" />
               </div>
             </div>
             <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="departemen" role="tabpanel"
               aria-labelledby="departemen-tab">
-              <!-- <div class="grid grid-cols-2 py-8 space-y-16 justify-items-center" v-if="administrator">
-                <CoreProfileCard :profile="administrator?.chairman as IProfile" subtitle="Chairman" />
-                <CoreProfileCard :profile="administrator?.viceChairman as IProfile" subtitle="Vice Chairman" />
-                <CoreProfileCard :profile="administrator?.secretary as IProfile" subtitle="Secretary" />
-                <CoreProfileCard :profile="administrator?.viceSecretary as IProfile" subtitle="Vice Secretary" />
-                <CoreProfileCard :profile="administrator?.treasurer as IProfile" subtitle="Treasurer" />
-                <CoreProfileCard :profile="administrator?.viceTreasurer as IProfile" subtitle="Vice Treasurer" />
-              </div> -->
+              <h1 class="mb-2 text-3xl font-bold text-center">Departemen</h1>
+              <h1 class="mb-4 text-xl font-bold text-center text-gray-400"><span>{{ new Date(departementPeriod?.start!).getFullYear() }}</span> - <span>{{ new Date(departementPeriod?.end!).getFullYear() }}</span> </h1>
+              <div class="grid max-w-4xl grid-cols-2 py-8 mx-auto justify-items-center" v-if="departements">
+                <CoreProfileCard v-for="member, i in departements" class="mb-8" :profile="member.profile as IProfile" :subtitle="member.departement" />
+              </div>
             </div>
           </div>
         </div>

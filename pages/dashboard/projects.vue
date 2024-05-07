@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { IProfile, IProject } from '~/types';
 
-const { access: canAccessAdd, role } = useRole(["Secretary", "viceSecretary"])
+const { access: canAccessAdd, role } = useRole(["Secretary", "viceSecretary", "Chairman"]);
 
 const {data: Projects, refresh } = useAsyncData(() => $fetch<IProject[]>("/api/project"));
 const Project = ref<IProject|null>(null);
@@ -49,8 +49,8 @@ definePageMeta({
                         <li class="flex">
                             <Icon name="solar:lock-keyhole-unlocked-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
-                            <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                Project?.hidden }}</span>
+                            <!-- <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                                Project?.hidden }}</span> -->
                         </li>
                         <li class="flex">
                             <Icon name="solar:document-outline"

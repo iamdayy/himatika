@@ -120,7 +120,7 @@ const navigation: ILink[] = [
 const userNavigation: ILink[] = [
   { name: 'Your Profile', href: '/dashboard/profile' },
   { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Settings', href: '/tools/setting' },
+  // { name: 'Settings', href: '/tools/setting' },
 ] as ILink[]
 onMounted(() => {
   initDropdowns()
