@@ -47,10 +47,26 @@ definePageMeta({
                                 new Date(Project?.deadline).toDateString() }}</span>
                         </li>
                         <li class="flex">
-                            <Icon name="solar:lock-keyhole-unlocked-outline"
+                            <Icon name="solar:eye-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
-                            <!-- <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                Project?.hidden }}</span> -->
+                            <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                                Project?.canSee }}</span>
+                        </li>
+                        <li class="flex">
+                            <Icon name="solar:user-plus-outline"
+                                class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                            <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                                Project?.canRegister }}</span>
+                        </li>
+                        <li class="flex">
+                            <Icon name="solar:pen-new-square-outline"
+                                class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                            <div class="flex flex-wrap gap-2">
+                                <span v-for="task, i in Project.tasks" :key="i" id="badge-dismiss-default"
+                                class="inline-flex items-center px-2 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded me-2 dark:bg-blue-900 dark:text-blue-300">
+                                {{ task }}
+                            </span>
+                            </div>
                         </li>
                         <li class="flex">
                             <Icon name="solar:document-outline"
@@ -74,7 +90,27 @@ definePageMeta({
                                 </div>
                             </dl>
                         </li>
+                        <li v-if="Project.registered">
+                            <span class="flex">
+                                <Icon name="solar:users-group-two-rounded-outline"
+                                    class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
+                                    Registered</span>
+                            </span>
+                            <dl
+                                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
+                                <div v-for="project, i in Project.registered" class="flex flex-col" :key="i">
+                                    <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ project.task
+                                    }}</dt>
+                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{ (project.profile as IProfile).fullName }}</dd>
+                                </div>
+                            </dl>
+                        </li>
                     </ul>
+                    <button type="submit"
+                        class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Register this
+                    </button>
                 </div>
             </div>
         </div>

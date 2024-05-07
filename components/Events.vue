@@ -74,7 +74,7 @@ const pickDetail = (id: string) => {
               <Icon name="solar:lock-keyhole-unlocked-outline"
                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
               <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                Event?.accessbility }}</span>
+                Event?.canSee }}</span>
             </li>
             <li class="flex">
               <Icon name="solar:document-outline" class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />

@@ -257,10 +257,10 @@ const getNameFromNIM = (NIM?: number) => {
                                 Event?.at }}</span>
                         </li>
                         <li class="flex">
-                            <Icon name="solar:lock-keyhole-unlocked-outline"
+                            <Icon name="solar:eye-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
-                            <!-- <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                Event?. }}</span> -->
+                            <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
+                                Event?.canSee }}</span>
                         </li>
                         <li class="flex">
                             <Icon name="solar:document-outline"
@@ -286,7 +286,29 @@ const getNameFromNIM = (NIM?: number) => {
                                 </div>
                             </dl>
                         </li>
+                        <li v-if="Event.registered">
+                            <span class="flex">
+                                <Icon name="solar:users-group-two-rounded-outline"
+                                    class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
+                                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
+                                    Registered</span>
+                            </span>
+                            <dl
+                                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
+                                <div v-for="registered, i in Event.registered" class="flex flex-col" :key="i">
+                                    <!-- <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ registered.job
+                                        }}</dt> -->
+                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
+                                        (registered.profile as IProfile).fullName }}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </li>
                     </ul>
+                    <button type="submit"
+                        class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Register this
+                    </button>
                 </div>
             </div>
         </div>
