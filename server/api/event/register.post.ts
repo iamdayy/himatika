@@ -1,13 +1,12 @@
 export default defineEventHandler(async (ev) => {
-    const { NIM, id, task } = await readBody(ev)
+    const { NIM, id } = await readBody(ev);
     try {
-        const project = await ProjectModel.findById(id);
+        const event = await EventModel.findById(id);
         const me = await ProfileModel.findOne({ NIM });
-        project?.registered?.push({
-            profile: me?._id,
-            task
+        event?.registered?.push({
+            profile: me?._id
         });
-        const saved =  await project?.save();
+        const saved = await event?.save();
         if (!saved) {
             throw createError({
                 statusCode: 400,
@@ -16,7 +15,7 @@ export default defineEventHandler(async (ev) => {
         }
         return {
             status: true,
-            statusMessage: "Success to register project " + project?.title,
+            statusMessage: "Success to register event " + event?.title,
         };
     } catch (error: any) {
         throw createError({

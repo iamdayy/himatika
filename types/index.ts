@@ -82,6 +82,7 @@ export interface IRegistered {
     task?: string;
 }
 export interface IEvent {
+    _id?: number;
     title: string;
     date: Date;
     at: string;
@@ -93,6 +94,7 @@ export interface IEvent {
 }
 
 export interface IProject {
+    _id?: number;
     title: string;
     deadline: Date;
     description: string;

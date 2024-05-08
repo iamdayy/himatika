@@ -15,9 +15,16 @@ const { access: canAccessAdd, isAdmin } = useRole(["Chairman", "viceChairman"]);
 
 const { isDept } = useDept();
 
+const { data } = useAuth()
+
 const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
 
 const { data: profiles } = await useAsyncData(() => $fetch<IProfile[]>("/api/profile"));
+
+const registerForm = ref({
+    NIM: data.value?.profile.NIM,
+    id: 0
+})
 
 const Event = ref<IEvent | null>(null);
 const newEvent = ref<IEvent>({
@@ -143,6 +150,30 @@ const canMeRegister = (canRegister: TRole) => {
         default:
             return false;
             break;
+    }
+}
+
+const isMeRegistered = (event: IEvent) => {
+    const nim = data.value?.profile.NIM;
+    const found = event.registered?.find((registered) => (registered.profile as IProfile).NIM == nim);
+    if (!found) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+const register = async (id: number) => {
+    registerForm.value.id = id;
+    try {
+        const response = await $fetch("/api/event/register", {
+            method: "post",
+            body: registerForm.value
+        });
+        refresh();
+        $toast(response.statusMessage!);
+    } catch (error: any) {
+        $toast("Failed to register " + Event.value?.title);
     }
 }
 </script>
@@ -352,7 +383,7 @@ const canMeRegister = (canRegister: TRole) => {
                             </dl>
                         </li>
                     </ul>
-                    <button type="submit" v-if="canMeRegister(Event.canRegister)"
+                    <button type="submit" v-if="canMeRegister(Event.canRegister) && !isMeRegistered(Event)" @click="register(Event?._id!)"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         Register this
                     </button>
