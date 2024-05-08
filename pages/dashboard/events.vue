@@ -21,6 +21,8 @@ const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/ap
 
 const { data: profiles } = await useAsyncData(() => $fetch<IProfile[]>("/api/profile"));
 
+const selectedRegistered = ref<Array<any>>([]);
+
 const registerForm = ref({
     NIM: data.value?.profile.NIM,
     id: 0
@@ -353,37 +355,95 @@ const register = async (id: number) => {
                                 <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
                                     Committee</span>
                             </span>
-                            <dl
-                                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
-                                <div v-for="event, i in Event.committee" class="flex flex-col" :key="i">
-                                    <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ event.job
-                                        }}</dt>
-                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
-                                        (event.user as IProfile).fullName }}
-                                    </dd>
-                                </div>
-                            </dl>
+                            <div class="relative my-3 mt-6 overflow-auto sm:rounded-lg ms-8 max-h-48 no-scrollbar">
+                                <table
+                                    class="w-full text-sm text-left text-gray-500 bg-gray-100 rtl:text-right dark:text-gray-400">
+                                    <tbody>
+                                        <tr v-for="event, i in Event.committee">
+                                            <td class="px-6 py-4 border-gray-200 border-e">
+                                                {{ (event.user as IProfile).fullName }}
+                                            </td>
+                                            <td class="px-6 py-4 border-gray-200 border-e">
+                                                as
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                {{ event.job }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </li>
                         <li v-if="Event.registered">
-                            <span class="flex">
-                                <Icon name="solar:users-group-two-rounded-outline"
-                                    class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
-                                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
-                                    Registered</span>
-                            </span>
-                            <dl
-                                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
-                                <div v-for="registered, i in Event.registered" class="flex flex-col" :key="i">
-                                    <!-- <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ registered.job
-                                        }}</dt> -->
-                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
-                                        (registered.profile as IProfile).fullName }}
-                                    </dd>
+                            <CoreModal name="Registered">
+                                <div class="px-2 py-2">
+                                    <table
+                                        class="w-full text-sm text-left text-gray-500 rtl:text-right dark:text-gray-400">
+                                        <thead
+                                            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="p-4">
+                                                    <div class="flex items-center">
+                                                        <input id="checkbox-all-search" type="checkbox"
+                                                            :checked="selectedRegistered.length == Event.registered?.length"
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                                        <label for="checkbox-all-search"
+                                                            class="sr-only">checkbox</label>
+                                                    </div>
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Name
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    NIM
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Class
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                                v-for="registered, i in Event.registered" :key="i">
+                                                <td class="w-4 p-4">
+                                                    <div class="flex items-center">
+                                                        <input id="checkbox-table" type="checkbox"
+                                                            v-model="selectedRegistered"
+                                                            :value="(registered?.profile as IProfile)"
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded checkbox-table focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                                        <label for="checkbox-table" class="sr-only">checkbox</label>
+                                                    </div>
+                                                </td>
+                                                <th scope="row"
+                                                    class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                                                    <NuxtImg class="rounded-full"
+                                                        :src="(registered?.profile as IProfile).avatar || '/profile-blank.png'"
+                                                        sizes="40" alt="Jese image" />
+                                                    <div class="ps-3">
+                                                        <div class="text-base font-semibold">{{
+                                                            (registered?.profile as IProfile).fullName }}</div>
+                                                        <div class="font-normal text-gray-500">{{
+                                                            (registered?.profile as IProfile).email
+                                                            }}</div>
+                                                    </div>
+                                                </th>
+                                                <td class="px-6 py-4">
+                                                    {{ (registered?.profile as IProfile).NIM }}
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center">
+                                                        {{ (registered?.profile as IProfile).class }}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </dl>
+                            </CoreModal>
                         </li>
                     </ul>
-                    <button type="submit" v-if="canMeRegister(Event.canRegister) && !isMeRegistered(Event)" @click="register(Event?._id!)"
+                    <button type="submit" v-if="canMeRegister(Event.canRegister) && !isMeRegistered(Event)"
+                        @click="register(Event?._id!)"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         Register this
                     </button>

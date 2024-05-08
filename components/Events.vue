@@ -2,7 +2,7 @@
 import type { IEvent, IProfile } from '~/types';
 const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
 const date = ref<number | undefined>(new Date(Date.now()).getDate());
-const Event = ref<IEvent>(Events.value?.find(event => new Date(event.date).getDate() == date.value)! || Events.value![Events.value?.length! -1]);
+const Event = ref<IEvent>(Events.value?.find(event => new Date(event.date).getDate() == date.value)! || Events.value![Events.value?.length! - 1]);
 const attributes = computed(() => [
   ...<[]>Events.value?.map(event => ({
     dot: 'green',
@@ -88,16 +88,24 @@ const pickDetail = (id: string) => {
                 <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
                   Committee</span>
               </span>
-              <dl
-                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
-                <div v-for="event, i in Event.committee" class="flex flex-col" :key="i">
-                  <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ event.job
-                    }}</dt>
-                  <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
-                    (event.user as IProfile).fullName }}
-                  </dd>
-                </div>
-              </dl>
+              <div class="relative my-3 mt-6 overflow-auto sm:rounded-lg ms-8 max-h-48">
+                <table
+                  class="w-full text-sm text-left text-gray-500 bg-gray-100 rtl:text-right dark:text-gray-400">
+                  <tbody>
+                    <tr v-for="event, i in Event.committee">
+                      <td class="px-6 py-4 border-gray-200 border-e">
+                        {{ (event.user as IProfile).fullName }}
+                      </td>
+                      <td class="px-6 py-4 border-gray-200 border-e">
+                        as
+                      </td>
+                      <td class="px-6 py-4">
+                        {{ event.job }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </li>
           </ul>
         </div>

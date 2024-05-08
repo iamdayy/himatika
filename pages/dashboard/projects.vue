@@ -9,6 +9,8 @@ const { $toast } = useNuxtApp();
 
 const { data: Projects, refresh } = useAsyncData(() => $fetch<IProject[]>("/api/project"));
 
+const selectedRegistered = ref<Array<any>>([]);
+
 const Project = ref<IProject | null>(null);
 const registerForm = ref({
     NIM: data.value?.profile.NIM,
@@ -108,7 +110,7 @@ onMounted(() => {
         </div>
         <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
             <div
-                class="mx-auto shadow-lg rounded-lg w-full md:w-2/5 max-h-[60vh] overflow-y-scroll border border-gray-400 bg-gray-100 py-4 no-scrollbar">
+                class="mx-auto shadow-lg rounded-lg w-full md:w-2/5 max-h-[60vh] overflow-y-scroll border border-gray-400 bg-gray-100 py-4">
                 <button v-for="project, i in Projects" :key="i" @click="pickDetail(project.title)"
                     class="relative inline-flex items-center w-full px-4 py-2 text-lg font-semibold border-b border-gray-200 rounded-t-lg hover:bg-gray-100 hover:text-blue-700 focus:border-blue-700 focus:z-10 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:text-white">
                     {{ project.title }} | <span class="font-light text-md ms-2">{{ new
@@ -144,7 +146,7 @@ onMounted(() => {
                         <li class="flex">
                             <Icon name="solar:pen-new-square-outline"
                                 class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex flex-wrap gap-2 ms-3">
                                 <span v-for="task, i in Project.tasks" :key="i" id="badge-dismiss-default"
                                     class="inline-flex items-center px-2 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded me-2 dark:bg-blue-900 dark:text-blue-300">
                                     {{ task }}
@@ -164,37 +166,95 @@ onMounted(() => {
                                 <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
                                     Contributors</span>
                             </span>
-                            <dl
-                                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
-                                <div v-for="project, i in Project.contributors" class="flex flex-col" :key="i">
-                                    <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ project.job
-                                        }}</dt>
-                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
-                                        (project.profile as IProfile).fullName
-                                        }}</dd>
-                                </div>
-                            </dl>
+                            <div class="relative my-3 mt-6 overflow-auto sm:rounded-lg ms-8 max-h-[40vh]">
+                                <table
+                                    class="w-full text-sm text-left text-gray-500 bg-gray-100 rtl:text-right dark:text-gray-400">
+                                    <tbody>
+                                        <tr v-for="event, i in Project.contributors">
+                                            <td class="px-6 py-4 border-gray-200 border-e">
+                                                {{ (event.profile as IProfile).fullName }}
+                                            </td>
+                                            <td class="px-6 py-4 border-gray-200 border-e">
+                                                as
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                {{ event.job }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </li>
                         <li v-if="Project.registered">
-                            <span class="flex">
-                                <Icon name="solar:users-group-two-rounded-outline"
-                                    class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
-                                <span class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">
-                                    Registered</span>
-                            </span>
-                            <dl
-                                class="my-3 mt-6 space-y-3 list-inside divide-y divide-gray-200 ps-8 dark:text-white dark:divide-gray-700">
-                                <div v-for="project, i in Project.registered" class="flex flex-col" :key="i">
-                                    <dt class="mb-1 text-sm text-gray-500 dark:text-gray-400">{{ project.task
-                                        }}</dt>
-                                    <dd class="text-lg font-medium text-gray-500 dark:text-gray-400">{{
-                                        (project.profile as IProfile).fullName
-                                        }}</dd>
+                            <CoreModal name="Registered">
+                                <div class="px-2 py-2 relative overflow-auto sm:rounded-lg max-h-[40vh]">
+                                    <table
+                                        class="w-full text-sm text-left text-gray-500 rtl:text-right dark:text-gray-400">
+                                        <thead
+                                            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="p-4">
+                                                    <div class="flex items-center">
+                                                        <input id="checkbox-all-search" type="checkbox"
+                                                            :checked="selectedRegistered.length == Project.registered?.length"
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                                        <label for="checkbox-all-search"
+                                                            class="sr-only">checkbox</label>
+                                                    </div>
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Name
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    NIM
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Class
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                                v-for="registered, i in Project.registered" :key="i">
+                                                <td class="w-4 p-4">
+                                                    <div class="flex items-center">
+                                                        <input id="checkbox-table" type="checkbox"
+                                                            v-model="selectedRegistered"
+                                                            :value="(registered?.profile as IProfile)"
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded checkbox-table focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                                        <label for="checkbox-table" class="sr-only">checkbox</label>
+                                                    </div>
+                                                </td>
+                                                <th scope="row"
+                                                    class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                                                    <NuxtImg class="rounded-full"
+                                                        :src="(registered?.profile as IProfile).avatar || '/profile-blank.png'"
+                                                        sizes="40" alt="Jese image" />
+                                                    <div class="ps-3">
+                                                        <div class="text-base font-semibold">{{
+                                                            (registered?.profile as IProfile).fullName }}</div>
+                                                        <div class="font-normal text-gray-500">{{
+                                                            (registered?.profile as IProfile).email
+                                                        }}</div>
+                                                    </div>
+                                                </th>
+                                                <td class="px-6 py-4">
+                                                    {{ (registered?.profile as IProfile).NIM }}
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center">
+                                                        {{ (registered?.profile as IProfile).class }}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </dl>
+                            </CoreModal>
                         </li>
                     </ul>
-                    <button type="submit" v-if="canMeRegister(Project.canRegister) && !isMeRegistered(Project)" data-popover-target="register" data-popover-placement="bottom" data-popover-trigger="click"
+                    <button type="submit" v-if="canMeRegister(Project.canRegister) && !isMeRegistered(Project)"
+                        data-popover-target="register" data-popover-placement="bottom" data-popover-trigger="click"
                         class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         Register this
                     </button>
