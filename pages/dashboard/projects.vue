@@ -7,7 +7,9 @@ const { isDept } = useDept();
 const { data } = useAuth();
 const { $toast } = useNuxtApp();
 
-const { data: Projects, refresh } = useAsyncData(() => $fetch<IProject[]>("/api/project"));
+const { Projects, refreshProjects } = useProjects()
+    
+const { canMeRegister } = useCanMeRegister();
 
 const selectedRegistered = ref<Array<any>>([]);
 
@@ -20,52 +22,6 @@ const registerForm = ref({
 const pickDetail = (title: string) => {
     const index = Projects.value?.findIndex((project) => project.title === title);
     Project.value = Projects.value![index!];
-}
-
-const canMeRegister = (canRegister: TRole) => {
-    switch (canRegister) {
-        case "All":
-            return true;
-            break;
-        case "No":
-            return false;
-            break;
-        case "Admin":
-            if (isAdmin) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        case "Departement":
-            if (isDept) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        case "Internal":
-            if (isAdmin || isDept) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        case "External":
-            if (!isAdmin || !isDept) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        default:
-            return false;
-            break;
-    }
 }
 
 const isMeRegistered = (project: IProject) => {
@@ -84,7 +40,7 @@ const register = async (id: number) => {
             method: "post",
             body: registerForm.value
         });
-        refresh();
+        refreshProjects();
         $toast(response.statusMessage!);
     } catch (error: any) {
         $toast("Failed to register " + Project.value?.title);
@@ -106,7 +62,7 @@ onMounted(() => {
             <h2 class="text-4xl font-extrabold leading-tight tracking-tight text-gray-600 dark:text-white">
                 Project
             </h2>
-            <ModalsProjectsAdd @trigger-refresh="refresh" v-if="canAccessAdd" />
+            <ModalsProjectsAdd @trigger-refresh="refreshProjects" v-if="canAccessAdd" />
         </div>
         <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
             <div

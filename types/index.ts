@@ -26,7 +26,7 @@ export interface IProfile {
         place: string,
         date: Date,
     };
-    sex: 'Laki-Laki' | 'Perempuan';
+    sex: 'female' | 'male';
     religion: string;
     citizen: string;
     phone: string;

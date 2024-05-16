@@ -1,10 +1,10 @@
 <script setup lang='ts'>
 import type { IEvent, IProfile } from '~/types';
-const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
+const { events } = useEvents();
 const date = ref<number | undefined>(new Date(Date.now()).getDate());
-const Event = ref<IEvent>(Events.value?.find(event => new Date(event.date).getDate() == date.value)! || Events.value![Events.value?.length! - 1]);
+const Event = ref<IEvent>(events.value?.find(event => new Date(event.date).getDate() == date.value)! ||  null);
 const attributes = computed(() => [
-  ...<[]>Events.value?.map(event => ({
+  ...<[]>events.value?.map(event => ({
     dot: 'green',
     content: 'green',
     dates: event.date,
@@ -17,22 +17,22 @@ const pickDay = (day: any) => {
   date.value = day.day;
 }
 const pickDetail = (id: string) => {
-  if (Events.value) {
-    const index = Events.value.findIndex((event) => event.title === id);
-    Event.value = Events.value[index];
+  if (events.value) {
+    const index = events.value.findIndex((event) => event.title === id);
+    Event.value = events.value[index];
   }
 }
 </script>
 <template>
-  <CoreCard title="Events">
+  <CoreCard title="events">
 
     <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
-      <VCalendar :attributes="attributes" class="mx-auto shadow-lg md:max-w-sm" @dayclick="pickDay">
+      <VCalendar v-if="events" :attributes="attributes" class="mx-auto shadow-lg md:max-w-sm" @dayclick="pickDay">
         <template #footer>
           <div class="px-2 pb-3">
             <div class="mx-auto">
               <div class="pt-2 border-t border-gray-800 dark:border-gray-700">
-                <div v-for="event, i in Events?.filter((event: IEvent) => new Date(event.date).getDate() == date)"
+                <div v-for="event, i in events?.filter((event: IEvent) => new Date(event.date).getDate() == date)"
                   :key="i"
                   class="flex flex-col gap-2 px-4 py-2 cursor-pointer sm:gap-6 sm:flex-row sm:items-center hover:bg-gray-200 rounded-3xl"
                   @click="pickDetail(event.title)">

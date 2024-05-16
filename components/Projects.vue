@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { initAccordions } from 'flowbite';
 import type { IProject, TRole, IProfile } from '~/types';
-const { data } = await useAsyncData(() => $fetch<IProject[]>("/api/project"));
+const { Projects } = useProjects()
 const { isAdmin } = useRole();
 const { isDept } = useDept();
 const canMeSee = (canSee: TRole) => {
@@ -49,7 +49,7 @@ const canMeSee = (canSee: TRole) => {
       break;
   }
 }
-const Projects = ref<IProject[]|undefined>(data.value?.filter((project) => canMeSee(project.canSee) && new Date(project.deadline) >= new Date(Date.now())).sort((a,b) => Number(a.deadline) - Number(b.deadline)));
+const projects = ref<IProject[]|undefined>(Projects.value?.filter((project) => canMeSee(project.canSee) && new Date(project.deadline) >= new Date(Date.now())).sort((a,b) => Number(a.deadline) - Number(b.deadline)));
 onMounted(() => {
   initAccordions()
 })
@@ -62,7 +62,7 @@ onMounted(() => {
       <div>
         <div class="px-3 py-8 overflow-auto max-h-[70vh]">
           <ol class="relative border-gray-300 border-s dark:border-orange-700">
-            <CoreTimelineItem v-for="project, i in Projects" :key="i" :index="i" :description="project.description"
+            <CoreTimelineItem v-for="project, i in projects" :key="i" :index="i" :description="project.description"
               :title="project.title" :date="new Date(project.deadline).toDateString()">
               <ul role="list" class="px-4 space-y-5 my-7">
                         <li class="flex items-center">

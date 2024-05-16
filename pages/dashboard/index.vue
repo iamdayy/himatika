@@ -1,5 +1,6 @@
 <script setup lang='ts'>
 import type { ILink, IEvent, IProject, IUser, IProfile } from '~/types'
+import { initCarousels, initDropdowns, initTooltips } from 'flowbite';
 definePageMeta({
   layout: false,
   middleware: ["auth"]
@@ -7,9 +8,10 @@ definePageMeta({
 useHead({
   title: "Dashboard | Himatika"
 });
-import { initCarousels, initDropdowns, initTooltips } from 'flowbite';
 
 const { data: user, signOut } = useAuth();
+
+const { eventsMe, EventPercentage, projectsMe, ProjectPercentage, all, allPercentage } = useStats();
 
 const navigation: ILink[] = [
   { name: 'Dashboard', href: '/', current: true },
@@ -18,14 +20,15 @@ const navigation: ILink[] = [
   { name: 'Profile', href: '/dashboard/profile', current: false },
 ] as ILink[];
 
-const { data: Events } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
+const { events: Events } = useEvents();
 
-const { data: Projects } = await useAsyncData(() => $fetch<IProject[]>("/api/project"));
-const Project = ref<IProject | undefined>(Projects.value?.find((project) => new Date(project.deadline) > new Date(Date.now())))
+const { Projects } = useProjects()
+const Project = ref<IProject | undefined>(Projects.value?.find((project) => new Date(project.deadline) > new Date(Date.now())));
 onMounted(async () => {
   initCarousels();
   initDropdowns();
   initTooltips();
+
 })
 </script>
 <template>
@@ -147,8 +150,66 @@ onMounted(async () => {
       </div>
     </div>
     <div class="w-full md:w-3/4">
+      <!-- Stats Section -->
+      <div class="grid w-full grid-cols-1 gap-4 px-2 py-4 md:grid-cols-3 md:gap-6 xl:grid-cols-3 2xl:gap-8">
+
+        <div
+          class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:border-slate-300 dark:bg-slate-500">
+          <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
+            <Icon name="solar:folder-with-files-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
+          </div>
+          <div class="flex items-end justify-between mt-4">
+            <div>
+              <span class="text-sm font-medium">Registered</span>
+              <h4 class="text-2xl font-bold text-black dark:text-white">
+                {{ all }}
+              </h4>
+            </div>
+            <span class="text-sm font-medium text-blue-700 dark:text-white">{{ allPercentage }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <div class="bg-blue-600 h-2.5 rounded-full" :style="`width: ${allPercentage}%`"></div>
+          </div>
+        </div>
+        <div
+          class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:border-slate-300 dark:bg-slate-500">
+          <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
+            <Icon name="solar:programming-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
+          </div>
+          <div class="flex items-end justify-between mt-4">
+            <div>
+              <span class="text-sm font-medium">Projects registered</span>
+              <h4 class="text-2xl font-bold text-black dark:text-white">
+                {{ projectsMe?.length }}
+              </h4>
+            </div>
+            <span class="text-sm font-medium text-blue-700 dark:text-white">{{ ProjectPercentage }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <div class="bg-blue-600 h-2.5 rounded-full" :style="`width: ${ProjectPercentage}%`"></div>
+          </div>
+        </div>
+        <div
+          class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:border-slate-300 dark:bg-slate-500">
+          <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
+            <Icon name="solar:calendar-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
+          </div>
+          <div class="flex items-end justify-between mt-4">
+            <div>
+              <span class="text-sm font-medium">Events registered</span>
+              <h4 class="text-2xl font-bold text-black dark:text-white">
+                {{ eventsMe?.length }}
+              </h4>
+            </div>
+            <span class="text-sm font-medium text-blue-700 dark:text-white">{{ EventPercentage }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <div class="bg-blue-600 h-2.5 rounded-full" :style="`width: ${EventPercentage}%`"></div>
+          </div>
+        </div>
+      </div>
       <!-- Events section -->
-      <div class="p-6 bg-gray-100 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
+      <div class="p-6 rounded-lg shadow-md bg-blue-50 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex justify-between">
           <div class="flex gap-2">
             <Icon name="solar:calendar-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
@@ -180,15 +241,9 @@ onMounted(async () => {
                   <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.at }}</h3>
 
                   <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.accessbility
+                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.canSee
                     }}
                   </h3>
-
-                  <!-- <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Urgently</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">
-                    <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" />
-                    <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" />
-                  </h3> -->
                 </div>
               </div>
             </div>
@@ -228,7 +283,7 @@ onMounted(async () => {
         </div>
       </div>
       <!-- Projects Section -->
-      <div class="p-6 mt-4 bg-gray-100 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
+      <div class="p-6 mt-4 rounded-lg shadow-md bg-blue-50 dark:bg-gray-800 dark:border-gray-700">
         <div class="flex justify-between">
           <div class="flex gap-2">
             <Icon name="solar:programming-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
@@ -257,8 +312,7 @@ onMounted(async () => {
             <div v-for="contributor, i in Project?.contributors" v-if="Project?.contributors" :key="i" class="-mx-1">
               <img :data-tooltip-target="`tooltip-${i}`"
                 class="object-cover w-6 h-6 border rounded-full shadow-md border-white/30"
-                :src="(contributor.profile as IProfile).avatar || '/img/profile-blank.png'"
-                alt="">
+                :src="(contributor.profile as IProfile).avatar || '/img/profile-blank.png'" alt="">
               <div :id="`tooltip-${i}`" role="tooltip"
                 class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
                 {{ `${(contributor.profile as IProfile).fullName}` }}
@@ -269,8 +323,9 @@ onMounted(async () => {
 
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Public</span>
           <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">
-            <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" v-if="!Project?.hidden" />
-            <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" v-else />
+            {{ Project?.canSee }}
+            <!-- <Icon name="solar:check-circle-bold" class="w-6 h-6 text-green-400" v-if="!Project" />
+            <Icon name="solar:close-circle-bold" class="w-6 h-6 text-red-600" v-else /> -->
           </h3>
           <!-- <div>
             <div class="flex justify-between mb-1">

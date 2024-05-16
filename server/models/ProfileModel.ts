@@ -45,7 +45,7 @@ export const ProfileModel = defineMongooseModel<IProfileSchema>("Profile", {
     sex: {
         type: String,
         required: true,
-        enum: ["Laki-Laki", "Perempuan"]
+        enum: ["female", "male"]
     },
     religion: {
         type: String,
@@ -73,8 +73,25 @@ export const ProfileModel = defineMongooseModel<IProfileSchema>("Profile", {
     }
 },
 {
-
+toJSON: {
+    virtuals: true
+},
+toObject: {
+    virtuals: true
+}
 },
 (schema) => {
-    schema.plugin(mongooseAutopopulate)
+    schema.virtual('projects', {
+        ref: "Project",
+        localField: "_id",
+        foreignField: "registered.profile",
+        autopopulate: true
+    });
+    schema.virtual('events', {
+        ref: "Event",
+        localField: "_id",
+        foreignField: "registered.profile",
+        autopopulate: true
+    });
+    schema.plugin(mongooseAutopopulate);
 });

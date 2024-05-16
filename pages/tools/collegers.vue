@@ -84,7 +84,7 @@ const checkAll = () => {
                         </div>
                     </td>
                     <th scope="row" class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
-                        <NuxtImg class="rounded-full" :src="colleger?.avatar || '/img/profile-blank.png'" sizes="40"
+                        <NuxtImg class="rounded-full" :src="colleger?.avatar || '/img/profile-blank.png'" sizes="40px"
                             alt="Jese image" />
                         <div class="ps-3">
                             <div class="text-base font-semibold">{{ colleger.fullName }}</div>

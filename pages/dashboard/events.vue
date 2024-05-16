@@ -13,11 +13,13 @@ useHead({
 
 const { access: canAccessAdd, isAdmin } = useRole(["Chairman", "viceChairman"]);
 
+const { canMeRegister } = useCanMeRegister();
+
 const { isDept } = useDept();
 
 const { data } = useAuth()
 
-const { data: Events, refresh } = await useAsyncData(() => $fetch<IEvent[]>("/api/event"));
+const { events, refreshEvents } = useEvents();
 
 const { data: profiles } = await useAsyncData(() => $fetch<IProfile[]>("/api/profile"));
 
@@ -64,9 +66,9 @@ const deleteCommittee = (i: number) => {
     newEvent.value.committee?.splice(i, 1);
 }
 const pickDetail = (id: string) => {
-    if (Events.value) {
-        const index = Events.value.findIndex((event) => event.title === id);
-        Event.value = Events.value[index];
+    if (events.value) {
+        const index = events.value.findIndex((event) => event.title === id);
+        Event.value = events.value[index];
     }
 }
 
@@ -76,7 +78,7 @@ const pickDay = (day: any) => {
 const pickDate = ref<number | null>(null);
 
 const attributes = computed(() => [
-    ...<[]>Events.value?.map(event => ({
+    ...<[]>events.value?.map(event => ({
         dot: 'green',
         content: 'green',
         dates: event.date,
@@ -100,7 +102,7 @@ const addEvent = async () => {
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
         $toast("Success add new event at " + newEvent.value.date.toLocaleDateString());
         modal.hide();
-        refresh();
+        refreshEvents();
     } catch (error: any) {
         $toast("Failed to add new Event");
     }
@@ -108,51 +110,6 @@ const addEvent = async () => {
 
 const getNameFromNIM = (NIM?: number) => {
     return profiles.value?.find((profile) => profile.NIM == NIM)?.fullName;
-}
-const canMeRegister = (canRegister: TRole) => {
-    switch (canRegister) {
-        case "All":
-            return true;
-            break;
-        case "No":
-            return false;
-            break;
-        case "Admin":
-            if (isAdmin) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        case "Departement":
-            if (isDept) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        case "Internal":
-            if (isAdmin || isDept) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        case "External":
-            if (!isAdmin || !isDept) {
-                return true;
-                break;
-            } else {
-                return false;
-                break;
-            }
-        default:
-            return false;
-            break;
-    }
 }
 
 const isMeRegistered = (event: IEvent) => {
@@ -172,7 +129,7 @@ const register = async (id: number) => {
             method: "post",
             body: registerForm.value
         });
-        refresh();
+        refreshEvents();
         $toast(response.statusMessage!);
     } catch (error: any) {
         $toast("Failed to register " + Event.value?.title);
@@ -293,7 +250,7 @@ const register = async (id: number) => {
                     <div class="px-2 pb-3">
                         <div class="mx-auto">
                             <div class="pt-2 border-t border-gray-800 dark:border-gray-700">
-                                <div v-for="event, i in Events?.filter((event: IEvent) => new Date(event.date).getDate() == pickDate)"
+                                <div v-for="event, i in events?.filter((event: IEvent) => new Date(event.date).getDate() == pickDate)"
                                     :key="i"
                                     class="flex flex-col gap-2 px-4 py-2 cursor-pointer sm:gap-6 sm:flex-row sm:items-center hover:bg-gray-200 rounded-3xl"
                                     @click="pickDetail(event.title)">
