@@ -25,7 +25,6 @@ export const ProfileModel = defineMongooseModel<IProfileSchema>("Profile", {
     },
     avatar: {
         type: String,
-        required: true
     },
     class: {
         type: String,
