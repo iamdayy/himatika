@@ -11,7 +11,7 @@ export const getSession = async (payload: string) => {
                 statusCode: 401
             })
         }
-        const user = await UserModel.findById(session.user);
+        const user = await UserModel.findById(session.user).populate('projects').populate('events').populate('isAdministrator').populate('isDepartement');
         return user;
     } catch (error: any) {
         return error;

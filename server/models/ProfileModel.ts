@@ -84,13 +84,23 @@ toObject: {
         ref: "Project",
         localField: "_id",
         foreignField: "registered.profile",
-        autopopulate: true
     });
     schema.virtual('events', {
         ref: "Event",
         localField: "_id",
         foreignField: "registered.profile",
-        autopopulate: true
+    });
+    schema.virtual('isAdministrator', {
+        ref: "Administrator",
+        localField: "_id",
+        foreignField: "AdministratorMembers.profile",
+        justOne: true
+    });
+    schema.virtual('isDepartement', {
+        ref: "Departement",
+        localField: "_id",
+        foreignField: "profile",
+        justOne: true
     });
     schema.plugin(mongooseAutopopulate);
 });

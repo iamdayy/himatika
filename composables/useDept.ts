@@ -8,23 +8,16 @@ export const useDept = (canAccess?: string[]) => {
     const fetchData = () => {
         dept.value = null;
         if (status.value == 'authenticated') {
-            const NIM = me.value?.profile.NIM;
-            $fetch<IDepartement>("/api/departement", {
-                method: "get",
-                query: {
-                    NIM
-                }
-            }).then(data => {
-                if (!data) {
-                    dept.value = 'Departement';
-                    
-                }
-                if (data) {
-                    dept.value = data.departement || 'Member';
-                    isDept.value = true;
-                    period.value = data.period;
-                }
-            });
+            const isDepartement = me.value?.profile.isDepartement as IDepartement;
+            if (!isDepartement) {
+                dept.value = 'Departement';
+                
+            }
+            if (isDepartement) {
+                dept.value = isDepartement.departement || 'Member';
+                isDept.value = true;
+                period.value = isDepartement.period;
+            }
         }
     }
     watchEffect(() => {

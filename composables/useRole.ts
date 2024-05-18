@@ -9,21 +9,15 @@ export const useRole = (canAccess?: string[]) => {
         role.value = null;
         if (status.value == 'authenticated') {
             const NIM = me.value?.profile.NIM;
-            $fetch<IAdministrator>("/api/administrator", {
-                method: "get",
-                query: {
-                    NIM
-                }
-            }).then(data => {
-                if (!data) {
-                    role.value = 'Member';
-                }
-                if (data) {
-                    role.value = data.AdministratorMembers.find((member) => (member.profile as IProfile).NIM === NIM)?.role || 'Member';
-                    isAdmin.value = true;
-                    period.value = data.period!;
-                }
-            });
+            const isAdministrator = me.value?.profile.isAdministrator as IAdministrator;
+            if (!isAdministrator) {
+                role.value = 'Member';
+            }
+            if (isAdministrator) {
+                role.value = isAdministrator.AdministratorMembers.find((member) => (member.profile as IProfile).NIM === NIM)?.role || 'Member';
+                isAdmin.value = true;
+                period.value = isAdministrator.period!;
+            }
         }
     }
     watchEffect(() => {

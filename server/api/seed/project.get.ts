@@ -1,8 +1,8 @@
-import { seedEvent } from "~/server/dev/faker/EventFaker";
+import { seedProject } from "~/server/dev/faker/ProjectFaker";
 
 export default defineEventHandler(async (ev) => {
     try {
-        seedEvent();
+        seedProject();
     } catch (error) {
         return error;
     }
