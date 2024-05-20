@@ -19,7 +19,13 @@ export interface IAddressSchema extends IAddress, Document {};
 export interface IRegisteredSchema extends IRegistered, Document {};
 
 export interface ICommitteeSchema extends ICommittee, Document {};
-export interface IEventSchema extends IEvent, Document {};
+export interface IEventSchema extends IEvent, Document {
+    createdAt: Date;
+    updatedAt: Date;
+};
 
 export interface IContributorSchema extends IContributor, Document {};
-export interface IProjectSchema extends IProject, Document {};
+export interface IProjectSchema extends IProject, Document {
+    createdAt: Date;
+    updatedAt: Date;
+};

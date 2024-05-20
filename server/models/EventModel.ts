@@ -12,7 +12,7 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
         type: Types.ObjectId,
         required: true,
         ref: "Profile",
-        autopopulate: true
+        autopopulate: { select: "NIM avatar fullName class semester" }
     }
 });
 
@@ -21,7 +21,7 @@ const registeredSchema = new Schema<IRegisteredSchema>({
         type: Types.ObjectId,
         required: true,
         ref: "Profile",
-        autopopulate: true
+        autopopulate: { select: "NIM avatar fullName class semester" }
     },
     task: {
         type: String,
@@ -55,9 +55,12 @@ export const EventModel = defineMongooseModel<IEventSchema>("Event", {
         default: "No",
         enum: ["Admin", "Departement", "Internal", "All", "External", "No"]
     },
-    registered: [registeredSchema]
+    registered: [registeredSchema],
+    createdAt: Date,
+    updatedAt: Date
 },
 {
+    timestamps: true
 },
 (schema) => {
     schema.plugin(mongooseAutoPopulate)

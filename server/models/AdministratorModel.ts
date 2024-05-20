@@ -24,7 +24,7 @@ export const AdministratorMemberSchema = new Schema<IAdministratorMemberSchema>(
         type: Types.ObjectId,
         required: true,
         ref: "Profile",
-        autopopulate: true
+        autopopulate: { select: "NIM avatar fullName class semester" }
     }
 })
 

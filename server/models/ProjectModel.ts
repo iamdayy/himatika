@@ -9,7 +9,7 @@ const contributorSchema = new Schema<IContributorSchema>({
         type: Types.ObjectId,
         required: true,
         ref: "Profile",
-        autopopulate: true
+        autopopulate: { select: "NIM avatar fullName class semester" }
     },
     job: {
         type: String,
@@ -22,7 +22,7 @@ const registeredSchema = new Schema<IRegisteredSchema>({
         type: Types.ObjectId,
         required: true,
         ref: "Profile",
-        autopopulate: true
+        autopopulate: { select: "NIM avatar fullName class semester" }
     },
     task: {
         type: String
@@ -59,10 +59,12 @@ export const ProjectModel = defineMongooseModel<IProjectSchema>("Project", {
         default: "No",
         enum: ["Admin", "Departement", "Internal", "All", "External", "No"]
     },
-    registered: [registeredSchema]
+    registered: [registeredSchema],
+    createdAt: Date,
+    updatedAt: Date
 },
 {
-
+timestamps: true
 },
 (schema) => {
     schema.plugin(mongooseAutoPopulate)
