@@ -3,12 +3,21 @@ import { initCollapses, initTabs } from 'flowbite';
 import type { IAdministrator, IDepartement, IProfile, IPeriod } from '~/types';
 const { data: administrators } = await useAsyncData(() => $fetch<IAdministrator[]>("/api/administrator"));
 const { data: departementsData } = await useAsyncData(() => $fetch<IDepartement[]>("/api/departement"));
-const administrator = ref<IAdministrator | undefined>(administrators.value?.find((admin) => new Date(admin.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(admin.period.end).getFullYear() <= new Date(Date.now()).getFullYear()));
-const departements = ref<IDepartement[] | undefined>(departementsData.value?.filter((departement) => new Date(departement.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(departement.period.end).getFullYear() <= new Date(Date.now()).getFullYear()));
-const departementPeriod = ref<IPeriod | undefined>(departements?.value![0].period)
+const administrator = ref<IAdministrator | undefined>();
+const departements = ref<IDepartement[] | undefined>();
+const departementPeriod = ref<IPeriod | undefined>()
 onMounted(async () => {
   initTabs();
-  initCollapses()
+  initCollapses();
+  if (administrators.value) {
+    administrator.value = administrators.value?.find((admin) => new Date(admin.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(admin.period.end).getFullYear() <= new Date(Date.now()).getFullYear());
+  }
+  if (departementsData.value) {
+    departementsData.value?.filter((departement) => new Date(departement.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(departement.period.end).getFullYear() <= new Date(Date.now()).getFullYear())
+  }
+  if (departements.value) {
+    departementPeriod.value = departements?.value![0].period;
+  }
 })
 </script>
 <template>
@@ -76,7 +85,7 @@ onMounted(async () => {
                   Informatika.</li>
               </ul>
             </div>
-            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="kepengurusan" role="tabpanel"
+            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="kepengurusan" role="tabpanel" v-if="administrator"
               aria-labelledby="kepengurusan-tab">
               <h1 class="mb-2 text-3xl font-bold text-center">Kepengurusan</h1>
               <h1 class="mb-4 text-xl font-bold text-center text-gray-400"><span>{{ new Date(administrator?.period.start!).getFullYear() }}</span> - <span>{{ new Date(administrator?.period.end!).getFullYear() }}</span> </h1>
@@ -84,7 +93,7 @@ onMounted(async () => {
                 <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" class="mb-8" :profile="member.profile as IProfile" :subtitle="member.role" />
               </div>
             </div>
-            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="departemen" role="tabpanel"
+            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="departemen" role="tabpanel" v-if="departements"
               aria-labelledby="departemen-tab">
               <h1 class="mb-2 text-3xl font-bold text-center">Departemen</h1>
               <h1 class="mb-4 text-xl font-bold text-center text-gray-400"><span>{{ new Date(departementPeriod?.start!).getFullYear() }}</span> - <span>{{ new Date(departementPeriod?.end!).getFullYear() }}</span> </h1>
