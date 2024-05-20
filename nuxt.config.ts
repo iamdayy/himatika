@@ -49,7 +49,7 @@ export default defineNuxtConfig({
   mongoose: {
     uri: process.env.MONGODB_URI,
     options: {
-
+      dbName: "himatika"
     },
     modelsDir: 'models'
   },
