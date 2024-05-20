@@ -8,7 +8,7 @@ export const useDept = (canAccess?: string[]) => {
     const fetchData = () => {
         dept.value = null;
         if (status.value == 'authenticated') {
-            const isDepartement = me.value?.user.profile.isDepartement as IDepartement;
+            const isDepartement = me.value?.profile.isDepartement as IDepartement;
             if (!isDepartement) {
                 dept.value = 'Departement';
                 

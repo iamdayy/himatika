@@ -38,7 +38,7 @@ export default defineNuxtConfig({
         sessionDataType: { profile: "IProfile", username: "string" },
     },
     session: {
-      enableRefreshPeriodically: true,
+      enableRefreshPeriodically: 3600000,
       enableRefreshOnWindowFocus: true
     },
     baseURL: "/api",
