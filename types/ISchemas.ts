@@ -3,8 +3,14 @@ import type { Document } from "mongoose";
 export interface IUserSchema extends IUser, Document {
     password: string;
 }
-export interface ISessionSchema extends ISession, Document {};
-export interface IProfileSchema extends IProfile, Document {};
+export interface ISessionSchema extends ISession, Document {
+    createdAt: Date;
+    updatedAt: Date;
+};
+export interface IProfileSchema extends IProfile, Document {
+    createdAt: Date;
+    updatedAt: Date;
+};
 export interface IDepartementSchema extends IDepartement, Document {};
 export interface IAdministratorMemberSchema extends IAdministratorMember, Document {};
 export interface IAdministratorSchema extends IAdministrator, Document {};

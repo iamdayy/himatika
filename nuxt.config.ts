@@ -23,17 +23,23 @@ export default defineNuxtConfig({
   },
   auth: {
     provider: {
-        type: 'local',
+        type: 'refresh',
         endpoints: {
           signIn: { path: "/login", method: "post" },
           signUp: { path: "/register", method: "post" },
           signOut: { path: "/logout", method: "get" },
-          getSession: { path: "/session", method: "get" }
+          getSession: { path: "/session", method: "get" },
+          refresh: { path: "/refresh", method: "get" }
         },
         token: {
-          signInResponseTokenPointer: '/token/accessToken'
+          signInResponseTokenPointer: '/token/accessToken',
         },
-        sessionDataType: { profile: 'IProfile', username: "string" },
+        refreshToken: { signInResponseRefreshTokenPointer: '/token/refreshToken' },
+        sessionDataType: { profile: "IProfile", username: "string" },
+    },
+    session: {
+      enableRefreshPeriodically: true,
+      enableRefreshOnWindowFocus: true
     },
     baseURL: "/api",
     globalAppMiddleware: {

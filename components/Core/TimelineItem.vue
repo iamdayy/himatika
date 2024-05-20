@@ -9,7 +9,7 @@ const props = defineProps({
 <template>
     <li class="mb-10 ms-4">
         <h2 :id="`accordion-detail-${index}`">
-            <button type="submit" :data-accordion-target="`#detail-${index}`" :aria-controls="`detail-${index}`">
+            <button type="submit" :data-accordion-target="`#detail-${index}`" :aria-controls="`detail-${index}`" class="p-2 text-start">
                 <div
                     class="absolute w-3 h-3 bg-blue-400 rounded-full mt-1.5 -start-1.5 dark:bg-blue-700 dot">
                 </div>

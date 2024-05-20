@@ -1,5 +1,4 @@
 import { defineMongooseModel } from '#nuxt/mongoose';
-import mongooseAutopopulate from "mongoose-autopopulate";
 import { IUserSchema } from '~/types/ISchemas';
 import { Types } from "mongoose";
 import bcrypt from "bcrypt";
@@ -22,14 +21,12 @@ export const UserModel = defineMongooseModel<IUserSchema>("User", {
     profile: {
         type: Types.ObjectId,
         ref: "Profile",
-        autopopulate: true
     }
 },
 {
 
 },
  (schema) => {
-    schema.plugin(mongooseAutopopulate),
     schema.pre('save', async function(next) {
         if (!this.isModified("password")) return next();
         try {

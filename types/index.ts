@@ -33,6 +33,7 @@ export interface IProfile {
     email: string;
     address: IAddress;
     isRegistered: boolean;
+    enteredYear: number;
 }
 
 export interface IUser  {

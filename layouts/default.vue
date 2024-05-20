@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import Logo from '~/assets/image/himatika-logo.png';
 import { initDropdowns } from 'flowbite';
+import type { IUser } from '~/types';
 const { data: user, signOut } = useAuth();
 onMounted(() => {
     initDropdowns()

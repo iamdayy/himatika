@@ -10,7 +10,6 @@ useHead({
 });
 
 const { data: user, signOut } = useAuth();
-
 const { eventsMe, EventPercentage, projectsMe, ProjectPercentage, all, allPercentage } = useStats();
 
 const navigation: ILink[] = [

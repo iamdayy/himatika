@@ -1,6 +1,5 @@
 import { defineMongooseModel } from "#nuxt/mongoose"
 import { Types } from "mongoose"
-import mongooseAutoPopulate from "mongoose-autopopulate"
 import { ISessionSchema } from "~/types/ISchemas"
 
 export const SessionModel = defineMongooseModel<ISessionSchema>("Session", {
@@ -14,10 +13,11 @@ export const SessionModel = defineMongooseModel<ISessionSchema>("Session", {
     user: {
         type: Types.ObjectId,
         ref: "User",
-        autopopulate: true,
-    }
+    },
+    createdAt: Date,
+    updatedAt: Date,
 },
 {},
 (schema) => {
-    schema.plugin(mongooseAutoPopulate)
+    schema.index({ "createdAt": 1 }, { "expireAfterSeconds": 604800 })
 })

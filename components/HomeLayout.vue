@@ -106,11 +106,10 @@
 </template>
   
 <script setup lang="ts">
-import type { ILink } from "~/types"
+import type { ILink, IUser } from "~/types"
 import { initDropdowns } from "flowbite";
 
 const { data: user, signOut } = useAuth();
-
 const navigation: ILink[] = [
   { name: 'Home', href: '/', current: true },
   { name: 'About', href: '#about', current: false },
