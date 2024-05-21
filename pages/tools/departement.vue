@@ -47,7 +47,7 @@ const getObjIsFirst = (val: string) => {
     <div class="max-w-6xl py-3 mx-auto overflow-x-auto rounded-md shadow-md sm:rounded-lg">
         <div
             class="flex flex-wrap items-center justify-between py-4 space-y-4 bg-white flex-column md:flex-row md:space-y-0 dark:bg-gray-900 px-2.5 border-b border-gray-300 dark:border-gray-500 shadow-md">
-            <ModalsDepartementsAdd @trigger-refresh="refresh" v-fi="canAccessAdd" />
+            <ModalsDepartementsAdd @trigger-refresh="refresh" />
             <ul class="flex flex-wrap text-sm font-medium text-center text-gray-500 dark:text-gray-400" id="about-tab"
                 data-tabs-toggle="#tab-content" role="tablist">
                 <li class="me-2" role="presentation"
@@ -62,9 +62,10 @@ const getObjIsFirst = (val: string) => {
         <div id="tab-content" class="w-full">
             <div class="hidden" v-for="([key, val], i) in Object.entries(groupByKey(departements!, 'departement'))"
                 :key="i" :id="`${key}`" role="tabpanel" :aria-labelledby="`${key}-tab`">
-                <div class="grid grid-cols-2 gap-3 py-8 justify-items-center"></div>
-                <CoreProfileCard v-for="departement, i in val" :profile="departement.profile as IProfile"
-                    :subtitle="departement.departement" />
+                <div class="grid grid-cols-2 gap-3 py-8 justify-items-center">
+                    <CoreProfileCard v-for="departement, i in val" :profile="departement.profile as IProfile"
+                        :subtitle="departement.departement" />
+                </div>
             </div>
         </div>
     </div>

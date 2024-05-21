@@ -31,8 +31,6 @@ const checkAll = () => {
             class="flex flex-wrap items-center justify-between py-4 space-y-4 bg-white flex-column md:flex-row md:space-y-0 dark:bg-gray-900">
             <div class="flex flex-wrap items-center space-x-4">
                 <ModalsCollegersAdd @trigger-refresh="refresh" v-if="canAccessAdd" />
-                <!--  -->
-                <!--  -->
                 <ModalsCollegersExport @trigger-refresh="refresh" v-if="canAccessAdd" />
             </div>
             <label for="table-search" class="sr-only">Search</label>

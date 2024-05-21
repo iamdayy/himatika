@@ -7,7 +7,7 @@ import type { IProfile } from '~/types';
 const { $toast } = useNuxtApp();
 
 const emit = defineEmits(["triggerRefresh"]);
-
+const loading = ref<boolean>(false);
 const colleger = ref<IProfile>({
     fullName: "",
     NIM: 0,
@@ -15,7 +15,7 @@ const colleger = ref<IProfile>({
     phone: "",
     avatar: "/profile-blank.png",
     religion: "",
-    sex: "Laki-Laki",
+    sex: "male",
     birth: {
         place: "",
         date: new Date()
@@ -36,6 +36,7 @@ const colleger = ref<IProfile>({
 });
 
 const addColleger = async () => {
+    loading.value = true;
     try {
         const added = await $fetch("/api/profile", {
             method: "post",
@@ -47,11 +48,13 @@ const addColleger = async () => {
             override: true
         };
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
+        loading.value = false;
+        emit("triggerRefresh");
         $toast(added.statusMessage!);
         modal.hide();
-        emit("triggerRefresh");
     } catch (error) {
         $toast("Failed to add new Colleger");
+        loading.value = false;
     }
 }
 </script>
@@ -209,6 +212,7 @@ const addColleger = async () => {
                         placeholder="IM24A" v-model="colleger.class" required>
                 </div>
             </div>
+            <CoreButton @click="addColleger" title="Add New Colleger" :loading="loading" />
             <button type="submit" @click="addColleger"
                 class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                 Add New Colleger

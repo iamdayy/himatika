@@ -4,11 +4,11 @@ import type { ModalOptions, ModalInterface } from 'flowbite';
 import type { InstanceOptions } from 'flowbite';
 import type { IDepartement, IProfile } from '~/types';
 
-const { data: profiles } = await useAsyncData<IProfile[]>(() => $fetch("/api/profile"))
+const { data: profiles } = await useAsyncData<IProfile[]>(() => $fetch("/api/profile"));
 const { $toast } = useNuxtApp();
 
 const emit  = defineEmits(["triggerRefresh"]);
-
+const loading = ref<boolean>(false);
 const departement = ref<IDepartement>({
     profile: 0,
     departement: "",
@@ -23,6 +23,7 @@ const getNameFromNIM =  (NIM?: number) => {
 }
 
 const addDepartement = async () => {
+    loading.value = true;
     try {
         const added = await $fetch("/api/departement", {
             method: "POST",
@@ -35,10 +36,12 @@ const addDepartement = async () => {
             override: true
         };
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
+        loading.value = false;
         $toast(added.statusMessage!);
-        modal.hide();
         emit("triggerRefresh");
+        modal.hide();
     } catch (error) {
+        loading.value = false;
         $toast("Failed to add new Departements");
     }
 };
@@ -97,6 +100,7 @@ const addDepartement = async () => {
                     </div>
                 </div>
             </div>
+            <CoreButton @click="addDepartement"  title="Add New Departement" :loading="loading" />
             <button type="submit" @click="addDepartement"
                 class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                 Add New Departement

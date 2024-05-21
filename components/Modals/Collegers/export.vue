@@ -9,7 +9,7 @@ const { $toast } = useNuxtApp();
 const emit = defineEmits(["triggerRefresh"])
 
 const selectedCollegers = ref<IProfile[]>([]);
-
+const loading = ref<boolean>(false);
 
 const DataFromCSV = ref<IProfile[] | null>(null);
 
@@ -22,16 +22,24 @@ const checkAll = () => {
 }
 
 const getCollegersFromCSV = async (file: File) => {
-    const form = new FormData();
-    form.append("file", file);
-    const uploaded = await $fetch("/api/profile/batchFileUpload", {
-        method: "POST",
-        body: form
-    });
-    DataFromCSV.value = uploaded;
+    loading.value = true;
+    try {
+        const form = new FormData();
+        form.append("file", file);
+        const uploaded = await $fetch("/api/profile/batchFileUpload", {
+            method: "POST",
+            body: form
+        });
+        DataFromCSV.value = uploaded;
+        loading.value = false;
+    } catch (error) {
+        $toast("Failed to read Data")
+        loading.value = false;
+    }
 }
 
 const addCollegers = async () => {
+    loading.value = true;
     try {
         const added = await $fetch("/api/profile/batch", {
             method: "post",
@@ -43,6 +51,7 @@ const addCollegers = async () => {
             override: true
         };
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
+        loading.value = false;
         $toast(added.statusMessage);
         modal.hide();
         emit("triggerRefresh");
@@ -115,10 +124,7 @@ const addCollegers = async () => {
             </tbody>
         </table>
         <div class="w-full p-2">
-            <button type="submit" @click="addCollegers"
-                class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                Add Checked Collegers
-            </button>
+            <CoreButton @click="addCollegers" :loading="loading" :title="`Add Checked Collegers (${selectedCollegers.length})`" />
         </div>
     </CoreModal>
 </template>
