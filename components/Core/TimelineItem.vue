@@ -7,7 +7,7 @@ const props = defineProps({
 });
 </script>
 <template>
-    <li class="mb-10 ms-4">
+    <li class="mb-10 ms-4" data-active-classes="bg-orange-400">
         <h2 :id="`accordion-detail-${index}`">
             <button type="submit" :data-accordion-target="`#detail-${index}`" :aria-controls="`detail-${index}`" class="p-2 text-start">
                 <div
@@ -22,7 +22,7 @@ const props = defineProps({
             </button>
         </h2>
         <div :id="`detail-${index}`" class="hidden" :aria-labelledby="`accordion-detail-${index}`">
-            <div class="py-5 border-b border-gray-200 dark:border-gray-700">
+            <div class="py-5 border-b border-orange-400 dark:border-gray-700">
                 <slot />
             </div>
         </div>

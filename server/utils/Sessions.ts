@@ -4,7 +4,6 @@ import { H3Error } from "h3";
 import jwt from "jsonwebtoken";
 export const getSession = async (payload: string) => {
   try {
-    let token = payload;
     const session = await SessionModel.findOne({ accessToken: payload });
     if (!session) {
       throw createError({

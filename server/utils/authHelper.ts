@@ -6,7 +6,13 @@ const extractToken = (authHeaderValue: string) => {
     const [, token] = authHeaderValue.split(`${TOKEN_TYPE} `)
     return token
   }
-  
+export const checkAuth = (event: H3Event) => {
+    const authHeaderValue = getRequestHeader(event, 'authorization')
+    if (typeof authHeaderValue === 'undefined') {
+      return false;
+    }
+    return true;
+  }
 export const ensureAuth = async (event: H3Event) => {
       const authHeaderValue = getRequestHeader(event, 'authorization')
       if (typeof authHeaderValue === 'undefined') {

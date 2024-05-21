@@ -76,7 +76,7 @@ onMounted(async () => {
             <div class="hidden max-w-4xl p-4 mx-auto rounded-lg bg-gray-50 dark:bg-gray-800" id="misi" role="tabpanel"
               aria-labelledby="misi-tab">
               <h1 class="mb-4 text-3xl font-bold text-center">MISI</h1>
-              <ul class="flex flex-col justify-center space-y-1 text-2xl text-center text-gray-800 dark:text-gray-400">
+              <ul class="space-y-3 text-2xl text-gray-800 list-disc list-inside text-start dark:text-gray-400">
                 <li>Mewujudkan HIMATIKA yang bersahabat dan profesional.</li>
                 <li>Menjadikan sebuah wadah aspirasi mahasiswa Informatika.</li>
                 <li>Meningkatkan kualitas dibidang pendidikan,keilmuan teknologi dan keorganisasian.</li>
@@ -85,18 +85,18 @@ onMounted(async () => {
                   Informatika.</li>
               </ul>
             </div>
-            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="kepengurusan" role="tabpanel" v-if="administrator"
+            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="kepengurusan" role="tabpanel"
               aria-labelledby="kepengurusan-tab">
               <h1 class="mb-2 text-3xl font-bold text-center">Kepengurusan</h1>
-              <h1 class="mb-4 text-xl font-bold text-center text-gray-400"><span>{{ new Date(administrator?.period.start!).getFullYear() }}</span> - <span>{{ new Date(administrator?.period.end!).getFullYear() }}</span> </h1>
+              <h1 class="mb-4 text-xl font-bold text-center text-gray-400" v-if="administrator"><span>{{ new Date(administrator?.period.start!).getFullYear() }}</span> - <span>{{ new Date(administrator?.period.end!).getFullYear() }}</span> </h1>
               <div class="grid max-w-4xl grid-cols-2 py-8 mx-auto justify-items-center" v-if="administrator">
                 <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" class="mb-8" :profile="member.profile as IProfile" :subtitle="member.role" />
               </div>
             </div>
-            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="departemen" role="tabpanel" v-if="departements"
+            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="departemen" role="tabpanel"
               aria-labelledby="departemen-tab">
               <h1 class="mb-2 text-3xl font-bold text-center">Departemen</h1>
-              <h1 class="mb-4 text-xl font-bold text-center text-gray-400"><span>{{ new Date(departementPeriod?.start!).getFullYear() }}</span> - <span>{{ new Date(departementPeriod?.end!).getFullYear() }}</span> </h1>
+              <h1 class="mb-4 text-xl font-bold text-center text-gray-400" v-if="departements"><span>{{ new Date(departementPeriod?.start!).getFullYear() }}</span> - <span>{{ new Date(departementPeriod?.end!).getFullYear() }}</span> </h1>
               <div class="grid max-w-4xl grid-cols-2 py-8 mx-auto justify-items-center" v-if="departements">
                 <CoreProfileCard v-for="member, i in departements" class="mb-8" :profile="member.profile as IProfile" :subtitle="member.departement" />
               </div>

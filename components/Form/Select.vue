@@ -7,7 +7,7 @@ const props = defineProps({
         type: String
     },
     options: {
-        type: Array<String>,
+        type: Array<String|number>,
     }
 });
 const input = defineModel();
