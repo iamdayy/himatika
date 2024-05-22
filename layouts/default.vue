@@ -21,8 +21,8 @@ onMounted(() => {
                         id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
                         data-dropdown-placement="bottom">
                         <span class="sr-only">Open user menu</span>
-                        <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="40px"
-                            class="rounded-full" />
+                        <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'"
+                            class="w-8 h-8 rounded-full" />
                     </button>
                     <!-- Dropdown menu -->
                     <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600"

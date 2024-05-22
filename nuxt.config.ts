@@ -1,5 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  app: {
+    head: {
+      link: [{ rel: 'icon', type: 'image/icon', href: 'https://himatika.s3.amazonaws.com/favicon.ico' }]
+  }
+  },
   runtimeConfig: {
     public: {
       mongodb_uri: process.env.MONGODB_URI,
@@ -16,11 +21,6 @@ export default defineNuxtConfig({
     '@samk-dev/nuxt-vcalendar',
     'nuxt-aos'
   ],
-  nitro: {
-    firebase: {
-      gen: 2
-    }
-  },
   auth: {
     provider: {
         type: 'refresh',

@@ -39,11 +39,11 @@ onMounted(async () => {
       </NuxtLink>
       <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
         <button type="button"
-          class="flex text-sm bg-gray-800 rounded-full md:user?-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+          class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
           id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
           data-dropdown-placement="bottom">
           <span class="sr-only">Open user? menu</span>
-          <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="40px" class="rounded-full" />
+          <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" class="w-8 h-8 rounded-full" />
         </button>
         <!-- Dropdown menu -->
         <div
