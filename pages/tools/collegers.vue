@@ -1,5 +1,6 @@
 <script setup lang='ts'>
 import type { IProfile } from '~/types';
+import type { IProfileResponse } from '~/types/IResponse';
 
 const { $toast } = useNuxtApp();
 definePageMeta({
@@ -11,19 +12,30 @@ useHead({
 
 
 const { access: canAccessAdd, role } = useRole(["Secretary", "viceSecretary"]);
+const page = ref<number>(1);
+const perPage = ref<number>(10);
 
-const { data: collegers, refresh } = await useAsyncData(() => $fetch<IProfile[]>("/api/profile"));
+const { data, refresh } = await useAsyncData(() => $api<IProfileResponse>("/api/profile", {
+    query: {
+        page: page.value,
+        perPage: perPage.value
+    }
+}));
 
 const selectedCollegers = ref<IProfile[]>([]);
 
 const checkAll = () => {
-    if (selectedCollegers.value?.length == collegers.value?.length) {
+    if (selectedCollegers.value?.length == data.value?.profiles.length) {
         selectedCollegers.value = [];
     } else {
-        selectedCollegers.value = collegers.value!;
+        selectedCollegers.value = data.value?.profiles!;
     }
 }
 
+const clickpage = (v: number) => {
+    page.value = v;
+    refresh();
+}
 </script>
 <template>
     <div class="max-w-6xl mx-auto overflow-x-auto shadow-md sm:rounded-lg px-2.5 py-3">
@@ -52,7 +64,7 @@ const checkAll = () => {
                 <tr>
                     <th scope="col" class="p-4">
                         <div class="flex items-center">
-                            <input id="checkbox-all-search" type="checkbox" @change="checkAll" :checked="selectedCollegers.length == collegers?.length"
+                            <input id="checkbox-all-search" type="checkbox" @change="checkAll" :checked="selectedCollegers.length == data?.profiles.length"
                                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                             <label for="checkbox-all-search" class="sr-only">checkbox</label>
                         </div>
@@ -73,7 +85,7 @@ const checkAll = () => {
             </thead>
             <tbody>
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                    v-for="colleger, i in collegers" :key="i">
+                    v-for="colleger, i in data?.profiles" :key="i">
                     <td class="w-4 p-4">
                         <div class="flex items-center">
                             <input id="checkbox-table" type="checkbox" v-model="selectedCollegers" :value="colleger"
@@ -103,6 +115,7 @@ const checkAll = () => {
                 </tr>
             </tbody>
         </table>
+        <CorePagination :total="data?.length!" v-model="perPage" :current-page="page" @pagechanged="clickpage" />
     </div>
 </template>
 <style scoped></style>

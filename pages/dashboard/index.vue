@@ -21,8 +21,8 @@ const navigation: ILink[] = [
 
 const { events: Events } = useEvents();
 
-const { Projects } = useProjects()
-const Project = ref<IProject | undefined>(Projects.value?.find((project) => new Date(project.deadline) > new Date(Date.now())));
+const { projects } = useProjects()
+const Project = ref<IProject | undefined>(projects.value?.find((project) => new Date(project.deadline) > new Date(Date.now())));
 onMounted(async () => {
   initCarousels();
   initDropdowns();

@@ -1,5 +1,10 @@
 import type { IEvent, IProfile } from ".";
 
+interface IReqQueryPaginate {
+    perPage: number;
+    page: number;
+}
+
 export interface IReqRegister {
     username: string;
     NIM: number;
@@ -15,6 +20,12 @@ export interface IReqAuth extends IReqRegister, IReqLogin {
     password_confirmation: string;
 }
 
+export interface IReqProfileQuery extends IReqQueryPaginate {
+    NIM: number;
+}
+
 export interface IReqProfile extends IProfile {}
 
 export interface IReqEvent extends IEvent {}
+
+export interface IReqProjectQuery extends IReqQueryPaginate {}

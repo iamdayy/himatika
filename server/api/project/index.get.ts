@@ -1,9 +1,10 @@
 import { ProjectModel } from "~/server/models/ProjectModel";
 import { checkAuth } from "~/server/utils/authHelper";
+import { IReqProjectQuery } from "~/types/IRequestPost";
 
 export default defineEventHandler(async (event) => {
   try {
-    const { perPage, page } = getQuery<{ perPage: number; page: number }>(
+    const { perPage, page } = getQuery<IReqProjectQuery>(
       event
     );
     const roles: string[] = ["All", "External"];

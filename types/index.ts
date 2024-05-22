@@ -34,6 +34,10 @@ export interface IProfile {
     address: IAddress;
     isRegistered: boolean;
     enteredYear?: number;
+    events?: IEvent[];
+    projects?: IProject[];
+    isAdministrator?: IAdministrator;
+    isDepartement?: IDepartement;
 }
 
 export interface IUser  {

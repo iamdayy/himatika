@@ -65,7 +65,7 @@ const onClickPage = (page: number) => {
 }
 </script>
 <template>
-    <div class="flex items-center justify-between px-3 py-2">
+    <div class="flex items-center justify-between w-full px-3 py-2">
         <FormSelect :options="[5,10,15,20]" v-model="perPage" @update:model-value="$emit('pagechanged', currentPage)" />
         <ul class="flex items-center -space-x-px text-sm">
             <li>

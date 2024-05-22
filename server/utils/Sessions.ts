@@ -46,7 +46,7 @@ export const getSession = async (payload: string) => {
     }
     return user;
   } catch (error: any) {
-    return error;
+    throw error;
   }
 };
 export const refreshSession = async (payload: string) => {
