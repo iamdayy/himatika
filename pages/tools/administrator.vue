@@ -6,7 +6,7 @@ definePageMeta({
     middleware: "auth"
 });
 useHead({
-    title: "Data Mahasiswa | Himatika"
+    title: "Administrator | Himatika"
 });
 
 const { access: canAccessAdd, role } = useRole(["Chairman"]);
