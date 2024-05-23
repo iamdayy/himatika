@@ -8,9 +8,10 @@
 
 <script lang="ts" setup>
 import { initFlowbite } from "flowbite";
-
+const { getSession } = useAuth();
 onMounted(async () => {
   initFlowbite();
+  getSession({ required: true });
 })
 </script>
 <style>

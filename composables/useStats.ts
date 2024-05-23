@@ -2,17 +2,28 @@ import type { IEvent, IProject } from "~/types"
 
 export const useStats = () => {
     const { eventsCanMeRegistered, eventsMe } = useEvents();
-    const EventPercentage = (eventsMe.length! / eventsCanMeRegistered?.length!) * 100;
     const { ProjectsCanMeRegistered, projectsMe } = useProjects();
-    const ProjectPercentage = (projectsMe.value.length! / ProjectsCanMeRegistered.value?.length!) * 100;
-    const all = eventsMe.length! + projectsMe.value.length!;
-    const allCanMeRegister = eventsCanMeRegistered?.length! + ProjectsCanMeRegistered.value?.length!;
+    const EventPercentage = computed<number>(() => {
+        return (eventsMe.value.length! / eventsCanMeRegistered.value?.length!) * 100;
+    })
+    const ProjectPercentage = computed<number>(() => {
+        return (projectsMe.value.length! / ProjectsCanMeRegistered.value?.length!) * 100;
+    })
+    const all = computed<number>(() => {
+        return eventsMe.value.length! + projectsMe.value.length!;
+    });
+    const allCanMeRegister = computed<number>(() => {
+        return eventsCanMeRegistered.value?.length! + ProjectsCanMeRegistered.value?.length!;
+    });
+    const allPercentage = computed<number>(() => {
+        return (all.value / allCanMeRegister.value) * 100
+    })
     return {
         eventsMe,
         projectsMe,
         EventPercentage,
         ProjectPercentage,
         all,
-        allPercentage: (all / allCanMeRegister) * 100
+        allPercentage
     }
 }

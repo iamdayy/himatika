@@ -2,12 +2,14 @@
 import { initAccordions } from 'flowbite';
 import type { IProfile } from '~/types';
 const { page, perPage, projects, totalProjects, refreshProjects } = useProjects();
+perPage.value = 10;
+page.value = 1;
 const clickpage = (v: number) => {
   page.value = v;
   refreshProjects();
 }
 onMounted(() => {
-  initAccordions()
+  initAccordions();
 })
 </script>
 <template>
@@ -82,7 +84,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <CorePagination :total="totalProjects!" v-model="perPage" :current-page="page" @pagechanged="clickpage" />
+    <CorePagination v-if="page" :total="totalProjects!" v-model="perPage" :current-page="page" @pagechanged="clickpage" />
   </CoreCard>
 </template>
 <style scoped></style>

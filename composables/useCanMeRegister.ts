@@ -2,7 +2,12 @@ import type { TRole } from "~/types";
 export const useCanMeRegister = () => {
     const { isAdmin } = useRole();
     const { isDept } = useDept();
-    const canMeRegister = (canRegister: TRole) => {
+    const canMeRegister = (canRegister: TRole, date?: Date) => {
+        if (date) {
+            if (new Date(date) <= new Date(Date.now())) {
+                return false;
+            }
+        }
         switch (canRegister) {
             case "All":
                 return true;

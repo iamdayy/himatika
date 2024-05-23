@@ -2,6 +2,14 @@ import { ProfileModel } from "~/server/models/ProfileModel";
 import type { IReqProfile } from "~/types/IRequestPost"
 export default defineEventHandler(async (event) => {
     try {
+        const user = await ensureAuth(event);
+        if (!user.profile.isAdministrator || !user.profile.isDepartement) {
+            throw createError({
+                statusCode: 403,
+                statusMessage: "You must be administrator or departement to use this endpoint"
+            });
+            
+        }
         const body = await readBody<IReqProfile>(event);
 
         const profile = new ProfileModel(body);

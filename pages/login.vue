@@ -2,7 +2,8 @@
 import Logo from "~/assets/image/himatika-logo.png";
 import type { IReqAuth } from "~/types/IRequestPost";
 const { signIn, data: user } = useAuth()
-const { $toast } = useNuxtApp()
+const { $toast } = useNuxtApp();
+const router = useRouter()
 const Form = ref<IReqAuth>({
     username: "",
     password: "",
@@ -24,9 +25,14 @@ definePageMeta({
 });
 const login = async () => {
     try {
-        await signIn(Form.value, { callbackUrl: "/dashboard" });
-        $toast("Welcome back " + user.value?.username)
+        await signIn(Form.value, { callbackUrl: "/dashboard", redirect: false });
+        $toast("Welcome back " + user.value?.username);
+        setTimeout(() => {
+            router.push("/dashboard")
+        }, 2000)
     } catch (error: any) {
+        console.log(error);
+        
         $toast("Failed to login, please chek username/password")
     }
 }
@@ -71,7 +77,7 @@ useHead({
                     </div>
 
                     <div>
-                        <button @click="signIn(Form, { callbackUrl: '/' })"
+                        <button @click="login"
                             class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign
                             in</button>
                     </div>

@@ -2,8 +2,8 @@ import type { IProject, TRole } from "~/types";
 import type { IProjectResponse } from "~/types/IResponse";
 
 export const useProjects = () => {
-    const page = ref<number>(1);
-    const perPage = ref<number>(10);
+    const page = ref<number>();
+    const perPage = ref<number>();
     const { canMeRegister } = useCanMeRegister();
     const { data: me } = useAuth();
     const { data, refresh: refreshProjects } = useAsyncData(() => $fetch<IProjectResponse>("/api/project", {

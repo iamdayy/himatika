@@ -7,7 +7,7 @@ const { isDept } = useDept();
 const { data } = useAuth();
 const { $toast } = useNuxtApp();
 
-const { Projects, refreshProjects } = useProjects()
+const { projects, refreshProjects } = useProjects()
     
 const { canMeRegister } = useCanMeRegister();
 
@@ -20,8 +20,8 @@ const registerForm = ref({
     id: 0
 })
 const pickDetail = (title: string) => {
-    const index = Projects.value?.findIndex((project) => project.title === title);
-    Project.value = Projects.value![index!];
+    const index = projects.value?.findIndex((project) => project.title === title);
+    Project.value = projects.value![index!];
 }
 
 const isMeRegistered = (project: IProject) => {
@@ -67,7 +67,7 @@ onMounted(() => {
         <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
             <div
                 class="mx-auto shadow-lg rounded-lg w-full md:w-2/5 max-h-[60vh] overflow-y-scroll border border-gray-400 bg-gray-100 py-4">
-                <button v-for="project, i in Projects" :key="i" @click="pickDetail(project.title)"
+                <button v-for="project, i in projects" :key="i" @click="pickDetail(project.title)"
                     class="relative inline-flex items-center w-full px-4 py-2 text-lg font-semibold border-b border-gray-200 rounded-t-lg hover:bg-gray-100 hover:text-blue-700 focus:border-blue-700 focus:z-10 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:text-white dark:focus:text-white">
                     {{ project.title }} | <span class="font-light text-md ms-2">{{ new
                         Date(project.deadline).toDateString() }}</span>

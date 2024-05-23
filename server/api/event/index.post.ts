@@ -3,6 +3,14 @@ import { getServerSession } from '#auth'
 
 export default defineEventHandler(async event => {
     try {
+        const user = await ensureAuth(event);
+        if (!user.profile.isAdministrator || !user.profile.isDepartement) {
+            throw createError({
+                statusCode: 403,
+                statusMessage: "You must be administrator or departement to use this endpoint"
+            });
+            
+        }
         const body = await readBody<IReqEvent>(event);
         const committees = body.committee?.map(async (committe) => {
             try {

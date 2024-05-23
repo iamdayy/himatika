@@ -2,6 +2,14 @@ import { IAdministrator, IAdministratorMember } from "~/types";
 import { Types } from "mongoose";
 export default defineEventHandler(async (event) => {
     try {
+        const user = await ensureAuth(event);
+        if (!user.profile.isAdministrator || !user.profile.isDepartement) {
+            throw createError({
+                statusCode: 403,
+                statusMessage: "You must be administrator or departement to use this endpoint"
+            });
+            
+        }
         const body = await readBody<IAdministrator>(event);
         await checkExistAdministrator(body.period.start, body.period.end);
         const AdministratorMembers = await Promise.all(body.AdministratorMembers.map(async member => ({ ...member, profile: await getIdByNim(member.profile as number) } as IAdministratorMember)))

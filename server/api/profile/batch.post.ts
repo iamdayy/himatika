@@ -2,6 +2,14 @@ import { IProfile } from "~/types";
 
 export default defineEventHandler(async (event) => {
     try {
+        const user = await ensureAuth(event);
+        if (!user.profile.isAdministrator || !user.profile.isDepartement) {
+            throw createError({
+                statusCode: 403,
+                statusMessage: "You must be administrator or departement to use this endpoint"
+            });
+            
+        }
         const body = await readBody<IProfile[]>(event);
         const saved = await ProfileModel.collection.insertMany(body)
         if (saved.insertedCount == 0) {
