@@ -1,3 +1,4 @@
+import { ProfileModel } from "~/server/models/ProfileModel";
 import { IProfile } from "~/types";
 
 export default defineEventHandler(async (event) => {
@@ -12,8 +13,8 @@ export default defineEventHandler(async (event) => {
       });
     }
     return {
-        statusCode: 200,
-        statusMessage: `Profile ${profile.NIM} updated`
+      statusCode: 200,
+      statusMessage: `Profile ${profile.NIM} updated`,
     };
   } catch (error: any) {
     return createError({

@@ -1,8 +1,8 @@
 <script setup lang='ts'>
-import type { IEvent, IProfile, TRole } from "~/types"
-import { Modal } from "flowbite"
-import type { ModalOptions, ModalInterface } from 'flowbite';
-import type { InstanceOptions } from 'flowbite';
+import type { InstanceOptions, ModalInterface } from 'flowbite';
+import { Modal } from "flowbite";
+import type { IEvent, IProfile } from "~/types";
+import type { IProfileResponse } from '~/types/IResponse';
 const { $toast } = useNuxtApp()
 definePageMeta({
     middleware: "auth"
@@ -21,7 +21,7 @@ const { data } = useAuth()
 
 const { events, refreshEvents } = useEvents();
 
-const { data: profiles } = await useAsyncData(() => $fetch<IProfile[]>("/api/profile"));
+const { data: profile } = await useAsyncData(() => $fetch<IProfileResponse>("/api/profile"));
 
 const selectedRegistered = ref<Array<any>>([]);
 
@@ -109,7 +109,7 @@ const addEvent = async () => {
 }
 
 const getNameFromNIM = (NIM?: number) => {
-    return profiles.value?.find((profile) => profile.NIM == NIM)?.fullName;
+    return profile.value?.profiles.find((profile) => profile.NIM == NIM)?.fullName;
 }
 
 const isMeRegistered = (event: IEvent) => {
@@ -381,7 +381,7 @@ const register = async (id: number) => {
                                                             (registered?.profile as IProfile).fullName }}</div>
                                                         <div class="font-normal text-gray-500">{{
                                                             (registered?.profile as IProfile).email
-                                                            }}</div>
+                                                        }}</div>
                                                     </div>
                                                 </th>
                                                 <td class="px-6 py-4">

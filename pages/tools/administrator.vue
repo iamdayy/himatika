@@ -11,7 +11,7 @@ useHead({
 
 const { access: canAccessAdd, role } = useRole(["Chairman"]);
 
-const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear()}`);
+const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear() + 1}`);
 
 const getStartYear = (opt: string): number => {
     const year = parseInt(opt.slice(0,5).match(/\d/g)?.join("")!);
@@ -22,7 +22,9 @@ const getEndYear = (opt: string): number => {
     return year;
 }
 const { data: administrators, refresh } = await useAsyncData(() => $fetch<IAdministrator[]>("/api/administrator"));
-const administrator = ref<IAdministrator | undefined>(administrators.value?.find((admin) => new Date(admin.period.start).getFullYear() >= getStartYear(option.value) && new Date(admin.period.end).getFullYear() <= getEndYear(option.value)));
+const administrator = computed<IAdministrator | undefined>(() => {
+    return administrators.value?.find((admin) => getStartYear(option.value) <= new Date(admin.period.start).getFullYear() && getEndYear(option.value) >= new Date(admin.period.end).getFullYear() );
+});
 
 const options = administrators.value?.map((administrator) => `${new Date(administrator.period.start).getFullYear()} - ${new Date(administrator.period.end).getFullYear()}`);
 </script>

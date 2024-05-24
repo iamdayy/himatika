@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import type { ILink } from '~/types';
-import Logo from "~/assets/image/himatika-logo.png";
 
 </script>
 <template>
@@ -8,7 +6,7 @@ import Logo from "~/assets/image/himatika-logo.png";
         <div class="container">
             <div class="flex flex-wrap">
                 <div class="w-full px-4">
-                    <img class="object-contain w-24" :src="Logo" alt="">
+                    <NuxtImg class="object-contain w-24" src="/img/himatika-logo.png" alt="Logo" />
                     <h4 class="text-3xl font-bold text-gray-600 text-uppercase">Himpunan Mahasiswa Informatika</h4>
                     <h5 class="mt-0 mb-2 text-lg text-gray-500">
                         <span>

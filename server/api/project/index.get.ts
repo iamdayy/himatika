@@ -4,13 +4,11 @@ import { IReqProjectQuery } from "~/types/IRequestPost";
 
 export default defineEventHandler(async (event) => {
   try {
-    const { perPage, page } = getQuery<IReqProjectQuery>(
-      event
-    );
+    const { perPage, page } = getQuery<IReqProjectQuery>(event);
     const roles: string[] = ["All", "External"];
-    const auth = checkAuth(event)
+    const auth = checkAuth(event);
     if (auth) {
-    const user = await ensureAuth(event);
+      const user = await ensureAuth(event);
       if (user.profile.isAdministrator) {
         if (!roles.includes("Internal")) {
           roles.push("Internal");

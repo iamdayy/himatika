@@ -1,6 +1,5 @@
-import { defineMongooseModel } from "#nuxt/mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IAddressSchema, IProfileSchema } from "~/types/ISchemas";
-import { Schema } from "mongoose";
 
 const AddressSchema = new Schema<IAddressSchema>({
   fullAddress: String,
@@ -12,8 +11,7 @@ const AddressSchema = new Schema<IAddressSchema>({
   zip: Number,
 });
 
-export const ProfileModel = defineMongooseModel<IProfileSchema>(
-  "Profile",
+const profileSchema = new Schema<IProfileSchema>(
   {
     NIM: {
       type: Number,
@@ -85,33 +83,44 @@ export const ProfileModel = defineMongooseModel<IProfileSchema>(
     },
     toObject: {
       virtuals: true,
+      getters: true,
     },
-  },
-  (schema) => {
-    schema.virtual("enteredAt").get(function (this: IProfileSchema) {
-      return new Date(this.createdAt).getFullYear();
-    });
-    schema.virtual("projects", {
-      ref: "Project",
-      localField: "_id",
-      foreignField: "registered.profile",
-    });
-    schema.virtual("events", {
-      ref: "Event",
-      localField: "_id",
-      foreignField: "registered.profile",
-    });
-    schema.virtual("isAdministrator", {
-      ref: "Administrator",
-      localField: "_id",
-      foreignField: "AdministratorMembers.profile",
-      justOne: true,
-    });
-    schema.virtual("isDepartement", {
-      ref: "Departement",
-      localField: "_id",
-      foreignField: "profile",
-      justOne: true,
-    });
   }
+);
+
+profileSchema.virtual("enteredAt").get(function (this: IProfileSchema) {
+  return new Date(this.createdAt).getFullYear();
+});
+profileSchema.virtual("projects", {
+  ref: "Project",
+  localField: "_id",
+  foreignField: "registered.profile",
+});
+profileSchema.virtual("events", {
+  ref: "Event",
+  localField: "_id",
+  foreignField: "registered.profile",
+});
+profileSchema.virtual("isAdministrator", {
+  ref: "Administrator",
+  localField: "_id",
+  foreignField: "AdministratorMembers.profile",
+  justOne: true,
+  match: {
+    "period.end": { $gte: new Date(Date.now()) },
+  },
+});
+profileSchema.virtual("isDepartement", {
+  ref: "Departement",
+  localField: "_id",
+  foreignField: "profile",
+  justOne: true,
+  match: {
+    "period.end": { $gte: new Date(Date.now()) },
+  },
+});
+
+export const ProfileModel = mongoose.model<IProfileSchema>(
+  "Profile",
+  profileSchema
 );

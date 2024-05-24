@@ -1,7 +1,8 @@
-import { ISetSessionParams } from "~/types/IParam";
-import { SessionModel } from "../models/SessionModel";
 import { H3Error } from "h3";
 import jwt from "jsonwebtoken";
+import { ISetSessionParams } from "~/types/IParam";
+import { SessionModel } from "../models/SessionModel";
+import { UserModel } from "../models/UserModel";
 export const getSession = async (payload: string) => {
   try {
     const session = await SessionModel.findOne({ accessToken: payload });
@@ -21,23 +22,7 @@ export const getSession = async (payload: string) => {
         statusCode: 401,
       });
     }
-    const user = await UserModel.findById(session.user).populate({
-      path: "profile",
-      populate: [
-        {
-          path: "projects",
-        },
-        {
-          path: "events",
-        },
-        {
-          path: "isAdministrator",
-        },
-        {
-          path: "isDepartement",
-        },
-      ],
-    });
+    const user = await UserModel.findById(session.user);
     if (!user) {
       throw createError({
         statusMessage: "Unauthenticated!",

@@ -1,23 +1,27 @@
-import { defineMongooseModel } from "#nuxt/mongoose"
-import { Types } from "mongoose"
-import { ISessionSchema } from "~/types/ISchemas"
-
-export const SessionModel = defineMongooseModel<ISessionSchema>("Session", {
+import mongoose, { Schema, Types } from "mongoose";
+import { ISessionSchema } from "~/types/ISchemas";
+const sessionSchema = new Schema<ISessionSchema>(
+  {
     accessToken: {
-        type: String,
+      type: String,
     },
     token: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     user: {
-        type: Types.ObjectId,
-        ref: "User",
+      type: Types.ObjectId,
+      ref: "User",
     },
     createdAt: Date,
     updatedAt: Date,
-},
-{},
-(schema) => {
-    schema.index({ "createdAt": 1 }, { "expireAfterSeconds": 604800 })
-})
+  },
+  {
+    timestamps: true,
+  }
+);
+sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+export const SessionModel = mongoose.model<ISessionSchema>(
+  "Session",
+  sessionSchema
+);

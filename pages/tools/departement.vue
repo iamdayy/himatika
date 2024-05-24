@@ -17,7 +17,7 @@ interface IDepByDepartement {
 const { isAdmin } = useRole();
 const { isDept } = useDept();
 
-const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear()}`);
+const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear() +1}`);
 
 const getStartYear = (opt: string): number => {
     const year = parseInt(opt.slice(0, 5).match(/\d/g)?.join("")!);

@@ -1,3 +1,5 @@
+import { EventModel } from "~/server/models/EventModel";
+
 export default defineEventHandler(async (event) => {
   try {
     const roles: string[] = ["All", "External"];
@@ -17,7 +19,7 @@ export default defineEventHandler(async (event) => {
         roles.push("Departement");
       }
     }
-    const events = await EventModel.find({ canSee: { $in: roles }});
+    const events = await EventModel.find({ canSee: { $in: roles } });
     if (!events) {
       throw createError({
         statusCode: 400,

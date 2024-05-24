@@ -12,20 +12,20 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
-    "@nuxtjs/color-mode": "^3.3.3",
-    "@nuxtjs/tailwindcss": "^6.11.4",
-    "@samk-dev/nuxt-vcalendar": "^1.0.2",
-    "@sidebase/nuxt-auth": "^0.7.0",
+    "@nuxtjs/color-mode": "^3.4.1",
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "@samk-dev/nuxt-vcalendar": "^1.0.3",
+    "@sidebase/nuxt-auth": "^0.7.2",
     "@types/formidable": "^3.4.5",
-    "nuxt": "^3.11.1",
+    "nuxt": "^3.11.2",
     "nuxt-aos": "^1.2.4",
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
+    "vue": "^3.4.27",
+    "vue-router": "^4.3.2"
   },
   "dependencies": {
-    "@formkit/auto-animate": "^0.8.1",
-    "@nuxt/image": "^1.4.0",
-    "@nuxt/kit": "^3.11.1",
+    "@formkit/auto-animate": "^0.8.2",
+    "@nuxt/image": "^1.7.0",
+    "@nuxt/kit": "^3.11.2",
     "@types/bcrypt": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.6",
     "bcrypt": "^5.1.1",
@@ -35,9 +35,9 @@
     "flowbite": "^2.3.0",
     "formidable": "^3.5.1",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.0",
     "mongoose-autopopulate": "^1.1.0",
     "nuxt-icon": "^0.6.10",
-    "nuxt-mongoose": "^1.0.5",
     "vue3-easy-data-table": "^1.5.47",
     "vue3-toastify": "^0.2.1"
   }

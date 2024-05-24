@@ -1,30 +1,26 @@
-import { IDepartementSchema } from "~/types/ISchemas";
-import { defineMongooseModel } from "#nuxt/mongoose";
-import { Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
+import { IDepartementSchema } from "~/types/ISchemas";
 import { PeriodSchema } from "./AdministratorModel";
 
-export const DepartementModel = defineMongooseModel<IDepartementSchema>("Departement",
-    {
-        profile: {
-            type: Types.ObjectId,
-            required: true,
-            ref: "Profile",
-            autopopulate: { select: "NIM avatar fullName class semester" }
-        },
-        departement: {
-            type: String,
-            required: true
-        },
-        period: {
-            type: PeriodSchema,
-            required: true
-        }
-    },
-    {
-
-    },
-    (schema) => {
-        schema.plugin(mongooseAutoPopulate)
-    }
+const departementSchema = new Schema<IDepartementSchema>({
+  profile: {
+    type: Types.ObjectId,
+    required: true,
+    ref: "Profile",
+    autopopulate: { select: "NIM avatar fullName class semester" },
+  },
+  departement: {
+    type: String,
+    required: true,
+  },
+  period: {
+    type: PeriodSchema,
+    required: true,
+  },
+});
+departementSchema.plugin(mongooseAutoPopulate);
+export const DepartementModel = mongoose.model<IDepartementSchema>(
+  "Departement",
+  departementSchema
 );

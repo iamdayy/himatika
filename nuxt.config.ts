@@ -2,57 +2,61 @@
 export default defineNuxtConfig({
   app: {
     head: {
-      link: [{ rel: 'icon', type: 'image/icon', href: 'https://himatika.s3.amazonaws.com/favicon.ico' }]
-  }
+      link: [
+        {
+          rel: "icon",
+          type: "image/icon",
+          href: "https://himatika.s3.amazonaws.com/favicon.ico",
+        },
+      ],
+    },
   },
   runtimeConfig: {
     public: {
       mongodb_uri: process.env.MONGODB_URI,
+      dbName: "himatika",
     },
   },
   devtools: { enabled: true },
   modules: [
-    "nuxt-mongoose",
-    '@nuxtjs/color-mode',
+    "@nuxtjs/color-mode",
     "@nuxt/image",
     "@sidebase/nuxt-auth",
-    '@nuxtjs/tailwindcss',
-    'nuxt-icon',
-    '@samk-dev/nuxt-vcalendar',
-    'nuxt-aos'
+    "@nuxtjs/tailwindcss",
+    "nuxt-icon",
+    "@samk-dev/nuxt-vcalendar",
+    "nuxt-aos",
   ],
   auth: {
     provider: {
-        type: 'refresh',
-        endpoints: {
-          signIn: { path: "/login", method: "post" },
-          signUp: { path: "/register", method: "post" },
-          signOut: { path: "/logout", method: "get" },
-          getSession: { path: "/session", method: "get" },
-          refresh: { path: "/refresh", method: "get" }
-        },
-        token: {
-          signInResponseTokenPointer: '/token/accessToken',
-        },
-        refreshToken: { signInResponseRefreshTokenPointer: '/token/refreshToken' },
-        sessionDataType: { profile: "IProfile", username: "string" },
+      type: "refresh",
+      endpoints: {
+        signIn: { path: "/login", method: "post" },
+        signUp: { path: "/register", method: "post" },
+        signOut: { path: "/logout", method: "get" },
+        getSession: { path: "/session", method: "get" },
+        refresh: { path: "/refresh", method: "get" },
+      },
+      token: {
+        signInResponseTokenPointer: "/token/accessToken",
+      },
+      refreshToken: {
+        signInResponseRefreshTokenPointer: "/token/refreshToken",
+      },
+      sessionDataType: { profile: "IProfile", username: "string" },
     },
     session: {
       enableRefreshPeriodically: 3600000,
-      enableRefreshOnWindowFocus: true
+      enableRefreshOnWindowFocus: true,
     },
     baseURL: "/api",
     globalAppMiddleware: {
-      isEnabled: true
-    }
-  },
-  mongoose: {
-    uri: process.env.MONGODB_URI,
-    options: {
-      dbName: "himatika"
+      isEnabled: true,
     },
-    modelsDir: 'models'
   },
-  image: {
-  }
-})
+  image: {},
+  colorMode: {
+    preference: "light",
+    classSuffix: "",
+  },
+});

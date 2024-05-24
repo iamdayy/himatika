@@ -1,7 +1,5 @@
 <script setup lang='ts'>
-import Logo from "~/assets/image/himatika-logo.png";
 import type { IReqAuth } from "~/types/IRequestPost";
-import type { IRegisterResponse } from "~/types/IResponse";
 
 const Form = ref<IReqAuth>({
     username: "",
@@ -35,7 +33,7 @@ definePageMeta({
         <div class="card-wrap">
             <h4 class="mb-5">REGISTER</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img class="w-auto h-10 mx-auto" :src="Logo" alt="Himatika" />
+                <nuxtImg class="w-auto h-10 mx-auto" src="/img/himatika-logo.png" alt="Himatika" />
             </div>
 
             <div class="pb-8 mt-6 sm:mx-auto sm:w-full sm:max-w-sm max-h-96">

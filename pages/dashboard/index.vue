@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import type { ILink, IEvent, IProject, IUser, IProfile } from '~/types'
 import { initCarousels, initDropdowns, initTooltips } from 'flowbite';
+import type { ILink, IProfile, IProject } from '~/types';
 definePageMeta({
   layout: false,
   middleware: ["auth"]
@@ -22,7 +22,9 @@ const navigation: ILink[] = [
 const { events: Events } = useEvents();
 
 const { projects } = useProjects()
-const Project = ref<IProject | undefined>(projects.value?.find((project) => new Date(project.deadline) > new Date(Date.now())));
+const Project = computed<IProject | undefined>(() => {
+  return projects.value?.find((project) => new Date(project.deadline) > new Date(Date.now()))
+});
 onMounted(async () => {
   initCarousels();
   initDropdowns();
@@ -223,63 +225,67 @@ onMounted(async () => {
             </svg>
           </NuxtLink>
         </div>
-        <div v-if="Events?.length !== 0" id="events-carousel" class="relative w-full" data-carousel="static">
-          <div class="relative overflow-hidden h-80 md:h-72">
-            <div v-for="event, i in Events" :key="i" class="hidden duration-700 ease-in-out" data-carousel-item>
-              <div class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-                <div class="px-8">
-                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.title }}</h3>
+        <ClientOnly>
+          <div v-if="Events" id="events-carousel" class="relative w-full overflow-hidden" data-carousel="static">
+            <div class="relative overflow-hidden h-80 md:h-72">
+              <div v-for="event, i in Events" :key="i" class="hidden duration-700 ease-in-out" data-carousel-item>
+                <div class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+                  <div class="px-8">
+                    <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
+                    <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.title }}
+                    </h3>
 
-                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
-                    new Date(event.date).toLocaleDateString() }}
-                  </h3>
+                    <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
+                    <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{
+                      new Date(event.date).toLocaleDateString() }}
+                    </h3>
 
-                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.at }}</h3>
+                    <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
+                    <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.at }}</h3>
 
-                  <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
-                  <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.canSee
-                    }}
-                  </h3>
+                    <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
+                    <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ event.canSee
+                      }}
+                    </h3>
+                  </div>
                 </div>
               </div>
             </div>
+            <!-- Slider indicators -->
+            <div class="absolute z-30 flex space-x-3 -translate-x-1/2 bottom-5 left-1/2 rtl:space-x-reverse">
+              <button v-for="event, i in Events" :key="i" type="button" class="w-3 h-3 rounded-full" aria-current="true"
+                :aria-label="`Slide ${i + 1}`" :data-carousel-slide-to="i"></button>
+            </div>
+            <!-- Slider controls -->
+            <button type="button"
+              class="absolute top-0 z-30 flex items-end justify-center h-full cursor-pointer start-0 group focus:outline-none"
+              data-carousel-prev>
+              <span
+                class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+                <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M5 1 1 5l4 4" />
+                </svg>
+                <span class="sr-only">Previous</span>
+              </span>
+            </button>
+            <button type="button"
+              class="absolute top-0 z-30 flex items-end justify-center h-full cursor-pointer end-0 group focus:outline-none"
+              data-carousel-next>
+              <span
+                class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
+                <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="m1 9 4-4-4-4" />
+                </svg>
+                <span class="sr-only">Next</span>
+              </span>
+            </button>
           </div>
-          <!-- Slider indicators -->
-          <div class="absolute z-30 flex space-x-3 -translate-x-1/2 bottom-5 left-1/2 rtl:space-x-reverse">
-            <button v-for="event, i in Events" :key="i" type="button" class="w-3 h-3 rounded-full" aria-current="true"
-              :aria-label="`Slide ${i + 1}`" :data-carousel-slide-to="i"></button>
-          </div>
-          <!-- Slider controls -->
-          <button type="button"
-            class="absolute top-0 z-30 flex items-end justify-center h-full cursor-pointer start-0 group focus:outline-none"
-            data-carousel-prev>
-            <span
-              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
-              <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M5 1 1 5l4 4" />
-              </svg>
-              <span class="sr-only">Previous</span>
-            </span>
-          </button>
-          <button type="button"
-            class="absolute top-0 z-30 flex items-end justify-center h-full cursor-pointer end-0 group focus:outline-none"
-            data-carousel-next>
-            <span
-              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/30 group-hover:bg-white/60 dark:group-hover:bg-gray-800/60 group-focus:ring-4 group-focus:ring-white dark:group-focus:ring-gray-800/70 group-focus:outline-none">
-              <svg class="w-4 h-4 text-gray-500 dark:text-gray-800 rtl:rotate-180" aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="m1 9 4-4-4-4" />
-              </svg>
-              <span class="sr-only">Next</span>
-            </span>
-          </button>
-        </div>
+          <CoreSkeleton v-else />
+        </ClientOnly>
       </div>
       <!-- Projects Section -->
       <div class="p-6 mt-4 rounded-lg shadow-md bg-blue-50 dark:bg-gray-800 dark:border-gray-700">
@@ -297,7 +303,7 @@ onMounted(async () => {
             </svg>
           </NuxtLink>
         </div>
-        <div class="px-8 my-4">
+        <div v-if="Project" class="px-8 my-4">
           <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Name</span>
           <h3 class="self-center text-gray-500 text-md whitespace-nowrap dark:text-white">{{ Project?.title }}</h3>
 
@@ -336,6 +342,7 @@ onMounted(async () => {
             </div>
           </div> -->
         </div>
+        <CoreSkeleton v-else />
       </div>
     </div>
   </div>

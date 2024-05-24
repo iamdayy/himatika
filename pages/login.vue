@@ -1,5 +1,4 @@
 <script setup lang='ts'>
-import Logo from "~/assets/image/himatika-logo.png";
 import type { IReqAuth } from "~/types/IRequestPost";
 const { signIn, data: user } = useAuth()
 const { $toast } = useNuxtApp();
@@ -32,7 +31,7 @@ const login = async () => {
         }, 2000)
     } catch (error: any) {
         console.log(error);
-        
+
         $toast("Failed to login, please chek username/password")
     }
 }
@@ -45,7 +44,7 @@ useHead({
         <div class="card-wrap">
             <h4 class="mb-5">LOGIN</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img class="w-auto h-10 mx-auto" :src="Logo" alt="Himatika" />
+                <nuxtImg class="w-auto h-10 mx-auto" src="/img/himatika-logo.png" alt="Himatika" />
             </div>
 
             <div class="mt-6 overflow-y-scroll sm:mx-auto sm:w-full sm:max-w-sm no-scrollbar max-h-96">

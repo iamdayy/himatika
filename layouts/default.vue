@@ -1,10 +1,8 @@
 <script setup lang='ts'>
-import Logo from '~/assets/image/himatika-logo.png';
 import { initDropdowns } from 'flowbite';
-import type { IUser } from '~/types';
 const { data: user, signOut } = useAuth();
 onMounted(() => {
-    initDropdowns()
+    initDropdowns();
 })
 </script>
 <template>
@@ -21,8 +19,7 @@ onMounted(() => {
                         id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
                         data-dropdown-placement="bottom">
                         <span class="sr-only">Open user menu</span>
-                        <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'"
-                            class="w-8 h-8 rounded-full" />
+                        <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" class="w-8 h-8 rounded-full" />
                     </button>
                     <!-- Dropdown menu -->
                     <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600"
@@ -35,11 +32,13 @@ onMounted(() => {
                         <ul class="py-2" aria-labelledby="user-menu-button">
                             <li>
                                 <NuxtLink to="/dashboard"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Dashboard</NuxtLink>
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                                    Dashboard</NuxtLink>
                             </li>
                             <li>
                                 <NuxtLink to="/dashboard/profile"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Profile</NuxtLink>
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                                    Profile</NuxtLink>
                             </li>
 
                             <!-- <li>
