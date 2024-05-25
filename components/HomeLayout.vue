@@ -80,7 +80,6 @@
 </template>
 
 <script setup lang="ts">
-import { initDropdowns } from "flowbite";
 import type { ILink } from "~/types";
 
 const { data: user, signOut } = useAuth();
@@ -95,7 +94,4 @@ const userNavigation: ILink[] = [
   { name: 'Dashboard', href: '/dashboard' },
   // { name: 'Settings', href: '/tools/setting' },
 ] as ILink[]
-onMounted(() => {
-  initDropdowns()
-})
 </script>

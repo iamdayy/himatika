@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { initCarousels, initDropdowns, initTooltips } from 'flowbite';
+import { initCarousels, initTooltips } from 'flowbite';
 import type { ILink, IProfile, IProject } from '~/types';
 definePageMeta({
   layout: false,
@@ -30,7 +30,6 @@ const Project = computed<IProject | undefined>(() => {
 });
 onMounted(async () => {
   initCarousels();
-  initDropdowns();
   initTooltips();
 
 })

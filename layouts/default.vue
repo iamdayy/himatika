@@ -1,5 +1,4 @@
 <script setup lang='ts'>
-import { CoreDropdown } from '#build/components';
 import { initDropdowns } from 'flowbite';
 const { data: user, signOut } = useAuth();
 onMounted(() => {
@@ -26,7 +25,7 @@ onMounted(() => {
                                 <span class="block text-sm text-gray-900 dark:text-white">{{ user?.username }}</span>
                                 <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{
                                     user?.profile.email
-                                    }}</span>
+                                }}</span>
                             </div>
                             <ul class="py-2" aria-labelledby="user-menu-button">
                                 <li>
