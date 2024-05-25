@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { CoreDropdown } from '#build/components';
 import { initDropdowns } from 'flowbite';
 const { data: user, signOut } = useAuth();
 onMounted(() => {
@@ -14,44 +15,43 @@ onMounted(() => {
                     <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
                 </NuxtLink>
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
-                    <button type="button"
-                        class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-                        id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
-                        data-dropdown-placement="bottom">
-                        <span class="sr-only">Open user menu</span>
-                        <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" class="w-8 h-8 rounded-full" />
-                    </button>
-                    <!-- Dropdown menu -->
-                    <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600"
-                        id="user-dropdown">
-                        <div class="px-4 py-3">
-                            <span class="block text-sm text-gray-900 dark:text-white">{{ user?.username }}</span>
-                            <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ user?.profile.email
-                                }}</span>
-                        </div>
-                        <ul class="py-2" aria-labelledby="user-menu-button">
-                            <li>
-                                <NuxtLink to="/dashboard"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
-                                    Dashboard</NuxtLink>
-                            </li>
-                            <li>
-                                <NuxtLink to="/dashboard/profile"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
-                                    Profile</NuxtLink>
-                            </li>
+                    <CoreDropdown name="user">
+                        <template v-slot:trigger>
+                            <span class="sr-only">Open user menu</span>
+                            <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'"
+                                class="w-8 h-8 rounded-full" />
+                        </template>
+                        <template v-slot:body>
+                            <div class="px-4 py-3">
+                                <span class="block text-sm text-gray-900 dark:text-white">{{ user?.username }}</span>
+                                <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{
+                                    user?.profile.email
+                                    }}</span>
+                            </div>
+                            <ul class="py-2" aria-labelledby="user-menu-button">
+                                <li>
+                                    <NuxtLink to="/dashboard"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                                        Dashboard</NuxtLink>
+                                </li>
+                                <li>
+                                    <NuxtLink to="/dashboard/profile"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
+                                        Profile</NuxtLink>
+                                </li>
 
-                            <!-- <li>
-                                <NuxtLink to="/tools/setting"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</NuxtLink>
-                            </li> -->
-                            <li>
-                                <button @click="signOut({ callbackUrl: '/login' })"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
-                                    out</button>
-                            </li>
-                        </ul>
-                    </div>
+                                <!-- <li>
+                                    <NuxtLink to="/tools/setting"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Settings</NuxtLink>
+                                </li> -->
+                                <li>
+                                    <button @click="signOut({ callbackUrl: '/login' })"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
+                                        out</button>
+                                </li>
+                            </ul>
+                        </template>
+                    </CoreDropdown>
                 </div>
             </div>
         </nav>

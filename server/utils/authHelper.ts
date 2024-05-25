@@ -36,7 +36,7 @@ export const ensureAuth = async (event: H3Event) => {
 };
 export const refreshAuth = async (event: H3Event) => {
   try {
-    const refreshToken = getCookie(event, "auth.refresh-token");
+    const { refreshToken } = await readBody(event);
     if (typeof refreshToken === "undefined") {
       throw createError({
         statusCode: 403,
@@ -44,8 +44,12 @@ export const refreshAuth = async (event: H3Event) => {
           "Need to pass valid Bearer-authorization header to access this endpoint",
       });
     }
-    const accessToken = refreshSession(refreshToken);
-    return accessToken;
+    const accessToken = await refreshSession(refreshToken);
+    return {
+      token: {
+        accessToken,
+      },
+    };
   } catch (error) {
     console.error("Login failed. Here's the raw error:", error);
     throw createError({

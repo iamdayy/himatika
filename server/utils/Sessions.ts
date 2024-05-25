@@ -54,6 +54,7 @@ export const refreshSession = async (payload: string) => {
   });
   session.accessToken = token;
   session.save();
+
   return token;
 };
 export const setSession = async (

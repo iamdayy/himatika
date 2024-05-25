@@ -35,7 +35,7 @@ export default defineNuxtConfig({
         signUp: { path: "/register", method: "post" },
         signOut: { path: "/logout", method: "get" },
         getSession: { path: "/session", method: "get" },
-        refresh: { path: "/refresh", method: "get" },
+        refresh: { path: "/refresh", method: "post" },
       },
       token: {
         signInResponseTokenPointer: "/token/accessToken",
@@ -43,6 +43,7 @@ export default defineNuxtConfig({
       refreshToken: {
         signInResponseRefreshTokenPointer: "/token/refreshToken",
       },
+      refreshOnlyToken: true,
       sessionDataType: { profile: "IProfile", username: "string" },
     },
     session: {

@@ -17,9 +17,11 @@ definePageMeta({
         name: "flip"
     },
     layout: "auth",
+    middleware: 'auth',
     auth: {
         unauthenticatedOnly: true,
-        navigateAuthenticatedTo: '/dashboard'
+        navigateAuthenticatedTo: '/dashboard',
+
     }
 });
 const login = async () => {
