@@ -44,10 +44,11 @@ export const refreshAuth = async (event: H3Event) => {
           "Need to pass valid Bearer-authorization header to access this endpoint",
       });
     }
-    const accessToken = await refreshSession(refreshToken);
+    const token = await refreshSession(refreshToken);
     return {
       token: {
-        accessToken,
+        accessToken: token,
+        refreshToken,
       },
     };
   } catch (error) {
