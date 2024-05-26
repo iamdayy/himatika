@@ -4,13 +4,17 @@ import {
   IProjectSchema,
   IRegisteredSchema,
 } from "~/types/ISchemas";
+import { ProfileModel } from "./ProfileModel";
 
 const contributorSchema = new Schema<IContributorSchema>({
   profile: {
     type: Types.ObjectId,
     required: true,
     ref: "Profile",
-    autopopulate: { select: "NIM avatar fullName class semester" },
+    autopopulate: {
+      model: ProfileModel,
+      select: "NIM avatar fullName class semester",
+    },
   },
   job: {
     type: String,
@@ -23,7 +27,10 @@ const registeredSchema = new Schema<IRegisteredSchema>({
     type: Types.ObjectId,
     required: true,
     ref: "Profile",
-    autopopulate: { select: "NIM avatar fullName class semester" },
+    autopopulate: {
+      model: ProfileModel,
+      select: "NIM avatar fullName class semester",
+    },
   },
   task: {
     type: String,

@@ -8,7 +8,8 @@
             <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
           </NuxtLink>
           <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse" v-if="user">
-            <CoreDropdown name="user">
+            <CoreColorModeToggle />
+            <CoreDropdown name="user" v-if="user">
               <template v-slot:trigger>
                 <span class="sr-only">Open user menu</span>
                 <NuxtImg class="w-8 h-8 rounded-full" :src="user.profile.avatar || '/img/profile-blank.png'"
@@ -33,9 +34,7 @@
                 </ul>
               </template>
             </CoreDropdown>
-          </div>
-          <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse" v-else>
-            <CoreDropdown name="auth">
+            <CoreDropdown name="auth" v-else>
               <template v-slot:trigger>
                 <span class="sr-only">Open user menu</span>
                 <Icon class="w-6 h-6" name="uil:signin" />

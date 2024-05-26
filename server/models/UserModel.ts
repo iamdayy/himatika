@@ -2,7 +2,11 @@ import bcrypt from "bcrypt";
 import mongoose, { Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IUserSchema } from "~/types/ISchemas";
+import { AdministratorModel } from "./AdministratorModel";
+import { DepartementModel } from "./DepartementModel";
+import { EventModel } from "./EventModel";
 import { ProfileModel } from "./ProfileModel";
+import { ProjectModel } from "./ProjectModel";
 const userSchema = new Schema<IUserSchema>({
   username: {
     type: String,
@@ -27,15 +31,19 @@ const userSchema = new Schema<IUserSchema>({
       populate: [
         {
           path: "projects",
+          model: ProjectModel,
         },
         {
           path: "events",
+          model: EventModel,
         },
         {
           path: "isAdministrator",
+          model: AdministratorModel,
         },
         {
           path: "isDepartement",
+          model: DepartementModel,
         },
       ],
     },

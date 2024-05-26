@@ -2,13 +2,17 @@ import mongoose, { Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IDepartementSchema } from "~/types/ISchemas";
 import { PeriodSchema } from "./AdministratorModel";
+import { ProfileModel } from "./ProfileModel";
 
 const departementSchema = new Schema<IDepartementSchema>({
   profile: {
     type: Types.ObjectId,
     required: true,
     ref: "Profile",
-    autopopulate: { select: "NIM avatar fullName class semester" },
+    autopopulate: {
+      model: ProfileModel,
+      select: "NIM avatar fullName class semester",
+    },
   },
   departement: {
     type: String,

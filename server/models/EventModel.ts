@@ -5,6 +5,7 @@ import {
   IEventSchema,
   IRegisteredSchema,
 } from "~/types/ISchemas";
+import { ProfileModel } from "./ProfileModel";
 const CommitteeSchema = new Schema<ICommitteeSchema>({
   job: {
     type: String,
@@ -14,7 +15,10 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
     type: Types.ObjectId,
     required: true,
     ref: "Profile",
-    autopopulate: { select: "NIM avatar fullName class semester" },
+    autopopulate: {
+      model: ProfileModel,
+      select: "NIM avatar fullName class semester",
+    },
   },
 });
 
@@ -23,7 +27,10 @@ const registeredSchema = new Schema<IRegisteredSchema>({
     type: Types.ObjectId,
     required: true,
     ref: "Profile",
-    autopopulate: { select: "NIM avatar fullName class semester" },
+    autopopulate: {
+      model: ProfileModel,
+      select: "NIM avatar fullName class semester",
+    },
   },
   task: {
     type: String,

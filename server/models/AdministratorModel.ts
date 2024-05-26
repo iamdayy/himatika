@@ -5,6 +5,7 @@ import {
   IAdministratorMemberSchema,
   IAdministratorSchema,
 } from "~/types/ISchemas";
+import { ProfileModel } from "./ProfileModel";
 
 export const PeriodSchema = new Schema<IPeriod>({
   start: {
@@ -27,7 +28,10 @@ export const AdministratorMemberSchema = new Schema<IAdministratorMemberSchema>(
       type: Types.ObjectId,
       required: true,
       ref: "Profile",
-      autopopulate: { select: "NIM avatar fullName class semester" },
+      autopopulate: {
+        model: ProfileModel,
+        select: "NIM avatar fullName class semester",
+      },
     },
   }
 );
