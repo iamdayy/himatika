@@ -4,7 +4,7 @@ import type { IProfile, IProject } from '~/types';
 
 const { access: canAccessAdd, isAdmin } = useRole(["Secretary", "viceSecretary", "Chairman"]);
 const { isDept } = useDept();
-const { data } = useAuth();
+const { user } = useAuth();
 const { $toast } = useNuxtApp();
 
 const { projects, refreshProjects } = useProjects()
@@ -15,7 +15,7 @@ const selectedRegistered = ref<Array<any>>([]);
 
 const Project = ref<IProject | null>(null);
 const registerForm = ref({
-    NIM: data.value?.profile.NIM,
+    NIM: user.value?.profile.NIM,
     task: "",
     id: 0
 })
@@ -25,7 +25,7 @@ const pickDetail = (title: string) => {
 }
 
 const isMeRegistered = (project: IProject) => {
-    const nim = data.value?.profile.NIM;
+    const nim = user.value?.profile.NIM;
     const found = project.registered?.find((registered) => (registered.profile as IProfile).NIM == nim);
     if (!found) {
         return false;
@@ -191,7 +191,7 @@ onMounted(() => {
                                                             (registered?.profile as IProfile).fullName }}</div>
                                                         <div class="font-normal text-gray-500">{{
                                                             (registered?.profile as IProfile).email
-                                                            }}</div>
+                                                        }}</div>
                                                     </div>
                                                 </th>
                                                 <td class="px-6 py-4">

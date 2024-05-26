@@ -17,16 +17,16 @@ const { canMeRegister } = useCanMeRegister();
 
 const { isDept } = useDept();
 
-const { data } = useAuth()
+const { user } = useAuth()
 
 const { events, refreshEvents } = useEvents();
 
-const { data: profile } = await useAsyncData(() => $fetch<IProfileResponse>("/api/profile"));
+const { data: profile } = await useAsyncData(() => $api<IProfileResponse>("/api/profile"));
 
 const selectedRegistered = ref<Array<any>>([]);
 
 const registerForm = ref({
-    NIM: data.value?.profile.NIM,
+    NIM: user.value?.profile.NIM,
     id: 0
 })
 
@@ -113,7 +113,7 @@ const getNameFromNIM = (NIM?: number) => {
 }
 
 const isMeRegistered = (event: IEvent) => {
-    const nim = data.value?.profile.NIM;
+    const nim = user.value?.profile.NIM;
     const found = event.registered?.find((registered) => (registered.profile as IProfile).NIM == nim);
     if (!found) {
         return false;
@@ -381,7 +381,7 @@ const register = async (id: number) => {
                                                             (registered?.profile as IProfile).fullName }}</div>
                                                         <div class="font-normal text-gray-500">{{
                                                             (registered?.profile as IProfile).email
-                                                        }}</div>
+                                                            }}</div>
                                                     </div>
                                                 </th>
                                                 <td class="px-6 py-4">
