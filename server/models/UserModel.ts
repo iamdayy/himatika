@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import mongoose, { Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IUserSchema } from "~/types/ISchemas";
+import { ProfileModel } from "./ProfileModel";
 const userSchema = new Schema<IUserSchema>({
   username: {
     type: String,
@@ -22,6 +23,7 @@ const userSchema = new Schema<IUserSchema>({
     type: Types.ObjectId,
     ref: "Profile",
     autopopulate: {
+      model: ProfileModel,
       populate: [
         {
           path: "projects",
