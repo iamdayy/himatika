@@ -8,10 +8,8 @@
 
 <script lang="ts" setup>
 import { initFlowbite } from "flowbite";
-const { refresh } = useAuth();
 onMounted(async () => {
   initFlowbite();
-  refresh();
   initFlowbite();
 });
 </script>

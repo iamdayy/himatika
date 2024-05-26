@@ -12,9 +12,11 @@
           <div class="text-center">
             <h1 class="text-4xl font-bold tracking-tight text-gray-900 md:text-6xl lg:text-8xl hero title">Himpunan
               Mahasiswa Informatika</h1>
-            <p class="mt-6 text-lg leading-8 text-gray-600 hero subtitle">Himpunan Mahasiswa Informatika atau yang sering
+            <p class="mt-6 text-lg leading-8 text-gray-600 hero subtitle">Himpunan Mahasiswa Informatika atau yang
+              sering
               disebut HIMATIKA
-              merupakan suatu organisasi yang menghimpun Mahasiswa Informatika untuk mengembangkan, dan mempraktekkan ilmu
+              merupakan suatu organisasi yang menghimpun Mahasiswa Informatika untuk mengembangkan, dan mempraktekkan
+              ilmu
               nya dalam bidang komputer.</p>
             <div class="flex items-center justify-center mt-10 gap-x-6">
               <a href="#about" class="text-sm font-semibold leading-6 text-gray-900">Learn more <span
@@ -23,8 +25,7 @@
           </div>
         </div>
       </section>
-      <div
-        class="absolute inset-x-0 top-[24rem] -z-10 transform-gpu overflow-hidden blur-2xl sm:top-[30rem]"
+      <div class="absolute inset-x-0 top-[24rem] -z-10 transform-gpu overflow-hidden blur-2xl sm:top-[30rem]"
         aria-hidden="true">
         <div
           class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[96.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
@@ -33,8 +34,7 @@
       <section class="py-12 overflow-x-hidden about" id="about">
         <About />
       </section>
-      <div
-        class="absolute inset-x-0 top-[56rem] -z-10 transform-gpu overflow-hidden blur-2xl sm:top-[85rem]"
+      <div class="absolute inset-x-0 top-[56rem] -z-10 transform-gpu overflow-hidden blur-2xl sm:top-[85rem]"
         aria-hidden="true">
         <div
           class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
@@ -58,7 +58,6 @@
 </template>
 <script setup lang='ts'>
 import { initDropdowns } from 'flowbite';
-const { access, dept } = useDept();
 
 definePageMeta({
   layout: false,

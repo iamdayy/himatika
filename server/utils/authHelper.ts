@@ -46,10 +46,8 @@ export const refreshAuth = async (event: H3Event) => {
     }
     const token = await refreshSession(refreshToken);
     return {
-      token: {
-        accessToken: token,
-        refreshToken,
-      },
+      accessToken: token,
+      refreshToken,
     };
   } catch (error) {
     console.error("Login failed. Here's the raw error:", error);

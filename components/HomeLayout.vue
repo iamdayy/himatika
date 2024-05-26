@@ -26,7 +26,7 @@
                       {{ nav.name }}</NuxtLink>
                   </li>
                   <li>
-                    <button @click="signOut({ callbackUrl: '/login' })"
+                    <button @click="logout('/login')"
                       class="block w-full px-4 py-2 text-sm text-gray-700 text-start hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
                       Out</button>
                   </li>
@@ -82,7 +82,7 @@
 <script setup lang="ts">
 import type { ILink } from "~/types";
 
-const { data: user, signOut } = useAuth();
+const { user, logout } = useAuth();
 const navigation: ILink[] = [
   { name: 'Home', href: '/', current: true },
   { name: 'About', href: '#about', current: false },

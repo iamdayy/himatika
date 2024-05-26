@@ -7,10 +7,12 @@ const Form = ref<IReqAuth>({
     password_confirmation: "",
     NIM: 0,
 });
-const { signUp } = useAuth()
 const register = async () => {
     try {
-        await signUp(Form.value)
+        await $fetch('/api/register', {
+            method: "post",
+            body: Form.value,
+        })
         useNuxtApp().$toast("Success to register, welcome to himatika " + Form.value.username);
     } catch (error: any) {
         useNuxtApp().$toast(error.message);
@@ -22,10 +24,7 @@ definePageMeta({
         name: "flip"
     },
     layout: "auth",
-    auth: {
-        unauthenticatedOnly: true,
-        navigateAuthenticatedTo: '/dashboard'
-    }
+    middleware: ["auth-guest"]
 })
 </script>
 <template>

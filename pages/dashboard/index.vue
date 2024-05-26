@@ -4,15 +4,12 @@ import type { ILink, IProfile, IProject } from '~/types';
 definePageMeta({
   layout: false,
   middleware: ["auth"],
-  auth: {
-
-  }
 })
 useHead({
   title: "Dashboard | Himatika"
 });
 
-const { data: user, signOut } = useAuth();
+const { user, logout } = useAuth();
 const { eventsMe, EventPercentage, projectsMe, ProjectPercentage, all, allPercentage } = useStats();
 
 const navigation: ILink[] = [
@@ -70,7 +67,7 @@ onMounted(async () => {
                   Settings</NuxtLink>
               </li> -->
               <li>
-                <button @click="signOut({ callbackUrl: '/login' })"
+                <button @click="logout('/login')"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign
                   out</button>
               </li>

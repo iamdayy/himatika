@@ -3,10 +3,9 @@ import { Types } from "mongoose";
 import { UserModel } from "~/server/models/UserModel";
 import { setSession } from "../utils/Sessions";
 
-const refreshTokens: Record<number, Record<string, any>> = {};
-
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
+
   const user = await UserModel.findOne({ username: body.username });
   if (!user) {
     throw createError({
@@ -34,9 +33,7 @@ export default defineEventHandler(async (event) => {
   });
   user.save();
   return {
-    token: {
-      accessToken,
-      refreshToken,
-    },
+    accessToken,
+    refreshToken,
   };
 });

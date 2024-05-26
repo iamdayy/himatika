@@ -21,38 +21,69 @@ export default defineNuxtConfig({
   modules: [
     "@nuxtjs/color-mode",
     "@nuxt/image",
-    "@sidebase/nuxt-auth",
+    "@workmate/nuxt-auth",
     "@nuxtjs/tailwindcss",
     "nuxt-icon",
     "@samk-dev/nuxt-vcalendar",
     "nuxt-aos",
   ],
   auth: {
-    provider: {
-      type: "refresh",
-      endpoints: {
-        signIn: { path: "/login", method: "post" },
-        signUp: { path: "/register", method: "post" },
-        signOut: { path: "/logout", method: "get" },
-        getSession: { path: "/session", method: "get" },
-        refresh: { path: "/refresh", method: "post" },
+    providers: {
+      local: {
+        endpoints: {
+          signIn: {
+            path: `${process.env.PUBLIC_URI_API}/signin`,
+            method: "POST",
+            tokenKey: "accessToken",
+            refreshTokenKey: "refreshToken",
+            body: {
+              principal: "username",
+              password: "password",
+            },
+          },
+          signOut: {
+            path: `${process.env.PUBLIC_URI_API}/logout`,
+            method: "GET",
+          },
+          signUp: {
+            path: `${process.env.PUBLIC_URI_API}/register`,
+            method: "POST",
+          },
+          user: {
+            path: `${process.env.PUBLIC_URI_API}/session`,
+            userKey: "",
+          },
+          refreshToken: {
+            path: `${process.env.PUBLIC_URI_API}/refresh`,
+            method: "POST",
+            tokenKey: "accessToken",
+            refreshTokenKey: "refreshToken",
+            body: {
+              refreshToken: "refreshToken",
+              token: "accessToken",
+            },
+          },
+        },
       },
-      token: {
-        signInResponseTokenPointer: "/token/accessToken",
-      },
-      refreshToken: {
-        signInResponseRefreshTokenPointer: "/token/refreshToken",
-      },
-      refreshOnlyToken: true,
-      sessionDataType: { profile: "IProfile", username: "string" },
     },
-    session: {
-      enableRefreshPeriodically: 3600000,
-      enableRefreshOnWindowFocus: true,
+    global: true,
+    redirects: {
+      redirectIfLoggedIn: "/dashboard",
+      redirectIfNotLoggedIn: "/login",
     },
-    baseURL: "/api",
-    globalAppMiddleware: {
-      isEnabled: true,
+    apiClient: {
+      baseURL: process.env.PUBLIC_URI_API || "http://localhost:3000/api",
+    },
+    defaultProvider: "local",
+    token: {
+      type: "Bearer",
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      cookiesNames: {
+        accessToken: "auth:token",
+        refreshToken: "auth:refreshToken",
+        authProvider: "auth:provider",
+        tokenType: "auth:tokenType",
+      },
     },
   },
   image: {},

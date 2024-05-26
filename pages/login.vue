@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import type { IReqAuth } from "~/types/IRequestPost";
-const { signIn, data: user } = useAuth()
+const { login: signIn, user } = useAuth()
 const { $toast } = useNuxtApp();
 const router = useRouter()
 const Form = ref<IReqAuth>({
@@ -17,16 +17,14 @@ definePageMeta({
         name: "flip"
     },
     layout: "auth",
-    middleware: 'auth',
-    auth: {
-        unauthenticatedOnly: true,
-        navigateAuthenticatedTo: '/dashboard',
-
-    }
+    middleware: ["auth-guest"]
 });
 const login = async () => {
     try {
-        await signIn(Form.value, { callbackUrl: "/dashboard", redirect: false });
+        await signIn('local', {
+            principal: Form.value.username,
+            password: Form.value.password
+        });
         $toast("Welcome back " + user.value?.username);
         setTimeout(() => {
             router.push("/dashboard")
@@ -39,6 +37,8 @@ const login = async () => {
 }
 useHead({
     title: "Login | Himatika"
+});
+onMounted(() => {
 })
 </script>
 <template>
