@@ -26,8 +26,7 @@ onMounted(() => {
 </script>
 <template>
     <button :id="`dropdownButton-${name}`"
-        class="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-        type="button">
+        class="flex text-sm text-indigo-800 rounded-full md:me-0 hover:text-orange-200 " type="button">
         <slot name="trigger" />
     </button>
     <!-- Dropdown menu -->

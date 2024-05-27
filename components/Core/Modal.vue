@@ -8,7 +8,8 @@ const props = defineProps({
     headTitle: String
 });
 onMounted(() => {
-    const $modalEl = document.getElementById('#modal-' + props.name);
+    const $modalEl = document.getElementById('modal-' + props.name);
+
     const options: ModalOptions = {};
     if ($modalEl) {
         modal = new Modal($modalEl, options);
@@ -35,7 +36,7 @@ onMounted(() => {
                     </h3>
                     <button type="button"
                         class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                        @click="modal.destroy()">
+                        @click="modal.hide()">
                         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 14 14">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

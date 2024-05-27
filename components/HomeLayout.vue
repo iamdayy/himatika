@@ -2,12 +2,12 @@
   <div class="min-h-full">
     <ClientOnly>
       <nav
-        class="absolute z-10 w-full bg-white border-gray-200 md:bg-transparent bg-opacity-35 backdrop-blur-md md:border-none dark:bg-gray-900">
+        class="absolute z-10 w-full bg-white border-gray-200 md:bg-transparent bg-opacity-35 backdrop-blur-md md:border-none">
         <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
           <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
             <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
           </NuxtLink>
-          <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse" v-if="user">
+          <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
             <CoreColorModeToggle />
             <CoreDropdown name="user" v-if="user">
               <template v-slot:trigger>
@@ -60,7 +60,7 @@
               class="flex flex-col p-4 mt-4 font-medium border border-gray-300 rounded-lg shadow-md md:p-0 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-transparent md:shadow-none">
               <li v-for="nav, i in navigation" :key="i">
                 <a :href="nav.href"
-                  class="block px-3 py-2 font-sans font-semibold text-gray-700 bg-transparent rounded md:p-0 dark:text-gray-400">{{
+                  class="block px-3 py-2 font-sans font-semibold text-gray-700 bg-transparent rounded md:p-0 dark:text-gray-200">{{
                     nav.name }}</a>
               </li>
             </ul>
@@ -70,11 +70,11 @@
     </ClientOnly>
 
     <main>
-      <div class="px-3 py-6 mx-auto sm:px-6 lg:px-8">
+      <div class="px-3 py-6 mx-auto sm:px-6 lg:px-8 dark:bg-gray-900">
         <slot />
+        <CoreFooter />
       </div>
     </main>
-    <CoreFooter />
   </div>
 </template>
 

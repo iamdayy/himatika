@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import { initCollapses, initTabs } from 'flowbite';
-import type { IAdministrator, IDepartement, IProfile, IPeriod } from '~/types';
+import { initAccordions, initTabs } from 'flowbite';
+import type { IAdministrator, IDepartement, IPeriod, IProfile } from '~/types';
 const { data: administrators } = await useAsyncData(() => $fetch<IAdministrator[]>("/api/administrator"));
 const { data: departementsData } = await useAsyncData(() => $fetch<IDepartement[]>("/api/departement"));
 const administrator = ref<IAdministrator | undefined>();
@@ -8,12 +8,12 @@ const departements = ref<IDepartement[] | undefined>();
 const departementPeriod = ref<IPeriod | undefined>()
 onMounted(async () => {
   initTabs();
-  initCollapses();
+  initAccordions();
   if (administrators.value) {
-    administrator.value = administrators.value?.find((admin) => new Date(admin.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(admin.period.end).getFullYear() <= new Date(Date.now()).getFullYear());
+    administrator.value = administrators.value?.find((admin) => new Date(admin.period.start).getFullYear() <= new Date(Date.now()).getFullYear() && new Date(admin.period.end).getFullYear() >= new Date(Date.now()).getFullYear());
   }
   if (departementsData.value) {
-    departementsData.value?.filter((departement) => new Date(departement.period.start).getFullYear() >= new Date(Date.now()).getFullYear() && new Date(departement.period.end).getFullYear() <= new Date(Date.now()).getFullYear())
+    departements.value = departementsData.value?.filter((departement) => new Date(departement.period.start).getFullYear() <= new Date(Date.now()).getFullYear() && new Date(departement.period.end).getFullYear() >= new Date(Date.now()).getFullYear())
   }
   if (departements.value) {
     departementPeriod.value = departements?.value![0].period;
@@ -66,16 +66,15 @@ onMounted(async () => {
             </ul>
           </div>
           <div id="tab-content" class="w-full">
-            <div class="hidden max-w-4xl p-4 mx-auto rounded-lg bg-gray-50 dark:bg-gray-800" id="visi" role="tabpanel"
-              aria-labelledby="visi-tab">
-              <h1 class="mb-4 text-3xl font-bold text-center">VISI</h1>
-              <p class="text-2xl text-center text-gray-800 dark:text-gray-400">Dengan Semangat kekeluargaan, HIMATIKA menjadi
+            <div class="hidden max-w-4xl p-4 mx-auto rounded-lg" id="visi" role="tabpanel" aria-labelledby="visi-tab">
+              <h1 class="mb-4 text-3xl font-bold text-center dark:text-gray-400">VISI</h1>
+              <p class="text-2xl text-center text-gray-800 dark:text-gray-400">Dengan Semangat kekeluargaan, HIMATIKA
+                menjadi
                 poros aktivitas kemahasiswaan Mahasiswa Informatika yang memberikan Kemanfaatan bagi mahasiswa
                 Teknologi Komputer</p>
             </div>
-            <div class="hidden max-w-4xl p-4 mx-auto rounded-lg bg-gray-50 dark:bg-gray-800" id="misi" role="tabpanel"
-              aria-labelledby="misi-tab">
-              <h1 class="mb-4 text-3xl font-bold text-center">MISI</h1>
+            <div class="hidden max-w-4xl p-4 mx-auto rounded-lg" id="misi" role="tabpanel" aria-labelledby="misi-tab">
+              <h1 class="mb-4 text-3xl font-bold text-center dark:text-gray-400">MISI</h1>
               <ul class="space-y-3 text-2xl text-gray-800 list-disc list-inside text-start dark:text-gray-400">
                 <li>Mewujudkan HIMATIKA yang bersahabat dan profesional.</li>
                 <li>Menjadikan sebuah wadah aspirasi mahasiswa Informatika.</li>
@@ -85,28 +84,36 @@ onMounted(async () => {
                   Informatika.</li>
               </ul>
             </div>
-            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="kepengurusan" role="tabpanel"
+            <div class="hidden w-full p-4 rounded-lg" id="kepengurusan" role="tabpanel"
               aria-labelledby="kepengurusan-tab">
-              <h1 class="mb-2 text-3xl font-bold text-center">Kepengurusan</h1>
-              <h1 class="mb-4 text-xl font-bold text-center text-gray-400" v-if="administrator"><span>{{ new Date(administrator?.period.start!).getFullYear() }}</span> - <span>{{ new Date(administrator?.period.end!).getFullYear() }}</span> </h1>
+              <h1 class="mb-2 text-3xl font-bold text-center dark:text-gray-400">Kepengurusan</h1>
+              <h1 class="mb-4 text-xl font-bold text-center text-gray-400" v-if="administrator"><span>{{ new
+                Date(administrator?.period.start!).getFullYear() }}</span> - <span>{{ new
+                    Date(administrator?.period.end!).getFullYear() }}</span> </h1>
               <div class="grid max-w-4xl grid-cols-2 py-8 mx-auto justify-items-center" v-if="administrator">
-                <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" class="mb-8" :profile="member.profile as IProfile" :subtitle="member.role" />
+                <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" class="mb-8"
+                  :profile="member.profile as IProfile" :subtitle="member.role" />
               </div>
             </div>
-            <div class="hidden w-full p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="departemen" role="tabpanel"
-              aria-labelledby="departemen-tab">
+            <div class="hidden w-full p-4 rounded-lg" id="departemen" role="tabpanel" aria-labelledby="departemen-tab">
               <h1 class="mb-2 text-3xl font-bold text-center">Departemen</h1>
-              <h1 class="mb-4 text-xl font-bold text-center text-gray-400" v-if="departements"><span>{{ new Date(departementPeriod?.start!).getFullYear() }}</span> - <span>{{ new Date(departementPeriod?.end!).getFullYear() }}</span> </h1>
+              <h1 class="mb-4 text-xl font-bold text-center text-gray-400" v-if="departements"><span>{{ new
+                Date(departementPeriod?.start!).getFullYear() }}</span> - <span>{{ new
+                    Date(departementPeriod?.end!).getFullYear() }}</span> </h1>
               <div class="grid max-w-4xl grid-cols-2 py-8 mx-auto justify-items-center" v-if="departements">
-                <CoreProfileCard v-for="member, i in departements" class="mb-8" :profile="member.profile as IProfile" :subtitle="member.departement" />
+                <CoreProfileCard v-for="member, i in departements" class="mb-8" :profile="member.profile as IProfile"
+                  :subtitle="member.departement" />
               </div>
             </div>
           </div>
         </div>
       </div>
-      <button class="flex items-center justify-center gap-3 p-5 mt-4 text-lg font-medium text-gray-400 -rotate-180 bg-transparent"
-        data-accordion-target="#about-expand" active-class="rotate-180" aria-expanded aria-controls="about expand">
-        <Icon name="solar:alt-arrow-down-bold" data-accordion-icon class="w-12 h-12 transition-all duration-700 ease-out rotate-180" aria-hidden="true"></Icon>
+      <button
+        class="flex items-center justify-center gap-3 p-5 mt-4 text-lg font-medium text-gray-400 -rotate-180 bg-transparent dark:bg-transparent"
+        data-accordion-target="#about-expand" active-class="rotate-180 bg-transparent" aria-expanded
+        aria-controls="about expand">
+        <Icon name="solar:alt-arrow-down-bold" data-accordion-icon
+          class="w-10 h-10 transition-all duration-700 ease-out rotate-180" aria-hidden="true"></Icon>
       </button>
     </div>
   </CoreCard>

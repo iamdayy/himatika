@@ -2,7 +2,7 @@
 import type { IEvent, IProfile } from '~/types';
 const { events } = useEvents();
 const date = ref<number | undefined>(new Date(Date.now()).getDate());
-const Event = ref<IEvent>(events.value?.find(event => new Date(event.date).getDate() == date.value)! ||  null);
+const Event = ref<IEvent>(events.value?.find(event => new Date(event.date).getDate() == date.value)! || null);
 const attributes = computed(() => [
   ...<[]>events.value?.map(event => ({
     dot: 'green',
@@ -25,9 +25,9 @@ const pickDetail = (id: string) => {
 </script>
 <template>
   <CoreCard title="events">
-
     <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
-      <VCalendar v-if="events" :attributes="attributes" class="mx-auto shadow-lg md:max-w-sm" @dayclick="pickDay">
+      <VCalendar v-if="events" :attributes="attributes" class="mx-auto shadow-lg md:max-w-sm dark:text-gray-50"
+        :is-dark="{ selector: 'html', darkClass: 'dark' }" transparent @dayclick="pickDay">
         <template #footer>
           <div class="px-2 pb-3">
             <div class="mx-auto">
@@ -90,13 +90,13 @@ const pickDetail = (id: string) => {
               </span>
               <div class="relative my-3 mt-6 overflow-auto sm:rounded-lg ms-8 max-h-48">
                 <table
-                  class="w-full text-sm text-left text-gray-500 bg-gray-100 rtl:text-right dark:text-gray-400">
+                  class="w-full text-sm text-left text-gray-500 bg-gray-100 shadow-md rtl:text-right dark:text-gray-400 dark:bg-gray-800">
                   <tbody>
                     <tr v-for="event, i in Event.committee">
-                      <td class="px-6 py-4 border-gray-200 border-e">
+                      <td class="px-6 py-4 border-gray-200 dark:border-gray-600 border-e">
                         {{ (event.user as IProfile).fullName }}
                       </td>
-                      <td class="px-6 py-4 border-gray-200 border-e">
+                      <td class="px-6 py-4 border-gray-200 dark:border-gray-600 border-e">
                         as
                       </td>
                       <td class="px-6 py-4">

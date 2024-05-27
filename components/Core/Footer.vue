@@ -39,7 +39,7 @@
                 </div>
             </div>
         </div>
-        <hr class="mx-auto my-6 border-blueGray-300">
+        <hr class="mx-auto my-6">
         <div class="flex flex-wrap items-center justify-center mx-auto md:justify-between">
             <div class="w-full px-4 mx-auto text-center md:w-4/12">
                 <div class="py-1 text-sm font-semibold text-blueGray-500">

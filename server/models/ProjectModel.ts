@@ -1,4 +1,5 @@
 import mongoose, { Schema, Types } from "mongoose";
+import mongooseAutoPopulate from "mongoose-autopopulate";
 import {
   IContributorSchema,
   IProjectSchema,
@@ -75,6 +76,7 @@ const projectSchema = new Schema<IProjectSchema>(
     timestamps: true,
   }
 );
+projectSchema.plugin(mongooseAutoPopulate);
 export const ProjectModel = mongoose.model<IProjectSchema>(
   "Project",
   projectSchema
