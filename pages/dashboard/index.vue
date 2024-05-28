@@ -153,13 +153,13 @@ onMounted(async () => {
           <div class="grid w-full grid-cols-1 gap-4 px-2 py-4 md:grid-cols-3 md:gap-6 xl:grid-cols-3 2xl:gap-8">
 
             <div
-              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:border-slate-300 dark:bg-slate-500">
+              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-700 dark:border-slate-300 dark:bg-slate-500">
               <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
                 <Icon name="solar:folder-with-files-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
               </div>
               <div class="flex items-end justify-between mt-4">
                 <div>
-                  <span class="text-sm font-medium">Registered</span>
+                  <span class="text-xl font-medium dark:text-gray-100">Registered</span>
                   <h4 class="text-2xl font-bold text-black dark:text-white">
                     {{ all }}
                   </h4>
@@ -171,13 +171,13 @@ onMounted(async () => {
               </div>
             </div>
             <div
-              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:border-slate-300 dark:bg-slate-500">
+              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-700 dark:border-slate-300 dark:bg-slate-500">
               <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
                 <Icon name="solar:programming-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
               </div>
               <div class="flex items-end justify-between mt-4">
                 <div>
-                  <span class="text-sm font-medium">Projects registered</span>
+                  <span class="text-xl font-medium dark:text-gray-100">Projects registered</span>
                   <h4 class="text-2xl font-bold text-black dark:text-white">
                     {{ projectsMe?.length }}
                   </h4>
@@ -189,13 +189,13 @@ onMounted(async () => {
               </div>
             </div>
             <div
-              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:border-slate-300 dark:bg-slate-500">
+              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-700 dark:border-slate-300 dark:bg-slate-500">
               <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
                 <Icon name="solar:calendar-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
               </div>
               <div class="flex items-end justify-between mt-4">
                 <div>
-                  <span class="text-sm font-medium">events registered</span>
+                  <span class="text-xl font-medium dark:text-gray-100">events registered</span>
                   <h4 class="text-2xl font-bold text-black dark:text-white">
                     {{ eventsMe?.length }}
                   </h4>

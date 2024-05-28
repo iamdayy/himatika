@@ -55,11 +55,12 @@ const { user, logout } = useAuth();
             <div class="min-h-screen px-3 py-6 mx-auto sm:px-6 lg:px-8 dark:bg-gray-900">
                 <slot />
                 <div
-                    class="fixed z-30 w-full h-16 max-w-lg -translate-x-1/2 bg-white border border-gray-200 rounded-full shadow-lg bottom-4 left-1/2 dark:bg-gray-700 dark:border-gray-600">
+                    class="fixed z-30 w-full h-16 max-w-lg -translate-x-1/2 bg-white rounded-full shadow-lg bottom-4 left-1/2 dark:bg-gray-700">
                     <div class="grid h-full max-w-lg grid-cols-5 mx-auto">
                         <NuxtLink to="/dashboard" data-tooltip-target="tooltip-home"
                             class="inline-flex flex-col items-center justify-center px-5 rounded-s-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
-                            <Icon name="solar:home-2-bold" class="w-6 h-6 text-gray-500 hover:text-gray-800" />
+                            <Icon name="solar:home-2-bold"
+                                class="w-6 h-6 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" />
                             <span class="sr-only">Home</span>
                         </NuxtLink>
                         <div id="tooltip-home" role="tooltip"
@@ -69,7 +70,8 @@ const { user, logout } = useAuth();
                         </div>
                         <NuxtLink to="/dashboard/events" data-tooltip-target="tooltip-events"
                             class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
-                            <Icon name="solar:calendar-bold" class="w-6 h-6 text-gray-500 hover:text-gray-800" />
+                            <Icon name="solar:calendar-bold"
+                                class="w-6 h-6 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" />
                             <span class="sr-only">Events</span>
                         </NuxtLink>
                         <div id="tooltip-events" role="tooltip"
@@ -77,10 +79,10 @@ const { user, logout } = useAuth();
                             Events
                             <div class="tooltip-arrow" data-popper-arrow></div>
                         </div>
-                        <div class="flex items-center justify-center">
+                        <div class="relative">
                             <button data-dropdown-toggle="dropdown-tools" data-tooltip-target="tooltip-tool"
                                 type="button"
-                                class="inline-flex items-center justify-center w-10 h-10 font-medium transition-transform duration-200 ease-out bg-gray-600 rounded-full shadow-md hover:bg-gray-700 hover:scale-125 group focus:ring-4 focus:ring-gray-300 focus:outline-none dark:focus:ring-gray-800">
+                                class="absolute inline-flex items-center justify-center w-20 h-20 font-medium transition-transform duration-200 ease-in-out bg-gray-700 rounded-full shadow-md bottom-2 hover:bg-gray-700 hover:scale-125 group focus:ring-4 focus:ring-gray-300 focus:outline-none dark:focus:ring-gray-800 dark:hover:bg-gray-500 hover:bottom-4 hover:shadow-lg">
                                 <Icon name="solar:command-bold" class="w-6 h-6 text-gray-100" />
                                 <span class="sr-only">Tools</span>
                             </button>
@@ -119,7 +121,8 @@ const { user, logout } = useAuth();
                         </div>
                         <NuxtLink to="/dashboard/projects" data-tooltip-target="tooltip-projects"
                             class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group">
-                            <Icon name="solar:programming-bold" class="w-6 h-6 text-gray-500 hover:text-gray-800" />
+                            <Icon name="solar:programming-bold"
+                                class="w-6 h-6 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" />
                             <span class="sr-only">Projects</span>
                         </NuxtLink>
                         <div id="tooltip-projects" role="tooltip"
@@ -129,7 +132,8 @@ const { user, logout } = useAuth();
                         </div>
                         <NuxtLink to="/dashboard/profile" data-tooltip-target="tooltip-profile"
                             class="inline-flex flex-col items-center justify-center px-5 rounded-e-full hover:bg-gray-50 dark:hover:bg-gray-800 group">
-                            <Icon name="solar:user-bold" class="w-6 h-6 text-gray-500 hover:text-gray-800" />
+                            <Icon name="solar:user-bold"
+                                class="w-6 h-6 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200" />
                             <span class="sr-only">Profile</span>
                         </NuxtLink>
                         <div id="tooltip-profile" role="tooltip"
