@@ -120,6 +120,7 @@ profileSchema.virtual("isDepartement", {
   },
 });
 
+profileSchema.index({ NIM: "text", fullName: "text", email: "text" });
 export const ProfileModel = mongoose.model<IProfileSchema>(
   "Profile",
   profileSchema

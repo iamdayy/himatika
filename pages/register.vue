@@ -28,7 +28,8 @@ definePageMeta({
 })
 </script>
 <template>
-    <div class="shadow-xl card bg-gradient-to-tr from-teal-100 via-white to-indigo-50">
+    <div
+        class="shadow-xl card bg-gradient-to-tr from-teal-100 via-white to-indigo-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900">
         <div class="card-wrap">
             <h4 class="mb-5">REGISTER</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
@@ -38,38 +39,40 @@ definePageMeta({
             <div class="pb-8 mt-6 sm:mx-auto sm:w-full sm:max-w-sm max-h-96">
                 <div class="space-y-2">
                     <div>
-                        <label for="NIM" class="block text-sm font-medium leading-6 text-gray-900">NIM</label>
+                        <label for="NIM"
+                            class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">NIM</label>
                         <div class="mt-2">
                             <input id="NIM" name="NIM" type="number" autocomplete="NIM" required v-model="Form.NIM"
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
                     </div>
                     <div>
                         <label for="username-register"
-                            class="block text-sm font-medium leading-6 text-gray-900">Username</label>
+                            class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">Username</label>
                         <div class="mt-2">
                             <input id="username-register" name="username" type="text" autocomplete="username" required
                                 v-model="Form.username"
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
                     </div>
 
                     <div>
                         <label for="password-register"
-                            class="block text-sm font-medium leading-6 text-gray-900">Password</label>
+                            class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">Password</label>
                         <div class="mt-2">
                             <input id="password-register" name="password" type="password"
                                 autocomplete="current-password" v-model="Form.password" required
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
                     </div>
                     <div>
-                        <label for="confirm-password" class="block text-sm font-medium leading-6 text-gray-900">Confirm
+                        <label for="confirm-password"
+                            class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">Confirm
                             Password</label>
                         <div class="mt-2">
                             <input id="confirm-password" name="confirm-password" type="password"
                                 v-model="Form.password_confirmation" autocomplete="current-password" required
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
                     </div>
 

@@ -153,7 +153,7 @@ onMounted(async () => {
           <div class="grid w-full grid-cols-1 gap-4 px-2 py-4 md:grid-cols-3 md:gap-6 xl:grid-cols-3 2xl:gap-8">
 
             <div
-              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-700 dark:border-slate-300 dark:bg-slate-500">
+              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-800 dark:border-gray-300">
               <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
                 <Icon name="solar:folder-with-files-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
               </div>
@@ -171,7 +171,7 @@ onMounted(async () => {
               </div>
             </div>
             <div
-              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-700 dark:border-slate-300 dark:bg-slate-500">
+              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-800 dark:border-gray-300">
               <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
                 <Icon name="solar:programming-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
               </div>
@@ -189,7 +189,7 @@ onMounted(async () => {
               </div>
             </div>
             <div
-              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-700 dark:border-slate-300 dark:bg-slate-500">
+              class="px-6 py-6 border border-blue-300 rounded-lg shadow-md bg-blue-50 dark:bg-gray-800 dark:border-gray-300">
               <div class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-400">
                 <Icon name="solar:calendar-bold" class="mb-3 text-gray-500 w-7 h-7 dark:text-gray-400" />
               </div>

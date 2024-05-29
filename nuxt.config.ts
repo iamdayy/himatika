@@ -88,7 +88,8 @@ export default defineNuxtConfig({
   },
   image: {},
   colorMode: {
-    preference: "light",
+    preference: "system",
+    fallback: "dark",
     classSuffix: "",
   },
 });

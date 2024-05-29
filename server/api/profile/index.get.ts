@@ -2,7 +2,31 @@ import { ProfileModel } from "~/server/models/ProfileModel";
 import { IReqProfileQuery } from "~/types/IRequestPost";
 export default defineEventHandler(async (event) => {
   try {
-    const { NIM, perPage, page } = getQuery<IReqProfileQuery>(event);
+    let { NIM, perPage, page, fullName, email } =
+      getQuery<IReqProfileQuery>(event);
+    let query = {};
+    if (fullName) {
+      query = {
+        fullName: {
+          $regex: `.*${fullName}.*`,
+          $options: `i`,
+        },
+      };
+    }
+    if (email) {
+      query = {
+        email: {
+          $regex: `.*${email}.*`,
+          $options: `i`,
+        },
+        // $text: {
+        //   $search: search,
+        //   $caseSensitive: false,
+        //   $diacriticSensitive: true,
+        // },
+      };
+    }
+
     const user = await ensureAuth(event);
     if (!user) {
       throw createError({
@@ -18,11 +42,19 @@ export default defineEventHandler(async (event) => {
       });
     }
     if (NIM) {
-      const profile = await ProfileModel.findOne({ NIM });
-      return profile;
+      query = {
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$NIM" },
+            regex: new RegExp(NIM),
+          },
+        },
+      };
+      // const profile = await ProfileModel.findOne({ NIM });
+      // return profile;
     }
-    const length = await ProfileModel.countDocuments();
-    const profiles = await ProfileModel.find()
+    const length = await ProfileModel.countDocuments(query);
+    const profiles = await ProfileModel.find(query)
       .skip((page - 1) * perPage)
       .limit(perPage);
     return {

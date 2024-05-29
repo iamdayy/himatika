@@ -42,9 +42,10 @@ onMounted(() => {
 })
 </script>
 <template>
-    <div class="shadow-xl card bg-gradient-to-bl from-indigo-50 via-white to-teal-100">
+    <div
+        class="shadow-xl card bg-gradient-to-bl from-indigo-50 via-white to-teal-100 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900">
         <div class="card-wrap">
-            <h4 class="mb-5">LOGIN</h4>
+            <h4 class="mb-5 text-orange-400">LOGIN</h4>
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
                 <nuxtImg class="w-auto h-10 mx-auto" src="/img/himatika-logo.png" alt="Himatika" />
             </div>
@@ -53,18 +54,18 @@ onMounted(() => {
                 <div class="space-y-6">
                     <div>
                         <label for="username-login"
-                            class="block text-sm font-medium leading-6 text-gray-900">Username</label>
+                            class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">Username</label>
                         <div class="mt-2">
                             <input id="username-login" name="username" type="text" autocomplete="username" required
                                 v-model="Form.username"
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 dark:bg-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
                     </div>
 
                     <div>
                         <div class="flex items-center justify-between">
                             <label for="password-login"
-                                class="block text-sm font-medium leading-6 text-gray-900">Password</label>
+                                class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">Password</label>
                             <div class="text-sm">
                                 <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot
                                     password?</a>
@@ -73,7 +74,7 @@ onMounted(() => {
                         <div class="mt-2">
                             <input id="password-login" name="password" type="password" autocomplete="current-password"
                                 required v-model="Form.password"
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm dark:text-gray-100 dark:bg-gray-800 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                         </div>
                     </div>
 

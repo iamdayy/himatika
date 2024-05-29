@@ -2,7 +2,7 @@
 </script>
 
 <template>
-    <div class="relative h-screen">
+    <div class="relative h-screen dark:bg-gray-900">
         <div class="absolute py-8 transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
             <ul
                 class="flex flex-row gap-3 font-sans font-semibold text-center text-white dark:text-gray-400 mx-auto w-fit bg-[#102770] rounded-xl mb-12">
