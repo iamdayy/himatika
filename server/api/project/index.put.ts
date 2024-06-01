@@ -1,4 +1,4 @@
-import { EventModel } from "~/server/models/EventModel";
+import { ProjectModel } from "~/server/models/ProjectModel";
 
 export default defineEventHandler(async (ev) => {
   try {
@@ -12,23 +12,22 @@ export default defineEventHandler(async (ev) => {
     }
     const { id } = getQuery(ev);
     const body = await readBody(ev);
-    const event = await EventModel.findById(id);
-    if (!event) {
+    const project = await ProjectModel.findById(id);
+    if (!project) {
       throw createError({
         statusCode: 404,
-        statusMessage: "The event is'nt found",
+        statusMessage: "The project is'nt found",
       });
     }
-    event.title = body.title;
-    event.at = body.at;
-    event.date = body.date;
-    event.canSee = body.canSee;
-    event.description = body.description;
-    event.canRegister = body.canRegister;
-    event.save();
+    project.title = body.title;
+    project.deadline = body.deadline;
+    project.canSee = body.canSee;
+    project.description = body.description;
+    project.canRegister = body.canRegister;
+    project.save();
     return {
       statusCode: 200,
-      statusMessage: `Event ${event.title} updated`,
+      statusMessage: `Project ${project.title} updated`,
     };
   } catch (error: any) {
     return createError({

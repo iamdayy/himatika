@@ -1,14 +1,21 @@
 <script setup lang='ts'>
 const { user, logout } = useAuth();
+const router = useRouter();
 </script>
 <template>
     <div class="min-h-screen">
         <nav class="bg-white border-gray-200 shadow-md dark:bg-gray-700">
             <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
-                <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-                    <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
-                    <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
-                </NuxtLink>
+                <div class="flex items-center space-x-3 rtl:space-x-reverse">
+                    <button class="text-gray-700 dark:text-gray-600" @click="router.back()">
+                        <Icon name="solar:alt-arrow-left-outline" class="w-8 h-8"></Icon>
+                    </button>
+                    <NuxtLink to="/" class="flex items-center space-x-3 rtl:space-x-reverse">
+                        <NuxtImg src="/img/himatika-logo.png" class="h-8" alt="Himatika Logo" />
+                        <span
+                            class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Himatika</span>
+                    </NuxtLink>
+                </div>
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <CoreColorModeToggle />
                     <CoreDropdown name="user">
@@ -22,7 +29,7 @@ const { user, logout } = useAuth();
                                 <span class="block text-sm text-gray-900 dark:text-white">{{ user?.username }}</span>
                                 <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{
                                     user?.profile.email
-                                }}</span>
+                                    }}</span>
                             </div>
                             <ul class="py-2" aria-labelledby="user-menu-button">
                                 <li>

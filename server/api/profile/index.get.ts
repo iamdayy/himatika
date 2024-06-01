@@ -4,6 +4,12 @@ export default defineEventHandler(async (event) => {
   try {
     let { NIM, perPage, page, fullName, email } =
       getQuery<IReqProfileQuery>(event);
+
+    if (NIM && !perPage && !page) {
+      const profile = await ProfileModel.findOne({ NIM });
+      return profile;
+    }
+
     let query = {};
     if (fullName) {
       query = {
@@ -19,11 +25,6 @@ export default defineEventHandler(async (event) => {
           $regex: `.*${email}.*`,
           $options: `i`,
         },
-        // $text: {
-        //   $search: search,
-        //   $caseSensitive: false,
-        //   $diacriticSensitive: true,
-        // },
       };
     }
 
@@ -50,8 +51,6 @@ export default defineEventHandler(async (event) => {
           },
         },
       };
-      // const profile = await ProfileModel.findOne({ NIM });
-      // return profile;
     }
     const length = await ProfileModel.countDocuments(query);
     const profiles = await ProfileModel.find(query)

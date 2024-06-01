@@ -7,8 +7,9 @@ const { isDept } = useDept();
 const { user } = useAuth();
 const { $toast } = useNuxtApp();
 
-const { projects, refreshProjects } = useProjects()
-
+const { page, perPage, projects, totalProjects, refreshProjects } = useProjects()
+page.value = 1;
+perPage.value = 10;
 const { canMeRegister } = useCanMeRegister();
 
 const selectedRegistered = ref<Array<any>>([]);
@@ -18,7 +19,11 @@ const registerForm = ref({
     NIM: user.value?.profile.NIM,
     task: "",
     id: 0
-})
+});
+const clickpage = (v: number) => {
+    page.value = v;
+    refreshProjects();
+}
 const pickDetail = (title: string) => {
     const index = projects.value?.findIndex((project) => project.title === title);
     Project.value = projects.value![index!];
@@ -75,9 +80,23 @@ onMounted(() => {
             <h2 class="text-4xl font-extrabold leading-tight tracking-tight text-gray-600 dark:text-white">
                 Project
             </h2>
-            <ModalsProjectsAdd @trigger-refresh="refreshProjects" v-if="isAdmin || isDept" />
         </div>
-        <CoreCard class="mt-4">
+        <CoreCard class="mt-6">
+            <div class="flex flex-row-reverse justify-between px-8">
+                <ModalsProjectsAdd @trigger-refresh="refreshProjects" v-if="isAdmin || isDept" />
+                <div class="relative">
+                    <div class="absolute inset-y-0 flex items-center pointer-events-none rtl:inset-r-0 start-0 ps-3">
+                        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                        </svg>
+                    </div>
+                    <input type="text" id="table-search-collegers"
+                        class="block pt-2 text-sm text-gray-900 border border-gray-300 rounded-lg ps-10 w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="Search project">
+                </div>
+            </div>
             <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
                 <div
                     class="mx-auto shadow-lg rounded-lg w-full md:w-2/5 max-h-[60vh] overflow-y-auto border border-gray-400 bg-gray-100 py-4 dark:bg-gray-800">
@@ -86,6 +105,8 @@ onMounted(() => {
                         {{ project.title }} | <span class="font-light text-md ms-2">{{ new
                             Date(project.deadline).toDateString() }}</span>
                     </button>
+                    <CorePagination v-if="page" :total="totalProjects!" v-model="perPage" :current-page="page"
+                        @pagechanged="clickpage" />
                 </div>
                 <div class="w-full px-8 py-4 bg-gray-100 border border-gray-400 rounded-lg shadow-lg dark:bg-gray-800">
                     <h5 v-if="!Project"
@@ -210,7 +231,7 @@ onMounted(() => {
                                                                 (registered?.profile as IProfile).fullName }}</div>
                                                             <div class="font-normal text-gray-500">{{
                                                                 (registered?.profile as IProfile).email
-                                                            }}</div>
+                                                                }}</div>
                                                         </div>
                                                     </th>
                                                     <td class="px-6 py-4">
@@ -228,11 +249,8 @@ onMounted(() => {
                                 </CoreModal>
                             </li>
                         </ul>
-                        <!-- NOT WORKING -->
-                        <!--  -->
-                        <!--  -->
-                        <!--  -->
-                        <CorePopover name="Register">
+                        <CorePopover name="Register"
+                            v-if="canMeRegister(Project.canRegister, Project.deadline) && !isMeRegistered(Project)">
                             <FormSelect title="Task" :options="Project.tasks" v-model="registerForm.task">
                             </FormSelect>
                             <button type="submit" @click="register(Project?._id!)"
