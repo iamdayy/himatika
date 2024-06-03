@@ -180,7 +180,7 @@ onMounted(() => {
                                     <table
                                         class="w-full text-sm text-left text-gray-500 bg-gray-100 rtl:text-right dark:text-gray-400 dark:bg-gray-700">
                                         <tbody>
-                                            <tr v-for="event, i in Project.contributors">
+                                            <tr v-for="event, i in project?.contributors">
                                                 <td class="px-6 py-4 border-gray-200 border-e dark:border-gray-600">
                                                     {{ (event.profile as IProfile).fullName }}
                                                 </td>
@@ -245,7 +245,7 @@ onMounted(() => {
                                                                 (registered?.profile as IProfile).fullName }}</div>
                                                             <div class="font-normal text-gray-500">{{
                                                                 (registered?.profile as IProfile).email
-                                                                }}</div>
+                                                            }}</div>
                                                         </div>
                                                     </th>
                                                     <td class="px-6 py-4">
