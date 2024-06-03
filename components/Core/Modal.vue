@@ -7,6 +7,14 @@ const props = defineProps({
     class: String,
     headTitle: String
 });
+// const slots = defineEmits({
+//     trigger
+// })
+const emits = defineEmits(['onShow'])
+const onShow = () => {
+    emits('onShow');
+    modal.show();
+}
 onMounted(() => {
     const $modalEl = document.getElementById('modal-' + props.name);
 
@@ -18,11 +26,12 @@ onMounted(() => {
 </script>
 <template>
     <!-- Modal toggle -->
-    <button :id="`trigger-${name}`"
+    <button :id="`trigger-${name}`" v-if="!$slots.trigger"
         :class="props.class || `inline-flex items-center px-4 py-2 text-lg font-medium text-gray-100 bg-green-500 rounded-full hover:bg-green-400`"
         type="button" @click="modal.show()">
         {{ capitalCase(props.name!) }}
     </button>
+    <slot name="trigger" :show="onShow" />
     <!-- Main modal -->
     <div :id="`modal-${props.name}`" tabindex="-1" aria-hidden="true"
         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">

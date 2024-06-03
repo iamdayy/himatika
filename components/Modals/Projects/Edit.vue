@@ -4,41 +4,58 @@ import { Modal, initPopovers } from 'flowbite';
 import type { IProject } from '~/types';
 import type { IProfileResponse } from '~/types/IResponse';
 
-const { data } = await useAsyncData(() => $fetch<IProfileResponse>("/api/profile"));
+const { data } = await useAsyncData(() => $api<IProfileResponse>("/api/profile"));
 const { $toast } = useNuxtApp();
 
 const emit = defineEmits(["triggerRefresh"]);
+const props = defineProps({
+    identifier: String,
+})
+const { data: proj, refresh } = await useAsyncData(() => $api<IProject>("/api/project", {
+    method: "get",
+    query: {
+        id: props.identifier
+    }
+}))
 
-const project = ref<IProject>({
-    title: "",
-    deadline: new Date(),
-    description: "",
-    canSee: "All",
-    canRegister: "No",
-    registered: [],
-    tasks: [],
-    contributors: [
-        {
-            profile: 0,
-            job: ""
+const project = computed<IProject>(() => {
+    if (!proj.value) {
+        return {
+            title: "",
+            deadline: new Date(),
+            description: "",
+            canSee: "All",
+            canRegister: "No",
+            registered: [],
+            tasks: [],
+            contributors: [
+                {
+                    profile: 0,
+                    job: ""
+                }
+            ]
         }
-    ]
+    }
+    return proj.value
 });
 
 const getNameFromNIM = (NIM?: number) => {
     return data.value?.profiles.find((profile) => profile.NIM == NIM)?.fullName;
 }
 
-const addProject = async () => {
+const editProject = async () => {
     try {
-        const added = await $fetch("/api/project", {
-            method: "POST",
+        const added = await $api("/api/project", {
+            method: "put",
+            query: {
+                id: project.value?._id
+            },
             body: project.value
         });
 
-        const modalElement: HTMLElement = document.querySelector('#modal-add-project') as HTMLElement;
+        const modalElement: HTMLElement = document.querySelector('#modal-edit-project') as HTMLElement;
         const instanceOptions: InstanceOptions = {
-            id: 'modal-add-project',
+            id: 'modal-edit-project',
             override: true
         };
         const modal: ModalInterface = new Modal(modalElement, {}, instanceOptions);
@@ -46,13 +63,13 @@ const addProject = async () => {
         modal.hide();
         emit("triggerRefresh");
     } catch (error) {
-        $toast("Failed to add new Projects");
+        $toast(`Failed to edit ${project.value?.title} Project`);
     }
 };
 
 
 const addContributors = () => {
-    if (!project.value.contributors) {
+    if (!project.value?.contributors) {
         project.value.contributors = [
             {
                 job: "",
@@ -73,19 +90,26 @@ const addNewTask = (ev: any) => {
 }
 
 const deleteTask = (i: number) => {
-    project.value.tasks?.splice(i, 1);
+    project.value?.tasks?.splice(i, 1);
 }
 
 const deleteContributors = (i: number) => {
-    project.value.contributors?.splice(i, 1);
+    project.value?.contributors?.splice(i, 1);
 }
 
 onMounted(() => {
-    initPopovers()
+    initPopovers();
 })
 </script>
 <template>
-    <CoreModal name="add-project">
+    <CoreModal @onShow="refresh()" name="edit-project">
+        <template #trigger="{ show }">
+            <button type="button" @click="show()"
+                class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <Icon name="solar:pen-new-square-outline" class="w-6 h-6" />
+                <span class="sr-only">Edit Project</span>
+            </button>
+        </template>
         <div class="p-6 space-y-6 text-start">
             <div class="grid grid-cols-6 gap-6">
                 <div class="col-span-6 sm:col-span-3">
@@ -108,7 +132,7 @@ onMounted(() => {
                             </template>
                         </VDatePicker>
                         <label class="block my-auto text-sm font-medium text-gray-900 dark:text-white" for="deadline">
-                            {{ project.deadline.toLocaleDateString() }}
+                            {{ new Date(project.deadline).toLocaleDateString() }}
                         </label>
                     </div>
                 </div>
@@ -133,6 +157,10 @@ onMounted(() => {
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
                                             required>
                                     </div>
+                                    <!-- input is an object -->
+                                    <!--  -->
+                                    <!--  -->
+                                    <!--  -->
                                     <div class="w-1/4">
                                         <label :for="`${contributors.job}-profile`"
                                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">NIM</label>
@@ -188,13 +216,13 @@ onMounted(() => {
                                 </button>
                             </span>
 
-                            <button data-popover-target="add-new-task" data-popover-placement="bottom"
+                            <button data-popover-target="edit-new-task" data-popover-placement="bottom"
                                 data-popover-trigger="click" type="button"
                                 class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm px-1.5 py-1.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                 <Icon name="solar:pen-new-round-outline" size="1.5em" />
                             </button>
 
-                            <div data-popover id="add-new-task" role="tooltip"
+                            <div data-popover id="edit-new-task" role="tooltip"
                                 class="absolute z-10 invisible inline-block w-64 text-sm text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:text-gray-400 dark:border-gray-600 dark:bg-gray-800">
                                 <div
                                     class="px-3 py-2 bg-gray-300 border-b border-gray-200 rounded-t-lg dark:border-gray-600 dark:bg-gray-700">
@@ -211,9 +239,9 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <button type="submit" @click="addProject"
+            <button type="submit" @click="editProject"
                 class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                Add New Project
+                Edit {{ project.title }} Project
             </button>
         </div>
     </CoreModal>

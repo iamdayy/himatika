@@ -31,4 +31,6 @@ export interface IReqProfile extends IProfile {}
 
 export interface IReqEvent extends IEvent {}
 
-export interface IReqProjectQuery extends IReqQueryPaginate {}
+export interface IReqProjectQuery extends IReqQueryPaginate {
+  id: string;
+}

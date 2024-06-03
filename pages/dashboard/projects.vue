@@ -13,19 +13,29 @@ perPage.value = 10;
 const { canMeRegister } = useCanMeRegister();
 
 const selectedRegistered = ref<Array<any>>([]);
-
-const Project = ref<IProject | null>(null);
+const project = ref<IProject | null>();
+const Project = computed<IProject | null>({
+    get() {
+        if (projects.value) {
+            return projects.value![0];
+        }
+        return null;
+    },
+    set(newVal) {
+        project.value = newVal;
+    }
+});
 const registerForm = ref({
     NIM: user.value?.profile.NIM,
     task: "",
-    id: 0
+    id: ""
 });
 const clickpage = (v: number) => {
     page.value = v;
     refreshProjects();
 }
-const pickDetail = (title: string) => {
-    const index = projects.value?.findIndex((project) => project.title === title);
+const pickDetail = (id: string) => {
+    const index = projects.value?.findIndex((project) => project._id === id);
     Project.value = projects.value![index!];
 }
 
@@ -38,7 +48,7 @@ const isMeRegistered = (project: IProject) => {
         return true;
     }
 }
-const register = async (id: number) => {
+const register = async (id: string) => {
     registerForm.value.id = id;
     try {
         const response = await $fetch("/api/project/register", {
@@ -100,7 +110,7 @@ onMounted(() => {
             <div class="flex flex-col w-full gap-3 px-8 py-12 md:flex-row">
                 <div
                     class="mx-auto shadow-lg rounded-lg w-full md:w-2/5 max-h-[60vh] overflow-y-auto border border-gray-400 bg-gray-100 py-4 dark:bg-gray-800">
-                    <button v-for="project, i in projects" :key="i" @click="pickDetail(project.title)"
+                    <button v-for="project, i in projects" :key="i" @click="pickDetail(project._id as string)"
                         class="relative inline-flex items-center w-full px-4 py-2 text-lg font-semibold border-b border-gray-200 rounded-t-lg hover:bg-gray-100 hover:text-blue-700 focus:border-blue-700 focus:z-10 focus:text-blue-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white dark:focus:text-white">
                         {{ project.title }} | <span class="font-light text-md ms-2">{{ new
                             Date(project.deadline).toDateString() }}</span>
@@ -109,39 +119,43 @@ onMounted(() => {
                         @pagechanged="clickpage" />
                 </div>
                 <div class="w-full px-8 py-4 bg-gray-100 border border-gray-400 rounded-lg shadow-lg dark:bg-gray-800">
-                    <h5 v-if="!Project"
+                    <h5 v-if="!project"
                         class="my-24 mb-4 text-3xl font-semibold text-center text-yellow-300 dark:text-yellow-200">No
                         Project
                         Selected</h5>
                     <div v-else>
-                        <h5 class="mb-4 text-2xl font-medium text-gray-500 dark:text-gray-400">{{ Project?.title }}</h5>
+                        <div class="flex justify-between w-full">
+                            <h5 class="mb-4 text-2xl font-medium text-gray-500 dark:text-gray-400">{{ project?.title }}
+                            </h5>
+                            <ModalsProjectsEdit :identifier="project?._id" @trigger-refresh="refreshProjects" />
+                        </div>
                         <ul role="list" class="space-y-5 my-7">
                             <li class="flex items-center">
                                 <Icon name="solar:calendar-outline"
                                     class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                                 <span
                                     class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                        new Date(Project?.deadline).toDateString() }}</span>
+                                        new Date(project?.deadline!).toDateString() }}</span>
                             </li>
                             <li class="flex">
                                 <Icon name="solar:eye-outline"
                                     class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                                 <span
                                     class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                        Project?.canSee }}</span>
+                                        project?.canSee }}</span>
                             </li>
                             <li class="flex">
                                 <Icon name="solar:user-plus-outline"
                                     class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                                 <span
                                     class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                        Project?.canRegister }}</span>
+                                        project?.canRegister }}</span>
                             </li>
                             <li class="flex">
                                 <Icon name="solar:pen-new-square-outline"
                                     class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                                 <div class="flex flex-wrap gap-2 ms-3">
-                                    <span v-for="task, i in Project.tasks" :key="i" id="badge-dismiss-default"
+                                    <span v-for="task, i in project?.tasks" :key="i" id="badge-dismiss-default"
                                         class="inline-flex items-center px-2 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded me-2 dark:bg-blue-900 dark:text-blue-300">
                                         {{ task }}
                                     </span>
@@ -152,9 +166,9 @@ onMounted(() => {
                                     class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
                                 <span
                                     class="text-base font-normal leading-tight text-gray-500 dark:text-gray-400 ms-3">{{
-                                        Project?.description }}</span>
+                                        project?.description }}</span>
                             </li>
-                            <li v-if="Project.contributors">
+                            <li v-if="project?.contributors">
                                 <span class="flex">
                                     <Icon name="solar:users-group-two-rounded-outline"
                                         class="flex-shrink-0 w-4 h-4 text-blue-600 dark:text-blue-500" />
@@ -181,7 +195,7 @@ onMounted(() => {
                                     </table>
                                 </div>
                             </li>
-                            <li v-if="Project.registered">
+                            <li v-if="project?.registered">
                                 <CoreModal name="Registered">
                                     <div class="px-2 py-2 relative overflow-auto sm:rounded-lg max-h-[40vh]">
                                         <table
@@ -192,7 +206,7 @@ onMounted(() => {
                                                     <th scope="col" class="p-4">
                                                         <div class="flex items-center">
                                                             <input id="checkbox-all-search" type="checkbox"
-                                                                :checked="selectedRegistered.length == Project.registered?.length"
+                                                                :checked="selectedRegistered.length == project?.registered?.length"
                                                                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                                                             <label for="checkbox-all-search"
                                                                 class="sr-only">checkbox</label>
@@ -211,7 +225,7 @@ onMounted(() => {
                                             </thead>
                                             <tbody>
                                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                                                    v-for="registered, i in Project.registered" :key="i">
+                                                    v-for="registered, i in project?.registered" :key="i">
                                                     <td class="w-4 p-4">
                                                         <div class="flex items-center">
                                                             <input id="checkbox-table" type="checkbox"
@@ -250,10 +264,10 @@ onMounted(() => {
                             </li>
                         </ul>
                         <CorePopover name="Register"
-                            v-if="canMeRegister(Project.canRegister, Project.deadline) && !isMeRegistered(Project)">
-                            <FormSelect title="Task" :options="Project.tasks" v-model="registerForm.task">
+                            v-if="canMeRegister(project?.canRegister!, project?.deadline) && !isMeRegistered(project!)">
+                            <FormSelect title="Task" :options="project?.tasks" v-model="registerForm.task">
                             </FormSelect>
-                            <button type="submit" @click="register(Project?._id!)"
+                            <button type="submit" @click="register(project?._id!)"
                                 class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                 Register this
                             </button>
