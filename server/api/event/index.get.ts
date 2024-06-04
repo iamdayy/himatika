@@ -1,7 +1,42 @@
 import { EventModel } from "~/server/models/EventModel";
+import { ProfileModel } from "~/server/models/ProfileModel";
+
+const getNimFromID = async (id: string) => {
+  const profile = await ProfileModel.findById(id);
+
+  if (!profile?.NIM) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Someone is error",
+    });
+  }
+
+  return profile.NIM;
+};
 
 export default defineEventHandler(async (event) => {
   try {
+    const { id } = getQuery(event);
+    if (id) {
+      const event = await EventModel.findById(id, {}, { autopopulate: false });
+      if (!event) {
+        throw createError({
+          statusCode: 404,
+          statusMessage: "Event not found",
+        });
+      }
+      const committee = await Promise.all(
+        event?.committee?.map(async (coommitee) => ({
+          user: await getNimFromID(coommitee.user as string),
+          job: coommitee.job,
+        }))!
+      );
+
+      return {
+        ...event.toJSON(),
+        committee,
+      };
+    }
     const roles: string[] = ["All", "External"];
     const auth = checkAuth(event);
     if (auth) {

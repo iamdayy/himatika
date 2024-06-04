@@ -93,7 +93,7 @@ export interface IRegistered {
   task?: string;
 }
 export interface IEvent {
-  _id?: number;
+  _id?: number | string;
   title: string;
   date: Date;
   at: string;
