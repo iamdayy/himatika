@@ -96,7 +96,7 @@ onMounted(async () => {
               </div>
             </div>
             <div class="hidden w-full p-4 rounded-lg" id="departemen" role="tabpanel" aria-labelledby="departemen-tab">
-              <h1 class="mb-2 text-3xl font-bold text-center">Departemen</h1>
+              <h1 class="mb-2 text-3xl font-bold text-center dark:text-gray-400">Departemen</h1>
               <h1 class="mb-4 text-xl font-bold text-center text-gray-400" v-if="departements"><span>{{ new
                 Date(departementPeriod?.start!).getFullYear() }}</span> - <span>{{ new
                     Date(departementPeriod?.end!).getFullYear() }}</span> </h1>

@@ -5,7 +5,8 @@ let modal: Modal;
 const props = defineProps({
     name: String,
     class: String,
-    headTitle: String
+    headTitle: String,
+    noTitle: Boolean
 });
 // const slots = defineEmits({
 //     trigger
@@ -34,13 +35,13 @@ onMounted(() => {
     <slot name="trigger" :show="onShow" />
     <!-- Main modal -->
     <div :id="`modal-${props.name}`" tabindex="-1" aria-hidden="true"
-        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-[999] justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="relative w-full max-w-6xl max-h-full p-4">
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
                 <!-- Modal header -->
                 <div class="flex items-center justify-between p-4 rounded-t md:p-5">
-                    <h3 class="text-2xl font-bold text-gray-600 dark:text-gray-400">
+                    <h3 class="text-2xl font-bold text-gray-600 dark:text-gray-400" v-if="!noTitle">
                         {{ props.headTitle ? capitalCase(props.headTitle!) : capitalCase(props.name!) }}
                     </h3>
                     <button type="button"

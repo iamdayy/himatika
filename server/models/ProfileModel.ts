@@ -69,12 +69,6 @@ const profileSchema = new Schema<IProfileSchema>(
       type: Boolean,
       required: true,
     },
-    createdAt: {
-      type: Date,
-    },
-    updatedAt: {
-      type: Date,
-    },
   },
   {
     timestamps: true,
@@ -88,7 +82,7 @@ const profileSchema = new Schema<IProfileSchema>(
   }
 );
 
-profileSchema.virtual("enteredAt").get(function (this: IProfileSchema) {
+profileSchema.virtual("enteredYear").get(function (this: IProfileSchema) {
   return new Date(this.createdAt).getFullYear();
 });
 profileSchema.virtual("projects", {

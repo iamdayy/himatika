@@ -1,6 +1,7 @@
 import { fakerID_ID as idFaker } from "@faker-js/faker";
-import { IProject } from "~/types";
 import { Types } from "mongoose";
+import { ProjectModel } from "~/server/models/ProjectModel";
+import { IProject } from "~/types";
 
 export const seedProject = async () => {
   const seedData: IProject[] = [];

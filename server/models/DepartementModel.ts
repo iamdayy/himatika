@@ -11,7 +11,7 @@ const departementSchema = new Schema<IDepartementSchema>({
     ref: "Profile",
     autopopulate: {
       model: ProfileModel,
-      select: "NIM avatar fullName class semester",
+      select: "NIM email avatar fullName class semester createdAt",
     },
   },
   departement: {

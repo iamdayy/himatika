@@ -11,22 +11,22 @@ useHead({
 
 const { access: canAccessAdd, role } = useRole(["Chairman"]);
 
-const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear() + 1}`);
 
 const getStartYear = (opt: string): number => {
-    const year = parseInt(opt.slice(0,5).match(/\d/g)?.join("")!);
+    const year = parseInt(opt.slice(0, 5).match(/\d/g)?.join("")!);
     return year;
 }
 const getEndYear = (opt: string): number => {
     const year = parseInt(opt.slice(5).match(/\d/g)?.join("")!);
     return year;
 }
-const { data: administrators, refresh } = await useAsyncData(() => $fetch<IAdministrator[]>("/api/administrator"));
+const { data: administrators, refresh } = await useAsyncData(() => $api<IAdministrator[]>("/api/administrator"));
 const administrator = computed<IAdministrator | undefined>(() => {
-    return administrators.value?.find((admin) => getStartYear(option.value) <= new Date(admin.period.start).getFullYear() && getEndYear(option.value) >= new Date(admin.period.end).getFullYear() );
+    return administrators.value?.find((admin) => getStartYear(option.value) <= new Date(admin.period.start).getFullYear() && getEndYear(option.value) >= new Date(admin.period.end).getFullYear());
 });
 
 const options = administrators.value?.map((administrator) => `${new Date(administrator.period.start).getFullYear()} - ${new Date(administrator.period.end).getFullYear()}`);
+const option = ref<string>(options![0]);
 </script>
 <template>
     <div class="max-w-6xl py-3 mx-auto overflow-x-auto rounded-md shadow-md sm:rounded-lg">
@@ -36,7 +36,8 @@ const options = administrators.value?.map((administrator) => `${new Date(adminis
             <FormSelect placeholder="Select Period" :options="options" v-model="option" />
         </div>
         <div class="grid grid-cols-2 gap-3 py-8 justify-items-center" v-if="administrator">
-            <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" :key="i" :profile="member.profile as IProfile" :subtitle="member.role" />
+            <CoreProfileCard v-for="member, i in administrator.AdministratorMembers" :key="i"
+                :profile="member.profile as IProfile" :subtitle="member.role" />
         </div>
     </div>
 </template>

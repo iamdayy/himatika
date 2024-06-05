@@ -10,24 +10,45 @@ const props = defineProps({
     subtitle: {
         type: String
     }
-})
-
+});
 </script>
 <template>
-    <div
-        class="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-        <div class="flex flex-col items-center py-8">
-            <NuxtImg class="rounded-full shadow-lg" :src="profile?.avatar || '/img/profile-blank.png'" sizes="240"
-                :alt="profile?.fullName" />
-            <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ profile?.fullName }}</h5>
-            <span class="text-sm text-gray-500 dark:text-gray-400">{{ subtitle }}</span>
-            <div class="flex justify-center mt-4 md:mt-6">
-                <!-- <ModalsProfileView></ModalsProfileView> -->
-                <!-- <a href="#"
-                    class="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg ms-2 focus:outline-none hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Message</a> -->
+    <CoreFlipCard :img="profile?.avatar || '/img/profile-blank.png'">
+        <template #front>
+            <h2 class="text-2xl font-semibold text-gray-200">{{ subtitle }}</h2>
+            <div class="absolute bottom-16">
+                <h1 class="mb-2 text-4xl font-semibold text-white -translate-x-14">{{ profile?.fullName }}</h1>
+                <h1 class="mb-2 text-xl font-medium text-white">{{ profile?.NIM }}</h1>
             </div>
-        </div>
-    </div>
-
+            <div></div>
+        </template>
+        <template #back>
+            <div>
+                <h1 class="mb-2 text-3xl font-semibold text-white -translate-x-14">{{ profile?.fullName }}</h1>
+                <dl class="max-w-md text-gray-200 dark:text-white">
+                    <div class="flex flex-col pb-2">
+                        <dt class="text-gray-400 dark:text-gray-300">Email address</dt>
+                        <hr class="mb-1 w-[105px] h-[1px] bg-gray-100 border-0 rounded dark:bg-gray-200">
+                        <dd class="text-lg font-semibold">{{ profile?.email }}</dd>
+                    </div>
+                    <div class="flex flex-col py-2">
+                        <dt class="text-gray-400 dark:text-gray-300">Class</dt>
+                        <hr class="mb-1 w-[45px] h-[1px] bg-gray-100 border-0 rounded dark:bg-gray-200">
+                        <dd class="text-lg font-semibold">{{ profile?.class }}</dd>
+                    </div>
+                    <div class="flex flex-col py-2">
+                        <dt class="text-gray-400 dark:text-gray-300">Semester</dt>
+                        <hr class="mb-1 w-[75px] h-[1px] bg-gray-100 border-0 rounded dark:bg-gray-200">
+                        <dd class="text-lg font-semibold">{{ profile?.semester }}</dd>
+                    </div>
+                    <div class="flex flex-col pt-2">
+                        <dt class="text-gray-400 dark:text-gray-300">Entered year</dt>
+                        <hr class="mb-1 w-[98px] h-[1px] bg-gray-100 border-0 rounded dark:bg-gray-200">
+                        <dd class="text-lg font-semibold">{{ profile?.enteredYear }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </template>
+    </CoreFlipCard>
 </template>
 <style scoped></style>
