@@ -10,7 +10,7 @@ export const useDept = (canAccess?: string[]) => {
     if (loggedIn.value) {
       const isDepartement = user.value?.profile.isDepartement as IDepartement;
       if (!isDepartement) {
-        dept.value = "Departement";
+        dept.value = null;
       }
       if (isDepartement) {
         dept.value = isDepartement.departement || "Member";

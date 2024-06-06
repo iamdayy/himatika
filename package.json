@@ -11,6 +11,7 @@
     "start": "node .output/server/index.mjs"
   },
   "devDependencies": {
+    "@bg-dev/nuxt-s3": "^2.0.0",
     "@faker-js/faker": "^8.4.1",
     "@nuxtjs/color-mode": "^3.4.1",
     "@nuxtjs/tailwindcss": "^6.12.0",

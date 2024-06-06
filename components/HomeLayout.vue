@@ -12,7 +12,7 @@
             <CoreDropdown name="user" v-if="user">
               <template v-slot:trigger>
                 <span class="sr-only">Open user menu</span>
-                <NuxtImg class="w-8 h-8 rounded-full" :src="user.profile.avatar || '/img/profile-blank.png'"
+                <img class="w-8 h-8 rounded-full" :src="user.profile.avatar || '/img/profile-blank.png'"
                   alt="user photo" />
               </template>
               <template v-slot:body>

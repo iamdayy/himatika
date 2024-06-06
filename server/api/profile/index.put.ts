@@ -5,8 +5,6 @@ export default defineEventHandler(async (event) => {
   try {
     const user = await ensureAuth(event);
     const { NIM } = getQuery(event);
-    console.log(user.profile.NIM);
-    console.log(NIM);
 
     if (user.profile.NIM != NIM) {
       throw createError({
@@ -32,7 +30,7 @@ export default defineEventHandler(async (event) => {
     profile.religion = body.religion;
     profile.phone = body.phone;
     profile.birth = body.birth;
-    profile.save();
+    await profile.save();
     return {
       statusCode: 200,
       statusMessage: `Profile ${profile.NIM} updated`,

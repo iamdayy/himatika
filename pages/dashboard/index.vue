@@ -43,7 +43,7 @@ onMounted(async () => {
         <CoreDropdown name="user">
           <template v-slot:trigger>
             <span class="sr-only">Open user? menu</span>
-            <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" class="w-8 h-8 rounded-full" />
+            <img :src="user?.profile.avatar || '/img/profile-blank.png'" class="w-8 h-8 rounded-full" />
           </template>
           <template v-slot:body>
             <div class="px-4 py-3">
@@ -83,7 +83,7 @@ onMounted(async () => {
         <div class="relative w-full px-6 py-3 border shadow-xl border-gray-50 md:w-1/4 rounded-xl">
           <dl class="max-w-md text-gray-900 dark:text-white">
             <div class="max-w-sm py-1">
-              <NuxtImg :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="120px"
+              <img :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="120px"
                 class="rounded-full shadow-md" />
             </div>
             <div class="flex flex-col py-1">

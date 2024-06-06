@@ -17,7 +17,6 @@ interface IDepByDepartement {
 const { isAdmin } = useRole();
 const { isDept } = useDept();
 
-const option = ref<string>(`${new Date(Date.now()).getFullYear()} - ${new Date(Date.now()).getFullYear() +1}`);
 
 const getStartYear = (opt: string): number => {
     const year = parseInt(opt.slice(0, 5).match(/\d/g)?.join("")!);
@@ -28,19 +27,17 @@ const getEndYear = (opt: string): number => {
     return year;
 }
 const { data, refresh } = await useAsyncData(() => $fetch<IDepartement[]>("/api/departement"));
-const departements = computed<IDepartement[] | undefined>( () =>
-    {
-        return data.value?.filter((dep) => new Date(dep.period.start).getFullYear() >= getStartYear(option.value) && new Date(dep.period.end).getFullYear() <= getEndYear(option.value));
-    });
+const departements = computed<IDepartement[] | undefined>(() => {
+    return data.value?.filter((dep) => new Date(dep.period.start).getFullYear() >= getStartYear(option.value) && new Date(dep.period.end).getFullYear() <= getEndYear(option.value));
+});
 
-const options = data.value?.map((d) => `${new Date(d.period.start).getFullYear()} - ${new Date(d.period.end).getFullYear()}`);
+const options = [...new Set(data.value?.map((d) => `${new Date(d.period.start).getFullYear()} - ${new Date(d.period.end).getFullYear()}`))];
+const option = ref<string>(options![0]);
 
 const groupByKey = (_data: any[], _key: string): IDepByDepartement => {
     return _data.reduce((result, next) => {
         const key = next[_key];
         result[key] = result[key]?.length ? [...result[key], next] : [next];
-        console.log(result);
-        
         return result;
     }, {} as IDepByDepartement);
 }

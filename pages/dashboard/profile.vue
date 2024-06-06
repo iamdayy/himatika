@@ -1,21 +1,60 @@
 <script setup lang='ts'>
 
 const { user } = useAuth();
-
+const { role, period } = useRole();
+const { isDept, period: DeptPeriod } = useDept();
+const { upload, remove } = useS3Object();
+const file = ref<File | null>();
+const avatar = ref<string | null>(null)
+const onFileChange = async ($event: Event) => {
+    const target = $event.target as HTMLInputElement;
+    if (target && target.files) {
+        if (user.value.profile.avatar) {
+            remove(user.value.profile.avatar);
+        }
+        file.value = target.files[0];
+        const uploaded = await upload(target.files[0], {
+            prefix: "avatar/",
+            meta: {
+                nim: user.value.profile.nim
+            }
+        });
+        user.value.profile.avatar = uploaded;
+        const profile = await $api("/api/profile", {
+            method: "put",
+            query: {
+                NIM: user.value.profile.NIM
+            },
+            body: { ...user.value.profile, avatar: uploaded }
+        });
+    }
+}
 useHead({
     title: "Profile | Himatika"
 });
 definePageMeta({
     middleware: "auth"
 });
-const { role, period } = useRole();
-const { dept, period: DeptPeriod } = useDept();
 </script>
 <template>
     <div class="px-4 pb-24">
         <div class="w-full p-3 shadow-md bg-slate-200 rounded-xl" v-if="user">
             <div class="max-w-sm py-1">
-                <NuxtImg :src="user.profile.avatar || '/img/profile-blank.png'" sizes="350px" class="rounded-md" />
+                <div class="relative overflow-hidden rounded-full group">
+                    <img :src="user.profile.avatar || '/img/profile-blank.png'" sizes="40px"
+                        class="object-cover w-full" />
+                    <div
+                        class="absolute top-0 left-0 flex items-center justify-center w-full h-0 gap-2 duration-500 bg-orange-400 rounded-full opacity-0 bg-opacity-95 group-hover:h-full group-hover:opacity-100">
+                        <label for="inputAvatar" class="cursor-pointer">
+                            <Icon name="solar:upload-minimalistic-outline"
+                                class="w-8 h-8 text-white hover:text-gray-300" />
+                            <input id="inputAvatar" type="file" class="hidden" @change="onFileChange" />
+                        </label>
+                        <button>
+                            <Icon name="solar:eye-outline" class="w-8 h-8 text-white hover:text-gray-300" />
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="flex flex-col py-1 mb-2">
                 <dd class="text-2xl font-semibold text-gray-600">{{ user.username }}</dd>
@@ -130,7 +169,7 @@ const { dept, period: DeptPeriod } = useDept();
                             class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Citizen</label>
                     </div>
                 </dl>
-                <dl class="w-full text-gray-900 md:w-1/3 dark:text-white" v-if="role || dept">
+                <dl class="w-full text-gray-900 md:w-1/3 dark:text-white" v-if="role || isDept">
                     <div class="w-full" v-if="role">
                         <div class="flex flex-col py-1">
                             <dd class="text-xl font-semibold text-gray-400">Administrator</dd>
@@ -184,13 +223,13 @@ const { dept, period: DeptPeriod } = useDept();
                             </div>
                         </div>
                     </div>
-                    <div class="w-full" v-if="dept">
+                    <div class="w-full" v-if="isDept">
                         <div class="flex flex-col py-1">
                             <dd class="text-xl font-semibold text-gray-400">Departement</dd>
                             <hr class="w-2/3 h-px mb-2 bg-gray-400 border-0 rounded">
                         </div>
                         <div class="relative py-1 mb-2">
-                            <input type="text" id="division" v-model="dept" disabled
+                            <input type="text" id="division" v-model="isDept" disabled
                                 class="block px-2.5 pb-1.5 pt-3 w-fit text-sm font-semibold text-gray-500 bg-transparent  border-0 border-b border-gray-400 appearance-none focus:outline-none focus:ring-0 peer" />
                             <label for="division"
                                 class="absolute text-sm text-gray-400 bg-slate-200 duration-300 transform -translate-y-3 scale-75 top-1 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-1 peer-focus:scale-75 peer-focus:-translate-y-3 start-2">Division</label>
