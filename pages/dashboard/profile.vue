@@ -40,9 +40,9 @@ definePageMeta({
     <div class="px-4 pb-24">
         <div class="w-full p-3 shadow-md bg-slate-200 rounded-xl" v-if="user">
             <div class="max-w-sm py-1">
-                <div class="relative overflow-hidden rounded-full group">
-                    <img :src="user.profile.avatar || '/img/profile-blank.png'" sizes="40px"
-                        class="object-cover w-full" />
+                <div class="relative overflow-hidden rounded-full group w-44 h-44">
+                    <img :src="user?.profile.avatar || '/img/profile-blank.png'"
+                        class="absolute object-cover h-full shadow-md" />
                     <div
                         class="absolute top-0 left-0 flex items-center justify-center w-full h-0 gap-2 duration-500 bg-orange-400 rounded-full opacity-0 bg-opacity-95 group-hover:h-full group-hover:opacity-100">
                         <label for="inputAvatar" class="cursor-pointer">
@@ -57,7 +57,7 @@ definePageMeta({
                 </div>
             </div>
             <div class="flex flex-col py-1 mb-2">
-                <dd class="text-2xl font-semibold text-gray-600">{{ user.username }}</dd>
+                <dd class="text-2xl font-semibold text-gray-600 dark:text-gray-200">{{ user.username }}</dd>
             </div>
             <div class="flex flex-col gap-2 md:flex-row">
                 <dl class="w-full md:w-1/3">

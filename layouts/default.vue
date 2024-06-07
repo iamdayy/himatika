@@ -21,14 +21,17 @@ const router = useRouter();
                     <CoreDropdown name="user">
                         <template v-slot:trigger>
                             <span class="sr-only">Open user menu</span>
-                            <img :src="user?.profile.avatar || '/img/profile-blank.png'" class="w-8 h-8 rounded-full" />
+                            <div class="relative w-8 h-8 overflow-hidden rounded-full">
+                                <img :src="user?.profile.avatar || '/img/profile-blank.png'"
+                                    class="absolute object-cover h-full shadow-md" />
+                            </div>
                         </template>
                         <template v-slot:body>
                             <div class="px-4 py-3">
                                 <span class="block text-sm text-gray-900 dark:text-white">{{ user?.username }}</span>
                                 <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{
                                     user?.profile.email
-                                }}</span>
+                                    }}</span>
                             </div>
                             <ul class="py-2" aria-labelledby="user-menu-button">
                                 <li>

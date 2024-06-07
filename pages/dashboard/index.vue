@@ -83,8 +83,10 @@ onMounted(async () => {
         <div class="relative w-full px-6 py-3 border shadow-xl border-gray-50 md:w-1/4 rounded-xl">
           <dl class="max-w-md text-gray-900 dark:text-white">
             <div class="max-w-sm py-1">
-              <img :src="user?.profile.avatar || '/img/profile-blank.png'" sizes="120px"
-                class="rounded-full shadow-md" />
+              <div class="relative w-24 h-24 overflow-hidden rounded-full">
+                <img :src="user?.profile.avatar || '/img/profile-blank.png'"
+                  class="absolute object-cover h-full shadow-md" />
+              </div>
             </div>
             <div class="flex flex-col py-1">
               <dd class="text-lg font-semibold text-gray-600">{{ user?.username }}</dd>

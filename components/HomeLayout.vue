@@ -12,8 +12,10 @@
             <CoreDropdown name="user" v-if="user">
               <template v-slot:trigger>
                 <span class="sr-only">Open user menu</span>
-                <img class="w-8 h-8 rounded-full" :src="user.profile.avatar || '/img/profile-blank.png'"
-                  alt="user photo" />
+                <div class="relative w-8 h-8 overflow-hidden rounded-full">
+                  <img :src="user?.profile.avatar || '/img/profile-blank.png'"
+                    class="absolute object-cover h-full shadow-md" />
+                </div>
               </template>
               <template v-slot:body>
                 <div class="px-4 py-3">
