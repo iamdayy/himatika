@@ -15,6 +15,7 @@ export const checkAuth = (event: H3Event) => {
 };
 export const ensureAuth = async (event: H3Event) => {
   const authHeaderValue = getRequestHeader(event, "authorization");
+
   if (typeof authHeaderValue === "undefined") {
     throw createError({
       statusCode: 403,

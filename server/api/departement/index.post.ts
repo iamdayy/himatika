@@ -4,7 +4,7 @@ import { IDepartement } from "~/types";
 export default defineEventHandler(async (event) => {
   try {
     const user = await ensureAuth(event);
-    if (!user.profile.isAdministrator || !user.profile.isDepartement) {
+    if (!user.profile.isAdministrator && !user.profile.isDepartement) {
       throw createError({
         statusCode: 403,
         statusMessage:

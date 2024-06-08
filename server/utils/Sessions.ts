@@ -61,8 +61,21 @@ export const setSession = async (
   payload: ISetSessionParams
 ): Promise<true | H3Error> => {
   try {
-    const createdSession = await SessionModel.create(payload);
-    if (createdSession) {
+    const session = await SessionModel.findOne({ user: payload.user });
+    if (!session) {
+      const createdSession = await SessionModel.create(payload);
+      if (createdSession) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: "Ouh error on system",
+        });
+      }
+      return true;
+    }
+    session.accessToken = payload.accessToken;
+    session.token = payload.token;
+    const saved = await session.save();
+    if (!saved) {
       throw createError({
         statusCode: 500,
         statusMessage: "Ouh error on system",

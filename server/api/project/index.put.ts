@@ -5,7 +5,7 @@ import { IContributor, IProject } from "~/types";
 export default defineEventHandler(async (ev) => {
   try {
     const user = await ensureAuth(ev);
-    if (!user.profile.isAdministrator || !user.profile.isDepartement) {
+    if (!user.profile.isAdministrator && !user.profile.isDepartement) {
       throw createError({
         statusCode: 403,
         statusMessage:

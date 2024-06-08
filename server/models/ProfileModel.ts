@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 import { IAddressSchema, IProfileSchema } from "~/types/ISchemas";
-
 const AddressSchema = new Schema<IAddressSchema>({
   fullAddress: String,
   village: String,

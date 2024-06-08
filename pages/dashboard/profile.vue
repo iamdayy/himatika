@@ -5,7 +5,6 @@ const { role, period } = useRole();
 const { isDept, period: DeptPeriod } = useDept();
 const { upload, remove } = useS3Object();
 const file = ref<File | null>();
-const avatar = ref<string | null>(null)
 const onFileChange = async ($event: Event) => {
     const target = $event.target as HTMLInputElement;
     if (target && target.files) {

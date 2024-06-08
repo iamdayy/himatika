@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (!user.profile.isDepartement || !user.profile.isAdministrator) {
+    if (!user.profile.isDepartement && !user.profile.isAdministrator) {
       throw createError({
         statusCode: 403,
         statusMessage: "You must be admin / departement to access this",
