@@ -28,7 +28,7 @@ const randomWalk = computed(() => {
             </div>
         </div>
         <div class="img-wrapper">
-            <NuxtImg :src='img' alt='' />
+            <img :src='img' alt='' class="object-cover rounded-full aspect-square" />
         </div>
     </div>
 </template>
@@ -116,6 +116,7 @@ img {
     transform: translateX(64%);
     max-width: 180px;
     pointer-events: none;
+    border-radius: 9999px;
 }
 
 .img-wrapper {

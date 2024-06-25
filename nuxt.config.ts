@@ -14,6 +14,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       mongodb_uri: process.env.MONGODB_URI,
+      mongodb_username: process.env.MONGODB_USERNAME,
+      mongodb_password: process.env.MONGODB_password,
       dbName: "himatika",
     },
   },
