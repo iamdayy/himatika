@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     "@samk-dev/nuxt-vcalendar",
     "nuxt-aos",
     "@bg-dev/nuxt-s3",
+    "@nuxtjs/sanity",
   ],
   auth: {
     providers: {
@@ -103,5 +104,12 @@ export default defineNuxtConfig({
     preference: "system",
     fallback: "dark",
     classSuffix: "",
+  },
+  sanity: {
+    projectId: process.env.SANITY_PROJECT_ID,
+    visualEditing: {
+      studioUrl: process.env.SANITY_STUDIO_URL,
+      token: process.env.SANITY_TOKEN,
+    },
   },
 });

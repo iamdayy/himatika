@@ -115,3 +115,17 @@ export interface IProject {
   tasks?: string[];
   registered?: IRegistered[];
 }
+
+export interface IPost {
+  title: string;
+  mainImage: any;
+  body: any[];
+  categories: {
+    title: string;
+    description: string;
+  }[];
+  author: {
+    name: string;
+  };
+  publishedAt: any;
+}
