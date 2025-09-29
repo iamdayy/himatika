@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   nitro: {
-    preset: "bun",
+    preset: "vercel",
   },
   devtools: { enabled: true },
   runtimeConfig: {
