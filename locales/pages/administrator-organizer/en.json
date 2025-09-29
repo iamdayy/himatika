@@ -1,0 +1,10 @@
+{
+    "add_organizer": "Add Organizer",
+    "add_organizer_description": "Add a new organizer to the system.",
+    "add_organizer_success": "Successfully added organizer",
+    "add_organizer_failed": "Failed to add organizer",
+    "edit_organizer": "Edit Organizer {period}",
+    "edit_organizer_description": "Edit the details of the selected organizer.",
+    "edit_organizer_success": "Successfully edited organizer",
+    "edit_organizer_failed": "Failed to edit organizer"
+}

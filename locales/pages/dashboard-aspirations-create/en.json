@@ -1,0 +1,14 @@
+{
+    "create_aspiration": "Create Aspiration",
+    "create_aspiration_description": "An aspiration is a goal you want to achieve. You can create a new aspiration, make sure to fill in all the required information and upload relevant images. When finished, click the 'submit' button to submit your aspiration.",
+    "subject_description": "The subject is the title or name of your aspiration. It should be short and clear, reflecting the essence of the aspiration you are creating.",
+    "message_description": "The message is a detailed description of your aspiration. It should include important information such as goals, benefits, and the steps needed to achieve it.",
+    "anonymous_description": "If you choose to remain anonymous, your identity will not be displayed to others. However, the information you provide will still be processed and stored securely.",
+    "proof_description": "Proof is a document or file that supports your aspiration. It can be a report, certificate, or other documents that show that your aspiration is valid and trustworthy. Make sure the uploaded proof is in the appropriate format and easy to read.",
+    "image_description": "The image is a visual representation of your aspiration. It can be a photo, graphic, or illustration relevant to the aspiration you are creating. Make sure the uploaded image is of good quality and relevant to the content of the aspiration.",
+    "video_description": "The video is a short clip that explains or demonstrates your aspiration. It can be a presentation, tutorial, or explanation of the aspiration you are creating. Make sure the uploaded video is of good quality and relevant to the content of the aspiration.",
+    "docs_description": "Documents are files that contain additional information about your aspiration. This can be a report, proposal, or other documents that support the aspiration you are creating. Make sure the uploaded documents are in the appropriate format and easy to read.",
+    "review_your_aspiration": "Review Your Aspiration",
+    "review_your_aspiration_description": "Review your aspiration before submitting it. Make sure all the information you provided is correct and complete. If anything needs to be corrected, you can go back to the previous step to make changes. Once you are sure all the information is correct, click the 'submit' button to submit your aspiration.",
+    "aspiration_success_description": "Your aspiration has been successfully submitted! Thank you for sharing your aspiration with us. We will process it and notify you about the next steps. If you have any questions or issues, feel free to contact us. After this, you will be redirected to the aspiration page."
+}

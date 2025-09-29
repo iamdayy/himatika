@@ -1,0 +1,18 @@
+{
+    "set_visit_status": "Set Visit Status",
+    "set_visit_status_confirmation": "Are you sure you want to set the visit status of this committee?",
+    "success_to_set_visit_status": "Successfully set the visit status of the committee",
+    "failed_to_set_visit_status": "Failed to set the visit status of the committee",
+    "set_payment_status": "Set Payment Status",
+    "set_payment_status_confirmation": "Are you sure you want to set the payment status of this committee?",
+    "success_to_set_payment_status": "Successfully set the payment status of the committee",
+    "failed_to_set_payment_status": "Failed to set the payment status of the committee",
+    "delete_committee": "Delete Committee",
+    "delete_committee_confirmation": "Are you sure you want to delete this committee?",
+    "success_to_delete_committee": "Successfully deleted the committee",
+    "failed_to_delete_committee": "Failed to delete the committee",
+    "set_approved": "Set Approved",
+    "set_approved_confirmation": "Are you sure you want to set this committee as approved?",
+    "success_to_set_approved": "Successfully set the committee as approved",
+    "failed_to_set_approved": "Failed to set the committee as approved"
+}

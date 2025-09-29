@@ -1,0 +1,18 @@
+{
+    "set_visit_status": "Atur Status Kunjungan",
+    "set_visit_status_confirmation": "Apakah Anda yakin ingin mengatur status kunjungan panitia ini?",
+    "success_to_set_visit_status": "Berhasil mengatur status kunjungan panitia",
+    "failed_to_set_visit_status": "Gagal mengatur status kunjungan panitia",
+    "set_payment_status": "Atur Status Pembayaran",
+    "set_payment_status_confirmation": "Apakah Anda yakin ingin mengatur status pembayaran panitia ini?",
+    "success_to_set_payment_status": "Berhasil mengatur status pembayaran panitia",
+    "failed_to_set_payment_status": "Gagal mengatur status pembayaran panitia",
+    "delete_committee": "Hapus panitia",
+    "delete_committee_confirmation": "Apakah Anda yakin ingin menghapus panitia ini?",
+    "success_to_delete_committee": "Berhasil menghapus panitia",
+    "failed_to_delete_committee": "Gagal menghapus panitia",
+    "set_approved": "Atur Disetujui",
+    "set_approved_confirmation": "Apakah Anda yakin ingin mengatur panitia ini sebagai disetujui?",
+    "success_to_set_approved_status": "Berhasil mengatur panitia sebagai disetujui",
+    "failed_to_set_approved_status": "Gagal mengatur panitia sebagai disetujui"
+}

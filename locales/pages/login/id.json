@@ -1,1 +1,6 @@
-{}
+{
+    "username_desc": "Masukkan nama pengguna / NIM Anda di sini",
+    "password_desc": "Masukkan kata sandi Anda di sini",
+    "login_desc": "Klik di sini untuk masuk",
+    "forgot_password_desc": "Klik di sini jika Anda lupa kata sandi Anda"
+}

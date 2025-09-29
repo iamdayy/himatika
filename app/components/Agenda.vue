@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { useWindowSize } from '@vueuse/core';
-import type { IAgenda, ICategory } from '~/types';
+import type { IAgenda, ICategory } from '~~/types';
+import type { IAgendaResponse } from '~~/types/IResponse';
 /**
  * Access the color mode of the application
  */
@@ -9,6 +10,7 @@ import type { IAgenda, ICategory } from '~/types';
  * Access the API instance from the Nuxt app
  */
 const router = useRouter();
+const { $api } = useNuxtApp();
 
 /**
  * Computed property to determine if dark mode is active
@@ -18,17 +20,57 @@ const isDarkMode = useDark();
 /**
  * Fetch agendas data from the API
  */
-const { agendas, pendingAgendas, refreshAgendas, page, perPage, upcomingOnly, sort, order } = useAgendas();
+
+const page = ref<number>(1);
+const perPage = ref<number>(100);
+const upcomingOnly = ref<boolean>(false);
+const sort = ref<string>("");
+const order = ref<string>("");
+const {
+    data: agendas,
+    refresh: refreshAgendas,
+    pending: pendingAgendas,
+} = useLazyAsyncData(
+    "agendas",
+    () =>
+        $api<IAgendaResponse>("/api/agenda", {
+            query: {
+                page: page.value,
+                perPage: perPage.value,
+                showMissed: !upcomingOnly.value,
+                sort: sort.value,
+                order: order.value,
+            },
+        }),
+    {
+        watch: [
+            page,
+            perPage,
+            upcomingOnly,
+            sort,
+            order,
+        ],
+        transform: (data) => {
+            if (data.statusCode !== 200) {
+                return {
+                    data: [],
+                    length: 0,
+                };
+            }
+            return {
+                data: data.data?.agendas || [],
+                length: data.data?.length,
+            };
+        },
+        default: () => ({
+            data: [],
+            length: 0,
+        }),
+    }
+);
+// const { agendas, pendingAgendas, refreshAgendas, page, perPage, upcomingOnly, sort, order } = useAgendas();
 
 const { $ts } = useI18n();
-/**
- * Reactive reference for the selected date
- */
-perPage.value = 4;
-page.value = 1;
-sort.value = 'date';
-order.value = 'desc';
-upcomingOnly.value = false;
 
 
 
@@ -162,7 +204,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                             <div class="relative h-48 rounded-lg overflow-hidden">
                                 <NuxtImg provider="localProvider"
                                     v-if="agenda.photos !== undefined && agenda.photos.length > 0"
-                                    :src="(agenda.photos[0].image as string)" alt="Agenda Image"
+                                    :src="(agenda.photos[0]!.image as string)" alt="Agenda Image"
                                     class="w-full h-full object-cover" />
                                 <div v-else
                                     class="bg-gray-200 dark:bg-gray-700 w-full h-full flex items-center justify-center">
@@ -303,7 +345,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                                             <div class="flex items-center gap-1">
                                                 <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
                                                 <span>{{ agenda.participants?.length || 0 }} {{ $ts('participant')
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                     </div>

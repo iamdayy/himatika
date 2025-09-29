@@ -1,0 +1,13 @@
+{
+    "create_aspiration": "Create Aspiration",
+    "create_aspiration_description": "An aspiration is a goal you want to achieve. You can create new aspirations and manage them here.",
+    "show_deleted": "Show Deleted",
+    "delete_aspiration_description": "Are you sure you want to delete this aspiration?",
+    "restore_aspiration_description": "Are you sure you want to restore this aspiration?",
+    "archive_aspiration_description": "Are you sure you want to archive this aspiration?",
+    "unarchive_aspiration_description": "Are you sure you want to unarchive this aspiration?",
+    "aspiration_archived": "Aspiration has been archived.",
+    "aspiration_unarchived": "Aspiration has been unarchived.",
+    "aspiration_restored": "Aspiration has been restored.",
+    "aspiration_deleted": "Aspiration has been deleted."
+}

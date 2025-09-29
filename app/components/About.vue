@@ -1,9 +1,20 @@
 <script setup lang='ts'>
 import { useWindowSize } from '@vueuse/core';
-import type { IMember } from '~/types';
-import type { IConfigResponse } from '~/types/IResponse';
+import type { IMember } from '~~/types';
+import type { IConfigResponse, IOrganizerResponse } from '~~/types/IResponse';
 
-const { organizers } = useOrganizer();
+const {
+    data: organizers,
+    refresh: refreshOrganizers,
+    pending: pendingOrganizers,
+} = useLazyAsyncData("organizers", () =>
+    $fetch<IOrganizerResponse>("/api/organizer"),
+    {
+        transform: (data) => {
+            return data.data?.organizers;
+        }
+    }
+);
 const { data } = useFetch<IConfigResponse>('/api/config');
 const config = computed(() => data.value?.data);
 const { $ts } = useI18n();
@@ -218,11 +229,11 @@ const cardDimensions = computed(() => ({
                                     <template #departments="{ item }">
                                         <UTabs :items="departementsTabs">
                                             <template #department="{ item, index }">
-                                                <ProfileCard v-if="organizer?.department[index].coordinator"
+                                                <ProfileCard v-if="organizer?.department[index]!.coordinator"
                                                     :member="(organizer?.department[index].coordinator as IMember)"
                                                     subtitle="Coordinator" class="mt-8" />
                                                 <div class="grid w-full grid-cols-1 gap-4 py-3 mt-8 md:grid-cols-3">
-                                                    <ProfileCard v-for="member in organizer?.department[index].members"
+                                                    <ProfileCard v-for="member in organizer?.department[index]!.members"
                                                         :member="(member as IMember)" subtitle="Member" />
                                                 </div>
                                             </template>

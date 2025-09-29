@@ -1,0 +1,10 @@
+{
+    "success_to_add_carrousel": "Successfully added carousel",
+    "failed_to_add_carrousel": "Failed to add carousel",
+    "success_to_delete_carrousel": "Successfully deleted carousel",
+    "failed_to_delete_carrousel": "Failed to delete carousel",
+    "success_to_update_config": "Successfully updated configuration",
+    "failed_to_update_config": "Failed to update configuration",
+    "auto_save_enabled": "Auto save enabled",
+    "auto_save_disabled": "Auto save disabled"
+}

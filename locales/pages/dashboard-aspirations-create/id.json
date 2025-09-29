@@ -1,0 +1,14 @@
+{
+    "create_aspiration": "Buat Aspirasi",
+    "create_aspiration_description": "Aspirasi adalah tujuan yang ingin Anda capai. Anda dapat membuat aspirasi baru, pastikan untuk mengisi semua informasi yang diperlukan dan mengunggah gambar yang relevan. Setelah selesai, klik tombol 'kirim' untuk mengajukan aspirasi Anda.",
+    "subject_description": "Subjek adalah judul atau nama dari aspirasi Anda. Ini harus singkat dan jelas, mencerminkan inti dari aspirasi yang Anda buat.",
+    "message_description": "Pesan adalah deskripsi rinci tentang aspirasi Anda. Ini harus mencakup informasi penting seperti tujuan, manfaat, dan langkah-langkah yang diperlukan untuk mencapainya.",
+    "anonymous_description": "Jika Anda memilih untuk tetap anonim, identitas Anda tidak akan ditampilkan kepada orang lain. Namun, informasi yang Anda berikan masih akan diproses dan disimpan dengan aman.",
+    "image_description": "Gambar adalah representasi visual dari aspirasi Anda. Ini dapat berupa foto, grafik, atau ilustrasi yang relevan dengan aspirasi yang Anda buat. Pastikan gambar yang diunggah memiliki kualitas baik dan sesuai dengan konten aspirasi.",
+    "proof_description": "Bukti adalah dokumen atau file yang mendukung aspirasi Anda. Ini dapat berupa laporan, sertifikat, atau dokumen lain yang menunjukkan bahwa aspirasi Anda valid dan dapat dipercaya. Pastikan bukti yang diunggah memiliki format yang sesuai dan mudah dibaca.",
+    "video_description": "Video adalah klip pendek yang menjelaskan atau mendemonstrasikan aspirasi Anda. Ini dapat berupa presentasi, tutorial, atau penjelasan tentang aspirasi yang Anda buat. Pastikan video yang diunggah memiliki kualitas baik dan relevan dengan konten aspirasi.",
+    "docs_description": "Dokumen adalah file yang berisi informasi tambahan tentang aspirasi Anda. Ini dapat berupa laporan, proposal, atau dokumen lain yang mendukung aspirasi yang Anda buat. Pastikan dokumen yang diunggah memiliki format yang sesuai dan mudah dibaca.",
+    "review_your_aspiration": "Tinjau Aspirasi Anda",
+    "review_your_aspiration_description": "Tinjau aspirasi Anda sebelum mengirimkannya. Pastikan semua informasi yang Anda berikan sudah benar dan lengkap. Jika ada yang perlu diperbaiki, Anda dapat kembali ke langkah sebelumnya untuk melakukan perubahan. Setelah yakin semua informasi sudah benar, klik tombol 'kirim' untuk mengajukan aspirasi Anda.",
+    "aspiration_success_description": "Aspirasi Anda telah berhasil diajukan! Terima kasih telah berbagi aspirasi Anda dengan kami. Kami akan memprosesnya dan memberi tahu Anda tentang langkah selanjutnya. Jika ada pertanyaan atau masalah, jangan ragu untuk menghubungi kami. Setelah ini, Anda akan di alihkan ke halaman aspirasi"
+}

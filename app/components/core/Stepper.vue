@@ -105,7 +105,7 @@ import type {
     StepValidationErrors,
     StepValidationEvent,
     ValidationErrorEvent
-} from '~/types/component/stepper';
+} from '~~/types/component/stepper';
 
 interface Props {
     // v-model for current step
