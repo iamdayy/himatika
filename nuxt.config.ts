@@ -28,6 +28,7 @@ export default defineNuxtConfig({
       version: process.env.VERSION,
     },
   },
+  ssr: false,
   modules: [
     "@nuxt/image",
     "@nuxt/ui",

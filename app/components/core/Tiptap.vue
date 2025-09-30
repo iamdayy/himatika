@@ -3,7 +3,7 @@
         <!-- Editor toolbar -->
         <div class="flex flex-wrap justify-between w-full border-b shadow-md border-accent-2 h-fit">
             <!-- Main editing tools -->
-            <UButtonGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled"
+            <UFieldGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled"
                 :ui="{ rounded: 'rounded-none' }">
                 <UButton icon="i-heroicons-bold" :variant="editor?.isActive('bold') ? 'solid' : 'outline'"
                     @click="editor?.chain().focus().toggleBold().run()"
@@ -20,18 +20,18 @@
                 <UButton icon="i-ph-paragraph" @click="editor?.chain().focus().setParagraph().run()" />
                 <UButton icon="i-ph-image" @click="openInput" />
                 <input class="hidden" id="tiptapFileInput" type="file" @input="handleImage" accept="image/*" />
-            </UButtonGroup>
+            </UFieldGroup>
             <!-- Undo/Redo buttons -->
-            <UButtonGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled">
+            <UFieldGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled">
                 <UButton icon="i-heroicons-arrow-uturn-left" @click="editor?.chain().focus().undo().run()"
                     :disabled="!editor?.can().chain().focus().undo().run()" />
                 <UButton icon="i-heroicons-arrow-uturn-right" @click="editor?.chain().focus().redo().run()"
                     :disabled="!editor?.can().chain().focus().redo().run()" />
-            </UButtonGroup>
+            </UFieldGroup>
         </div>
         <!-- Floating menu for quick formatting -->
-        <TiptapFloatingMenu :editor="editor" :tippy-options="{ duration: 100 }" v-if="editor && !disabled">
-            <UButtonGroup :size="responsiveUISizes.floatingMenu" orientation="horizontal"
+        <FloatingMenu :editor="editor" :tippy-options="{ duration: 100 }" v-if="editor && !disabled">
+            <UFieldGroup :size="responsiveUISizes.floatingMenu" orientation="horizontal"
                 :ui="{ rounded: 'rounded-full' }">
                 <UButton v-for="level in [1, 2, 3]" :key="level" :label="`h${level}`"
                     :variant="editor?.isActive('heading', { level: level as 1 | 2 | 3 }) ? 'solid' : 'outline'"
@@ -42,10 +42,10 @@
                     @click="editor?.chain().focus().toggleOrderedList().run()" />
                 <UButton icon="i-ph-arrow-elbow-down-left" variant="solid"
                     @click="editor?.chain().focus().setHardBreak().run()" />
-            </UButtonGroup>
-        </TiptapFloatingMenu>
+            </UFieldGroup>
+        </FloatingMenu>
         <!-- Main editor content area -->
-        <TiptapEditorContent :editor="editor" />
+        <EditorContent :editor="editor" />
     </div>
 </template>
 
@@ -60,7 +60,8 @@ import ListItem from '@tiptap/extension-list-item';
 import { Placeholder as TiptapPlaceholder } from "@tiptap/extension-placeholder";
 import { TextStyle } from '@tiptap/extension-text-style';
 import StarterKit from '@tiptap/starter-kit';
-import { useEditor } from '@tiptap/vue-3';
+import { EditorContent, useEditor } from '@tiptap/vue-3';
+import { FloatingMenu } from '@tiptap/vue-3/menus';
 import { useWindowSize } from '@vueuse/core';
 import imageCompression from 'browser-image-compression';
 

@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IDoc } from '~/types';
+import type { IDoc } from '~~/types';
 
 const props = defineProps({
     doc: {
@@ -18,7 +18,9 @@ const emit = defineEmits(['remove', 'download', 'close']);
     <UModal :title="doc.label" @close="$emit('close')">
         <template #body>
             <div class="w-full rounded-lg shadow-xl">
-                <PDFViewer :pdfUrl="(doc.doc as string)" />
+                <client-only>
+                    <!-- <PDFViewer :pdfUrl="(doc.doc as string)" /> -->
+                </client-only>
             </div>
         </template>
     </UModal>

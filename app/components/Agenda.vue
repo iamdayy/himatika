@@ -54,17 +54,17 @@ const {
             if (data.statusCode !== 200) {
                 return {
                     data: [],
-                    length: 0,
+                    count: 0,
                 };
             }
             return {
                 data: data.data?.agendas || [],
-                length: data.data?.length,
+                count: data.data?.length,
             };
         },
         default: () => ({
             data: [],
-            length: 0,
+            count: 0,
         }),
     }
 );
@@ -345,7 +345,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                                             <div class="flex items-center gap-1">
                                                 <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
                                                 <span>{{ agenda.participants?.length || 0 }} {{ $ts('participant')
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </div>

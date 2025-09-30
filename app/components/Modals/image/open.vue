@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue'
 import { ref } from 'vue'
-
-interface IPhoto {
-    image: string
-    tags?: string[]
-}
+import type { IPhoto } from '~~/types'
 
 const props = defineProps({
     photo: {
@@ -63,8 +59,8 @@ const startDrag = (e: MouseEvent | TouchEvent) => {
         startX.value = e.clientX
         startY.value = e.clientY
     } else {
-        startX.value = e.touches[0].clientX
-        startY.value = e.touches[0].clientY
+        startX.value = e.touches[0]!.clientX
+        startY.value = e.touches[0]!.clientY
     }
 
     initialTranslateX.value = translateX.value
@@ -80,8 +76,8 @@ const onDrag = (e: MouseEvent | TouchEvent) => {
         clientX = e.clientX
         clientY = e.clientY
     } else {
-        clientX = e.touches[0].clientX
-        clientY = e.touches[0].clientY
+        clientX = e.touches[0]!.clientX
+        clientY = e.touches[0]!.clientY
     }
 
     const dx = clientX - startX.value
@@ -126,7 +122,8 @@ const handleClose = () => {
 
                 <!-- Image container with zoom and pan -->
                 <div class="relative overflow-hidden rounded-lg size-full">
-                    <NuxtImg provider="localProvider" :src="photo.image" :alt="photo.tags?.join('-') || 'Photo'"
+                    <NuxtImg provider="localProvider" :src="photo.image as string"
+                        :alt="photo.tags?.join('-') || 'Photo'"
                         class="transition-transform duration-200 rounded-lg shadow-xl cursor-move size-full" :style="{
                             transform: `scale(${zoomLevel}) translate(${translateX / zoomLevel}px, ${translateY / zoomLevel}px)`,
                             transformOrigin: 'center',
