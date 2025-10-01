@@ -1,4 +1,4 @@
-import type { IResponse } from "~/types/IResponse";
+import type { IResponse } from "~~/types/IResponse";
 const router = useRouter();
 export const AfterToken = async (
   type:

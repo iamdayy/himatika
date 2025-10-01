@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { DriveStep } from "driver.js";
-import type { FieldValidationRules, FormError, Step } from "~/types/component/stepper";
-import type { IReqGenerateOTP } from "~/types/IRequestPost";
-import type { IGenerateOTPResponse, IResponse, IVerifyOTPResponse } from "~/types/IResponse";
-import type { RegisterSchema, VerifyNIMSchema } from "~/types/schemas/auth";
+import type { FieldValidationRules, FormError, Step } from "~~/types/component/stepper";
+import type { IReqGenerateOTP } from "~~/types/IRequestPost";
+import type { IGenerateOTPResponse, IResponse, IVerifyOTPResponse } from "~~/types/IResponse";
+import type { RegisterSchema, VerifyNIMSchema } from "~~/types/schemas/auth";
 
 const { $pageGuide } = useNuxtApp();
 const { $ts } = useI18n();
@@ -386,7 +386,7 @@ onBeforeUnmount(() => {
                 :skip-validation="hasVerificationParams"
                 :ui="{ root: 'bg-transparent dark:bg-transparent shadow-none backdrop-blur-none ' }">
                 <template #default="{ step, errors }">
-                    <div v-if="step.id === 'verifyNIM'" class="px-2">
+                    <div v-if="step?.id === 'verifyNIM'" class="px-2">
                         <div class="px-1">
                             <UFormField id="NIM" label="NIM" name="NIM" :error="errors.NIM?.message">
                                 <UInput type="number" color="neutral" :size="responsiveUISizes.input" variant="outline"
@@ -395,7 +395,7 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div v-if="step.id === 'account'" class="space-y-3">
+                    <div v-if="step?.id === 'account'" class="space-y-3">
                         <div class="px-1 space-y-6 overflow-y-scroll no-scrollbar">
                             <UFormField :label="$ts('username')" id="username" name="username"
                                 :error="errors.username?.message">
@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
                             </UFormField>
                         </div>
                     </div>
-                    <div v-if="step.id === 'verification'" class="px-2">
+                    <div v-if="step?.id === 'verification'" class="px-2">
                         <div class="flex flex-col px-1 space-y-6">
                             <UFormField id="verification" label="Verification" name="verification"
                                 :error="errors.verification?.message">

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { Form, FormSubmitEvent } from '#ui/types';
 import type { DriveStep } from "driver.js";
-import type { LoginSchema } from "~/types/schemas/auth";
+import type { LoginSchema } from "~~/types/schemas/auth";
 // Page metadata
 definePageMeta({
     pageTransition: {
