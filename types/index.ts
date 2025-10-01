@@ -536,8 +536,8 @@ export interface IAspiration {
   read?: boolean;
   archived?: boolean;
   deleted?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 export interface IMessage {
   name: {

@@ -1,9 +1,9 @@
 <script setup lang='ts'>
 import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
-import type { INews } from '~/types';
-import type { IReqNews } from '~/types/IRequestPost';
-import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~/types/IResponse';
+import type { INews } from '~~/types';
+import type { IReqNews } from '~~/types/IRequestPost';
+import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
 
 /**
  * Composables
@@ -47,10 +47,12 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     default: () => []
 });
 /**
- * Emits
+ * Emits & Props
  */
 const emit = defineEmits(["triggerRefresh", "close"]);
-
+const props = defineProps({
+    fullscreen: { type: Boolean, default: false }
+})
 /**
  * Reactive references
  */

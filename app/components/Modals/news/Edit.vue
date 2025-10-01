@@ -1,15 +1,16 @@
 <script setup lang='ts'>
 import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
-import type { ICategory, IMember, INews } from '~/types';
-import type { IReqNews } from '~/types/IRequestPost';
-import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~/types/IResponse';
+import type { ICategory, IMember, INews } from '~~/types';
+import type { IReqNews } from '~~/types/IRequestPost';
+import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
 
 /**
  * Props definition
  */
 const props = defineProps({
-    data: { type: Object as PropType<INews>, required: true }
+    data: { type: Object as PropType<INews>, required: true },
+    fullscreen: { type: Boolean, default: false }
 })
 
 /**
@@ -195,7 +196,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
 }));
 </script>
 <template>
-    <UModal :title="$ts('edit_news')">
+    <UModal :title="$ts('edit_news')" :fullscreen="fullscreen">
         <template #body>
             <div class="grid grid-cols-1 space-y-4 md:space-y-6 text-start">
                 <!-- Title input -->

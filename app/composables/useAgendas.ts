@@ -11,14 +11,6 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
   >(() => {
     return user.value?.member.agendas;
   });
-  // const agendasCanMeRegistered = computed<IAgenda[] | undefined>(() => {
-  //   return agendas.value?.data?.filter((agenda.value) =>
-  //     canMeRegister(
-  //       agenda.value.configuration.participant.canRegister as string,
-  //       agenda.value.configuration.participant.canRegisterUntil.end
-  //     )
-  //   );
-  // });
   const canMeRegisterAsCommittee = computed<boolean>(() => {
     const date = agenda.value?.configuration.committee.canRegisterUntil.end;
     const canRegister = agenda.value?.configuration.committee.canRegister;
@@ -265,18 +257,14 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
   };
   const isCommittee = computed(() => {
     if (status.value !== "authenticated") {
-      console.log("not authenticated");
       return false;
     }
     if (!agenda.value) {
-      console.log("no agenda.value");
       return false;
     }
     if (!agenda.value.committees) {
-      console.log("no committees");
       return false;
     }
-    console.log(agenda.value.committees);
     return agenda.value.committees?.some(
       (comm) =>
         (comm.member as IMember | undefined)?.NIM == user.value?.member.NIM

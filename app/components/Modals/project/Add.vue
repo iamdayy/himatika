@@ -1,8 +1,8 @@
 <script setup lang='ts'>
 import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
-import type { IProject } from '~/types';
-import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~/types/IResponse';
+import type { IProject } from '~~/types';
+import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
 
 // Access Nuxt app instance and utilities
 const { $api } = useNuxtApp();
