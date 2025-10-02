@@ -1,12 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
-  nitro: {
-    preset: "vercel",
-    output: {
-      dir: "../../.vercel/output", // Example for an app in 'apps/my-app'
-    },
-  },
+  // nitro: {
+  //   preset: "vercel",
+  //   output: {
+  //     dir: "../../.vercel/output", // Example for an app in 'apps/my-app'
+  //   },
+  // },
   devtools: { enabled: true },
   runtimeConfig: {
     mongodb_uri: process.env.MONGODB_URI,
