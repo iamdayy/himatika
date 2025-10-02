@@ -3,8 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "NODE_OPTIONS=--max_old_space_size=2000 nuxt build",
-    "generate": "NODE_OPTIONS=--max_old_space_size=2000 nuxt generate",
+    "build": "NODE_OPTIONS=--max_old_space_size=1500 nuxt build",
+    "generate": "NODE_OPTIONS=--max_old_space_size=1500 nuxt generate",
     "start": "bun run .output/server/index.mjs",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
