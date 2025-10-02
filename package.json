@@ -3,9 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "NODE_OPTIONS=--max_old_space_size=1500 nuxt build",
-    "generate": "NODE_OPTIONS=--max_old_space_size=1500 nuxt generate",
-    "start": "bun run .output/server/index.mjs",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -15,9 +14,9 @@
     "@nuxt/ui": "4.0.0",
     "@samk-dev/nuxt-vcalendar": "1.0.4",
     "@sidebase/nuxt-auth": "1.1.0",
-    "@tiptap-pro/extension-file-handler": "^2.21.5",
     "@tiptap/core": "^3.6.2",
     "@tiptap/extension-color": "^3.6.2",
+    "@tiptap/extension-file-handler": "^3.6.2",
     "@tiptap/extension-image": "^3.6.2",
     "@tiptap/extension-link": "^3.6.2",
     "@tiptap/extension-list-item": "^3.6.2",

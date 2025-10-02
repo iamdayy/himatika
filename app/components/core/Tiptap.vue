@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { ModalsImageCrop } from "#components";
-import { FileHandler as TiptapFileHandler } from '@tiptap-pro/extension-file-handler';
+import { FileHandler as TiptapFileHandler } from '@tiptap/extension-file-handler';
 import type { Content, Editor } from "@tiptap/core";
 import { Color } from '@tiptap/extension-color';
 import { Image as TiptapImage } from '@tiptap/extension-image';
