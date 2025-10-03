@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   nitro: {
-    preset: "vercel",
+    // preset: "vercel",
     // output: {
     //   dir: "../../.vercel/output", // Example for an app in 'apps/my-app'
     // },
