@@ -1,12 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
-  nitro: {
-    // preset: "vercel",
-    // output: {
-    //   dir: "../../.vercel/output", // Example for an app in 'apps/my-app'
-    // },
-  },
   hooks: {
     close: (nuxt) => {
       if (!nuxt.options._prepare) process.exit();
@@ -18,7 +12,8 @@ export default defineNuxtConfig({
     mongodb_username: process.env.MONGODB_USERNAME,
     mongodb_password: process.env.MONGODB_PASSWORD,
     dbName: process.env.DBNAME,
-    storageDir: process.env.STORAGE_DIR,
+    vercelBlobToken: process.env.BLOB_READ_WRITE_TOKEN,
+    storageDir: process.env.BLOB_URI,
     mailtrap_token: process.env.MAILTRAP_TOKEN,
     mailtrap_domain: process.env.MAILTRAP_DOMAIN,
     recaptcha_site_key: process.env.RECAPTCHA_SITE_KEY,
@@ -36,7 +31,7 @@ export default defineNuxtConfig({
       version: process.env.VERSION,
     },
   },
-  // ssr: false,
+  ssr: false,
   modules: [
     "@nuxt/image",
     "@nuxt/ui",

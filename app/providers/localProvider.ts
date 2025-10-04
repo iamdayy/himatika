@@ -10,7 +10,7 @@ export const getImage: ProviderGetImage = (
 ) => {
   if (!baseURL) {
     // also support runtime config
-    baseURL = useRuntimeConfig().public.public_uri;
+    baseURL = useRuntimeConfig().storageDir;
   }
 
   const operations = operationsGenerator(modifiers);
