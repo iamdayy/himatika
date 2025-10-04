@@ -8,9 +8,7 @@ export default defineNuxtConfig({
   },
   devtools: { enabled: true },
   runtimeConfig: {
-    mongodb_uri: process.env.MONGODB_URI,
-    mongodb_username: process.env.MONGODB_USERNAME,
-    mongodb_password: process.env.MONGODB_PASSWORD,
+    mongodb_uri: process.env.HIMATIKA_MONGODB_URI,
     dbName: process.env.DBNAME,
     vercelBlobToken: process.env.BLOB_READ_WRITE_TOKEN,
     storageDir: process.env.BLOB_URI,

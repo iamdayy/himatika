@@ -15,9 +15,6 @@ export default defineNitroPlugin(async () => {
     // Attempt to connect to MongoDB using the configuration
     await mongoose.connect(config.mongodb_uri, {
       dbName: config.dbName,
-      user: config.mongodb_username,
-      pass: config.mongodb_password,
-      authSource: config.dbName,
     });
 
     console.log("DB connection established.");
