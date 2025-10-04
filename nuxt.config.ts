@@ -7,6 +7,11 @@ export default defineNuxtConfig({
     //   dir: "../../.vercel/output", // Example for an app in 'apps/my-app'
     // },
   },
+  hooks: {
+    close: (nuxt) => {
+      if (!nuxt.options._prepare) process.exit();
+    },
+  },
   devtools: { enabled: true },
   runtimeConfig: {
     mongodb_uri: process.env.MONGODB_URI,
@@ -31,7 +36,7 @@ export default defineNuxtConfig({
       version: process.env.VERSION,
     },
   },
-  ssr: false,
+  // ssr: false,
   modules: [
     "@nuxt/image",
     "@nuxt/ui",
