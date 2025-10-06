@@ -1,6 +1,7 @@
 <script setup lang='ts'>
-import type { IVideo } from '~/types';
-import type { ITagsResponse } from '~/types/IResponse';
+import { UFileUpload } from '#components';
+import type { IVideo } from '~~/types';
+import type { ITagsResponse } from '~~/types/IResponse';
 /**
  * Composables
  */
@@ -39,6 +40,7 @@ const video = ref<IVideo[]>([]);
 const onVideoChange = async (files: FileList) => {
     for (let i = 0; i < files.length; i++) {
         const f = files[i];
+        if (!f) continue;
         file.value.push(f);
         const blob = await convert(f);
         video.value.push({
@@ -56,17 +58,7 @@ const onVideoChange = async (files: FileList) => {
 const addVideo = async () => {
     loading.value = true;
     emit('video', {
-        videos: await Promise.all(video.value.map(async (video, i) => ({
-            ...video,
-            video: {
-                name: file.value![i].name,
-                content: await convert(file.value![i]),
-                size: file.value![i].size.toString(),
-                type: file.value![i].type,
-                lastModified: file.value![i].lastModified.toString(),
-            },
-            tags: tags.value
-        })))
+        videos: video.value
     });
 }
 
@@ -98,17 +90,20 @@ const addNewTag = async (tag: string) => {
     tagsOptions.value.push(tag);
     tags.value.push(tag);
 }
-const videoOptions = (file: string) => ({
-    autoplay: true,
-    controls: true,
-    fluid: true,
-    sources: [
-        {
-            src: file,
-            type: 'video/mp4'
-        }
-    ]
-});
+const videoOptions = (file: File) => {
+    const blob = URL.createObjectURL(file);
+    return {
+        autoplay: true,
+        controls: true,
+        fluid: true,
+        sources: [
+            {
+                src: blob,
+                type: 'video/mp4'
+            }
+        ]
+    }
+};
 
 </script>
 <template>
@@ -120,12 +115,14 @@ const videoOptions = (file: string) => ({
                     <div :class="[responsiveClasses.fullSpan, 'min-h-36']">
                         <label for="Title"
                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Video</label>
-                        <DropFile @change="onVideoChange" accept="video/*">
-                        </DropFile>
-                        <div class="grid grid-cols-3 gap-2 py-3 md:px-2">
-                            <VideoPlayer v-for="file, i in video" :key="i" :options="videoOptions(file.video as string)"
-                                class="" />
-                        </div>
+                        <UFileUpload v-model="file" accept="video/*" multiple>
+                            <template #files="{ files }">
+                                <div class="grid grid-cols-3 gap-2 py-3 md:px-2 w-full">
+                                    <VideoPlayer v-for="file, i in files" :key="i" :options="videoOptions(file)"
+                                        class="w-full h-full" />
+                                </div>
+                            </template>
+                        </UFileUpload>
                     </div>
 
                     <!-- Tags input -->

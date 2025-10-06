@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import type { IDoc } from '~/types';
-import type { ITagsResponse } from '~/types/IResponse';
+import type { IDoc } from '~~/types';
+import type { ITagsResponse } from '~~/types/IResponse';
 /**
  * Composables
  */
@@ -51,14 +51,6 @@ const doc = ref<IDoc>({
 const addDoc = async () => {
     emit('doc', {
         ...doc.value,
-        label: doc.value.label,
-        doc: {
-            name: file.value!.name,
-            content: await convert(file.value!),
-            size: file.value!.size.toString(),
-            type: file.value!.type,
-            lastModified: file.value!.lastModified.toString()
-        },
         tags: tags.value
     });
 }
@@ -128,8 +120,8 @@ const uiSize = computed(() => isMobile.value ? 'sm' : isTablet.value ? 'md' : 'l
                     <div :class="[responsiveClasses.fullSpan, 'min-h-36']">
                         <label for="Title"
                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Doc</label>
-                        <DropFile @change="onChangeFile" single accept="*">
-                        </DropFile>
+                        <UFileUpload v-model="file" single accept="*">
+                        </UFileUpload>
                     </div>
 
                     <!-- Tags input -->

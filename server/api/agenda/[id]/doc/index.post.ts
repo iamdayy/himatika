@@ -1,13 +1,15 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IDoc, IFile, IMember } from "~~/types";
+import { IDoc, IMember, IRequestSign } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { doc, no, label, tags, signs } = await readBody<IDoc>(event);
+    const { doc, no, label, tags, signs } =
+      await customReadMultipartFormData<IDoc>(event);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -35,22 +37,26 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_DOC_FOLDER = `/uploads/img/agenda/${agenda._id}/docs`;
     let docUrl = "";
-    const d = doc as IFile;
-
+    const d = doc as File;
+    const fileName = `${BASE_DOC_FOLDER}/${hashText(`${agenda._id}`)}.${
+      d.type?.split("/")[1] || "pdf"
+    }`;
     // Handle main doc upload
-    const hashedName = await storeFileLocally(d, 12, BASE_DOC_FOLDER);
-    docUrl = `${BASE_DOC_FOLDER}/${hashedName}`;
+    const { url } = await put(fileName, d, {
+      access: "public",
+    });
+    docUrl = url;
     const saved = await DocModel.create({
       label,
       on: agenda._id,
       onModel: "Agenda",
       no,
-      tags: tags,
+      tags: tags ? JSON.parse(tags) : [],
       doc: docUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
       signs: signs
         ? await Promise.all(
-            signs.map(async (request) => ({
+            (JSON.parse(signs) as IRequestSign[]).map(async (request) => ({
               user: request.user
                 ? ((await findMemberByNim(
                     request.user as number

@@ -37,7 +37,7 @@ export type IConfig = {
 
 export interface IFile {
   name: string;
-  content: string;
+  content: string | ArrayBuffer | Blob;
   size: string;
   type: string;
   lastModified: string;
@@ -395,7 +395,7 @@ export interface INews {
 
 export interface IPhoto {
   _id?: string;
-  image: string | IFile;
+  image: string | File;
   tags?: string[];
   uploader?: Types.ObjectId | IMember | number;
   archived: boolean;
@@ -405,7 +405,7 @@ export interface IPhoto {
 }
 export interface IVideo {
   _id?: string;
-  video: string | IFile;
+  video: string | File;
   tags: string[];
   uploader?: Types.ObjectId | IMember | number;
   archived: boolean;
@@ -467,7 +467,7 @@ export interface IDoc {
   _id?: string;
   label: string;
   no: string;
-  doc: string | IFile;
+  doc: string | File;
   tags: string[];
   uploader?: Types.ObjectId | IMember | number;
   archived: boolean;

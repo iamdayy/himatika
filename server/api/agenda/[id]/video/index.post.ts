@@ -1,14 +1,14 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { VideoModel } from "~~/server/models/VideoModel";
-import { IFile, IMember } from "~~/types";
-import { IReqAgendaVideo } from "~~/types/IRequestPost";
+import { IMember, IVideo } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { video } = await readBody<IReqAgendaVideo>(event);
+    const video = await customReadMultipartFormData<IVideo>(event);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -36,12 +36,17 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_VIDEO_FOLDER = `/uploads/img/agenda/${agenda._id}/videos`;
     let videoUrl = "";
-    const vid = video.video as IFile;
+    const vid = video.video as File;
+    const fileName = `${BASE_VIDEO_FOLDER}/${hashText(`${agenda._id}`)}.${
+      vid.type?.split("/")[1] || "mp4"
+    }`;
 
     // Handle main video upload
     if (vid.type?.startsWith("video/")) {
-      const hashedName = await storeFileLocally(vid, 12, BASE_VIDEO_FOLDER);
-      videoUrl = `${BASE_VIDEO_FOLDER}/${hashedName}`;
+      const { url } = await put(fileName, vid, {
+        access: "public",
+      });
+      videoUrl = url;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but videos.",
@@ -50,7 +55,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await VideoModel.create({
       on: agenda._id,
       onModel: "Agenda",
-      tags: video.tags,
+      tags: video.tags ? JSON.parse(video.tags) : [],
       video: videoUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

@@ -1,10 +1,6 @@
-import fs from "fs";
-import path from "path";
+import { del, put } from "@vercel/blob";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IFile } from "~~/types";
-import { IReqMemberAvatar } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
-
 const config = useRuntimeConfig();
 
 /**
@@ -16,8 +12,15 @@ const config = useRuntimeConfig();
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const { NIM } = getQuery(event);
-    const body = await readBody<IReqMemberAvatar>(event);
-    const avatarFile = body.avatar as IFile;
+    const body = await readMultipartFormData(event);
+    if (!body) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "No file uploaded",
+      });
+    }
+
+    const avatarFile = body[0]!;
     const BASE_AVATAR_FOLDER = "/uploads/img/avatars";
     let imageUrl = "";
 
@@ -48,20 +51,21 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Remove old avatar if it exists
     if (member.avatar) {
-      const oldAvatarPath = path.join(config.storageDir, member.avatar);
-      if (fs.existsSync(oldAvatarPath)) {
-        deleteFile(member.avatar);
-      }
+      const oldAvatarurl = member.avatar;
+      await del(oldAvatarurl);
     }
 
     // Process and save the new avatar
+    // const buffer = Buffer.from(avatarFile.content, "base64");
+    const fileName = `${BASE_AVATAR_FOLDER}/${hashText(`${member.NIM}`)}.${
+      avatarFile.type?.split("/")[1] || "png"
+    }`;
+
     if (avatarFile.type?.startsWith("image/")) {
-      const hashedName = await storeFileLocally(
-        avatarFile,
-        12,
-        BASE_AVATAR_FOLDER
-      );
-      imageUrl = `${BASE_AVATAR_FOLDER}/${hashedName}`;
+      const { url } = await put(fileName, avatarFile.data, {
+        access: "public",
+      });
+      imageUrl = url;
     } else {
       throw createError({
         statusCode: 400,

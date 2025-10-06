@@ -2,8 +2,10 @@
 import { ModalsConfirmation, ModalsDocAdd, ModalsImageAdd, ModalsImageOpen, ModalsPDF, ModalsVideoAdd, UIcon } from '#components';
 import type { DropdownMenuItem, TabsItem } from '@nuxt/ui';
 import type { DriveStep } from 'driver.js';
+import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICategory, IDoc, IMember, IPhoto, IVideo } from '~~/types';
 import type { IAgendaResponse, IResponse } from '~~/types/IResponse';
+
 definePageMeta({
     layout: "client",
     auth: false
@@ -232,9 +234,12 @@ const addPhotoModal = () => {
         async onPhoto({ photos }: { photos: IPhoto[] }) {
             try {
                 photos.forEach(async (photo) => {
+                    const formData = new CustomFormData<IPhoto>();
+                    formData.append('image', photo.image);
+                    formData.append('tags', JSON.stringify(photo.tags) || '');
                     const response = await $api<IResponse>(`/api/agenda/${id}/photo`, {
                         method: "POST",
-                        body: { photo }
+                        body: formData.getFormData()
                     });
                     toast.add({ title: response.statusMessage });
                     refresh();
@@ -252,9 +257,12 @@ const addVideoModal = () => {
         async onVideo({ videos }: { videos: IVideo[] }) {
             try {
                 videos.forEach(async (video) => {
+                    const formData = new CustomFormData<IVideo>();
+                    formData.append('video', video.video);
+                    formData.append('tags', JSON.stringify(video.tags) || '');
                     const response = await $api<IResponse>(`/api/agenda/${id}/video`, {
                         method: "POST",
-                        body: { video }
+                        body: formData.getFormData()
                     });
                     toast.add({ title: response.statusMessage });
                     refresh();
@@ -270,10 +278,16 @@ const addVideoModal = () => {
 const addDocModal = () => {
     addDocModalComp.open({
         async onDoc(v: IDoc) {
+            const formData = new CustomFormData<IDoc>();
+            formData.append('doc', v.doc);
+            formData.append('no', v.no);
+            formData.append('signs', JSON.stringify(v.signs) || '');
+            formData.append('label', v.label);
+            formData.append('tags', JSON.stringify(v.tags) || '');
             try {
                 const response = await $api<IResponse>(`/api/agenda/${id}/doc`, {
                     method: "POST",
-                    body: v
+                    body: formData.getFormData()
                 });
                 toast.add({ title: response.statusMessage });
                 refresh();

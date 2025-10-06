@@ -4,7 +4,6 @@ import type { AccordionItem, TabsItem } from "@nuxt/ui";
 import imageCompression from "browser-image-compression";
 import type { DriveStep } from "driver.js";
 import type { IConfig } from "~~/types";
-import type { IReqMemberAvatar } from "~~/types/IRequestPost";
 import { type IConfigResponse } from "~~/types/IResponse";
 
 // Define page metadata
@@ -62,15 +61,17 @@ const onFileChange = async ($event: Event) => {
             img: blob,
             title: file.value.name,
             async onCropped(file: File) {
-                const body: IReqMemberAvatar = {
-                    avatar: {
-                        name: file.name,
-                        content: await convert(file),
-                        size: file.size.toString(),
-                        type: file.type,
-                        lastModified: file.lastModified.toString()
-                    }
-                }
+                // const body: IReqMemberAvatar = {
+                //     avatar: {
+                //         name: file.name,
+                //         content: await convert(file),
+                //         size: file.size.toString(),
+                //         type: file.type,
+                //         lastModified: file.lastModified.toString()
+                //     }
+                // }
+                const body = new FormData();
+                body.append("avatar", file);
                 await $api("/api/member/avatar", {
                     method: "put",
                     query: {
@@ -675,7 +676,7 @@ const breadcumbs = computed(() => [
                 </template>
             </UTabs>
             <div class="flex-1 md:flex-1/4 space-y-4 pt-12">
-                <UCard class="px-4 pt-8 md:px-8 md:pt-12" id="profile">
+                <UCard class="px-4 pt-8 md:px-8 md:pt-12" id="profile" :ui="{ root: 'overflow-visible' }">
                     <!-- User avatar and member summary -->
                     <div id="avatar" class="relative w-56 h-56 mx-auto -mt-32 overflow-hidden rounded-full group">
                         <NuxtImg provider="localProvider" :src="user?.member.avatar || '/img/profile-blank.png'"

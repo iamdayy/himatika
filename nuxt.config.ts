@@ -6,6 +6,15 @@ export default defineNuxtConfig({
       if (!nuxt.options._prepare) process.exit();
     },
   },
+  routeRules: {
+    "/api/*": {
+      cors: true,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+    },
+  },
+  ssr: false,
   devtools: { enabled: true },
   runtimeConfig: {
     mongodb_uri: process.env.HIMATIKA_MONGODB_URI,

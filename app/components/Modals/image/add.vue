@@ -1,8 +1,8 @@
 <script setup lang='ts'>
 import { ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
-import type { IPhoto } from '~/types';
-import type { ITagsResponse } from '~/types/IResponse';
+import type { IPhoto } from '~~/types';
+import type { ITagsResponse } from '~~/types/IResponse';
 /**
  * Composables
  */
@@ -49,17 +49,7 @@ const photos = ref<IPhoto[]>([]);
  */
 const addPhoto = async () => {
     emit('photo', {
-        photos: await Promise.all(photos.value.map(async (photo, i) => ({
-            ...photo,
-            image: {
-                name: files.value![i].name,
-                content: await convert(files.value![i]),
-                size: files.value![i].size.toString(),
-                type: files.value![i].type,
-                lastModified: files.value![i].lastModified.toString()
-            },
-            tags: tags.value
-        } as IPhoto))),
+        photos: photos.value
     });
     model.value = false;
 }
@@ -86,7 +76,7 @@ const onCropped = async (f: File) => {
  * Handle image change
  * @param {FileList} f - Selected image files
  */
-const onChangeImage = async (f: FileList) => {
+const onChangeImage = async (file?: File | null) => {
     loadingCompress.value = true;
     const options = {
         maxSizeMB: 1,
@@ -94,38 +84,45 @@ const onChangeImage = async (f: FileList) => {
         useWebWorker: true,
         alwaysKeepResolution: true,
     };
+    if (!file) return;
+    try {
+        const compressedFile = await imageCompression(file, options);
+        const blob = URL.createObjectURL(compressedFile);
+        // Tunggu modal crop selesai sebelum melanjutkan ke file berikutnya
+        await new Promise<void>((resolve) => {
+            ImageCropComp.open({
+                img: blob,
+                title: file.name,
+                stencil: {
+                    movable: true,
+                    resizable: true,
+                    aspectRatio: 16 / 9,
+                },
+                onCropped: (croppedFile: File) => {
+                    onCropped(croppedFile);
+                    URL.revokeObjectURL(blob);
+                    resolve();
+                    ImageCropComp.close();
+                },
+            });
+        });
+    } catch (error) {
+        console.error("Error processing file:", error);
+        toast.add({ title: "Failed to compress image" });
+    }
 
     // Proses file satu per satu
-    for (const file of Array.from(f)) {
-        try {
-            const compressedFile = await imageCompression(file, options);
-            const blob = URL.createObjectURL(compressedFile);
-            // Tunggu modal crop selesai sebelum melanjutkan ke file berikutnya
-            await new Promise<void>((resolve) => {
-                ImageCropComp.open({
-                    img: blob,
-                    title: file.name,
-                    stencil: {
-                        movable: true,
-                        resizable: true,
-                        aspectRatio: 16 / 9,
-                    },
-                    onCropped: (croppedFile: File) => {
-                        onCropped(croppedFile);
-                        URL.revokeObjectURL(blob);
-                        resolve();
-                        ImageCropComp.close();
-                    },
-                });
-            });
-        } catch (error) {
-            console.error("Error processing file:", error);
-            toast.add({ title: "Failed to compress image" });
-        }
-    }
+    // for (const file of Array.from(f)) {
+    // }
 
     loadingCompress.value = false;
 };
+
+watch(files, (newFiles) => {
+    if (newFiles && newFiles.length > 0) {
+        onChangeImage(newFiles[0]);
+    }
+});
 
 /**
  * Add new tag
@@ -165,12 +162,8 @@ const responsiveClasses = computed(() => ({
                     <div :class="[responsiveClasses.fullSpan, 'min-h-36']">
                         <label for="Title"
                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Image</label>
-                        <DropFile @change="onChangeImage" accept="image/*">
-                            <div class="grid grid-cols-6 gap-2 p-2 border border-gray-400 rounded-lg min-h-32">
-                                <NuxtImg v-if="photos.length > 0" v-for="photo, i in photos" :key="i"
-                                    :src="(photo.image as string)" class="max-w-[80px]" />
-                            </div>
-                        </DropFile>
+                        <UFileUpload v-model="files" accept="image/*" multiple>
+                        </UFileUpload>
                     </div>
 
                     <!-- Tags input -->

@@ -1,14 +1,16 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
-import { IFile, IMember } from "~~/types";
-import { IReqAgendaPhoto } from "~~/types/IRequestPost";
+import { customReadMultipartFormData } from "~~/server/utils/customReadMultipartFormData";
+import { IMember, IPhoto } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { photo } = await readBody<IReqAgendaPhoto>(event);
+    const photo = await customReadMultipartFormData<IPhoto>(event);
+    console.log(photo);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -36,12 +38,20 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_PHOTO_FOLDER = `/uploads/img/agenda/${agenda._id}/photos`;
     let imageUrl = "";
-    const image = photo.image as IFile;
+    const image = photo.image as File;
+
+    const fileName = `${BASE_PHOTO_FOLDER}/${hashText(`${agenda._id}`)}.${
+      image.type?.split("/")[1] || "png"
+    }`;
 
     // Handle main image upload
     if (image.type?.startsWith("image/")) {
-      const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
-      imageUrl = `${BASE_PHOTO_FOLDER}/${hashedName}`;
+      // const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
+      const { url } = await put(fileName, image, {
+        access: "public",
+      });
+
+      imageUrl = url;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but images.",
@@ -50,7 +60,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await PhotoModel.create({
       on: agenda._id,
       onModel: "Agenda",
-      tags: photo.tags,
+      tags: photo.tags ? JSON.parse(photo.tags) : [],
       image: imageUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });
