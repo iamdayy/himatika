@@ -39,8 +39,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     let imageUrl = "";
     const image = photo.image as File;
 
-    console.log(`Type: ${image.type}`);
-
     const fileName = `${BASE_PHOTO_FOLDER}/${hashText(`${agenda._id}`)}.${
       image.type?.split("/")[1] || "png"
     }`;
@@ -61,7 +59,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await PhotoModel.create({
       on: agenda._id,
       onModel: "Agenda",
-      tags: photo.tags ? JSON.parse(photo.tags) : [],
+      tags: photo.tags ? photo.tags : [],
       image: imageUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });
