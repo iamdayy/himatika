@@ -10,7 +10,6 @@ import { IResponse } from "~~/types/IResponse";
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const photo = await customReadMultipartFormData<IPhoto>(event);
-    console.log(photo);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -37,29 +36,29 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_PHOTO_FOLDER = `/uploads/img/agenda/${agenda._id}/photos`;
     let imageUrl = "";
-    const image = photo.image as File;
+    const image = photo.image as any;
 
     const fileName = `${BASE_PHOTO_FOLDER}/${hashText(`${agenda._id}`)}.${
       image.type?.split("/")[1] || "png"
     }`;
 
     // Handle main image upload
-    const { url } = await put(fileName, image, {
-      access: "public",
-    });
+    if (image.type?.startsWith("image/")) {
+      const { url } = await put(fileName, image.data, {
+        access: "public",
+      });
 
-    imageUrl = url;
-    // if (image.type?.startsWith("image/")) {
-    //   // const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
-    // } else {
-    //   throw createError({
-    //     statusMessage: "Please upload nothing but images.",
-    //   });
-    // }
+      imageUrl = url;
+      // const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
+    } else {
+      throw createError({
+        statusMessage: "Please upload nothing but images.",
+      });
+    }
     const saved = await PhotoModel.create({
       on: agenda._id,
       onModel: "Agenda",
-      tags: photo.tags ? photo.tags : [],
+      tags: photo.tags ? JSON.parse(photo.tags) : [],
       image: imageUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

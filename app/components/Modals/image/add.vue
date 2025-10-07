@@ -61,9 +61,8 @@ const addPhoto = async () => {
 const onCropped = async (f: File) => {
     try {
         files.value.push(f);
-        const blob = URL.createObjectURL(f);
         photos.value.push({
-            image: blob,
+            image: f,
             tags: [],
             archived: false,
         });
@@ -100,7 +99,6 @@ const onChangeImage = async (file?: File | null) => {
                 },
                 onCropped: (croppedFile: File) => {
                     onCropped(croppedFile);
-                    URL.revokeObjectURL(blob);
                     resolve();
                     ImageCropComp.close();
                 },

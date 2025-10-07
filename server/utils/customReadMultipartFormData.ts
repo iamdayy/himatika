@@ -10,10 +10,10 @@ export async function customReadMultipartFormData<T>(
     for (const data of multiPartsData) {
       if (data.name) {
         // Check if the field is a file
-        if (data.filename) {
+        if (data.type) {
           parsedData[data.name] = {
             name: data.filename,
-            content: data.data,
+            data: data.data,
             type: data.type,
             size: data.data.length,
             lastModified: new Date(),
