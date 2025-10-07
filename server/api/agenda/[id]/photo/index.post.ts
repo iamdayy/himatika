@@ -49,7 +49,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
 
       imageUrl = url;
-      // const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
     } else {
       throw createError({
         statusMessage: "Please upload nothing but images.",

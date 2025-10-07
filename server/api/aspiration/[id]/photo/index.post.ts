@@ -1,14 +1,14 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
-import { IFile, IMember } from "~~/types";
-import { IReqAspirationPhoto } from "~~/types/IRequestPost";
+import { IMember, IPhoto } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { photo } = await readBody<IReqAspirationPhoto>(event);
+    const photo = await customReadMultipartFormData<IPhoto>(event);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -32,12 +32,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_PHOTO_FOLDER = `/uploads/img/aspiration/${aspiration._id}/photos`;
     let imageUrl = "";
-    const image = photo.image as IFile;
-
+    const image = photo.image as File;
+    const fileName = `${BASE_PHOTO_FOLDER}/${hashText(image.name)}.${
+      image.type.split("/")[1]
+    }`;
     // Handle main image upload
     if (image.type?.startsWith("image/")) {
-      const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
-      imageUrl = `${BASE_PHOTO_FOLDER}/${hashedName}`;
+      const { url } = await put(fileName, image, { access: "public" });
+      imageUrl = url;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but images.",

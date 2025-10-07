@@ -1,14 +1,14 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { VideoModel } from "~~/server/models/VideoModel";
-import { IFile, IMember } from "~~/types";
-import { IReqAspirationVideo } from "~~/types/IRequestPost";
+import { IMember, IVideo } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { video } = await readBody<IReqAspirationVideo>(event);
+    const video = await customReadMultipartFormData<IVideo>(event);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -31,12 +31,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_VIDEO_FOLDER = `/uploads/img/aspiration/${aspiration._id}/videos`;
     let videoUrl = "";
-    const vid = video.video as IFile;
+    const vid = video.video as File;
 
+    const fileName = `${BASE_VIDEO_FOLDER}/${hashText(vid.name)}.${
+      vid.type.split("/")[1]
+    }`;
     // Handle main video upload
     if (vid.type?.startsWith("video/")) {
-      const hashedName = await storeFileLocally(vid, 12, BASE_VIDEO_FOLDER);
-      videoUrl = `${BASE_VIDEO_FOLDER}/${hashedName}`;
+      const { url } = await put(fileName, vid, { access: "public" });
+      videoUrl = url;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but videos.",

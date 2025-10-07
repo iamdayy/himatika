@@ -374,7 +374,7 @@ export interface IProject {
 export interface INews {
   _id?: string | Types.ObjectId;
   title: string;
-  mainImage: string | IFile; // URL of the main image
+  mainImage: string | File; // URL of the main image
   body: string;
   slug?: string;
   category: ICategory | Types.ObjectId | string; // E.g., 'article', 'poster', 'video', 'application', etc.

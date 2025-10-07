@@ -1,8 +1,8 @@
 <script setup lang='ts'>
 import { ModalsConfirmation } from '#components';
 import { format } from 'date-fns';
-import type { IFile, IQuestion } from '~/types';
-import type { IResponse } from '~/types/IResponse';
+import type { IFile, IQuestion } from '~~/types';
+import type { IResponse } from '~~/types/IResponse';
 
 const { convert } = useImageToBase64()
 const overlay = useOverlay();
@@ -43,7 +43,7 @@ const questionData = computed({
         editedQuestion.value = value;
     },
 })
-const fileInput = ref<FileList | undefined>(undefined);
+const fileInput = ref<File | undefined>(undefined);
 const questionTypes = computed(() => [
     { label: $ts('text'), value: 'text' },
     { label: $ts('email'), value: 'email' },
@@ -199,22 +199,14 @@ function handleAnswer(value?: string | number | boolean | string[] | number[] | 
 }
 async function handleFileInput(file?: File) {
     if (file) {
-        const base64 = await convert(file);
-        const fileData: IFile = {
-            name: file.name,
-            type: file.type,
-            size: file.size.toString(),
-            lastModified: file.lastModified.toString(),
-            content: base64,
-        };
-        model.value = fileData;
+        model.value = file;
     } else {
         model.value = undefined;
     }
 }
 function handleDownload() {
     if (fileInput.value) {
-        const file = fileInput.value[0];
+        const file = fileInput.value!;
         const url = URL.createObjectURL(file);
         const a = document.createElement('a');
         a.href = url;
@@ -315,21 +307,8 @@ const AcceptedFileTypesOptions = computed(() => [
             :disabled="disabled" />
         <!-- File Input -->
         <div class="flex items-center space-x-2" v-else-if="question.type === 'file'" type="file">
-            <DropFile @change="value => handleFileInput(value[0])" v-model="fileInput" :disabled="disabled"
-                :accept="question.acceptedFileTypes?.join(',')" :size="question.maxFileSize">
-                <div class="flex p-1 ml-1 border border-gray-400">
-                    <div v-if="fileInput">
-                        <p>
-                            {{ fileInput[0].name }}
-                        </p>
-                    </div>
-                    <div v-else-if="typeof model === 'string'">
-                        <p>
-                            {{ model.split('/').pop() }}
-                        </p>
-                    </div>
-                </div>
-            </DropFile>
+            <UFileUpload v-model="fileInput" :disabled="disabled" :accept="question.acceptedFileTypes?.join(',')">
+            </UFileUpload>
             <div class="flex-col flex gap-2 items-center">
                 <UButton variant="solid" icon="i-heroicons-arrow-down-tray" @click="handleDownload()"></UButton>
                 <UButton variant="subtle" @click="handleFileInput()" icon="i-heroicons-x-mark"></UButton>

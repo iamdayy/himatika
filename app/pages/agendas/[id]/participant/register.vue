@@ -45,8 +45,9 @@
 * - `registerAsOptions`: Options for the "register as" radio group.
 */
 <script setup lang='ts'>
+import { CustomFormData } from '~/helpers/CustomFormData';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
-import type { IPaymentBody } from '~~/types/IRequestPost';
+import type { IPaymentBody, IReqAnswer } from '~~/types/IRequestPost';
 import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, IParticipantResponse, IResponse } from '~~/types/IResponse';
 
 definePageMeta({
@@ -331,18 +332,24 @@ const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => 
 const onCompleted = async () => {
     router.push(`/agendas/${id}/participant`);
 }
+// TODO: resolve answer handle
 async function handleAnswer() {
     try {
+        const body = new CustomFormData<IReqAnswer>();
+        questions.value?.forEach((question) => {
+            body.append('answers', question.answer);
+        });
+        // {
+        //         answers: questions.value?.map((question) => {
+        //             return {
+        //                 questionId: question.question._id,
+        //                 answer: question.answer,
+        //             };
+        //         }),
+        //     }
         const response = await $api<IResponse & { data: string }>(`api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
             method: 'POST',
-            body: {
-                answers: questions.value?.map((question) => {
-                    return {
-                        questionId: question.question._id,
-                        answer: question.answer,
-                    };
-                }),
-            },
+            body,
         });
         if (response.statusCode !== 200) {
             toast.add({ title: $ts('failed'), description: $ts('failed_to_answer_question'), color: 'error' });

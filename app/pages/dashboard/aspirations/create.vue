@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { CoreStepper, ModalsDocAdd, ModalsImageAdd, ModalsVideoAdd } from '#components';
-import type { IAspiration, IDoc, IFile, IPhoto, IVideo } from '~~/types';
+import { CustomFormData } from '~/helpers/CustomFormData';
+import type { IAspiration, IDoc, IPhoto, IVideo } from '~~/types';
 import type { FieldValidationRules, Step } from '~~/types/component/stepper';
 import type { IResponse } from '~~/types/IResponse';
 definePageMeta({
     middleware: ['sidebase-auth'],
     layout: 'dashboard',
 });
-const route = useRoute();
+
 const router = useRouter();
 const overlay = useOverlay();
 const toast = useToast();
@@ -21,6 +22,10 @@ const AddVideoModal = overlay.create(ModalsVideoAdd);
 const newPhotos = ref<IPhoto[]>([]);
 const newVideos = ref<IVideo[]>([]);
 const newDocs = ref<IDoc[]>([]);
+
+const readFileAsBlob = (file: File) => {
+    return URL.createObjectURL(file);
+}
 
 const steps = computed<Step[]>(() => [
     {
@@ -80,23 +85,34 @@ async function onSubmit() {
             loading.value = false;
             const id = response.data?.id;
             newPhotos.value.forEach(async (photo) => {
+                const body = new CustomFormData<IPhoto>();
+                body.append('image', photo.image);
+                body.append('tags', photo.tags ? JSON.stringify(photo.tags) : '');
                 const response = await $api<IResponse>(`/api/aspiration/${id}/photo`, {
                     method: "POST",
-                    body: { photo }
+                    body: body.getFormData()
                 });
                 toast.add({ title: response.statusMessage });
             });
             newVideos.value.forEach(async (video) => {
+                const body = new CustomFormData<IVideo>();
+                body.append('video', video.video);
+                body.append('tags', video.tags ? JSON.stringify(video.tags) : '');
                 const response = await $api<IResponse>(`/api/aspiration/${id}/video`, {
                     method: "POST",
-                    body: { video }
+                    body: body.getFormData()
                 });
                 toast.add({ title: response.statusMessage });
             });
             newDocs.value.forEach(async (doc) => {
+                const body = new CustomFormData<IDoc>();
+                body.append('doc', doc.doc);
+                body.append('label', doc.label);
+                body.append('tags', doc.tags ? JSON.stringify(doc.tags) : '');
+                body.append('no', doc.no.toString());
                 const response = await $api<IResponse>(`/api/aspiration/${id}/doc`, {
                     method: "POST",
-                    body: doc
+                    body: body.getFormData()
                 });
                 toast.add({ title: response.statusMessage });
             });
@@ -148,12 +164,15 @@ const addDocModal = () => {
 }
 const deletePhoto = (index: number) => {
     newPhotos.value.splice(index, 1);
+    URL.revokeObjectURL(newPhotos.value[index]?.image as string);
 }
 const deleteVideo = (index: number) => {
     newVideos.value.splice(index, 1);
+    URL.revokeObjectURL(newVideos.value[index]?.video as string);
 }
 const deleteDoc = (index: number) => {
     newDocs.value.splice(index, 1);
+    URL.revokeObjectURL(newDocs.value[index]?.doc as string);
 }
 </script>
 
@@ -184,7 +203,7 @@ const deleteDoc = (index: number) => {
                             <div>{{ $ts('photo') }}:</div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <div v-for="photo, i in newPhotos" :key="i" class="relative group">
-                                    <img :src="((photo.image as IFile).content as string)" :alt="photo.tags?.join(', ')"
+                                    <img :src="readFileAsBlob(photo.image as File)" :alt="photo.tags?.join(', ')"
                                         class="max-h-[120px]" />
                                     <div
                                         class="absolute inset-0 flex items-center justify-center transition-opacity bg-gray-900 opacity-0 bg-opacity-70 group-hover:opacity-100">
@@ -200,7 +219,7 @@ const deleteDoc = (index: number) => {
                             <div>{{ $ts('video') }}:</div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <div v-for="video, i in newVideos" :key="i" class="relative group">
-                                    <video :src="((video.video as IFile).content as string)" controls
+                                    <video :src="readFileAsBlob(video.video as File)" controls
                                         class="max-h-[120px]"></video>
                                     <div
                                         class="absolute inset-0 flex items-center justify-center transition-opacity bg-gray-900 opacity-0 bg-opacity-70 group-hover:opacity-100">
@@ -217,7 +236,7 @@ const deleteDoc = (index: number) => {
                             <div class="flex flex-col items-center gap-2">
                                 <div v-for="document, i in newDocs" :key="i"
                                     class="flex flex-row items-center justify-between w-full gap-2 px-3 py-2 bg-opacity-25 border border-gray-400 rounded-md shadow-md dark:border-gray-700 hover:bg-gray-400">
-                                    <a :href="((document.doc as IFile).content as string)" target="_blank"
+                                    <a :href="readFileAsBlob(document.doc as File)" target="_blank"
                                         class="text-blue-500 hover:cursor-pointer">
                                         {{ document.label }}
                                     </a>
@@ -256,8 +275,8 @@ const deleteDoc = (index: number) => {
                                 <div>{{ $ts('photo') }}:</div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <div v-for="photo, i in newPhotos" :key="i" class="relative group">
-                                        <img :src="((photo.image as IFile).content as string)"
-                                            :alt="photo.tags?.join(', ')" class="max-h-[120px]" />
+                                        <img :src="readFileAsBlob(photo.image as File)" :alt="photo.tags?.join(', ')"
+                                            class="max-h-[120px]" />
                                         <div
                                             class="absolute inset-0 flex items-center justify-center transition-opacity bg-gray-900 opacity-0 bg-opacity-70 group-hover:opacity-100">
                                             <UButton variant="link" color="error" icon="i-heroicons-trash" size="xl"
@@ -271,7 +290,7 @@ const deleteDoc = (index: number) => {
                                 <div>{{ $ts('video') }}:</div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <div v-for="video, i in newVideos" :key="i" class="relative group">
-                                        <video :src="((video.video as IFile).content as string)" controls
+                                        <video :src="readFileAsBlob(video.video as File)" controls
                                             class="max-h-[120px]"></video>
                                         <div
                                             class="absolute inset-0 flex items-center justify-center transition-opacity bg-gray-900 opacity-0 bg-opacity-70 group-hover:opacity-100">
@@ -287,7 +306,7 @@ const deleteDoc = (index: number) => {
                                 <div class="flex flex-col items-center gap-2">
                                     <div v-for="document, i in newDocs" :key="i"
                                         class="flex flex-row items-center justify-between w-full gap-2 px-3 py-2 bg-opacity-25 border border-gray-400 rounded-md shadow-md dark:border-gray-700 hover:bg-gray-400">
-                                        <a :href="((document.doc as IFile).content as string)" target="_blank"
+                                        <a :href="readFileAsBlob(document.doc as File)" target="_blank"
                                             class="text-blue-500 hover:cursor-pointer">
                                             {{ document.label }}
                                         </a>

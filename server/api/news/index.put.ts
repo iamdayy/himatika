@@ -1,9 +1,7 @@
-import fs from "fs";
+import { del, put } from "@vercel/blob";
 import { Types } from "mongoose";
-import path from "path";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
-import { IFile } from "~~/types";
 import { IReqNews } from "~~/types/IRequestPost";
 import type { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -44,28 +42,21 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const body = await readBody<IReqNews>(event);
-    const mainImage = body.mainImage as IFile;
+    const body = await customReadMultipartFormData<IReqNews>(event);
+    const mainImage = body.mainImage as File;
     // Handle main image upload
-    if (typeof mainImage === "object") {
+    if (mainImage) {
       if (mainImage.type?.startsWith("image/")) {
         // Remove old image if it exists
         if (news.mainImage) {
-          const imagePath = path.join(
-            config.storageDir,
-            news.mainImage as string
-          );
-          if (fs.existsSync(imagePath)) {
-            deleteFile(news.mainImage as string);
-          }
+          await del(news.mainImage as string);
         }
-        // Save new image
-        const hasedImage = await storeFileLocally(
-          mainImage,
-          12,
-          BASE_MAINIMAGE_FOLDER
-        );
-        imageUrl = `${BASE_MAINIMAGE_FOLDER}/${hasedImage}`;
+        const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(
+          mainImage.name
+        )}.${mainImage.type.split("/")[1]}`;
+        // Save new
+        const { url } = await put(fileName, mainImage, { access: "public" });
+        imageUrl = url;
       } else {
         throw createError({
           statusMessage: "Please upload nothing but images.",

@@ -1,14 +1,16 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { DocModel } from "~~/server/models/DocModel";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IFile, IMember } from "~~/types";
+import { IMember } from "~~/types";
 import { IReqAspirationDoc } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { doc, label, tags, no } = await readBody<IReqAspirationDoc>(event);
+    const { doc, label, tags, no } =
+      await customReadMultipartFormData<IReqAspirationDoc>(event);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -32,11 +34,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_DOC_FOLDER = `/uploads/img/aspiration/${aspiration._id}/docs`;
     let docUrl = "";
-    const d = doc as IFile;
-
+    const d = doc as File;
+    const fileName = `${BASE_DOC_FOLDER}/${hashText(d.name)}.${
+      d.type.split("/")[1]
+    }`;
     // Handle main doc upload
-    const hashedName = await storeFileLocally(d, 12, BASE_DOC_FOLDER);
-    docUrl = `${BASE_DOC_FOLDER}/${hashedName}`;
+    const { url } = await put(fileName, d, { access: "public" });
+    docUrl = url;
     const saved = await DocModel.create({
       label,
       on: aspiration._id,

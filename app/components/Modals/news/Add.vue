@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
+import { CustomFormData } from '~/helpers/CustomFormData';
 import type { INews } from '~~/types';
 import type { IReqNews } from '~~/types/IRequestPost';
 import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
@@ -85,24 +86,16 @@ const news = ref<INews>({
  */
 const addNews = async () => {
     try {
-        const body: IReqNews = {
-            title: news.value.title,
-            mainImage: {
-                name: file.value!.name,
-                content: await convert(file.value!),
-                size: file.value!.size.toString(),
-                type: file.value!.type,
-                lastModified: file.value!.lastModified.toString()
-            },
-            body: news.value.body,
-            slug: news.value.slug,
-            category: news.value.category,
-            tags: news.value.tags,
-            authors: news.value.authors
-        }
+        const body = new CustomFormData<IReqNews>();
+        body.append("title", news.value.title);
+        body.append("mainImage", file.value as File);
+        body.append("body", news.value.body);
+        body.append("category", news.value.category as string);
+        body.append("tags", news.value.tags ? JSON.stringify(news.value.tags) : "");
+        body.append("authors", news.value.authors ? JSON.stringify(news.value.authors) : "");
         const added = await $api<IResponse>("/api/news", {
             method: "POST",
-            body
+            body: body.getFormData()
         });
         toast.add({ title: $ts("success"), description: $ts("success_to_add_news") });
         emit("triggerRefresh");

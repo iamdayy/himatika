@@ -1,7 +1,8 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
-import { IFile, INews } from "~~/types";
+import { INews } from "~~/types";
 import { IReqNews } from "~~/types/IRequestPost";
 import type { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -32,16 +33,16 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const BASE_MAINIMAGE_FOLDER = "/uploads/img/newss";
     let imageUrl = "";
 
-    const body = await readBody<IReqNews>(event);
+    const body = await customReadMultipartFormData<IReqNews>(event);
 
-    const mainImage = body.mainImage as IFile;
+    const mainImage = body.mainImage as File;
+    const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(mainImage.name)}.${
+      mainImage.type.split("/")[1]
+    }`;
+    // Handle main image upload
     if (mainImage.type?.startsWith("image/")) {
-      const hashedName = await storeFileLocally(
-        mainImage,
-        12,
-        BASE_MAINIMAGE_FOLDER
-      );
-      imageUrl = `${BASE_MAINIMAGE_FOLDER}/${hashedName}`;
+      const { url } = await put(fileName, mainImage, { access: "public" });
+      imageUrl = url;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but images.",
@@ -54,7 +55,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Prepare news data
     const newNews: INews = {
-      ...body,
+      title: body.title,
+      body: body.body,
       category: body.category,
       slug: body.title
         .toLowerCase()

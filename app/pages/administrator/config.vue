@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CoreTiptap, ModalsCarouselAdd, ModalsImageCrop, UInput } from '#components';
 import imageCompression from 'browser-image-compression';
+import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICarousel, IConfig, IEncryption, IPhoto } from "~~/types";
 import type { IConfigResponse, IResponse } from '~~/types/IResponse';
 definePageMeta({
@@ -152,19 +153,11 @@ const addPhoto = async () => {
     AddCarouselModal.open({
         onSaveCarousel: async (carousel: ICarousel) => {
             try {
+                const body = new CustomFormData<IPhoto>();
+                body.append('image', carousel.image?.image as File);
                 const response = await $api<IResponse & { data?: IPhoto }>('/api/config/carousel', {
                     method: "POST",
-                    body: {
-                        photo: {
-                            image: {
-                                name: file.value!.name,
-                                content: await convert(file.value!),
-                                size: file.value!.size.toString(),
-                                type: file.value!.type,
-                                lastModified: file.value!.lastModified.toString()
-                            }
-                        } as IPhoto
-                    }
+                    body: body.getFormData()
                 });
                 if (response.statusCode == 200 && response.data) {
                     toast.add({ title: $ts('success'), description: $ts('success_to_add_carrousel') });
