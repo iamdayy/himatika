@@ -1,3 +1,4 @@
+import { del } from "@vercel/blob";
 import fs from "fs";
 import path from "path";
 import { DocModel } from "~~/server/models/DocModel";
@@ -30,10 +31,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     // Delete the associated main doc file if it exists
     if (doc && doc.doc) {
-      const docPath = path.join(config.storageDir, doc.doc as string);
-      if (fs.existsSync(docPath)) {
-        deleteFile(doc.doc as string);
-      }
+      await del(doc.doc as string);
     }
     if (doc && doc.trails) {
       // Delete the associated trail doc files if they exist

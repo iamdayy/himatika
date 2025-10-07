@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { del } from "@vercel/blob";
 import { VideoModel } from "~~/server/models/VideoModel";
 import { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -28,10 +27,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const video = await VideoModel.findById(id);
     // Delete the associated main video file if it exists
     if (video && video.video) {
-      const videoPath = path.join(config.storageDir, video.video as string);
-      if (fs.existsSync(videoPath)) {
-        deleteFile(video.video as string);
-      }
+      await del(video.video as string);
     }
     if (!video) {
       throw createError({
