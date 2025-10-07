@@ -14,7 +14,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
-    const organizer = event.context.organizer;
     if (!user) {
       throw createError({
         statusMessage: "Unauthorized",
@@ -40,23 +39,25 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     let imageUrl = "";
     const image = photo.image as File;
 
+    console.log(`Type: ${image.type}`);
+
     const fileName = `${BASE_PHOTO_FOLDER}/${hashText(`${agenda._id}`)}.${
       image.type?.split("/")[1] || "png"
     }`;
 
     // Handle main image upload
-    if (image.type?.startsWith("image/")) {
-      // const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
-      const { url } = await put(fileName, image, {
-        access: "public",
-      });
+    const { url } = await put(fileName, image, {
+      access: "public",
+    });
 
-      imageUrl = url;
-    } else {
-      throw createError({
-        statusMessage: "Please upload nothing but images.",
-      });
-    }
+    imageUrl = url;
+    // if (image.type?.startsWith("image/")) {
+    //   // const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
+    // } else {
+    //   throw createError({
+    //     statusMessage: "Please upload nothing but images.",
+    //   });
+    // }
     const saved = await PhotoModel.create({
       on: agenda._id,
       onModel: "Agenda",
