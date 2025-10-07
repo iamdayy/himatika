@@ -84,6 +84,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusMessage: "Doc added successfully",
     };
   } catch (error: any) {
+    console.error(error);
     return {
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || "Internal Server Error",

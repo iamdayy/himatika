@@ -74,7 +74,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusCode: 200,
       statusMessage: "Photo added successfully",
     };
-  } catch (error) {
+  } catch (error: any) {
+    console.error(error);
     return {
       statusCode: 500,
       statusMessage: "Internal Server Error",

@@ -70,7 +70,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusMessage: "Video added successfully",
     };
   } catch (error: any) {
-    console.log(error);
+    console.error(error);
     return {
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || "Internal Server Error",
