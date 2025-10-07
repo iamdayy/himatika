@@ -51,7 +51,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       on: agenda._id,
       onModel: "Agenda",
       no,
-      tags: tags ? JSON.parse(tags) : [],
+      tags: tags ? tags : [],
       doc: docUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
       signs: signs

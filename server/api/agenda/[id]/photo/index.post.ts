@@ -58,7 +58,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await PhotoModel.create({
       on: agenda._id,
       onModel: "Agenda",
-      tags: photo.tags ? JSON.parse(photo.tags) : [],
+      tags: photo.tags ? photo.tags : [],
       image: imageUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

@@ -36,14 +36,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_VIDEO_FOLDER = `/uploads/img/agenda/${agenda._id}/videos`;
     let videoUrl = "";
-    const vid = video.video as File;
+    const vid = video.video;
     const fileName = `${BASE_VIDEO_FOLDER}/${hashText(`${agenda._id}`)}.${
       vid.type?.split("/")[1] || "mp4"
     }`;
 
     // Handle main video upload
     if (vid.type?.startsWith("video/")) {
-      const { url } = await put(fileName, vid, {
+      const { url } = await put(fileName, vid.data, {
         access: "public",
       });
       videoUrl = url;
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await VideoModel.create({
       on: agenda._id,
       onModel: "Agenda",
-      tags: video.tags ? JSON.parse(video.tags) : [],
+      tags: video.tags ? video.tags : [],
       video: videoUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });
