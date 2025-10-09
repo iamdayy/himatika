@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { ModalsMemberEdit, NuxtImg, UButton, UCheckbox } from '#components';
 import type { TableColumn } from '@nuxt/ui';
+import { CustomFormData } from '~/helpers/CustomFormData';
 import type { IMember } from '~~/types';
 import type { IExportSheetResponse, IResponse } from '~~/types/IResponse';
 const UDropdownMenu = resolveComponent('UDropdownMenu');
@@ -140,17 +141,11 @@ const onChangeXlsx = async (files: FileList) => {
         return;
     }
     try {
+        const body = new CustomFormData<{ file: File }>();
+        body.append('file', file)
         const uploaded = await $api<IResponse & { data: IMember[] }>("/api/sheet/import", {
             method: "POST",
-            body: {
-                file: {
-                    name: file.name,
-                    content: await convert(file),
-                    size: file.size.toString(),
-                    type: file.type,
-                    lastModified: file.lastModified.toString()
-                }
-            },
+            body: body.getFormData()
         });
         DataFromCSV.value = uploaded.data as IMember[];
         selectedRows.value = {

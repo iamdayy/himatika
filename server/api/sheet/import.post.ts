@@ -1,6 +1,4 @@
 import ExcelJS from "exceljs";
-import path from "path";
-import { IFile } from "~~/types";
 const config = useRuntimeConfig();
 /**
  * Represents a row of data from the Excel sheet.
@@ -17,7 +15,7 @@ interface DataRow {
 export default defineEventHandler(async (event) => {
   try {
     // Read the uploaded file
-    const { file } = await readBody<{ file: IFile }>(event);
+    const { file } = await customReadMultipartFormData<{ file: File }>(event);
 
     if (!file) {
       throw createError({
@@ -25,23 +23,11 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Please attach file in the form",
       });
     }
-    const BASE_XLSX_FOLDER = "/uploads/xlsx/import";
-    let excelUrl = "";
-    if (file.type.startsWith("application/")) {
-      const hashedName = await storeFileLocally(file, 12, BASE_XLSX_FOLDER);
-      excelUrl = `${BASE_XLSX_FOLDER}/${hashedName}`;
-    } else {
-      throw createError({
-        statusCode: 402,
-        statusMessage: "Only xlsx files are allowed",
-      });
-    }
-
     // Read the Excel workbook
     const workbook = new ExcelJS.Workbook();
-    const excelPath = path.join(config.storageDir, excelUrl as string);
+    // const excelPath = path.join(config.storageDir, excelUrl as string);
 
-    await workbook.xlsx.readFile(excelPath);
+    await workbook.xlsx.load(file);
     const worksheet = workbook.getWorksheet("template");
 
     const jsonData: DataRow[] = [];
@@ -77,8 +63,6 @@ export default defineEventHandler(async (event) => {
         jsonData.push(rowData as DataRow);
       }
     });
-
-    deleteFile(excelUrl);
 
     return {
       statusCode: 200,

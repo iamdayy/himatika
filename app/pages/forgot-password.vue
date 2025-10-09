@@ -219,28 +219,6 @@ function formatTime(ms: number) {
 }
 
 onMounted(() => {
-    // const steps: DriveStep[] = [
-    //     {
-    //         element: "#NIM",
-    //         popover: {
-    //             title: "NIM",
-    //             description: $ts("nim_desc"),
-    //             side: "right",
-    //         },
-    //     },
-    //     {
-    //         element: "#verify-nim",
-    //         popover: {
-    //             title: $ts("verification_nim"),
-    //             description: $ts("verification_nim_btn_desc"),
-    //             side: "right",
-    //         },
-    //     },
-    // ];
-    // $pageGuide("register-verify-nim", steps, {
-    //     showProgress: true,
-    //     showButtons: ["next", "previous"],
-    // });
 
     // Update the countdown every second
     setInterval(() => {

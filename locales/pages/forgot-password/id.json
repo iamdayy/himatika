@@ -1,1 +1,6 @@
-{}
+{
+    "account_description": "Masukan informasi akun anda di bawah ini, pastikan nim dan email anda terdaftar",
+    "otp_description": "Masukan kode OTP (One-Time Password) yang kami kirimkan ke email anda",
+    "reset_password_description": "Masukan kata sandi baru Anda di bawah ini. pastikan anda mengingat kata sandi baru Anda",
+    "complete_description": "Selamat, kata sandi baru telah berhasil diubah!"
+}
