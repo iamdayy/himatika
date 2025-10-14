@@ -197,7 +197,7 @@ function toggleRequired(value: boolean | "indeterminate") {
 function handleAnswer(value?: string | number | boolean | string[] | number[] | Date | null | IFile) {
     emit('answer', value)
 }
-async function handleFileInput(file?: File) {
+async function handleFileInput(file?: File | null) {
     if (file) {
         model.value = file;
     } else {
@@ -307,7 +307,8 @@ const AcceptedFileTypesOptions = computed(() => [
             :disabled="disabled" />
         <!-- File Input -->
         <div class="flex items-center space-x-2" v-else-if="question.type === 'file'" type="file">
-            <UFileUpload v-model="fileInput" :disabled="disabled" :accept="question.acceptedFileTypes?.join(',')">
+            <UFileUpload v-model="fileInput" :disabled="disabled" @update:model-value="handleFileInput"
+                :accept="question.acceptedFileTypes?.join(',')">
             </UFileUpload>
             <div class="flex-col flex gap-2 items-center">
                 <UButton variant="solid" icon="i-heroicons-arrow-down-tray" @click="handleDownload()"></UButton>

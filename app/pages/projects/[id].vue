@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ModalsConfirmation, ModalsImageAdd, ModalsImageOpen } from '#components';
+import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICategory, IMember, IPhoto, IProject } from '~~/types';
 import type { IProjectsResponse, IResponse } from '~~/types/IResponse';
 
@@ -88,9 +89,12 @@ const addPhotoModal = () => {
         async onPhoto({ photos }: { photos: IPhoto[] }) {
             try {
                 const promises = photos.map(async (photo) => {
+                    const formData = new CustomFormData<IPhoto>();
+                    formData.append('image', photo.image as File);
+                    formData.append('tags', JSON.stringify(photo.tags));
                     return $api<IResponse>(`/api/project/${route.params.id}/photo`, {
                         method: "POST",
-                        body: photo
+                        body: formData.getFormData()
                     });
                 });
                 await Promise.all(promises);

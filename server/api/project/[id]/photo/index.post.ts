@@ -1,14 +1,14 @@
+import { put } from "@vercel/blob";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { ProjectModel } from "~~/server/models/ProjectModel";
-import { IFile, IMember } from "~~/types";
-import { IReqProjectPhoto } from "~~/types/IRequestPost";
+import { IMember, IPhoto } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { photo } = await readBody<IReqProjectPhoto>(event);
+    const photo = await customReadMultipartFormData<IPhoto>(event);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -36,12 +36,16 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_PHOTO_FOLDER = "/uploads/img/project/photos";
     let imageUrl = "";
-    const image = photo.image as IFile;
-
+    const image = photo.image as File;
+    const fileName = `${BASE_PHOTO_FOLDER}/${image.name}.${
+      image.type.split("/")[1]
+    }`;
     // Handle main image upload
     if (image.type?.startsWith("image/")) {
-      const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
-      imageUrl = `${BASE_PHOTO_FOLDER}/${hashedName}`;
+      const { url } = await put(fileName, image, {
+        access: "public",
+      });
+      imageUrl = url;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but images.",

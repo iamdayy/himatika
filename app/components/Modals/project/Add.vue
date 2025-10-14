@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
+import { CustomFormData } from '~/helpers/CustomFormData';
 import type { IProject } from '~~/types';
 import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
 
@@ -86,18 +87,19 @@ const fileToCropped = ref<{ blob: string, name: string }>({
  */
 const addProject = async (): Promise<void> => {
     try {
+        const formData = new CustomFormData<IProject>();
+        formData.append('title', stateProject.title);
+        formData.append('image', stateProject.image);
+        formData.append('date', stateProject.date.toISOString());
+        formData.append('category', stateProject.category as string || '');
+        formData.append('progress', stateProject.progress.toString());
+        formData.append('description', stateProject.description);
+        formData.append('url', stateProject.url || '');
+        formData.append('tags', stateProject ? JSON.stringify(stateProject.tags) : '');
+        formData.append('members', stateProject ? JSON.stringify(stateProject.members) : '');
         const added = await $api<IResponse>("/api/project", {
             method: "POST",
-            body: {
-                ...stateProject,
-                image: {
-                    name: file.value!.name,
-                    content: await convert(file.value!),
-                    size: file.value!.size.toString(),
-                    type: file.value!.type,
-                    lastModified: file.value!.lastModified.toString()
-                },
-            }
+            body: formData.getFormData()
         });
         toast.add({ title: added.statusMessage! });
         emit("close");
@@ -129,17 +131,6 @@ const addNewCategory = async (category: string) => {
     })
 }
 
-/**
- * Handle cropped image
- * @param {File} f - Cropped image file
- */
-const onCropped = async (f: File) => {
-    file.value = f;
-    const blob = URL.createObjectURL(f);
-    fileToCropped.value.blob = blob;
-    ImageCropModal.close();
-}
-
 
 
 /**
@@ -167,7 +158,8 @@ const onChangeImage = async (value: FileList) => {
             aspectRatio: 16 / 9,
         },
         onCropped: (file: File) => {
-            onCropped(file);
+            stateProject.image = file;
+            ImageCropModal.close();
         }
     })
 

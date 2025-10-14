@@ -1,5 +1,6 @@
+import { put } from "@vercel/blob";
 import { ProjectModel } from "~~/server/models/ProjectModel";
-import { IFile, IProject } from "~~/types";
+import { IProject } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 /**
  * Handles POST requests for creating a new project.
@@ -19,17 +20,22 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     // Read the request body containing the project data
-    const body = await readBody<IProject>(event);
-    const image = body.image as IFile;
+    const body = await customReadMultipartFormData<IProject>(event);
+    const image = body.image as File;
     let imageUrl = "";
     if (image) {
       const BASE_PHOTO_FOLDER = "/uploads/img/projects/";
-      const image = body.image as IFile;
+      const image = body.image as File;
+      const fileName = `${BASE_PHOTO_FOLDER}/${image.name}.${
+        image.type.split("/")[1]
+      }`;
 
       // Handle main image upload
       if (image.type?.startsWith("image/")) {
-        const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
-        imageUrl = `${BASE_PHOTO_FOLDER}/${hashedName}`;
+        const { url } = await put(fileName, image, {
+          access: "public",
+        });
+        imageUrl = url;
       } else {
         throw createError({
           statusMessage: "Please upload nothing but images.",
@@ -42,7 +48,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       ...body,
       image: imageUrl,
       members: await Promise.all(
-        body.members?.map(
+        (JSON.parse(body.members) as number[])?.map(
           async (member) => await findMemberByNim(member as number)
         )!
       ),

@@ -355,7 +355,7 @@ export interface IAgenda {
 export interface IProject {
   _id?: string; // Optional, MongoDB will auto-generate _id if not provided
   title: string;
-  image: string | IFile;
+  image: string | File;
   description: string;
   category: ICategory | string | Types.ObjectId; // E.g., 'article', 'poster', 'video', 'application', etc.
   date: Date;

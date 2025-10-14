@@ -1,7 +1,7 @@
+import { del, put } from "@vercel/blob";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { AnswerModel } from "~~/server/models/AnswerModel";
-import { IFile, IQuestion } from "~~/types";
-import { IReqAnswer } from "~~/types/IRequestPost";
+import { IQuestion } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -9,7 +9,19 @@ export default defineEventHandler(async (event) => {
       id: string;
       registeredId: string;
     };
-    const body = await readBody<IReqAnswer>(event);
+    const multipart = await readMultipartFormData(event);
+
+    const answersData = multipart?.find((p) => p.name === "answers");
+    if (!answersData) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Answers data not provided",
+      });
+    }
+    const answersFromBody: { questionId: string; answer: any }[] = JSON.parse(
+      answersData.data.toString()
+    );
+
     const agenda = await AgendaModel.findById(id);
     if (!agenda) {
       throw createError({
@@ -20,8 +32,8 @@ export default defineEventHandler(async (event) => {
     const questions =
       (agenda.configuration.participant.questions as IQuestion[] | undefined) ||
       [];
-    const answers = body.answers || [];
-    if (!answers.length || answers.length === 0) {
+    const answers = answersFromBody || [];
+    if (!answers.length) {
       throw createError({
         statusCode: 404,
         statusMessage: "Answer not found",
@@ -36,7 +48,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (!questions.length || questions.length === 0) {
+    if (!questions.length) {
       throw createError({
         statusCode: 404,
         statusMessage: "Question not found",
@@ -53,32 +65,35 @@ export default defineEventHandler(async (event) => {
           statusMessage: "Question not found",
         });
       }
-      // Handle multiple choice question
-      if (question.type === "multiple") {
-      }
-      // Handle file type question
-      if (question.type === "file" && typeof q.answer === "object") {
-        const file = q.answer as IFile;
+
+      // Handle file type
+      console.log(question.answer);
+      if (question.type === "file" && q.answer === "[[FILE]]") {
+        const filePart = multipart?.find((p) => p.name === questionId);
+        const file = filePart as File | undefined;
         if (!file) {
           throw createError({
             statusCode: 404,
-            statusMessage: "File not found",
+            statusMessage: `File for question ${question.question} not found`,
           });
         }
-        // Handle file upload here
-        // You can use a library like multer or busboy to handle file uploads
+
         const BASE_FILE_FOLDER = `/uploads/img/agenda/${agenda._id}/answers/${registeredId}`;
-        let imageUrl = "";
-        // Handle main image upload
-        if (file.type) {
-          const hashedName = await storeFileLocally(file, 12, BASE_FILE_FOLDER);
-          imageUrl = `${BASE_FILE_FOLDER}/${hashedName}`;
-        } else {
+        const fileName = `${BASE_FILE_FOLDER}/${file.name}.${file.type}`;
+
+        if (!file.type) {
           throw createError({
-            statusMessage: "Please upload nothing but images.",
+            statusCode: 400,
+            statusMessage: `Invalid file type for question ${question.question}.`,
           });
         }
-        q.answer = imageUrl;
+        if (q.answer) {
+          await del(q.answer);
+        }
+        const { url } = await put(fileName, file, {
+          access: "public",
+        });
+        q.answer = url;
       }
 
       const answer = await AnswerModel.findOne({
@@ -112,13 +127,13 @@ export default defineEventHandler(async (event) => {
     });
     return {
       statusCode: 200,
-      statusMessage: "Success",
+      statusMessage: "Answers submitted successfully",
     };
   } catch (error: any) {
-    return {
-      statusCode: 500,
-      statusMessage: "Internal Server Error",
-      data: error.message,
-    };
+    console.error(error);
+    return createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || "Internal Server Error",
+    });
   }
 });

@@ -1,8 +1,7 @@
-import fs from "fs";
-import path from "path";
+import { del, put } from "@vercel/blob";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { ProjectModel } from "~~/server/models/ProjectModel";
-import { IFile, IMember, IProject } from "~~/types";
+import { IMember, IProject } from "~~/types";
 import type { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
 /**
@@ -32,7 +31,7 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
     const { id } = getQuery(ev);
 
     // Read the request body containing the updated project data
-    const body = await readBody<IProject>(ev);
+    const body = await customReadMultipartFormData<IProject>(ev);
 
     // Find the project by ID
     const project = await ProjectModel.findById(id);
@@ -42,22 +41,23 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
         statusMessage: "The project is not found",
       });
     }
-    const image = body.image as IFile;
+    const image = body.image as File;
     let imageUrl = "";
     if (image) {
       const BASE_PHOTO_FOLDER = "/uploads/img/projects/";
-      const image = body.image as IFile;
+      const fileName = `${BASE_PHOTO_FOLDER}/${image.name}.${
+        image.type.split("/")[1]
+      }`;
       if (project.image) {
-        const imagePath = path.join(config.storageDir, project.image as string);
-        if (fs.existsSync(imagePath)) {
-          deleteFile(project.image as string);
-        }
+        await del(project.image as string);
       }
 
       // Handle main image upload
       if (image.type?.startsWith("image/")) {
-        const hashedName = await storeFileLocally(image, 12, BASE_PHOTO_FOLDER);
-        imageUrl = `${BASE_PHOTO_FOLDER}/${hashedName}`;
+        const { url } = await put(fileName, image, {
+          access: "public",
+        });
+        imageUrl = url;
       } else {
         throw createError({
           statusMessage: "Please upload nothing but images.",
@@ -77,7 +77,9 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
     project.url = body.url;
     project.publishedAt = body.publishedAt;
     project.members = (await Promise.all(
-      body.members?.map(async (member) => await getIdByNim(member as number))!
+      (JSON.parse(body.members) as number[])?.map(
+        async (member) => await getIdByNim(member as number)
+      )!
     )) as IMember[];
 
     // Save the updated project
