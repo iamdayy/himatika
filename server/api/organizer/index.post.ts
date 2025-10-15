@@ -1,6 +1,7 @@
+import { put } from "@vercel/blob";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
-import { IFile, IMember, IOrganizer } from "~~/types";
+import { IMember, IOrganizer } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
@@ -56,34 +57,56 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const body = await readBody<IOrganizer>(event);
+    const parts = await readMultipartFormData(event);
+    if (!parts) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid form data",
+      });
+    }
 
-    const councilPromises = body.council.map(async (council) => {
-      const image = council.image as IFile;
-      if (image.type?.startsWith("image/")) {
-        const hashedName = await storeFileLocally(
-          image,
-          12,
-          BASE_AVATAR_FOLDER
-        );
-        council.image = `${BASE_AVATAR_FOLDER}/${hashedName}`;
+    const dataPart = parts.find((part) => part.name === "organizerData");
+    if (!dataPart || !dataPart.data) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Missing organizer data",
+      });
+    }
+
+    const body = JSON.parse(dataPart.data.toString()) as IOrganizer;
+
+    const councilPromises = body.council.map(async (council, index) => {
+      const filePart = parts.find(
+        (part) => part.name === `council-image-${index}`
+      );
+      let imageUrl = council.image; // Default to existing image path or null
+
+      if (filePart && filePart.type?.startsWith("image/")) {
+        const fileName = `${BASE_AVATAR_FOLDER}/${filePart.filename}.${
+          filePart.type.split("/")[1]
+        }`;
+        const { url } = await put(fileName, filePart.data, {
+          access: "public",
+        });
+        imageUrl = url;
       }
       return {
         position: council.position,
         name: council.name,
-        image: council.image,
+        image: imageUrl,
       };
     });
 
-    const advisorImage = body.advisor.image as IFile;
-    let imageUrlAdvisor = "";
-    if (advisorImage.type?.startsWith("image/")) {
-      const hashedName = await storeFileLocally(
-        advisorImage,
-        12,
-        BASE_AVATAR_FOLDER
-      );
-      imageUrlAdvisor = `${BASE_AVATAR_FOLDER}/${hashedName}`;
+    const advisorFilePart = parts.find((part) => part.name === "advisor-image");
+    let imageUrlAdvisor = body.advisor.image;
+    if (advisorFilePart && advisorFilePart.type?.startsWith("image/")) {
+      const fileName = `${BASE_AVATAR_FOLDER}/${advisorFilePart.filename}.${
+        advisorFilePart.type.split("/")[1]
+      }`;
+      const { url } = await put(fileName, advisorFilePart.data, {
+        access: "public",
+      });
+      imageUrlAdvisor = url;
     }
     const advisor = {
       position: body.advisor.position,

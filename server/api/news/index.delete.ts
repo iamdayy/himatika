@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { del } from "@vercel/blob";
 import { NewsModel } from "~~/server/models/NewsModel";
 import { IResponse } from "~~/types/IResponse";
 
@@ -42,10 +41,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Delete the associated main image file if it exists
     if (news.mainImage) {
-      const imagePath = path.join(config.storageDir, news.mainImage as string);
-      if (fs.existsSync(imagePath)) {
-        deleteFile(news.mainImage as string);
-      }
+      await del(news.mainImage as string);
     }
 
     // Delete the news from the database

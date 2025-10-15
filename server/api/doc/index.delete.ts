@@ -1,6 +1,4 @@
 import { del } from "@vercel/blob";
-import fs from "fs";
-import path from "path";
 import { DocModel } from "~~/server/models/DocModel";
 import { IMember } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
@@ -35,15 +33,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     if (doc && doc.trails) {
       // Delete the associated trail doc files if they exist
-      doc.trails.forEach((trail) => {
+      doc.trails.forEach(async (trail) => {
         if (trail.doc) {
-          const trailDocPath = path.join(
-            config.storageDir,
-            trail.doc as string
-          );
-          if (fs.existsSync(trailDocPath)) {
-            deleteFile(trail.doc as string);
-          }
+          await del(trail.doc as string);
         }
       });
     }

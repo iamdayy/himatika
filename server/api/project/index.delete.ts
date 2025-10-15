@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { del } from "@vercel/blob";
 import { ProjectModel } from "~~/server/models/ProjectModel";
 import { IResponse } from "~~/types/IResponse";
 
@@ -42,10 +41,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Delete the associated main image file if it exists
     if (project.image) {
-      const imagePath = path.join(config.storageDir, project.image as string);
-      if (fs.existsSync(imagePath)) {
-        deleteFile(project.image as string);
-      }
+      await del(project.image as string);
     }
 
     // Delete the project from the database

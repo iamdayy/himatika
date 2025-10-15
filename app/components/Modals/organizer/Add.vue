@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
-import type { IOrganizer } from '~/types';
-import type { IConfigResponse, IMemberResponse, IOrganizerResponse } from '~/types/IResponse';
+import type { IOrganizer } from '~~/types';
+import type { IConfigResponse, IMemberResponse, IOrganizerResponse } from '~~/types/IResponse';
 
 const { $api } = useNuxtApp();
 const toast = useToast();
-const { convert } = useImageToBase64();
 const items = [
     {
         slot: 'dailyManager',
@@ -125,28 +124,27 @@ const filesToCropped = ref<{ blob: string, name: string }[]>([{ blob: '', name: 
 const loadingCompress = ref<boolean>(false);
 const openModals = ref<boolean[]>([false, false, false]);
 const isMobile = computed(() => width.value < 768);
-const onChangeImages = async (files: FileList, i: number) => {
+const onChangeImages = async (i: number, file?: File | null) => {
     loadingCompress.value = true;
-    const f = files[0];
-    if (!f) return;
+    if (!file) return;
     const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
         alwaysKeepResolution: true
     }
-    const compressedFile = await imageCompression(f, options);
+    const compressedFile = await imageCompression(file, options);
     const blob = URL.createObjectURL(compressedFile);
     CropImageModal.open({
         img: blob,
-        title: f.name,
+        title: file.name,
         stencil: {
             movable: true,
             resizable: true,
             aspectRatio: 1 / 1,
         },
-        onCropped: (file: File) => {
-            onCropped(file, i);
+        onCropped: (f: File) => {
+            onCropped(f, i);
             CropImageModal.close();
         },
     });
@@ -170,38 +168,34 @@ const onCropped = async (f: File, i: number) => {
 }
 const addOrganizer = async () => {
     try {
-        const body: IOrganizer = {
-            ...organizer.value,
-            council: await Promise.all(organizer.value.council.map(async (council, i) => {
-                return {
-                    ...council,
-                    image: {
-                        name: files.value[i]!.name,
-                        content: await convert(files.value[i]!),
-                        size: files.value[i]!.size.toString(),
-                        type: files.value[i]!.type,
-                        lastModified: files.value[i]!.lastModified.toString(),
-                    }
-                }
-            })),
-            advisor: {
-                ...organizer.value.advisor,
-                image: {
-                    name: files.value[organizer.value.council.length]!.name,
-                    content: await convert(files.value[organizer.value.council.length]!),
-                    size: files.value[organizer.value.council.length]!.size.toString(),
-                    type: files.value[organizer.value.council.length]!.type,
-                    lastModified: files.value[organizer.value.council.length]!.lastModified.toString(),
-                }
+        const formData = new FormData();
+        const organizerData = JSON.parse(JSON.stringify(organizer.value));
+
+        // Clear image content to avoid sending large data in JSON
+        organizerData.council.forEach((c: { image: any; }) => c.image = null);
+        organizerData.advisor.image = null;
+
+        formData.append('organizerData', JSON.stringify(organizerData));
+
+        // Append council images
+        files.value.forEach((file, index) => {
+            if (index < organizer.value.council.length) {
+                formData.append(`council-image-${index}`, file, file.name);
+            } else {
+                formData.append('advisor-image', file, file.name);
             }
-        }
+        });
+
         const response = await $api<IOrganizerResponse>('/api/organizer', {
             method: 'POST',
-            body,
+            body: formData,
         });
+
         if (response.statusCode !== 200) {
             toast.add({ title: $ts('failed'), color: 'error', description: $ts('add_organizer_failed') });
+            return; // Stop execution on failure
         }
+
         toast.add({
             title: $ts('success'),
             description: $ts('add_organizer_success'),
@@ -260,12 +254,8 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                                 class="w-full" />
                         </UFormField>
                         <UFormField class="col-span-12" :label="$ts('image')" required>
-                            <DropFile :identifier="i" @change="v => onChangeImages(v, i)" accept="image/*">
-                                <div v-if="filesToCropped[i]!.blob">
-                                    <NuxtImg :src="filesToCropped[i]!.blob" :alt="filesToCropped[i]!.name"
-                                        class="mx-auto" />
-                                </div>
-                            </DropFile>
+                            <UFileUpload @update:modelValue="v => onChangeImages(i, v)" accept="image/*">
+                            </UFileUpload>
                         </UFormField>
                     </div>
                 </div>
@@ -284,13 +274,9 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                             :size="responsiveUISizes.input" v-model="organizer.advisor.position" class="w-full" />
                     </UFormField>
                     <UFormField class="col-span-12" :label="$ts('image')" required>
-                        <DropFile :identifier="organizer.council.length"
-                            @change="v => onChangeImages(v, organizer.council.length)" accept="image/*">
-                            <div v-if="filesToCropped[organizer.council.length]!.blob">
-                                <NuxtImg :src="filesToCropped[organizer.council.length]!.blob"
-                                    :alt="filesToCropped[organizer.council.length]!.name" class="mx-auto" />
-                            </div>
-                        </DropFile>
+                        <UFileUpload @update:modelValue="v => onChangeImages(organizer.council.length, v)"
+                            accept="image/*">
+                        </UFileUpload>
                     </UFormField>
                 </div>
             </div>
