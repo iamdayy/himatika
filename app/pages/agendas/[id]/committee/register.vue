@@ -48,7 +48,7 @@
 import type { IAgenda, IPayment } from '~~/types';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
 import type { IPaymentBody } from '~~/types/IRequestPost';
-import type { IAgendaRegisterResponse, IAgendaResponse, ICommitteeResponse } from '~~/types/IResponse';
+import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, ICommitteeResponse, IResponse } from '~~/types/IResponse';
 interface IFormData {
 
     payment: IPayment & {
@@ -65,6 +65,7 @@ definePageMeta({
 });
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 const { id } = route.params as { id: string; };
 const { tab } = route.query as { tab: string; };
 
@@ -73,7 +74,6 @@ const { $api } = useNuxtApp()
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 
-const { data: user } = useAuth();
 
 const { data: agendaData } = useLazyAsyncData<IAgendaResponse>(() => $api('/api/agenda', {
     method: 'GET',
@@ -85,6 +85,15 @@ const { data: committeeData, refresh: refreshCommittee } = useLazyAsyncData<ICom
 const agenda = computed<IAgenda | undefined>(() => agendaData.value?.data?.agenda);
 const committee = computed(() => committeeData.value?.data?.committee);
 const registrationId = computed(() => committee.value?._id);
+const { data: questions } = useLazyAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
+    method: 'GET',
+}), {
+    transform: (data) => {
+        return data.data?.answers;
+    },
+    default: () => [],
+    watch: [registrationId],
+});
 const { $ts } = useI18n();
 const links = computed(() => [
     { label: $ts('home'), to: '/' },
@@ -95,11 +104,23 @@ const links = computed(() => [
 const steps = computed<Step[]>(() => {
     const steps: Step[] = [
         { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: committee.value ? refreshCommittee : register },
+        { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: undefined },
         { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method === 'transfer' ? payment : undefined },
         { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
         { id: 'success', label: $ts('success'), title: $ts('success'), formData: {} }
     ];
-    return steps.filter(step => ['select_payment', 'payment'].includes(step.id) && (agenda.value?.configuration.committee.amount ?? 0) > 0 || (step.id !== 'payment' && step.id !== 'select_payment'));
+    return steps.filter(step => {
+        if (step.id === 'answer_question') {
+            return agenda.value?.configuration?.committee?.questions && agenda.value?.configuration?.committee?.questions.length > 0;
+        }
+        if (step.id === 'select_payment') {
+            return agenda.value?.configuration?.committee?.pay;
+        }
+        if (step.id === 'payment') {
+            return agenda.value?.configuration?.committee?.pay;
+        }
+        return true;
+    });
 });
 const activeStep = ref(0);
 
@@ -194,6 +215,36 @@ const onCancelPayment = async () => {
     activeStep.value = 1;
 }
 
+async function handleAnswer() {
+    try {
+        const formData = new FormData();
+        const answersPayload = questions.value?.map((q) => {
+            // For file inputs, we will append them separately and put a placeholder here.
+            console.log(q.answer);
+            console.log(q.question);
+            if (q.question.type === 'file' && (q.answer as any) instanceof File) {
+                formData.append(q.question._id as string, q.answer);
+                return { questionId: q.question._id, answer: '[[FILE]]' };
+            }
+            return { questionId: q.question._id, answer: q.answer };
+        });
+
+        formData.append('answers', JSON.stringify(answersPayload));
+        const response = await $api<IResponse & { data: string }>(`api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
+            method: 'POST',
+            body: formData,
+        });
+        if (response.statusCode !== 200) {
+            toast.add({ title: $ts('failed'), description: $ts('failed_to_answer_question'), color: 'error' });
+            return false;
+        }
+        toast.add({ title: $ts('success'), description: $ts('success_to_answer_question'), color: 'success' });
+        return true;
+    } catch (error) {
+        toast.add({ title: $ts('success'), description: $ts('failed_to_answer_question'), color: 'error' });
+        return false;
+    }
+}
 
 /**
  * Responsive classes for UI elements
@@ -260,6 +311,12 @@ onMounted(() => {
                                 </UFormField>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div v-else-if="step?.id === 'answer_question'">
+                    <div class="space-y-4">
+                        <CoreQuestion v-for="(question, index) in questions" :key="index" :question="question.question"
+                            v-model="question.answer" />
                     </div>
                 </div>
                 <div v-else-if="step?.id === 'select_payment'">

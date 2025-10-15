@@ -68,12 +68,15 @@ export default defineEventHandler(
           });
         }
 
-        agenda.committees?.push({
-          _id: committeeId,
-          job: job ?? "",
-          member: me._id as Types.ObjectId,
-          approved: false,
+        const committeeToUpdate = agenda.committees?.find((item) => {
+          if (item.job === job && !item.member) {
+            return true;
+          }
+          return false;
         });
+        if (committeeToUpdate) {
+          committeeToUpdate.member = me;
+        }
       } else {
         throw createError({
           statusCode: 401,

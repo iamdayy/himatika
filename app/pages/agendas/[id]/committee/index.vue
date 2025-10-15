@@ -52,6 +52,7 @@ const toast = useToast();
 const agenda = computed<IAgenda | undefined>(() => data.value?.data?.agenda);
 const { isCommittee, isRegistered, payStatus, registeredId, canMeUnregister } = useAgendas(agenda);
 const { canMeRegister } = useCanMeRegister();
+const { isOrganizer } = useOrganizer();
 
 const selectedRows = ref<{
     [key: number]: boolean
@@ -229,7 +230,7 @@ function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
         {
             icon: 'i-heroicons-check-circle',
             label: $ts('set_approved'),
-            disabled: row.original.approved || !isCommittee,
+            disabled: row.original.approved || (!isOrganizer.value && !isCommittee) || row.original.payment?.status !== 'success',
             onSelect: () => setApproved(row.original._id as string),
         },
         {
