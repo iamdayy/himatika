@@ -182,7 +182,7 @@ const verifyNIM = async (): Promise<true | FormError> => {
             return { path: "NIM", message: verified.statusMessage };
         }
     } catch (error: any) {
-        toast.add({ title: error.statusMessage, color: "error" });
+        toast.add({ title: $ts("verification_nim_failed"), description: $ts('verification_nim_failed_desc'), color: "error" });
         return { path: error.data.data.path, message: error.data.data.message };
     }
 };
@@ -285,7 +285,7 @@ const items = computed<Step[]>(() => [
         id: "finish",
         label: $ts("finish"),
         title: $ts("finish"),
-        description: $ts("finish_desc"),
+        description: $ts("finish_desc", { name: fullName.value }),
         formData: {},
     }
 ]);

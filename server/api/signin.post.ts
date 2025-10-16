@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { UserModel } from "~~/server/models/UserModel";
-import { MemberModel } from "../models/MemberModel";
 import { setSession } from "../utils/Sessions";
 
 /**
@@ -16,6 +15,7 @@ import { setSession } from "../utils/Sessions";
  */
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
+  const t = await useTranslationServerMiddleware(event);
   let memberId: Types.ObjectId | undefined;
   const NIM = parseInt(body.username);
   // Check if the username is a number
@@ -24,8 +24,8 @@ export default defineEventHandler(async (event) => {
     if (!member) {
       throw createError({
         statusCode: 401,
-        statusMessage: "User not found",
-        data: { message: "Please check your username", name: "username" },
+        statusMessage: t("login_page.user_not_found"),
+        data: { message: t("login_page.check_username"), name: "username" },
       });
     }
     memberId = member;
@@ -38,15 +38,15 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 401,
-      statusMessage: "User not found",
-      data: { message: "Please check your username", name: "username" },
+        statusMessage: t("login_page.user_not_found"),
+        data: { message: t("login_page.check_username"), name: "username" },
     });
   }
   if (!user?.verified) {
     throw createError({
       statusCode: 401,
-      statusMessage: "Please verified your email first",
-      data: { message: "Please verify your email", name: "email" },
+      statusMessage: t("login_page.email_not_verified"),
+      data: { message: t("login_page.verify_email"), name: "email" },
     });
   }
 
@@ -55,19 +55,8 @@ export default defineEventHandler(async (event) => {
   if (!passMatch) {
     throw createError({
       statusCode: 401,
-      statusMessage: "Please check your password",
-      data: { message: "Please check your password", name: "password" },
-    });
-  }
-
-  // Check user's member status
-  const member = await MemberModel.findOne({ NIM: user.member.NIM });
-  if (member?.status !== "active") {
-    await UserModel.deleteOne({ username: body.username });
-    throw createError({
-      statusCode: 406,
-      statusMessage: `Your membership is ${member?.status}, so this user is deleted`,
-      data: { message: "Your membership is not active", name: "username" },
+      statusMessage: t("login_page.wrong_password"),
+      data: { message: t("login_page.check_password"), name: "password" },
     });
   }
 

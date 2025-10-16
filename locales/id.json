@@ -293,5 +293,38 @@
     "edit_category": "Edit Kategori {title}",
     "success_edit_category": "Kategori berhasil diedit",
     "failed_edit_category": "Kategori gagal diedit",
-    "free": "Gratis"
+    "free": "Gratis",
+    "login_page": {
+      "login_failed": "Gagal masuk",
+      "user_not_found": "Pengguna tidak ditemukan",
+      "check_username": "Silakan periksa kembali nama pengguna Anda",
+      "email_not_verified": "Email Anda belum diverifikasi",
+      "verify_email": "Silakan verifikasi email Anda untuk melanjutkan",
+      "wrong_password": "Kata sandi salah",
+      "check_password": "Silakan periksa kembali kata sandi Anda"
+    },
+    "register_page": {
+      "member_free": "Keanggotaan ditemukan dan bisa didaftarkan",
+      "nim_not_found": "NIM tidak ditemukan",
+      "check_nim": "Silakan periksa kembali NIM Anda. Pastikan NIM sudah sesuai!",
+      "email_already_registered": "Email sudah terdaftar",
+      "check_email": "Silakan periksa kembali email Anda. Pastikan email belum digunakan dan aktif!",
+      "member_not_free": "Keanggotaan tidak Ditemukan",
+      "check_member": "Silakan periksa kembali keanggotaan Anda. Pastikan anda adalah mahasiswa Informatika aktif dan NIM belum pernah mendaftar sebelumnya!",
+      "password_not_match": "Konfirmasi Password tidak sama",
+      "check_password": "Silakan periksa kembali kata sandi Anda",
+      "username_already_registered": "Username sudah didaftarkan",
+      "check_username": "Silakan periksa kembali nama pengguna Anda. Pastikan nama pengguna belum digunakan!",
+      "member_already_registered": "Keanggotaan sudah didaftarkan",
+      "registration_failed": "Pendaftaran gagal",
+      "registration_again": "Pendaftaran gagal. Silakan coba lagi nanti.",
+      "registration_success": "Pendaftaran berhasil"
+    },
+    "otp_page": {
+      "otp_not_found": "Kode OTP tidak ditemukan",
+      "otp_not_match": "Kode OTP tidak cocok",
+      "otp_expired": "Kode OTP telah kedaluwarsa",
+      "otp_invalid": "Kode OTP tidak valid",
+      "otp_verified": "Kode OTP berhasil diverifikasi"
+    }
   }

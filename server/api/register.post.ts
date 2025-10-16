@@ -14,6 +14,7 @@ import { MemberModel } from "../models/MemberModel";
 export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
   // Read the request body
   let registered = null;
+  const t = await useTranslationServerMiddleware(event);
   const body = await readBody<IReqRegister>(event);
   const memberFound = await MemberModel.findOne({ NIM: body.NIM });
   const emailExists = await MemberModel.exists({ email: body.email });
@@ -24,8 +25,8 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
   if (!memberFound) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Your NIM was not found in our records.",
-      data: { message: "NIM not found", path: "NIM" },
+      statusMessage: t('register_page.nim_not_found'),
+      data: { message: t('register_page.check_nim'), path: "NIM" },
     });
   }
   if (
@@ -35,22 +36,22 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: "This email is already registered.",
-      data: { message: "Email already registered", path: "email" },
+      statusMessage: t('register_page.email_already_registered'),
+      data: { message: t('register_page.check_email'), path: "email" },
     });
   }
   if (memberFound?.status != "free") {
     throw createError({
       statusCode: 400,
-      statusMessage: "This NIM is already registered.",
-      data: { message: "NIM already registered", path: "NIM" },
+      statusMessage: t('register_page.member_not_free'),
+      data: { message: t('register_page.check_member'), path: "NIM" },
     });
   }
   if (body.password !== body.password_confirmation) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Error: Passwords do not match.",
-      data: { message: "Passwords do not match", path: "password" },
+      statusMessage: t('register_page.password_not_match'),
+      data: { message: t('register_page.check_password'), path: "password" },
     });
   }
   if (userFound) {
@@ -60,8 +61,8 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
     ) {
       throw createError({
         statusCode: 400,
-        statusMessage: "This NIM is already registered.",
-        data: { message: "Username already registered", path: "username" },
+        statusMessage: t('register_page.username_already_registered'),
+        data: { message: t('register_page.check_username'), path: "username" },
       });
     }
     userFound.username = body.username;
@@ -80,9 +81,9 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
     if (userAlreadyExists) {
       throw createError({
         statusCode: 405,
-        statusMessage: "Error: Your NIM is already registered.",
+        statusMessage: t('register_page.member_already_registered'),
         data: {
-          message: "This member is already registered",
+          message: t('register_page.check_member'),
           path: "changeEmail",
         },
       });
@@ -100,15 +101,15 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
   if (!registered) {
     throw createError({
       statusCode: 401,
-      statusMessage: "Error: Registration failed. Please try again.",
-      data: { message: "Registration failed", path: "password" },
+      statusMessage: t('register_page.registration_failed'),
+      data: { message: t('register_page.registration_again'), path: "password" },
     });
   }
 
   // Return the registered user data
   return {
     statusCode: 200,
-    statusMessage: "Registration successful",
+    statusMessage: t('register_page.registration_success'),
     data: registered,
   };
 });

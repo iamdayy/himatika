@@ -28,3 +28,4 @@ server/assets/_locales
 .vercel
 
 .vercel
+.env*.local

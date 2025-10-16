@@ -44,7 +44,6 @@ export default defineNuxtConfig({
     "@sidebase/nuxt-auth",
     "nuxt-i18n-micro",
     "nuxt-qrcode",
-    "nuxt-file-storage",
     "@vueuse/nuxt",
   ],
   css: ["./app/assets/css/main.css"],
@@ -91,9 +90,6 @@ export default defineNuxtConfig({
   },
   fonts: {
     provider: "google",
-  },
-  fileStorage: {
-    mount: process.env.STORAGE_DIR,
   },
   icon: {
     collections: ["heroicons", "uil", "ion", "ph"],

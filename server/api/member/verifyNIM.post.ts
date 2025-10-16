@@ -2,25 +2,26 @@ import { MemberModel } from "~~/server/models/MemberModel";
 
 export default defineEventHandler(async (event) => {
   try {
+    const t = await useTranslationServerMiddleware(event);
     const { NIM } = await readBody(event);
     const member = await MemberModel.findOne({ NIM });
     if (!member) {
       throw createError({
         statusCode: 404,
-        statusMessage: "Member not found",
-        data: { message: "Please check your NIM", path: "NIM" },
+        statusMessage: t("register_page.nim_not_found"),
+        data: { message: t("register_page.check_nim"), path: "NIM" },
       });
     }
     if (member.status !== "free") {
       throw createError({
         statusCode: 403,
-        statusMessage: "Member is not available",
-        data: { message: "Member is not available", path: "NIM" },
+        statusMessage: t("register_page.member_not_free"),
+        data: { message: t("register_page.check_member"), path: "NIM" },
       });
     }
     return {
       statusCode: 200,
-      statusMessage: "Member found",
+      statusMessage: t("register_page.member_free"),
       status: true,
     };
   } catch (error: any) {
