@@ -200,7 +200,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     if (asp.archived) {
       return false; // Skip archived aspirations
     }
-    if (rangeDate.start >= asp.createdAt && rangeDate.end <= asp.createdAt) {
+    if (asp.createdAt && rangeDate.start >= asp.createdAt && rangeDate.end <= asp.createdAt) {
       return true; // Include aspirations that fall within the date range
     }
   });
