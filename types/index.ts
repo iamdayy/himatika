@@ -119,6 +119,7 @@ export interface IMember {
     role: string;
     period: IPeriod;
   };
+  organizersConsiderationBoard?: IOrganizer[];
   organizersDailyManagement?: IOrganizer[];
   organizersDepartmentCoordinator?: IOrganizer[];
   organizersDepartmentMembers?: IOrganizer[];

@@ -340,6 +340,19 @@ memberSchema.virtual("docsRequestSign", {
   foreignField: "signs.user",
 });
 
+// Virtual for considerationBoards
+memberSchema.virtual("organizersConsiderationBoard", {
+  ref: "Organizer",
+  localField: "_id",
+  foreignField: "considerationBoard",
+  justOne: true,
+  match: {
+    "period.end": { $gte: new Date() },
+  },
+});
+
+
+
 // Virtual for dailyManagement
 memberSchema.virtual("organizersDailyManagement", {
   ref: "Organizer",
@@ -381,6 +394,7 @@ memberSchema.virtual("aspirations", {
 // Combine all organizers
 memberSchema.virtual("organizer").get(function () {
   return (
+    this.organizersConsiderationBoard ||
     this.organizersDailyManagement ||
     this.organizersDepartmentCoordinator ||
     this.organizersDepartmentMembers
