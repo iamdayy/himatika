@@ -554,11 +554,11 @@ const links = computed(() => [{
 
 
 useHead({
-    title: () => `Participant - ${agenda.value?.title}`,
+    title: () => `${$ts('participant')} - ${agenda.value?.title}`,
     meta: [
         {
             name: 'description',
-            content: 'Participant users for the agenda'
+            content: `'${agenda.value?.title} participant list'`
         }
     ]
 });
