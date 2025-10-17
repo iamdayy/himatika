@@ -82,6 +82,46 @@ const isMobile = computed(() => width.value < 640)
 const { isOrganizer } = useOrganizer();
 const columns = computed<TableColumn<IParticipant>[]>(() => {
     const baseColumns: TableColumn<IParticipant>[] = [
+        
+            {
+                id: 'expand',
+                cell: ({ row }) =>
+                    h(UButton, {
+                        color: 'neutral',
+                        variant: 'ghost',
+                        icon: 'i-lucide-chevron-down',
+                        square: true,
+                        'aria-label': 'Expand',
+                        disabled: !isCommittee.value,
+                        size: responsiveUISizes.value.button,
+                        ui: {
+                            leadingIcon: [
+                                'transition-transform',
+                                row.getIsExpanded() ? 'duration-200 rotate-180' : ''
+                            ]
+                        },
+                        onClick: () => row.toggleExpanded()
+                    })
+            },
+            {
+                id: 'select',
+                header: ({ table }) =>
+                    h(UCheckbox, {
+                        modelValue: table.getIsSomePageRowsSelected()
+                            ? 'indeterminate'
+                            : table.getIsAllPageRowsSelected(),
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                            table.toggleAllPageRowsSelected(!!value),
+                        'aria-label': 'Select all'
+                    }),
+                cell: ({ row }) =>
+                    h(UCheckbox, {
+                        modelValue: row.getIsSelected(),
+                        size: responsiveUISizes.value.input,
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                        'aria-label': 'Select row'
+                    })
+            },
         {
             accessorKey: 'fullName',
             header: $ts('name'),
@@ -147,45 +187,6 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
 
     if (isCommittee.value || isOrganizer.value) {
         const committeeColumns: TableColumn<IParticipant>[] = [
-            {
-                id: 'expand',
-                cell: ({ row }) =>
-                    h(UButton, {
-                        color: 'neutral',
-                        variant: 'ghost',
-                        icon: 'i-lucide-chevron-down',
-                        square: true,
-                        'aria-label': 'Expand',
-                        disabled: !isCommittee.value,
-                        size: responsiveUISizes.value.button,
-                        ui: {
-                            leadingIcon: [
-                                'transition-transform',
-                                row.getIsExpanded() ? 'duration-200 rotate-180' : ''
-                            ]
-                        },
-                        onClick: () => row.toggleExpanded()
-                    })
-            },
-            {
-                id: 'select',
-                header: ({ table }) =>
-                    h(UCheckbox, {
-                        modelValue: table.getIsSomePageRowsSelected()
-                            ? 'indeterminate'
-                            : table.getIsAllPageRowsSelected(),
-                        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-                            table.toggleAllPageRowsSelected(!!value),
-                        'aria-label': 'Select all'
-                    }),
-                cell: ({ row }) =>
-                    h(UCheckbox, {
-                        modelValue: row.getIsSelected(),
-                        size: responsiveUISizes.value.input,
-                        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-                        'aria-label': 'Select row'
-                    })
-            },
             {
                 accessorKey: 'paid',
                 header: $ts('payment_status'),
