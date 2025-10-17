@@ -81,6 +81,26 @@ const isMobile = computed(() => width.value < 640)
  */
 const columns = computed<TableColumn<ICommittee>[]>(() => {
     const baseColumns: TableColumn<ICommittee>[] = [
+        
+            {
+                id: 'select',
+                header: ({ table }) =>
+                    h(UCheckbox, {
+                        modelValue: table.getIsSomePageRowsSelected()
+                            ? 'indeterminate'
+                            : table.getIsAllPageRowsSelected(),
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                            table.toggleAllPageRowsSelected(!!value),
+                        'aria-label': 'Select all'
+                    }),
+                cell: ({ row }) =>
+                    h(UCheckbox, {
+                        modelValue: row.getIsSelected(),
+                        size: responsiveUISizes.value.input,
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                        'aria-label': 'Select row'
+                    })
+            },
         {
             accessorKey: 'fullName',
             header: $ts('name'),
@@ -143,25 +163,6 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
     if (isCommittee.value || isOrganizer.value) {
         const committeeColumns: TableColumn<ICommittee>[] = [
             {
-                id: 'select',
-                header: ({ table }) =>
-                    h(UCheckbox, {
-                        modelValue: table.getIsSomePageRowsSelected()
-                            ? 'indeterminate'
-                            : table.getIsAllPageRowsSelected(),
-                        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-                            table.toggleAllPageRowsSelected(!!value),
-                        'aria-label': 'Select all'
-                    }),
-                cell: ({ row }) =>
-                    h(UCheckbox, {
-                        modelValue: row.getIsSelected(),
-                        size: responsiveUISizes.value.input,
-                        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-                        'aria-label': 'Select row'
-                    })
-            },
-            {
                 accessorKey: 'paid',
                 header: $ts('payment_status'),
                 
@@ -209,7 +210,7 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
                 }
             }
         ];
-        return [...committeeColumns, ...baseColumns];
+        return [...baseColumns, ...committeeColumns];
     }
 
     return baseColumns;
