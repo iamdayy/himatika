@@ -209,7 +209,7 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
                 }
             }
         ];
-        return [...committeeColumns, ...baseColumns];
+        return [...baseColumns, ...committeeColumns];
     }
 
     return baseColumns;

@@ -232,7 +232,7 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
                 }
             }
         ];
-        return [ ...committeeColumns, ...baseColumns];
+        return [...baseColumns, ...committeeColumns];
     }
 
     return baseColumns;
