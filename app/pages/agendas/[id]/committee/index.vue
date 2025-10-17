@@ -79,135 +79,141 @@ const isMobile = computed(() => width.value < 640)
 /**
  * Computed property for responsive table columns
  */
-const columns = computed<TableColumn<ICommittee>[]>(() => [
-    {
-        id: 'select',
-        header: ({ table }) =>
-            h(UCheckbox, {
-                modelValue: table.getIsSomePageRowsSelected()
-                    ? 'indeterminate'
-                    : table.getIsAllPageRowsSelected(),
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-                    table.toggleAllPageRowsSelected(!!value),
-                'aria-label': 'Select all'
-            }),
-        cell: ({ row }) =>
-            h(UCheckbox, {
-                modelValue: row.getIsSelected(),
-                size: responsiveUISizes.value.input,
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-                'aria-label': 'Select row'
-            })
-    },
-    {
-        accessorKey: 'fullName',
-        header: $ts('name'),
-        size: 150,
-        cell: ({ row }) => {
-            return h('div', {
-                class: 'flex flex-row items-center gap-2',
-            }, [
-                h(NuxtImg, {
-                    provider: 'localProvider',
-                    src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
-                    class: 'object-cover rounded-full max-w-12 aspect-square',
-                }),
-                h('div', {
-                    class: 'flex flex-col items-start gap-1',
+const columns = computed<TableColumn<ICommittee>[]>(() => {
+    const baseColumns: TableColumn<ICommittee>[] = [
+        {
+            accessorKey: 'fullName',
+            header: $ts('name'),
+            size: 150,
+            cell: ({ row }) => {
+                return h('div', {
+                    class: 'flex flex-row items-center gap-2',
                 }, [
-                    h('span', {
-                        class: 'font-semibold text-gray-600 dark:text-gray-200'
-                    }, (row.original.member as IMember | undefined)?.fullName),
-                    h('span', {
-                        class: 'text-sm font-light text-gray-600 dark:text-gray-300'
-                    }, `${(row.original.member as IMember | undefined)?.NIM} | ${(row.original.member as IMember | undefined)?.email}`),
-                ]),
-            ]);
-        }
-    },
-    {
-        accessorKey: 'class',
-        header: $ts('class'),
-        sortable: true,
-        cell: ({ row }) => {
-            return (row.original.member as IMember | undefined)?.class
-        }
-    },
-    {
-        accessorKey: 'semester',
-        header: $ts('semester'),
-        sortable: true,
-        cell: ({ row }) => {
-            return (row.original.member as IMember | undefined)?.semester
-        }
-    },
-    {
-        accessorKey: 'job',
-        header: $ts('job'),
-        sortable: true,
-        cell: ({ row }) => {
-            return row.original.job || '-';
-        }
-    },
-    {
-        accessorKey: 'paid',
-        header: $ts('payment_status'),
-        sortable: true,
-        cell: ({ row }) => {
-            return h(UBadge, {
-                color: row.original.payment?.status && row.original.payment?.status === 'success' ? 'success' : 'error',
-                label: row.original.payment?.status ? row.original.payment?.status as string : 'Error'
-            })
-        }
-    },
-    {
-        accessorKey: 'status',
-        header: $ts('status'),
-        sortable: true,
-        cell: ({ row }) => {
-            return h(UBadge, {
-                color: row.original.approved ? 'success' : 'error',
-                label: row.original.approved ? $ts('approved') : $ts('unapproved')
-            })
-        }
-    },
-    {
-        accessorKey: 'visiting',
-        header: $ts('visit_status'),
-        sortable: true,
-        cell: ({ row }) => {
-            return h(UBadge, {
-                color: row.original.visiting ? 'success' : 'error',
-                icon: row.original.visiting ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle',
-            })
-        }
-    },
-    {
-        id: 'actions',
-        cell: ({ row }) => {
-            return h(
-                'div',
-                { class: 'text-right' },
-                h(
-                    UDropdownMenu,
-                    {
-                        content: {
-                            align: 'end'
-                        },
-                        items: getRowItems(row)
-                    },
-                    () =>
-                        h(UButton, {
-                            icon: 'i-lucide-ellipsis-vertical',
-                            color: 'neutral',
-                            variant: 'ghost',
-                            class: 'ml-auto'
-                        })
-                )
-            )
-        }
+                    h(NuxtImg, {
+                        provider: 'localProvider',
+                        src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
+                        class: 'object-cover rounded-full max-w-12 aspect-square',
+                    }),
+                    h('div', {
+                        class: 'flex flex-col items-start gap-1',
+                    }, [
+                        h('span', {
+                            class: 'font-semibold text-gray-600 dark:text-gray-200'
+                        }, (row.original.member as IMember | undefined)?.fullName),
+                        h('span', {
+                            class: 'text-sm font-light text-gray-600 dark:text-gray-300'
+                        }, `${(row.original.member as IMember | undefined)?.NIM} ${(isCommittee.value || isOrganizer.value) ? '| ' + (row.original.member as IMember | undefined)?.email : ''}`),
+                    ]),
+                ]);
+            }
+        },
+        {
+            accessorKey: 'class',
+            header: $ts('class'),
+            cell: ({ row }) => {
+                return (row.original.member as IMember | undefined)?.class
+            }
+        },
+        {
+            accessorKey: 'semester',
+            header: $ts('semester'),
+            cell: ({ row }) => {
+                return (row.original.member as IMember | undefined)?.semester
+            }
+        },
+        {
+            accessorKey: 'job',
+            header: $ts('job'),
+            cell: ({ row }) => {
+                return row.original.job || '-';
+            }
+        },
+        {
+            accessorKey: 'status',
+            header: $ts('status'),
+            cell: ({ row }) => {
+                return h(UBadge, {
+                    color: row.original.approved ? 'success' : 'error',
+                    label: row.original.approved ? $ts('approved') : $ts('unapproved')
+                })
+            }
+        },
+    ];
+
+    if (isCommittee.value || isOrganizer.value) {
+        const committeeColumns: TableColumn<ICommittee>[] = [
+            {
+                id: 'select',
+                header: ({ table }) =>
+                    h(UCheckbox, {
+                        modelValue: table.getIsSomePageRowsSelected()
+                            ? 'indeterminate'
+                            : table.getIsAllPageRowsSelected(),
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                            table.toggleAllPageRowsSelected(!!value),
+                        'aria-label': 'Select all'
+                    }),
+                cell: ({ row }) =>
+                    h(UCheckbox, {
+                        modelValue: row.getIsSelected(),
+                        size: responsiveUISizes.value.input,
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                        'aria-label': 'Select row'
+                    })
+            },
+            {
+                accessorKey: 'paid',
+                header: $ts('payment_status'),
+                
+                cell: ({ row }) => {
+                    if (!row.original.payment) return '-';
+                    return h(UBadge, {
+                        color: row.original.payment?.status && row.original.payment?.status === 'success' ? 'success' : 'error',
+                        label: row.original.payment?.status ? row.original.payment?.status as string : 'Error'
+                    })
+                }
+            },
+            {
+                accessorKey: 'visiting',
+                header: $ts('visit_status'),
+                cell: ({ row }) => {
+                    return h(UBadge, {
+                        color: row.original.visiting ? 'success' : 'error',
+                        icon: row.original.visiting ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle',
+                    })
+                }
+            },
+            {
+                id: 'actions',
+                cell: ({ row }) => {
+                    return h(
+                        'div',
+                        { class: 'text-right' },
+                        h(
+                            UDropdownMenu,
+                            {
+                                content: {
+                                    align: 'end'
+                                },
+                                items: getRowItems(row)
+                            },
+                            () =>
+                                h(UButton, {
+                                    icon: 'i-lucide-ellipsis-vertical',
+                                    color: 'neutral',
+                                    variant: 'ghost',
+                                    class: 'ml-auto'
+                                })
+                        )
+                    )
+                }
+            }
+        ];
+        return [...committeeColumns, ...baseColumns];
     }
-]);
+
+    return baseColumns;
+});
 
 function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
     return [
@@ -224,7 +230,7 @@ function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
         {
             icon: 'i-heroicons-banknotes',
             label: $ts('set_payment_status'),
-            disabled: row.original.payment?.status === 'success' || !isCommittee,
+            disabled: row.original.payment?.status === 'success' || !isCommittee || agenda.value?.configuration.committee.pay === false,
             onSelect: () => setPaid(row.original._id as string)
         },
         {
@@ -492,6 +498,44 @@ const openQrReader = () => {
     })
 };
 
+const setBatch = async (field: 'payment' | 'visiting') => {
+    if (selectedCommittee.value.length === 0) {
+        return toast.add({ title: $ts('no_committee_selected'), color: 'warning' });
+    }
+    ConfirmationModal.open({
+        title: field === 'payment' ? $ts('set_payment_status') : $ts('set_visit_status'),
+        body: field === 'payment' ? $ts('set_payment_status_confirmation') : $ts('set_visit_status_confirmation'),
+        onConfirm: async () => {
+            try {
+                const response = await $api<IResponse>(`/api/agenda/${id}/committee/register/batch`, {
+                    method: 'post',
+                    body: {
+                        committees: selectedCommittee.value.map((p) => p._id),
+                        field
+                    }
+                });
+                if (response.statusCode != 200) {
+                    return toast.add({ title: $ts('failed'), description: field === 'payment' ? $ts('success_to_set_payment_status') : $ts('success_to_set_visit_status'), color: 'error' });
+                }
+                refresh();
+                return toast.add({
+                    title: $ts('success'),
+                    description: field === 'payment' ? $ts('success_to_set_payment_status') : $ts('success_to_set_visit_status'),
+                    color: 'success',
+                })
+            } catch (error: any) {
+                toast.add({
+                    title: $ts('failed'),
+                    description: field === 'payment' ? $ts('failed_to_set_payment_status') : $ts('failed_to_set_visit_status'),
+                    color: 'error',
+                })
+            } finally {
+                ConfirmationModal.close();
+            }
+        }
+    });
+}
+
 /**
  * Computed property for responsive UI sizes
  */
@@ -522,11 +566,11 @@ const links = computed(() => [{
 
 
 useHead({
-    title: () => `Committee - ${agenda.value?.title}`,
+    title: () => `${$ts('committee')} - ${agenda.value?.title}`,
     meta: [
         {
             name: 'description',
-            content: 'Committee users for the agenda'
+            content: '`${agenda.value?.title} committee list`'
         }
     ]
 });
@@ -546,7 +590,7 @@ useHead({
                     :loading="pending" :loading-icon="pending ? 'i-heroicons-arrow-path' : undefined"
                     :size="responsiveUISizes.input" class="w-full md:w-auto" />
 
-                <div class="flex flex-wrap gap-1.5 items-center justify-center md:justify-end">
+                 <div class="flex flex-wrap gap-1.5 items-center justify-center md:justify-end">
                     <div class="flex items-center gap-1.5" v-if="isCommittee">
                         <UButton v-if="selectedCommittee.length >= 1" icon="i-heroicons-arrow-down-tray" trailing
                             color="neutral" :size="responsiveUISizes.button" @click="generateXlsx">
@@ -555,6 +599,14 @@ useHead({
                         <UButton v-else icon="i-heroicons-arrow-down-tray" trailing color="neutral"
                             :size="responsiveUISizes.button" @click="generateXlsx">
                             {{ $ts('export_all') }}
+                        </UButton>
+                        <UButton v-if="selectedCommittee.length > 0" icon="i-heroicons-check-circle" trailing
+                            :size="responsiveUISizes.button" @click="setBatch('visiting')">
+                            {{ $ts('set_visit_status') }}
+                        </UButton>
+                        <UButton v-if="selectedCommittee.length > 0" icon="i-heroicons-banknotes" trailing
+                            :size="responsiveUISizes.button" @click="setBatch('payment')">
+                            {{ $ts('set_payment_status') }}
                         </UButton>
                     </div>
                     <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"

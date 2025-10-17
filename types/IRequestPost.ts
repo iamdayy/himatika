@@ -156,6 +156,10 @@ export interface IReqAgendaCommitteeQuery extends IReqQueryPaginate {
   search: string;
   status?: string;
 }
+export interface IReqCommitteeBatch {
+  committees: string[];
+  field: "payment" | "visiting";
+}
 export interface IPaymentBody {
   payment_type: TPaymentType;
   bank_transfer?: string;
