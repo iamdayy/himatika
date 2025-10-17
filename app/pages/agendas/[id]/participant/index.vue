@@ -79,160 +79,164 @@ const isMobile = computed(() => width.value < 640)
 /**
  * Computed property for responsive table columns
  */
-const columns = computed<TableColumn<IParticipant>[]>(() => [
-    {
-        id: 'expand',
-        cell: ({ row }) =>
-            h(UButton, {
-                color: 'neutral',
-                variant: 'ghost',
-                icon: 'i-lucide-chevron-down',
-                square: true,
-                'aria-label': 'Expand',
-                disabled: !isCommittee.value,
-                size: responsiveUISizes.value.button,
-                ui: {
-                    leadingIcon: [
-                        'transition-transform',
-                        row.getIsExpanded() ? 'duration-200 rotate-180' : ''
-                    ]
-                },
-                onClick: () => row.toggleExpanded()
-            })
-    },
-    {
-        id: 'select',
-        header: ({ table }) =>
-            h(UCheckbox, {
-                modelValue: table.getIsSomePageRowsSelected()
-                    ? 'indeterminate'
-                    : table.getIsAllPageRowsSelected(),
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-                    table.toggleAllPageRowsSelected(!!value),
-                'aria-label': 'Select all'
-            }),
-        cell: ({ row }) =>
-            h(UCheckbox, {
-                modelValue: row.getIsSelected(),
-                size: responsiveUISizes.value.input,
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-                'aria-label': 'Select row'
-            })
-    },
-    {
-        accessorKey: 'fullName',
-        header: $ts('name'),
-        size: 150,
-        cell: ({ row }) => {
-            return h('div', {
-                class: 'flex flex-row items-center gap-2',
-            }, [
-                h(NuxtImg, {
-                    provider: 'localProvider',
-                    src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
-                    class: 'object-cover rounded-full max-w-12 aspect-square',
-                }),
-                h('div', {
-                    class: 'flex flex-col items-start gap-1',
+const { isOrganizer } = useOrganizer();
+const columns = computed<TableColumn<IParticipant>[]>(() => {
+    const baseColumns: TableColumn<IParticipant>[] = [
+        {
+            accessorKey: 'fullName',
+            header: $ts('name'),
+            size: 150,
+            cell: ({ row }) => {
+                return h('div', {
+                    class: 'flex flex-row items-center gap-2',
                 }, [
-                    h('span', {
-                        class: 'font-semibold text-gray-600 dark:text-gray-200'
-                    }, row.original.member ? (row.original.member as IMember | undefined)?.fullName : (row.original.guest as IGuest).fullName),
-                    h('span', {
-                        class: 'text-sm font-light text-gray-600 dark:text-gray-300'
-                    }, `${(row.original.member as IMember | undefined)?.NIM || (row.original.guest as IGuest | undefined)?.NIM || '-'} | ${(row.original.member as IMember | undefined)?.email || (row.original.guest as IGuest | undefined)?.email || '-'}`),
-                ]),
-            ]);
+                    h(NuxtImg, {
+                        provider: 'localProvider',
+                        src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
+                        class: 'object-cover rounded-full max-w-12 aspect-square',
+                    }),
+                    h('div', {
+                        class: 'flex flex-col items-start gap-1',
+                    }, [
+                        h('span', {
+                            class: 'font-semibold text-gray-600 dark:text-gray-200'
+                        }, row.original.member ? (row.original.member as IMember | undefined)?.fullName : (row.original.guest as IGuest).fullName),
+                        h('span', {
+                            class: 'text-sm font-light text-gray-600 dark:text-gray-300'
+                        }, `${(row.original.member as IMember | undefined)?.NIM || (row.original.guest as IGuest | undefined)?.NIM || '-'} ${(isCommittee.value || isOrganizer.value) ? '| ' + ((row.original.member as IMember | undefined)?.email || (row.original.guest as IGuest | undefined)?.email || '-') : ''}`),
+                    ]),
+                ]);
+            }
+        },
+        {
+            accessorKey: 'class',
+            header: $ts('class'),
+            cell: ({ row }) => {
+                return (row.original.member as IMember | undefined)?.class || (row.original.guest as IGuest | undefined)?.class || '-'
+            }
+        },
+        {
+            accessorKey: 'semester',
+            header: $ts('semester'),
+            cell: ({ row }) => {
+                return (row.original.member as IMember | undefined)?.semester || (row.original.guest as IGuest | undefined)?.semester || '-'
+            }
+        },
+        {
+            accessorKey: 'association',
+            header: $ts('association'),
+            cell: ({ row }) => {
+                return row.original.member ? 'Member' : 'Guest';
+            }
+        },
+        {
+            accessorKey: 'prodi',
+            header: $ts('study_program'),
+            cell: ({ row }) => {
+                return (row.original.guest as IGuest | undefined)?.prodi || '-'
+            }
+        },
+        {
+            accessorKey: 'instution',
+            header: $ts('instance'),
+            cell: ({ row }) => {
+                return (row.original.guest as IGuest | undefined)?.instance || '-'
+            }
         }
-    },
-    {
-        accessorKey: 'class',
-        header: $ts('class'),
-        sortable: true,
-        cell: ({ row }) => {
-            return (row.original.member as IMember | undefined)?.class || (row.original.guest as IGuest | undefined)?.class || '-'
-        }
-    },
-    {
-        accessorKey: 'semester',
-        header: $ts('semester'),
-        sortable: true,
-        cell: ({ row }) => {
-            return (row.original.member as IMember | undefined)?.semester || (row.original.guest as IGuest | undefined)?.semester || '-'
-        }
-    },
-    {
-        accessorKey: 'association',
-        header: $ts('association'),
-        sortable: true,
-        cell: ({ row }) => {
-            return row.original.member ? 'Member' : 'Guest';
-        }
-    },
-    {
-        accessorKey: 'prodi',
-        header: $ts('study_program'),
-        sortable: true,
-        cell: ({ row }) => {
-            return (row.original.guest as IGuest | undefined)?.prodi || '-'
-        }
-    },
-    {
-        accessorKey: 'instution',
-        header: $ts('instance'),
-        sortable: true,
-        cell: ({ row }) => {
-            return (row.original.guest as IGuest | undefined)?.instance || '-'
-        }
-    },
-    {
-        accessorKey: 'paid',
-        header: $ts('payment_status'),
-        sortable: true,
-        cell: ({ row }) => {
-            return h(UBadge, {
-                color: row.original.payment?.status && row.original.payment?.status === 'success' ? 'success' : 'error',
-                label: row.original.payment?.status && agenda.value?.configuration.participant.pay ? row.original.payment?.status as string : $ts('not_paid')
-            })
-        }
-    },
-    {
-        accessorKey: 'visiting',
-        header: $ts('visit_status'),
-        sortable: true,
-        cell: ({ row }) => {
-            return h(UBadge, {
-                color: row.original.visiting ? 'success' : 'error',
-                label: row.original.visiting ? $ts('visited') : $ts('not_visited')
-            })
-        }
-    },
-    {
-        id: 'actions',
-        cell: ({ row }) => {
-            return h(
-                'div',
-                { class: 'text-right' },
-                h(
-                    UDropdownMenu,
-                    {
-                        content: {
-                            align: 'end'
+    ];
+
+    if (isCommittee.value || isOrganizer.value) {
+        const committeeColumns: TableColumn<IParticipant>[] = [
+            {
+                id: 'expand',
+                cell: ({ row }) =>
+                    h(UButton, {
+                        color: 'neutral',
+                        variant: 'ghost',
+                        icon: 'i-lucide-chevron-down',
+                        square: true,
+                        'aria-label': 'Expand',
+                        disabled: !isCommittee.value,
+                        size: responsiveUISizes.value.button,
+                        ui: {
+                            leadingIcon: [
+                                'transition-transform',
+                                row.getIsExpanded() ? 'duration-200 rotate-180' : ''
+                            ]
                         },
-                        items: getRowItems(row)
-                    },
-                    () =>
-                        h(UButton, {
-                            icon: 'i-lucide-ellipsis-vertical',
-                            color: 'neutral',
-                            variant: 'ghost',
-                            class: 'ml-auto'
-                        })
-                )
-            )
-        }
+                        onClick: () => row.toggleExpanded()
+                    })
+            },
+            {
+                id: 'select',
+                header: ({ table }) =>
+                    h(UCheckbox, {
+                        modelValue: table.getIsSomePageRowsSelected()
+                            ? 'indeterminate'
+                            : table.getIsAllPageRowsSelected(),
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                            table.toggleAllPageRowsSelected(!!value),
+                        'aria-label': 'Select all'
+                    }),
+                cell: ({ row }) =>
+                    h(UCheckbox, {
+                        modelValue: row.getIsSelected(),
+                        size: responsiveUISizes.value.input,
+                        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                        'aria-label': 'Select row'
+                    })
+            },
+            {
+                accessorKey: 'paid',
+                header: $ts('payment_status'),
+                cell: ({ row }) => {
+                    return h(UBadge, {
+                        color: row.original.payment?.status && row.original.payment?.status === 'success' ? 'success' : 'error',
+                        label: row.original.payment?.status && agenda.value?.configuration.participant.pay ? row.original.payment?.status as string : $ts('not_paid')
+                    })
+                }
+            },
+            {
+                accessorKey: 'visiting',
+                header: $ts('visit_status'),
+                cell: ({ row }) => {
+                    return h(UBadge, {
+                        color: row.original.visiting ? 'success' : 'error',
+                        label: row.original.visiting ? $ts('visited') : $ts('not_visited')
+                    })
+                }
+            },
+            {
+                id: 'actions',
+                cell: ({ row }) => {
+                    return h(
+                        'div',
+                        { class: 'text-right' },
+                        h(
+                            UDropdownMenu,
+                            {
+                                content: {
+                                    align: 'end'
+                                },
+                                items: getRowItems(row)
+                            },
+                            () =>
+                                h(UButton, {
+                                    icon: 'i-lucide-ellipsis-vertical',
+                                    color: 'neutral',
+                                    variant: 'ghost',
+                                    class: 'ml-auto'
+                                })
+                        )
+                    )
+                }
+            }
+        ];
+        return [ ...committeeColumns, ...baseColumns];
     }
-]);
+
+    return baseColumns;
+});
 
 function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
     return [
@@ -265,25 +269,6 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
     ]
 }
 
-/**
- * Flattens a nested object structure
- * @param {Object} obj - The object to flatten
- * @returns {Object} Flattened object
- */
-const flattenData = (obj: Object): Object => {
-    return Object.assign(
-        {},
-        Object.fromEntries(
-            Object.values(obj)
-                .filter((x) => Array.isArray(x) || typeof x === "object")
-                .map((x) => Array.isArray(x) ? x.map((item, index) => [index, item]) : Object.entries(x))
-                .flat(1)
-        ),
-        Object.fromEntries(
-            Object.entries(obj).filter(([, x]) => !Array.isArray(x) && typeof x !== "object")
-        )
-    );
-}
 const members = computed(() => data.value?.data?.participants || []);
 
 
