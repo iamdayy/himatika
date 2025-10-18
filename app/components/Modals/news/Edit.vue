@@ -88,10 +88,6 @@ const file = ref<File>();
  * Edit news
  */
 const editNews = async () => {
-    if (!file.value) {
-        toast.add({ title: $ts("error"), description: $ts("please_select_image") });
-        return;
-    }
     loading.value = true;
     try {
         const body = new CustomFormData<IReqNews>();
