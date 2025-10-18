@@ -1,4 +1,5 @@
 import { del, put } from "@vercel/blob";
+import { MultiPartData } from "h3";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
@@ -43,7 +44,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     const body = await customReadMultipartFormData<IReqNews>(event);
-    const mainImage = body.mainImage as File;
+    const mainImage = body.mainImage as MultiPartData;
     // Handle main image upload
     if (mainImage) {
       if (mainImage.type?.startsWith("image/")) {
@@ -52,34 +53,32 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
           await del(news.mainImage as string);
         }
         const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(
-          mainImage.name
-        )}.${mainImage.type.split("/")[1]}`;
+          mainImage.name!
+        )}.${mainImage.type.split("/")[1] || 'png'}`;
         // Save new
-        const { url } = await put(fileName, mainImage, { access: "public" });
+        const { url } = await put(fileName, mainImage.data, { access: "public" });
         imageUrl = url;
       } else {
-        throw createError({
-          statusMessage: "Please upload nothing but images.",
-        });
+        imageUrl = news.mainImage as string;
       }
     } else {
       imageUrl = news.mainImage as string;
     }
 
     const authorsIds = body.authors
-      ? await getAuthorsIds(body.authors as number[])
+      ? await getAuthorsIds(JSON.parse(body.authors as string))
       : [];
 
     // Update news properties
-    news.title = body.title;
+    news.title = body.title as string;
     news.mainImage = imageUrl;
-    news.slug = body.title
+    news.slug = (body.title as string)
       .toLowerCase()
       .replace(/ /g, "-")
       .replace(/[^\w-]+/g, "");
-    news.category = body.category;
-    news.tags = body.tags;
-    news.body = body.body;
+    news.category = body.category as string;
+    // news.tags = body.tags as string;
+    news.body = body.body as string;
     news.authors = authorsIds;
 
     // Save the updated news
