@@ -53,7 +53,7 @@
                                 </UAvatarGroup>
                             </div>
                             <div class="w-full text-gray-400 dark:text-gray-300 line-clamp-2">
-                                <TiptapShow :content="mainArticle?.body!" />
+                                <CoreContent :content="mainArticle?.body!" :size="responsiveUISizes.prose" />
                             </div>
                             <div class="flex flex-wrap items-center justify-between">
                                 <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
@@ -316,6 +316,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
     button: isMobile.value ? 'xs' : 'md',
     select: isMobile.value ? 'xs' : 'md',
     input: isMobile.value ? 'xs' : 'md',
+    prose: isMobile.value ? 'xs' : 'md',
 }));
 const links = computed(() => [{
     label: $ts('home'),
