@@ -96,6 +96,18 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
             model: DocModel,
           },
           {
+            path: "organizersConsiderationBoard",
+            model: OrganizerModel,
+            transform: (doc: IOrganizer, id: any) => {
+              if (doc) {
+                return {
+                  role: "Consideration Board",
+                  period: doc.period,
+                };
+              }
+            },
+          },
+          {
             path: "organizersDepartmentCoordinator",
             model: OrganizerModel,
             transform: (doc: IOrganizer, id: any) => {

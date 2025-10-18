@@ -50,7 +50,7 @@ const archived = ref(true);
 /**
  * Fetch newss data
  */
-const { data, refresh, pending } = useLazyAsyncData(() => $api<INewsResponse>('/api/news', {
+const { data, refresh, pending } = useLazyAsyncData('news',() => $api<INewsResponse>('/api/news', {
     query: {
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,
@@ -358,26 +358,22 @@ useSeoMeta({
             </div>
             <div v-else-if="(data.data?.news as INews[])?.length > 0"
                 class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-                <UCard :ui="{ root: 'max-w-sm min-h-32', body: 'min-h-40' }"
+                <UCard :ui="{ root: 'overflow-hidden', body: 'p-0 sm:p-0 px-0 md:px-0' }"
                     v-for="news, i in (data.data?.news as INews[])" :key="i">
-                    <template #header>
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <UBadge :label="(news.category as ICategory).title" color="info" variant="solid"
-                                    class="max-w-[120px]" />
-                            </div>
+                    <div class="relative h-48">
+                            <img :src="(news.mainImage as string)" :alt="news.title"
+                                class="absolute inset-0 object-cover w-full h-full" />
+                            <UBadge class="absolute top-2 left-2">{{
+                                (news.category as ICategory).title }}</UBadge>
                         </div>
-                        <NuxtImg provider="localProvider" :src="news.mainImage as string"
-                            class="w-full mx-auto rounded-lg" />
-                    </template>
-                    <div class="space-y-2">
+                    <div class="min-h-[6rem] space-y-2 px-4 py-1">
                         <NuxtLink :to="`/news/${news.slug}`">
                             <h2 class="text-sm font-semibold sm:text-lg md:text-xl lg:text-2xl line-clamp-2">{{
                                 news.title
                             }}</h2>
                         </NuxtLink>
                         <div class="line-clamp-3">
-                            <TiptapShow :content="news.body" size="sm" />
+                            <CoreContent :content="news.body" size="sm" />
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="flex flex-wrap w-full gap-2">

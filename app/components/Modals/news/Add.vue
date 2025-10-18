@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
+import { ModalsCategoryAdd, ModalsImageCrop, UFileUpload } from '#components';
 import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { INews } from '~~/types';
@@ -17,6 +17,7 @@ const config = useRuntimeConfig();
 
 const ImageCropModal = overlay.create(ModalsImageCrop);
 const AddCategoryModal = overlay.create(ModalsCategoryAdd);
+const loading = ref(false);
 
 const searchMember = ref('');
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/news/tags'));
@@ -40,7 +41,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
-            title: category.title,
+        label: category.title,
             description: category.description,
             value: category._id as string
         }))
@@ -58,11 +59,6 @@ const props = defineProps({
  * Reactive references
  */
 const file = ref<File>();
-const fileToCropped = ref<{ blob: string, name: string }>({
-    blob: "",
-    name: ""
-});
-const { convert } = useImageToBase64();
 /**
  * News data structure
  */
@@ -85,6 +81,11 @@ const news = ref<INews>({
  * Add new news
  */
 const addNews = async () => {
+    if (!file.value) {
+        toast.add({ title: $ts("error"), description: $ts("please_select_image") });
+        return;
+    }
+    loading.value = true;
     try {
         const body = new CustomFormData<IReqNews>();
         body.append("title", news.value.title);
@@ -97,36 +98,32 @@ const addNews = async () => {
             method: "POST",
             body: body.getFormData()
         });
+        if (added.statusCode !== 200) {
+            throw new Error(added.statusMessage);
+        }
         toast.add({ title: $ts("success"), description: $ts("success_to_add_news") });
         emit("triggerRefresh");
     } catch (error) {
         toast.add({ title: $ts("failed"), description: $ts("failed_to_add_news") });
+    } finally {
+        loading.value = false;
     }
 };
 
-/**
- * Handle cropped image
- * @param {File} f - Cropped image file
- */
-const onCropped = async (f: File) => {
-    file.value = f;
-    const blob = URL.createObjectURL(f);
-    fileToCropped.value.blob = blob;
-    ImageCropModal.close();
-}
 
 /**
  * Handle image change
  * @param {File} f - Selected image file
  */
-const onChangeImage = async (f: FileList) => {
+const onChangeImage = async (f?: File | null) => {
+    if (!f) return;
     const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
         alwaysKeepResolution: true
     }
-    const compressedFile = await imageCompression(f[0]!, options);
+    const compressedFile = await imageCompression(f, options);
     const blob = URL.createObjectURL(compressedFile);
     ImageCropModal.open({
         img: blob,
@@ -136,8 +133,8 @@ const onChangeImage = async (f: FileList) => {
             resizable: true,
             aspectRatio: 16 / 9,
         },
-        onCropped: (file: File) => {
-            onCropped(file);
+        onCropped: (f: File) => {
+            file.value = f;
             ImageCropModal.close();
         }
     });
@@ -190,8 +187,8 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                 </UFormField>
                 <!-- Categories input -->
                 <UFormField :label="$ts('category')">
-                    <USelectMenu v-model="news.category as string" :items="categoryOptions" searchable create-item
-                        :size="responsiveUISizes.select" label-key="title" value-key="value" class="w-full"
+                    <USelectMenu v-model="(news.category as string)" :items="categoryOptions" create-item
+                        :size="responsiveUISizes.select" value-key="value" class="w-full"
                         :placeholder="$ts('select_category')" @create="addNewCategory">
                     </USelectMenu>
                 </UFormField>
@@ -204,10 +201,9 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                     </USelectMenu>
                 </UFormField>
                 <!-- Image upload -->
-                <UFormField class="min-h-36" :label="$ts('image')">
-                    <DropFile @change="onChangeImage" accept="image/*">
-                        <NuxtImg :src="fileToCropped.blob" v-if="file" />
-                    </DropFile>
+                <UFormField :label="$ts('image')">
+                    <UFileUpload :size="responsiveUISizes.input"  accept="image/*" v-model="file" @update:model-value="onChangeImage">
+                    </UFileUpload>
                 </UFormField>
                 <!-- Description input -->
                 <UFormField :label="$ts('description')">
@@ -233,9 +229,9 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
         </template>
         <template #footer>
             <div class="flex flex-row justify-between w-full gap-2">
-                <UButton @click="$emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button" />
+                <UButton @click="$emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button" :loading="loading" :disabled="loading" />
                 <!-- Submit button -->
-                <UButton @click="addNews" :label="$ts('save')" :size="responsiveUISizes.button" />
+                <UButton @click="addNews" :label="$ts('save')" :size="responsiveUISizes.button" :loading="loading" :disabled="loading" />
             </div>
         </template>
     </UModal>

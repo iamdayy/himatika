@@ -1,4 +1,5 @@
 import { put } from "@vercel/blob";
+import { MultiPartData } from "h3";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
@@ -35,13 +36,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     const body = await customReadMultipartFormData<IReqNews>(event);
 
-    const mainImage = body.mainImage as File;
-    const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(mainImage.name)}.${
-      mainImage.type.split("/")[1]
+    const mainImage = body.mainImage as MultiPartData;
+    const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(mainImage.name!)}.${
+      mainImage.type?.split("/")[1]
     }`;
     // Handle main image upload
     if (mainImage.type?.startsWith("image/")) {
-      const { url } = await put(fileName, mainImage, { access: "public" });
+      const { url } = await put(fileName, mainImage.data, { access: "public" });
       imageUrl = url;
     } else {
       throw createError({
@@ -50,15 +51,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     const authorsIds = body.authors
-      ? await getAuthorsIds(body.authors as number[])
+      ? await getAuthorsIds(JSON.parse(body.authors as string))
       : [];
 
     // Prepare news data
     const newNews: INews = {
-      title: body.title,
-      body: body.body,
-      category: body.category,
-      slug: body.title
+      title: body.title as string,
+      body: body.body as string,
+      category: body.category as string,
+      slug: (body.title as string)
         .toLowerCase()
         .replace(/ /g, "-")
         .replace(/[^\w-]+/g, ""),

@@ -41,6 +41,7 @@ export const checkSession = async (payload: string) => {
       });
     }
 
+
     return {
       username: user.username,
       member: {

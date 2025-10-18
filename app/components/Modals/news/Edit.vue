@@ -20,12 +20,13 @@ const props = defineProps({
 const toast = useToast();
 const overlay = useOverlay();
 const { $api } = useNuxtApp();
-const { convert } = useImageToBase64();
 const { $ts } = useI18n();
 const config = useRuntimeConfig();
 
 const CropImageModal = overlay.create(ModalsImageCrop);
 const AddCategoryModal = overlay.create(ModalsCategoryAdd);
+
+const loading = ref(false);
 
 const searchMember = ref('');
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/news/tags'));
@@ -48,7 +49,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
-            title: category.title,
+            label: category.title,
             description: category.description,
             value: category._id as string
         }))
@@ -64,12 +65,6 @@ const emit = defineEmits(["triggerRefresh", "close"]);
 /**
  * Reactive references
  */
-const openModal = ref<boolean>(false)
-const file = ref<File>()
-const fileToCropped = ref<{ blob: string, name: string }>({
-    blob: "",
-    name: ""
-});
 
 const tagsSelected = ref<{ id: number, label: string }[]>(props.data.tags?.map((tag, i) => ({
     id: i + 1,
@@ -88,10 +83,12 @@ const news = ref<INews>({
     authors: (props.data.authors as IMember[]).map(author => author.NIM)
 });
 
+const file = ref<File>();
 /**
  * Edit news
  */
 const editNews = async () => {
+    loading.value = true;
     try {
         const body = new CustomFormData<IReqNews>();
         body.append("title", news.value.title);
@@ -107,32 +104,26 @@ const editNews = async () => {
                 slug: props.data.slug
             }
         });
+        if (added.statusCode !== 200) {
+            throw new Error(added.statusMessage);
+        }
         toast.add({ title: $ts("success"), description: $ts("success_to_edit_news") });
         emit("triggerRefresh");
     } catch (error) {
         console.log(error);
         toast.add({ title: $ts("failed"), description: $ts("failed_to_edit_news") });
+    } finally {
+        loading.value = false;
     }
 };
 
-/**
- * Handle cropped image
- * @param {File} f - Cropped image file
- */
-const onCropped = async (f: File) => {
-    const blob = URL.createObjectURL(f);
-    fileToCropped.value.blob = blob;
-    file.value = f;
-    openModal.value = false;
-}
 
 /**
  * Handle image change
  * @param {File} f - Selected image file
  */
-const onChangeImage = async (files: FileList) => {
-    if (!files.length) return;
-    const f = files[0]!;
+const onChangeImage = async (f?: File | null) => {
+    if (!f) return;
     const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 1920,
@@ -148,8 +139,8 @@ const onChangeImage = async (files: FileList) => {
             resizable: true,
             aspectRatio: 16 / 9,
         },
-        onCropped: (file: File) => {
-            onCropped(file);
+        onCropped: (f: File) => {
+            file.value = f;
             CropImageModal.close();
         }
     });
@@ -203,7 +194,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                 <!-- Categories input -->
                 <UFormField :label="$ts('category')">
                     <USelectMenu v-model="news.category as string" :items="categoryOptions" searchable create-item
-                        :size="responsiveUISizes.select" label-key="title" value-key="value" class="w-full"
+                        :size="responsiveUISizes.select" value-key="value" class="w-full"
                         :placeholder="$ts('select_category')" @create="addNewCategory">
                     </USelectMenu>
                 </UFormField>
@@ -217,12 +208,9 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                 </UFormField>
                 <!-- Image upload -->
                 <UFormField class="min-h-36" :label="$ts('image')">
-                    <DropFile @change="onChangeImage" accept="image/*">
-                        <NuxtImg :src="fileToCropped.blob" v-if="file" />
-                        <div v-else-if="news.mainImage && typeof news.mainImage === 'string'">
-                            <NuxtImg provider="localProvider" :src="news.mainImage" :alt="news.title" class="mx-auto" />
-                        </div>
-                    </DropFile>
+                    <NuxtImg :src="(news.mainImage as string)" :alt="news.title" v-if="news.mainImage && !file" />
+                    <UFileUpload :size="responsiveUISizes.input" v-model="file" @update:model-value="onChangeImage" accept="image/*">
+                    </UFileUpload>
                 </UFormField>
                 <!-- Description input -->
                 <UFormField :label="$ts('description')">
@@ -249,11 +237,11 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
         <template #footer>
             <div class="flex flex-row justify-between w-full gap-2">
                 <!-- Cancel button -->
-                <UButton @click="emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button" color="error" />
+                <UButton @click="emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button" color="error" :loading="loading" :disabled="loading" />
 
 
                 <!-- Submit button -->
-                <UButton @click="editNews" :label="$ts('save')" :size="responsiveUISizes.button" />
+                <UButton @click="editNews" :label="$ts('save')" :size="responsiveUISizes.button" :loading="loading" :disabled="loading" />
             </div>
         </template>
     </UModal>

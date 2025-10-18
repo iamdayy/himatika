@@ -394,8 +394,8 @@ memberSchema.virtual("aspirations", {
 // Combine all organizers
 memberSchema.virtual("organizer").get(function () {
   return (
-    this.organizersConsiderationBoard ||
     this.organizersDailyManagement ||
+    this.organizersConsiderationBoard ||
     this.organizersDepartmentCoordinator ||
     this.organizersDepartmentMembers
   );
