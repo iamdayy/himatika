@@ -1,10 +1,12 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import QRCode from "qrcode";
+import { CustomFormData } from "~/helpers/CustomFormData";
 import type { IAgenda, IDoc, IMember, IPoint } from "~~/types";
-import type {
-  IConfigResponse,
-  IDocResponse,
-  IResponse,
+import {
+  type IConfigResponse,
+  type IDocResponse,
+  type IOrganizerResponse,
+  type IResponse,
 } from "~~/types/IResponse";
 
 function monthToRomanFromDate(): string {
@@ -39,14 +41,13 @@ function monthToRomanFromDate(): string {
   }
   return romanNumeral;
 }
-export const useMakeDocs = (agenda: IAgenda | undefined) => {
+export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   const config = useRuntimeConfig();
   const { $api } = useNuxtApp();
-  const { data: organizers } = useFetch("/api/organizer", {
+  const { data: organizers } = useAsyncData('organizers', () => $api<IOrganizerResponse>("/api/organizer"), {
     transform: (data) => {
       return data.data?.organizers || [];
-    },
-    lazy: true,
+    }
   });
   const { data: user } = useAuth();
   const { data: lastDocNumber } = useAsyncData<IResponse & { data?: number }>(
@@ -59,28 +60,19 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
   const organizer = computed(() =>
     organizers.value ? organizers.value[0] : undefined
   );
-  const chairman = computed(() =>
+  const chairman = computed<IMember>(() =>
     organizer.value?.dailyManagement.find(
       (dm) => dm.position.includes("Ketua") || dm.position.includes("Chairman")
-    )
-  ).value?.member as IMember;
-  const secretary = computed(() =>
+    )?.member as IMember
+  );
+  const secretary = computed<IMember>(() =>
     organizer.value?.dailyManagement.find(
       (dm) =>
         dm.position.includes("Sekretaris") || dm.position.includes("Secretary")
-    )
-  ).value?.member as IMember;
+    )?.member as IMember
+  );
   const member = computed(() => user?.value?.member as unknown as IMember);
-  // const pdf = usePDFMake();
-  // pdf.fonts = {
-  //   Times: {
-  //     normal: config.public.public_uri + "/fonts/times-new-roman.ttf",
-  //     italics: config.public.public_uri + "/fonts/times-new-roman-italic.ttf",
-  //     bold: config.public.public_uri + "/fonts/times-new-roman-bold.ttf",
-  //     bolditalics:
-  //       config.public.public_uri + "/fonts/times-new-roman-bold-italic.ttf",
-  //   },
-  // };
+  
 
   async function generateQRCode(data: string): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
@@ -95,10 +87,10 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
   }
 
   const makeActivinessLetter = async (data: IPoint) => {
-    let response: IDocResponse = {
-      statusCode: 500,
-      statusMessage: "Failed to generate Activiness Letter",
-    };
+    if (organizer.value === undefined || configdata.value === undefined) {
+      throw new Error("organizer not found");
+    }
+
     // Generate the last document number in the desired format
     const formatDocNumber = (number: number): string => {
       const paddedNumber = number.toString().padStart(4, "0");
@@ -298,9 +290,9 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
       };
 
       currentY -= 15;
-      drawKeyValue("Nama", chairman?.fullName, currentY);
+      drawKeyValue("Nama", chairman.value.fullName, currentY);
       currentY -= 15;
-      drawKeyValue("NIM", chairman.NIM, currentY);
+      drawKeyValue("NIM", chairman.value.NIM, currentY);
       currentY -= 15;
       drawKeyValue("Jabatan", "Ketua Umum", currentY);
 
@@ -385,11 +377,11 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
       const chairmanSignatureY =
         signatureY -
         signatureSpacing -
-        timesRomanFont.widthOfTextAtSize(`/${chairman.NIM}signature/`, 12); // Height for each signature section
+        timesRomanFont.widthOfTextAtSize(`/${chairman.value.NIM}signature/`, 12); // Height for each signature section
       const secretarySignatureY =
         signatureY -
         signatureSpacing -
-        timesRomanFont.widthOfTextAtSize(`/${secretary.NIM}signature/`, 12); // Height for each signature section
+        timesRomanFont.widthOfTextAtSize(`/${secretary.value.NIM}signature/`, 12); // Height for each signature section
       // Left (Ketua Umum)
       const leftSignatureX = pageWidth / 4; // Centered in the left quarter of the page
       page.setFont(timesRomanBoldFont);
@@ -401,43 +393,43 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
       });
 
       page.setFont(timesRomanFont);
-      page.drawText(`/${chairman.NIM}signature/`, {
+      page.drawText(`/${chairman.value.NIM}signature/`, {
         x:
           leftSignatureX -
-          timesRomanFont.widthOfTextAtSize(`/${chairman.NIM}signature/`, 12) /
+          timesRomanFont.widthOfTextAtSize(`/${chairman.value.NIM}signature/`, 12) /
             2,
         y: chairmanSignatureY,
         color: rgb(0.5, 0.5, 0.5),
       });
 
       page.setFont(timesRomanBoldFont);
-      page.drawText(chairman.fullName, {
+      page.drawText(chairman.value.fullName, {
         x:
           leftSignatureX -
-          timesRomanBoldFont.widthOfTextAtSize(chairman.fullName, 12) / 2,
+          timesRomanBoldFont.widthOfTextAtSize(chairman.value.fullName, 12) / 2,
         y: chairmanSignatureY - signatureSpacing,
       });
       page.drawLine({
         start: {
           x:
             leftSignatureX -
-            timesRomanBoldFont.widthOfTextAtSize(chairman.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(chairman.value.fullName, 12) / 2,
           y: chairmanSignatureY - signatureSpacing - 2,
         },
         end: {
           x:
             leftSignatureX +
-            timesRomanBoldFont.widthOfTextAtSize(chairman.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(chairman.value.fullName, 12) / 2,
           y: chairmanSignatureY - signatureSpacing - 2,
         },
         thickness: 0.5,
         color: rgb(0, 0, 0),
       });
       page.setFont(timesRomanFont);
-      page.drawText(chairman.NIM.toString(), {
+      page.drawText(chairman.value.NIM.toString(), {
         x:
           leftSignatureX -
-          timesRomanFont.widthOfTextAtSize(chairman.NIM.toString(), 12) / 2,
+          timesRomanFont.widthOfTextAtSize(chairman.value.NIM.toString(), 12) / 2,
         y: chairmanSignatureY - 2 * signatureSpacing,
       });
 
@@ -452,43 +444,43 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
       });
 
       page.setFont(timesRomanFont);
-      page.drawText(`/${secretary.NIM}signature/`, {
+      page.drawText(`/${secretary.value.NIM}signature/`, {
         x:
           rightSignatureX -
-          timesRomanFont.widthOfTextAtSize(`/${secretary.NIM}signature/`, 12) /
+          timesRomanFont.widthOfTextAtSize(`/${secretary.value.NIM}signature/`, 12) /
             2,
         y: secretarySignatureY,
         color: rgb(0.5, 0.5, 0.5),
       });
 
       page.setFont(timesRomanBoldFont);
-      page.drawText(secretary.fullName, {
+      page.drawText(secretary.value.fullName, {
         x:
           rightSignatureX -
-          timesRomanBoldFont.widthOfTextAtSize(secretary.fullName, 12) / 2,
+          timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) / 2,
         y: secretarySignatureY - signatureSpacing,
       });
       page.drawLine({
         start: {
           x:
             rightSignatureX -
-            timesRomanBoldFont.widthOfTextAtSize(secretary.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) / 2,
           y: secretarySignatureY - signatureSpacing - 2,
         },
         end: {
           x:
             rightSignatureX +
-            timesRomanBoldFont.widthOfTextAtSize(secretary.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) / 2,
           y: secretarySignatureY - signatureSpacing - 2,
         },
         thickness: 0.5,
         color: rgb(0, 0, 0),
       });
       page.setFont(timesRomanFont);
-      page.drawText(secretary.NIM.toString(), {
+      page.drawText(secretary.value.NIM.toString(), {
         x:
           rightSignatureX -
-          timesRomanFont.widthOfTextAtSize(secretary.NIM.toString(), 12) / 2,
+          timesRomanFont.widthOfTextAtSize(secretary.value.NIM.toString(), 12) / 2,
         y: secretarySignatureY - 2 * signatureSpacing,
       });
 
@@ -672,23 +664,20 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
       });
 
       // Serialize the PDFDocument to bytes (a Uint8Array)
-      const dataUrl = await pdfDoc.saveAsBase64({
-        dataUri: true,
-      });
-      if (!dataUrl) {
+      const Uint8Data = await pdfDoc.save();
+      if (!Uint8Data || !(Uint8Data instanceof Uint8Array)) {
         throw new Error("failed_generate_pdf");
       }
+      const docFile = new File([(Uint8Data as Uint8Array<ArrayBuffer>)], `Surat Keterangan Aktif ${user?.value?.member.NIM} Semester ${data.semester}.pdf`, {
+        type: "application/pdf",
+      });
+
+
 
       const docData: IDoc = {
         label: `Surat Keterangan Aktif ${user?.value?.member.NIM} Semester ${data.semester}`,
         no: document_number,
-        doc: {
-          name: `Surat Keterangan Aktif ${user?.value?.member.NIM} Semester ${data.semester}.pdf`,
-          content: dataUrl,
-          type: "application/pdf",
-          size: dataUrl.length.toString(),
-          lastModified: new Date().getTime().toString(),
-        },
+        doc: docFile,
         tags: ["Surat Keterangan Aktif", `Semester ${data.semester}`],
         archived: false,
         signs: [
@@ -716,9 +705,17 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
           },
         ],
       };
+      
+      const formData = new CustomFormData<IDoc>();
+      formData.append("label", docData.label);
+      formData.append("no", docData.no);
+      formData.append("doc", docData.doc);
+      formData.append("tags", JSON.stringify(docData.tags));
+      formData.append("archived", JSON.stringify(docData.archived));
+      formData.append("signs", JSON.stringify(docData.signs));
       const ress = await $api<IDocResponse>("/api/doc", {
         method: "post",
-        body: docData,
+        body: formData.getFormData(),
       });
       if (ress.statusCode === 200) {
         return ress.data;
@@ -930,19 +927,20 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
       );
 
       // Serialize the PDFDocument to bytes (a Uint8Array)
-      const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: true });
+      const pdfBytes = await pdfDoc.save();
 
+      const docFile = new File(
+        [(pdfBytes as Uint8Array<ArrayBuffer>)],
+        `Agenda ${agenda.title} QR Code.pdf`,
+        {
+          type: "application/pdf",
+        }
+      );
       // Prepare document data
       const docData: IDoc = {
         label: `Agenda ${agenda.title} QR Code`,
         no: `019/II.3.AI/BO1.01/02.A-1/S.Ket/IV/${new Date().getFullYear()}`,
-        doc: {
-          name: `Agenda ${agenda.title} QR Code.pdf`,
-          content: pdfBytes,
-          type: "application/pdf",
-          size: pdfBytes.length.toString(),
-          lastModified: new Date().getTime().toString(),
-        },
+        doc: docFile,
         tags: ["Agenda", "QR Code", "HIMATIKA"],
         archived: false,
         signs: [
@@ -960,10 +958,18 @@ export const useMakeDocs = (agenda: IAgenda | undefined) => {
         ],
       };
 
+      const formData = new CustomFormData<IDoc>();
+      formData.append("label", docData.label);
+      formData.append("no", docData.no);
+      formData.append("doc", docData.doc);
+      formData.append("tags", JSON.stringify(docData.tags));
+      formData.append("archived", JSON.stringify(docData.archived));
+      formData.append("signs", JSON.stringify(docData.signs));
+
       // Send document data to API
       const ress = await $api<IDocResponse>(`/api/agenda/${agenda._id}/doc`, {
         method: "post",
-        body: docData,
+        body: formData.getFormData(),
       });
 
       if (ress.statusCode === 200) {

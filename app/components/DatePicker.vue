@@ -12,8 +12,7 @@ const props = defineProps({
         default: null
     },
     min: {
-        type: [Date, String] as PropType<Date | string>,
-        default: new Date()
+        type: [Date, String] as PropType<Date | string>
     },
     max: {
         type: [Date, String] as PropType<Date | string>,

@@ -68,7 +68,6 @@ const trailSchema = new Schema<ITrailSchema>(
     },
     actionAt: {
       type: Date,
-      required: true,
       default: Date.now,
     },
     actionIp: {

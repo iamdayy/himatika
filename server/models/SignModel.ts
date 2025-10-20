@@ -1,11 +1,6 @@
-import { ISign } from "@/types";
-import { Document, model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
-
-interface ISignSchema extends Document, ISign {
-  updatedAt: Date;
-  createdAt: Date;
-}
+import { ISignSchema } from "~~/types/ISchemas";
 
 export const SignSchema = new Schema<ISignSchema>(
   {

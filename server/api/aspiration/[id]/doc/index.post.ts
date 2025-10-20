@@ -1,4 +1,5 @@
 import { put } from "@vercel/blob";
+import { MultiPartData } from 'h3';
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { DocModel } from "~~/server/models/DocModel";
@@ -6,7 +7,6 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { IMember } from "~~/types";
 import { IReqAspirationDoc } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
-
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const { doc, label, tags, no } =
@@ -34,12 +34,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_DOC_FOLDER = `/uploads/img/aspiration/${aspiration._id}/docs`;
     let docUrl = "";
-    const d = doc as File;
-    const fileName = `${BASE_DOC_FOLDER}/${hashText(d.name)}.${
-      d.type.split("/")[1]
+    const d = doc as MultiPartData;
+    const fileName = `${BASE_DOC_FOLDER}/${hashText(d.name!)}.${
+      d.type?.split("/")[1]
     }`;
     // Handle main doc upload
-    const { url } = await put(fileName, d, { access: "public" });
+    const { url } = await put(fileName, d.data, { access: "public" });
     docUrl = url;
     const saved = await DocModel.create({
       label,

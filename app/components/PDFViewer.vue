@@ -104,7 +104,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 import { ref, watch } from 'vue';
-pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs";
 
 const props = defineProps({
     pdfUrl: {
@@ -178,6 +178,7 @@ const renderPage = async (pageNumber: number) => {
     if (context) {
         // context.scale(scale.value, scale.value);
         const renderContext = {
+            canvas,
             canvasContext: context,
             viewport: viewport
         };
@@ -197,7 +198,7 @@ const renderThumbnails = async () => {
             canvas.height = viewport.height - 20;
             canvas.width = viewport.width - 20;
             if (context) {
-                page.render({
+                page.render({ canvas,
                     canvasContext: context,
                     viewport: viewport
                 });

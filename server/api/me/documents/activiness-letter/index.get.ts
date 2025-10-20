@@ -16,6 +16,7 @@ export default defineEventHandler(
       const documents = user.member.documents?.filter((doc) =>
         doc.tags.includes("Surat Keterangan Aktif")
       );
+
       if (!documents || documents.length === 0) {
         return {
           statusCode: 404,

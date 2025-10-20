@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { UFileUpload } from "#components";
 import type { TabsItem } from "@nuxt/ui";
 import jsQR, { type Options, type QRCode } from "jsqr";
 import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
@@ -15,12 +16,14 @@ interface IVerifyResponse {
     data: IDoc
 }
 
-const { $signApi } = useNuxtApp();
+type CodeOfQRDetect = 'not_found' | 'found' | 'not_signed' | 'error';
+
+const { $api } = useNuxtApp();
 const toast = useToast();
 const { $ts } = useI18n();
 const ready = ref(false);
 const loading = ref(false);
-const pdfs = ref<FileList | undefined>(undefined);
+const pdfs = ref<File | undefined>(undefined);
 const pdf = ref<string>('');
 const doc = ref<IDoc | null>(null);
 const error = ref<string | null>(null);
@@ -30,12 +33,12 @@ const cameraOn = () => {
 }
 const findDocBySignature = async (signature: string): Promise<IDoc | undefined> => {
     loading.value = true;
+    error.value = null;
     try {
-        const response = await $signApi<IVerifyResponse>('/sign/verify', {
+        const response = await $api<IVerifyResponse>('api/sign/verify', {
             method: 'POST',
             body: JSON.stringify({ signature })
         });
-        pdf.value = response.data.doc as string;
         if (response.status === 200) {
             doc.value = response.data
             toast.add({
@@ -81,10 +84,15 @@ function paintOutline(detectedCodes: any[], ctx: CanvasRenderingContext2D) {
         ctx.stroke()
     }
 }
-const onLoad = async (doc: PDFDocumentProxy | null) => {
-    const totalPages = doc?.numPages || 1;
+const onLoad = async (docProxy: PDFDocumentProxy | null) => {
+    const totalPages = docProxy?.numPages || 1;
+    if (!docProxy) return;
+    const detectionResults: CodeOfQRDetect[] = [];
+    error.value = null;
+    doc.value = null;
+
     for (let i = 1; i <= totalPages; i++) {
-        const page = await doc?.getPage(i);
+        const page = await docProxy.getPage(i);
         if (!page) continue;
         const viewport = page.getViewport({ scale: 1.5 });
         const canvas = document.createElement('canvas');
@@ -93,26 +101,49 @@ const onLoad = async (doc: PDFDocumentProxy | null) => {
         const context = canvas.getContext('2d');
         if (context) {
             await page.render({ canvasContext: context, viewport, canvas }).promise;
-            detectQRCode(canvas, context);
+            const result = await detectQRCode(canvas, context);
+            detectionResults.push(result);
+            if (result === 'found') {
+                break;
+            }
         }
     }
+
+    if (!detectionResults.includes('found')) {
+        if (detectionResults.includes('not_signed')) {
+            error.value = $ts('verify_doc_qr_code_failed');
+        } else if (detectionResults.includes('error')) {
+            error.value = $ts('verify_doc_qr_code_error');
+        } else {
+            error.value = $ts('verify_doc_qr_code_not_found');
+        }
+
+        if (error.value) {
+            toast.add({
+                title: $ts('failed'),
+                description: error.value,
+                color: 'error'
+            });
+        }
+    } else {
+        error.value = null;
+    }
 };
-const detectQRCode = (
+
+const detectQRCode = async (
     canvas: HTMLCanvasElement,
     context: CanvasRenderingContext2D
-) => {
+): Promise<CodeOfQRDetect> => {
     const codes: string[] = [];
 
     if (!context) {
-        return;
+        return 'error';
     }
 
     // --- Grayscale pada tempCanvas ---
     let imageData = context.getImageData(0, 0, canvas.width / 2, canvas.height);
 
     const options: Options = { inversionAttempts: "dontInvert" };
-
-    const detectedQRRegions = []; // Array untuk menyimpan lokasi kode QR yang terdeteksi
 
     // jsQR sekarang akan memproses imageData yang sudah digrayscale
     let code: QRCode | null = jsQR(
@@ -128,7 +159,6 @@ const detectQRCode = (
 
     while (code) {
         codes.push(code.data);
-        detectedQRRegions.push(code.location);
 
         // Gambar persegi panjang putih di atas area kode QR
         const { topLeftCorner, bottomRightCorner } = code.location;
@@ -156,51 +186,37 @@ const detectQRCode = (
     }
 
     if (codes.length > 0) {
-        codes.forEach(async (code) => {
+        let hasUnsigned = false;
+        for (const qrCode of codes) {
             try {
-                const signature = code;
-                const doc = await findDocBySignature(code);
-                if (doc) {
-
-                    if (doc.signs?.some((sign) => !sign.signed)) {
-                        error.value = $ts('verify_doc_qr_code_failed');
-                        return;
+                const foundDoc = await findDocBySignature(qrCode);
+                if (foundDoc) {
+                    if (foundDoc.signs?.some((sign) => !sign.signed)) {
+                        hasUnsigned = true;
+                    } else {
+                        pdf.value = foundDoc.doc as string;
+                        return 'found';
                     }
-                    // if (codes.length !== doc.signs?.length || 0) {
-                    //     error.value = "The number of QR codes found does not match the number of signatures in the document.";
-                    //     return;
-                    // }
-                } else {
-                    error.value = $ts('verify_doc_qr_code_failed');
-                    toast.add({
-                        title: $ts('failed'),
-                        description: error.value,
-                        color: 'error'
-                    });
-                    return;
                 }
-
             } catch (err) {
-                error.value = $ts('verify_doc_qr_code_error');
-                toast.add({
-                    title: $ts('failed'),
-                    description: error.value,
-                    color: 'error'
-                });
+                return 'error';
             }
-        });
+        }
+
+        if (hasUnsigned) {
+            return 'not_signed';
+        }
+
+        return 'not_found';
     } else {
-        error.value = "No QR code found in the PDF.";
-        toast.add({
-            title: $ts('failed'),
-            description: error.value,
-            color: 'error'
-        })
+        return 'not_found';
     }
 };
-watch(pdfs, async (newFiles) => {
-    if (newFiles) {
-        const file = newFiles[0]!;
+watch(pdfs, async (file) => {
+    if (file) {
+        doc.value = null;
+        error.value = null;
+        loading.value = true;
         const fileBytes = await file.arrayBuffer();
         const url = URL.createObjectURL(new Blob([fileBytes], { type: file.type }));
         pdf.value = url;
@@ -219,13 +235,13 @@ const tabs = computed(() => {
         {
             label: $ts('upload'),
             description: $ts('upload_pdf_description'),
-            icon: 'i-heroicons-tray-arrow-up',
+            icon: 'i-heroicons-arrow-up-tray',
             slot: 'upload' as const,
         },
         {
             label: $ts('scan'),
             description: $ts('scan_pdf_description'),
-            icon: 'i-heroicons-qrcode',
+            icon: 'i-heroicons-qr-code',
             slot: 'scan' as const,
         },
     ]
@@ -240,7 +256,7 @@ const tabs = computed(() => {
                 <UCard>
                     <template #header>
                         <h2 class="text-2xl font-bold">{{ item.label }}</h2>
-                        <p class="text-sm text-gray-500">{{ item.description }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-200">{{ item.description }}</p>
                     </template>
                     <div class="flex flex-col items-center justify-center gap-2">
                         <QrcodeStream v-show="ready" @camera-on="cameraOn" @detect="onDetect" :track="paintOutline"
@@ -272,10 +288,10 @@ const tabs = computed(() => {
                 <UCard>
                     <template #header>
                         <h2 class="text-2xl font-bold">{{ item.label }}</h2>
-                        <p class="text-sm text-gray-500">{{ item.description }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-200">{{ item.description }}</p>
                     </template>
                     <div class="flex flex-col items-center justify-center gap-2">
-                        <DropFile accept="pdf" format="pdf" v-model="pdfs" />
+                        <UFileUpload accept="pdf" format="pdf" v-model="pdfs" icon="i-heroicons-document" :label="$ts('drag_or_drop_file')" description="PDF (Max. 2MB)" layout="list" class="w-full" />
                     </div>
                 </UCard>
             </template>
@@ -311,8 +327,8 @@ const tabs = computed(() => {
                                     IMember).fullName
                                 }}</span>
                                 <span class="text-sm text-gray-500 dark:text-gray-400">{{ sign.as }}</span>
-                                <UIcon name="check" v-if="sign.signed" class="text-green-500 dark:text-green-400" />
-                                <UIcon name="close" v-else class="text-red-500 dark:text-red-400" />
+                                <UIcon name="i-heroicons-check-circle" v-if="sign.signed" class="text-green-500 dark:text-green-400" />
+                                <UIcon name="i-heroicons-x-circle" v-else class="text-red-500 dark:text-red-400" />
                             </div>
                         </div>
                     </div>

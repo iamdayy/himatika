@@ -2,10 +2,11 @@
 import { ModalsImageCrop, ModalsImageOpen, ModalsProfileActivinessLetter, NuxtImg, UTextarea } from "#components";
 import type { AccordionItem, TabsItem } from "@nuxt/ui";
 import imageCompression from "browser-image-compression";
+import { format } from 'date-fns';
 import type { DriveStep } from "driver.js";
-import type { IConfig } from "~~/types";
+import { DatePicker } from 'v-calendar';
+import type { IAgenda, IConfig } from "~~/types";
 import { type IConfigResponse } from "~~/types/IResponse";
-
 // Define page metadata
 definePageMeta({
     layout: 'dashboard',
@@ -61,15 +62,6 @@ const onFileChange = async ($event: Event) => {
             img: blob,
             title: file.value.name,
             async onCropped(file: File) {
-                // const body: IReqMemberAvatar = {
-                //     avatar: {
-                //         name: file.name,
-                //         content: await convert(file),
-                //         size: file.size.toString(),
-                //         type: file.type,
-                //         lastModified: file.lastModified.toString()
-                //     }
-                // }
                 const body = new FormData();
                 body.append("avatar", file);
                 await $api("/api/member/avatar", {
@@ -92,7 +84,7 @@ const member = ref({
     semester: user?.value?.member.semester || "",
     birth: {
         place: user?.value?.member.birth.place || "",
-        date: user?.value?.member.birth.date || new Date(),
+        date: new Date(user?.value?.member.birth.date!) || new Date(),
     },
     sex: user?.value?.member.sex || "",
     religion: user?.value?.member.religion || "",
@@ -161,7 +153,7 @@ onMounted(() => {
         {
             element: '#avatar',
             popover: {
-                title: $ts('avatar'),
+                title: $ts('photo_profile'),
                 description: $ts('avatar_desc'),
                 side: 'right'
             }
@@ -185,8 +177,8 @@ onMounted(() => {
         {
             element: '#activiness',
             popover: {
-                title: $ts('activiness_letter'),
-                description: $ts('activiness_desc'),
+                title: $ts('generate_activiness_letter'),
+                description: $ts('generate_activiness_letter_description'),
                 side: 'right'
             }
         },
@@ -224,7 +216,7 @@ const pointAccordionItems = computed<AccordionItem[]>(() => {
     })) || [];
 });
 
-const getAgendasCommitteeByRange = (range: { start: Date; end: Date }) => {
+const getAgendasCommitteeByRange = (range: { start: Date; end: Date }): IAgenda[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
     const agendas = member.value?.agendasCommittee?.filter((agenda: { date: { start: string; end: string; }; }) => {
@@ -234,7 +226,7 @@ const getAgendasCommitteeByRange = (range: { start: Date; end: Date }) => {
     }) || [];
     return agendas;
 };
-const getAgendasMemberByRange = (range: { start: Date; end: Date }) => {
+const getAgendasMemberByRange = (range: { start: Date; end: Date }): IAgenda[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
     const agendas = member.value?.agendasMember?.filter((agenda: { date: { start: string; end: string; }; }) => {
@@ -316,14 +308,20 @@ const breadcumbs = computed(() => [
                                             v-model="member.birth.place" required
                                             :class="isMobile ? 'mb-2 w-full' : 'flex-1 mb-0 mr-2'" />
                                         <div class="flex flex-row items-center gap-2">
-                                            <VDatePicker id="date" v-model="member.birth.date" mode="date">
-                                                <template #default="{ togglePopover }">
-                                                    <button @click="togglePopover" :class="isMobile ? '' : 'w-auto'">
-                                                        <Icon name="solar:calendar-date-outline"
-                                                            class="w-6 h-6 mx-2 text-gray-400 hover:text-blue-600" />
-                                                    </button>
+                                            <!-- TODO: FIX DATE PICKER -->
+                                            <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
+                                                <UButton icon="i-heroicons-calendar-days-20-solid" color="neutral"
+                                                    variant="outline" class="w-full">
+                                                    {{ format(member.birth.date as Date, 'd MMM, yyy') }}
+                                                </UButton>
+                                                <template #content>
+                                                    <div
+                                                        class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
+                                                        <DatePicker v-model="member.birth.date" mode="datetime"
+                                                            color="orange-hima" />
+                                                    </div>
                                                 </template>
-                                            </VDatePicker>
+                                            </UPopover>
                                             <label :class="isMobile ? 'w-full' : 'w-auto text-left'"
                                                 class="block my-auto text-sm font-medium text-gray-900 dark:text-white">
                                                 {{ new Date(member.birth.date).toLocaleDateString('id-ID', {
@@ -344,10 +342,10 @@ const breadcumbs = computed(() => [
                                         $ts('gender') }}
                                     </dt>
                                     <USelect v-model="member.sex" v-if="editMode"
-                                        :options="[{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }]">
+                                        :options="[{ value: 'male', label: $ts('male') }, { value: 'female', label: $ts('female') }]">
                                     </USelect>
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{
-                                        toTitleCase(user?.member.sex!) }}</dd>
+                                        $ts(user?.member.sex === 'male' ? 'male' : 'female') }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
@@ -498,15 +496,18 @@ const breadcumbs = computed(() => [
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
-                                                        member.point[index]!.activities.projects
-                                                        }}</div>
+                                                        getProjectsByRange(member.point[index]!.range)?.length
+                                                        ||
+                                                        0
+                                                    }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project')
                                                         }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
-                                                        member.point[index]!.activities.aspirations }}</div>
+                                                        getAspirationsByRange(member.point[index]!.range)?.length ||
+                                                        0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('aspiration')
                                                         }}</div>
@@ -549,7 +550,8 @@ const breadcumbs = computed(() => [
                                                                             {{ agenda.at }}</p>
                                                                     </div>
                                                                     <UBadge color="success" variant="subtle">{{
-                                                                        $ts('committee') }}</UBadge>
+                                                                        agenda.configuration.committee.point || 0 }} Pts
+                                                                    </UBadge>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -569,9 +571,9 @@ const breadcumbs = computed(() => [
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
                                                                             {{ agenda.at }}</p>
                                                                     </div>
-                                                                    <UBadge variant="subtle">{{ $ts('participant')
-                                                                        }}
-                                                                    </UBadge>
+                                                                    <UBadge variant="subtle">{{
+                                                                        agenda.configuration.participant.point || 0 }}
+                                                                        Pts</UBadge>
                                                                 </div>
                                                             </div>
                                                         </div>

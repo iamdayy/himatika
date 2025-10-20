@@ -41,6 +41,8 @@ const configSchema = new mongoose.Schema<IConfigSchema>({
   carousels: [carouselSchema],
   enscriptActivinessLetter: {
     type: Types.ObjectId,
+    default: null,
+    ref: "Encryption",
   },
   minPoint: { type: Number },
 });

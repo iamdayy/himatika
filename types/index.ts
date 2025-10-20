@@ -420,12 +420,13 @@ export interface IPrivateKey {
   encrypted_key: string;
   metadata: {
     iv: string;
+    key: string;
     tag?: string;
   };
 }
 
 export interface IEncryption {
-  _id: string | Types.ObjectId;
+  _id?: string | Types.ObjectId;
   title: string;
   private_key: IPrivateKey;
   public_key: string;
@@ -588,4 +589,17 @@ export interface IQuestion {
   maxFileSize?: number;
   required: boolean;
   answer?: any;
+}
+
+/**
+ * Represents the location and dimensions for placing an overlay on a PDF page.
+ * Coordinates are measured from the bottom-left corner of the page.
+ */
+export interface IOverlayLocation {
+  text: string;
+  page: number;
+  x: number; // Koordinat X (dari kiri halaman)
+  y: number; // Koordinat Y (dari bawah halaman)
+  width: number;
+  height: number;
 }

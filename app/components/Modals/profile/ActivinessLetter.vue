@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ModalsConfirmation } from '#components';
-import type { IDoc, IPoint } from '~/types';
-import type { IActivinessLetterResponse, IConfigResponse } from '~/types/IResponse';
+import type { IDoc, IPoint } from '~~/types';
+import type { IActivinessLetterResponse, IConfigResponse } from '~~/types/IResponse';
 
 interface IPointWithDisabled extends IPoint {
     disabled: boolean;
@@ -53,6 +53,7 @@ const generate = async (point: IPointWithDisabled) => {
                 refreshActivinessLetterData();
                 toast.add({ title: $ts('generate_activiness_letter_success'), color: 'success' });
             } catch (error) {
+                console.error(error);
                 toast.add({ title: $ts('generate_activiness_letter_failed'), color: 'error' });
             } finally {
                 loading.value = false;

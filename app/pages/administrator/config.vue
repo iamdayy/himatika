@@ -2,8 +2,8 @@
 import { CoreTiptap, ModalsCarouselAdd, ModalsImageCrop, UInput } from '#components';
 import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
-import type { ICarousel, IConfig, IEncryption, IPhoto } from "~~/types";
-import type { IConfigResponse, IResponse } from '~~/types/IResponse';
+import type { ICarousel, IConfig, IPhoto } from "~~/types";
+import type { IConfigResponse, IEncryptionsResponse, IResponse } from '~~/types/IResponse';
 definePageMeta({
     layout: 'dashboard',
     middleware: 'sidebase-auth'
@@ -17,7 +17,7 @@ const searchQuery = ref('');
 const { $ts } = useI18n();
 const { token } = useAuth();
 const { data, refresh } = await useAsyncData(() => $fetch<IConfigResponse>("/api/config"));
-const { data: enscriptions } = await useAsyncData(() => $fetch<IResponse & { data: IEncryption[] }>(`${config.public.sign_service_uri}/encryption`, {
+const { data: enscriptions } = await useAsyncData(() => $fetch<IEncryptionsResponse>('/api/enscryption', {
     query: {
         search: searchQuery.value
     },
@@ -25,9 +25,15 @@ const { data: enscriptions } = await useAsyncData(() => $fetch<IResponse & { dat
         Authorization: token.value || ''
     }
 }), {
-    watch: [searchQuery]
+    watch: [searchQuery],
+    transform: (data) => {
+        if (data.statusCode !== 200 || data.data?.count == 0) return [];
+        return data.data?.encryptions?.map((d) => ({
+            label: d.title,
+            value: d._id as string
+        }));
+    }
 });
-const Enscriptions = computed(() => enscriptions.value?.data || []);
 const { organizer } = useOrganizer();
 const toast = useToast();
 const { $api } = useNuxtApp();
@@ -38,19 +44,19 @@ const CropImageModal = overlay.create(ModalsImageCrop);
 const AddCarouselModal = overlay.create(ModalsCarouselAdd);
 
 const loading = ref(false);
-const Config = ref<IConfig>(data.value?.data || {
-    dailyManagements: [],
-    departments: [],
-    description: '',
-    name: '',
-    contact: { email: '', phone: '' },
-    address: '',
-    socialMedia: [{ name: '', url: '' }],
-    vision: '',
-    mission: [],
-    carousels: [],
-    enscriptActivinessLetter: '',
-    minPoint: 0,
+const Config = ref<IConfig>({
+    dailyManagements: data.value?.data?.dailyManagements || [],
+    enscriptActivinessLetter: data.value?.data?.enscriptActivinessLetter || '',
+    minPoint: data.value?.data?.minPoint || 0,
+    departments: data.value?.data?.departments || [],
+    description: data.value?.data?.description || '',
+    name: data.value?.data?.name || '',
+    contact: data.value?.data?.contact || { email: '', phone: '' },
+    address: data.value?.data?.address || '',
+    socialMedia: data.value?.data?.socialMedia || [{ name: '', url: '' }],
+    vision: data.value?.data?.vision || '',
+    mission: data.value?.data?.mission || [],
+    carousels: data.value?.data?.carousels || [],
 });
 
 const notEditMode = ref(true);
@@ -239,41 +245,41 @@ const links = computed(() => [{
     label: $ts('config'),
     icon: 'i-heroicons-cog',
 }]);
-const debouncedSave = useDebounceFn(async () => {
-    if (notEditMode.value) return;
+// const debouncedSave = useDebounceFn(async () => {
+//     if (notEditMode.value) return;
 
-    isSaving.value = true;
-    try {
-        await $api<IResponse>('/api/config', {
-            method: 'POST',
-            body: {
-                ...Config.value,
-                carousels: Config.value.carousels?.map(carousel => ({ ...carousel, image: carousel.image?._id }))
-            }
-        });
-        refresh();
-        toast.add({
-            title: $ts('success'),
-            description: $ts('success_to_update_config'),
-            icon: 'i-heroicons-check-circle',
-            color: 'success'
-        });
-    } catch (error) {
-        toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_update_config'),
-            icon: 'i-heroicons-x-circle',
-            color: 'error'
-        });
-    } finally {
-        isSaving.value = false;
-    }
-}, 2000); // 2000ms delay
-watch(() => Config.value, () => {
-    if (!notEditMode.value) {
-        debouncedSave();
-    }
-}, { deep: true });
+//     isSaving.value = true;
+//     try {
+//         await $api<IResponse>('/api/config', {
+//             method: 'POST',
+//             body: {
+//                 ...Config.value,
+//                 carousels: Config.value.carousels?.map(carousel => ({ ...carousel, image: carousel.image?._id }))
+//             }
+//         });
+//         refresh();
+//         toast.add({
+//             title: $ts('success'),
+//             description: $ts('success_to_update_config'),
+//             icon: 'i-heroicons-check-circle',
+//             color: 'success'
+//         });
+//     } catch (error) {
+//         toast.add({
+//             title: $ts('failed'),
+//             description: $ts('failed_to_update_config'),
+//             icon: 'i-heroicons-x-circle',
+//             color: 'error'
+//         });
+//     } finally {
+//         isSaving.value = false;
+//     }
+// }, 2000); // 2000ms delay
+// watch(() => Config.value, () => {
+//     if (!notEditMode.value) {
+//         debouncedSave();
+//     }
+// }, { deep: true });
 
 </script>
 <template>
@@ -420,9 +426,9 @@ watch(() => Config.value, () => {
                     </div>
                 </UFormField>
                 <UFormField :label="$ts('enscript_activiness_letter')">
-                    <USelectMenu v-model="Config.enscriptActivinessLetter as string" v-model:search-term="searchQuery"
+                    <USelectMenu v-model="(Config.enscriptActivinessLetter as string)" v-model:search-term="searchQuery"
                         :size="responsiveUISizes.select" :disabled="notEditMode && !isSaving" class="px-2 md:px-4"
-                        :items="Enscriptions" label-key="title" value-key="_id" searchable v-model:query="searchQuery">
+                        :items="enscriptions" value-key="value" searchable v-model:query="searchQuery">
                     </USelectMenu>
                 </UFormField>
                 <UFormField :label="$ts('min_point')">

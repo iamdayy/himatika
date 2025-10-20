@@ -15,6 +15,7 @@ import type {
   IDailyManagement,
   IDepartment,
   IDoc,
+  IEncryption,
   IGuest,
   IJob,
   IMember,
@@ -31,6 +32,7 @@ import type {
   IReqruitment,
   IRequestSign,
   ISession,
+  ISign,
   ITrail,
   IUser,
   IVideo,
@@ -221,3 +223,13 @@ export interface IQuestionSchema extends Document, Omit<IQuestion, "_id"> {
   updatedAt: Date;
 }
 export interface IOptionSchema extends Document, Omit<IOption, "_id"> {}
+
+export interface IEncryptionSchema extends Document, Omit<IEncryption, "_id"> {
+  updatedAt: Date;
+  createdAt: Date;
+}
+
+export interface ISignSchema extends Document, Omit<ISign, "_id"> {
+  updatedAt: Date;
+  createdAt: Date;
+}
