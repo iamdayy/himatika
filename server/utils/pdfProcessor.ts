@@ -1,11 +1,8 @@
 import { put } from "@vercel/blob";
 import { PDFDocument } from "pdf-lib"; // Pastikan pdf-lib sudah terpasang
-import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import * as pdfjs from "pdfjs-dist";
 import { toDataURL } from "qrcode";
 
-// Konfigurasi worker untuk pdfjs-dist
-// Penting: Sesuaikan path ke pdf.worker.mjs
-// pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs"
 
 interface TextLocation {
   text: string;
