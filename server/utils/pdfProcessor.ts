@@ -1,8 +1,10 @@
 import { put } from "@vercel/blob";
 import { PDFDocument } from "pdf-lib"; // Pastikan pdf-lib sudah terpasang
-import * as pdfjs from "pdfjs-dist";
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { toDataURL } from "qrcode";
 
+
+pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs";
 
 interface TextLocation {
   text: string;
@@ -18,7 +20,7 @@ export async function findTextCoordinates(
   searchText: string
 ): Promise<TextLocation[]> {
   const matchingLocations: TextLocation[] = [];
-
+  if (!import.meta.client) throw new Error("Not client");
   try {
     const response = await fetch(pdfPath);
     const arrayBuffer = await response.arrayBuffer();
@@ -75,6 +77,7 @@ export async function overlayQRAndSavePdf(
   qrValue: string,
   locations: TextLocation[]
 ) {
+  if (!import.meta.client) return;
   const response = await fetch(inputPdfPath);
   const arrayBuffer = await response.arrayBuffer();
   const pdfDoc = await PDFDocument.load(arrayBuffer as ArrayBuffer);
