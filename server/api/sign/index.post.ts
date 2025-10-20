@@ -4,14 +4,14 @@ import EncryptionModel from "~~/server/models/EncryptionModel";
 import SignModel from "~~/server/models/SignModel";
 import { decrypt } from "~~/server/utils/encrypt";
 import { signData } from "~~/server/utils/encryption";
-import { findTextCoordinates, overlayQRAndSavePdf } from "~~/server/utils/pdfProcessor";
+import { overlayQRAndSavePdf } from "~~/server/utils/pdfProcessor";
 import { IMember, IRequestSign, ISign, ITrail } from "~~/types";
 import { IReqSignDocument } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse & { data?: string }> => {
      try {
-        const { encryption, docId, data } = await readBody<IReqSignDocument>(event);
+        const { encryption, docId, data, coordinates } = await readBody<IReqSignDocument>(event);
         const user = event.context.user;
         if (!user) {
           return {
@@ -107,16 +107,16 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
         signedIp: "",
       };
 
-      const cordinates = await findTextCoordinates(
-        (doc.doc as string),
-        `/${member.NIM}signature/`
-      );
-      if (!cordinates) {
-        return {
-          statusCode: 404,
-          statusMessage: "Coordinates of Signature not found",
-        };
-      }
+      // const cordinates = await findTextCoordinates(
+      //   (doc.doc as string),
+      //   `/${member.NIM}signature/`
+      // );
+      // if (!cordinates) {
+      //   return {
+      //     statusCode: 404,
+      //     statusMessage: "Coordinates of Signature not found",
+      //   };
+      // }
       const BASE_DOC_FOLDER = `/uploads/docs/${doc.label.replace(
         /\s+/g,
         "_"
@@ -134,7 +134,7 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
         doc.doc as string,
         `${BASE_DOC_FOLDER}${hashText(doc.label)}.pdf`,
         sign.signature,
-        cordinates
+        coordinates
       );
       await doc.save();
       return {

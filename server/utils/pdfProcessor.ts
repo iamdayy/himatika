@@ -1,134 +1,93 @@
 import { put } from "@vercel/blob";
-import { PDFDocument } from "pdf-lib"; // Pastikan pdf-lib sudah terpasang
-import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import { PDFDocument } from "pdf-lib";
+import { PDFParse } from "pdf-parse";
 import { toDataURL } from "qrcode";
+import { IOverlayLocation } from "~~/types";
 
 
-pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs";
-
-interface TextLocation {
-  text: string;
-  page: number;
-  x: number; // Koordinat X (dari kiri halaman)
-  y: number; // Koordinat Y (dari bawah halaman)
-  width: number;
-  height: number;
-}
-
-export async function findTextCoordinates(
-  pdfPath: string,
-  searchText: string
-): Promise<TextLocation[]> {
-  const matchingLocations: TextLocation[] = [];
-  if (!import.meta.client) throw new Error("Not client");
+/**
+ * Analyzes a PDF buffer to extract its text content.
+ * This is useful for validation or indexing but not for finding coordinates.
+ * @param pdfBuffer The PDF file content as a Buffer.
+ * @returns A promise that resolves with the extracted text of the PDF.
+ */
+export async function getPdfText(pdfBuffer: Buffer): Promise<string> {
   try {
-    const response = await fetch(pdfPath);
-    const arrayBuffer = await response.arrayBuffer();
-
-    // Memuat dokumen PDF dari buffer
-    const loadingTask = pdfjs.getDocument({ data: arrayBuffer as ArrayBuffer });
-    const pdfDocument = await loadingTask.promise;
-
-    // Iterasi melalui setiap halaman PDF
-    for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-      const page = await pdfDocument.getPage(pageNum);
-      const textContent = await page.getTextContent();
-
-      // Iterasi melalui setiap item teks di halaman
-      for (const item of textContent.items) {
-        // Konversi item.item ke any untuk menghindari error tipe jika item.str bukan string
-        const textItem = item as any; // Cast ke any untuk akses str dan transform
-
-        if (textItem.str && textItem.str.includes(searchText)) {
-          // Mendapatkan transformasi matriks untuk posisi teks
-          const transform = textItem.transform;
-
-          // Koordinat (x, y) dari teks item berada di transform [4] dan [5]
-          // PDF.js menggunakan sistem koordinat di mana Y=0 adalah di bagian bawah halaman.
-          // Jika Anda butuh Y dari atas, Anda perlu menguranginya dari tinggi halaman.
-          const viewport = page.getViewport({ scale: 1 }); // Skala 1 untuk koordinat asli PDF
-
-          const x = transform[4];
-          const y = viewport.height - transform[5]; // Konversi Y dari bawah ke atas
-
-          matchingLocations.push({
-            text: textItem.str,
-            page: pageNum,
-            x: x,
-            y: y,
-            width: textItem.width,
-            height: textItem.height,
-          });
-        }
-      }
-      page.cleanup(true); // Penting untuk membebaskan memori
-    }
-
-    return matchingLocations;
+    const parser = new PDFParse({ data: pdfBuffer});
+    const data = await parser.getText();
+    return data.text;
   } catch (error) {
-    console.error("Error finding text coordinates in PDF:", error);
-    throw new Error("Failed to process PDF for text coordinates.");
+    console.error("Error parsing PDF for text extraction:", error);
+    throw new Error("Failed to parse PDF.");
   }
 }
 
+/**
+ * Overlays a QR code onto a PDF at specified locations and saves it to Vercel Blob.
+ *
+ * @param pdfBuffer The buffer of the input PDF file.
+ * @param outputBlobPath The desired path for the output file in Vercel Blob (e.g., "documents/processed.pdf").
+ * @param qrValue The string value to encode in the QR code.
+ * @param locations An array of IOverlayLocation objects specifying where to draw the QR codes.
+ * @returns A promise that resolves with the public URL of the saved PDF in Vercel Blob.
+ */
 export async function overlayQRAndSavePdf(
-  inputPdfPath: string,
-  outputPdfPath: string,
+  pdf: string,
+  outputBlobPath: string,
   qrValue: string,
-  locations: TextLocation[]
-) {
-  if (!import.meta.client) return;
-  const response = await fetch(inputPdfPath);
-  const arrayBuffer = await response.arrayBuffer();
-  const pdfDoc = await PDFDocument.load(arrayBuffer as ArrayBuffer);
+  locations: IOverlayLocation[]
+): Promise<string> {
+  try {
+    const pdfFetch = await fetch(pdf);
+    const pdfBuffer = await pdfFetch.arrayBuffer();
+    // Load the PDF document from the buffer
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const pages = pdfDoc.getPages();
 
-  const pages = pdfDoc.getPages();
-  // Muat semua gambar yang dibutuhkan sekali
-  const embeddedImages: { [imagePath: string]: any } = {};
-  for (const location of locations) {
-    const imageDataUrl = await toDataURL(qrValue, {
+    // Generate the QR code image as a Data URL
+    const qrImageDataUrl = await toDataURL(qrValue, {
       errorCorrectionLevel: "H",
       type: "image/png",
-      margin: 0,
-      color: {
-        dark: "#000000", // Warna gelap untuk QR Code
-        light: "#FFFFFF", // Warna terang untuk latar belakang
-      },
+      margin: 1,
     });
-    if (!embeddedImages[location.text]) {
-      const image = await pdfDoc.embedPng(imageDataUrl);
-      embeddedImages[location.text] = image;
-    }
-  }
 
-  for (const location of locations) {
-    const page = pages[location.page - 1]; // Halaman array berbasis 0
+    // Embed the QR code image into the PDF document
+    const qrImage = await pdfDoc.embedPng(qrImageDataUrl);
 
-    // Perlu penyesuaian koordinat: pdf-lib Y=0 juga di bawah.
-    // Anda harus konsisten dengan sistem koordinat yang Anda gunakan.
-    // Jika Anda sudah konversi Y di pdfjs-dist ke dari atas, gunakan itu.
-    // Kalau tidak, gunakan: page.getHeight() - (location.y + location.height)
-    const yCoordForPdfLib = page.getHeight() - (location.y + location.height); // Sesuaikan ini!
-
-    page.drawImage(embeddedImages[location.text], {
-      x: location.x, // Perlu dihitung ulang
-      y: yCoordForPdfLib + 8, // Perlu dihitung ulang
-      width: location.width, // Sesuaikan ukuran gambar sesuai kebutuhan
-      height: location.width, // Sesuaikan ukuran gambar sesuai kebutuhan
-      // Opsi lain seperti opacity, rotate, dll.
-    });
-  }
-
-  const Uint8Data = await pdfDoc.save();
-  if (!Uint8Data || !(Uint8Data instanceof Uint8Array)) {
-        throw new Error("failed_generate_pdf");
+    // Draw the QR code image at each specified location
+    for (const location of locations) {
+      if (location.page < 1 || location.page > pages.length) {
+        console.warn(`Invalid page number ${location.page}. Skipping.`);
+        continue;
       }
-  const docFile = new File([(Uint8Data as Uint8Array<ArrayBuffer>)], inputPdfPath.split("/").pop() as string, {
-        type: "application/pdf",
-      });
+      const page = pages[location.page - 1]; // Page array is 0-based
+      const yCoordForPdfLib = page.getHeight() - (location.y + location.height); // Sesuaikan ini!
 
-  const { url } = await put(outputPdfPath, docFile, {
-    access: "public",
-  });
-  return url;
+      page.drawImage(qrImage, {
+        x: location.x,
+        y: yCoordForPdfLib + 8,
+        width: location.width,
+        height: location.width,
+      });
+    }
+
+    // Save the modified PDF to a Uint8Array
+    const pdfBytes = await pdfDoc.save();
+
+    if (!pdfBytes || pdfBytes.length === 0) {
+      throw new Error("Failed to generate PDF bytes.");
+    }
+
+    const buffer = Buffer.from(pdfBytes);
+    // Upload the resulting PDF buffer to Vercel Blob
+    const { url } = await put(outputBlobPath, buffer, {
+      access: "public",
+      contentType: "application/pdf",
+    });
+
+    return url;
+  } catch (error) {
+    console.error("Error overlaying QR code and saving PDF:", error);
+    throw new Error("A problem occurred during the PDF modification process.");
+  }
 }

@@ -590,3 +590,16 @@ export interface IQuestion {
   required: boolean;
   answer?: any;
 }
+
+/**
+ * Represents the location and dimensions for placing an overlay on a PDF page.
+ * Coordinates are measured from the bottom-left corner of the page.
+ */
+export interface IOverlayLocation {
+  text: string;
+  page: number;
+  x: number; // Koordinat X (dari kiri halaman)
+  y: number; // Koordinat Y (dari bawah halaman)
+  width: number;
+  height: number;
+}

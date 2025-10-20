@@ -383,7 +383,7 @@ export interface IReqEncryption {
 
 export interface IReqSignDocument {
     encryption: string;
-    id: string;
     docId: string;
     data: string;
+    coordinates: IOverlayLocation[]
   };
