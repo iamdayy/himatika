@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.80",
     "@nuxt/image": "1.11.0",
     "@nuxt/ui": "4.0.0",
     "@samk-dev/nuxt-vcalendar": "1.0.4",
