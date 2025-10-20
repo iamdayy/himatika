@@ -375,3 +375,15 @@ export interface IReqAnswer {
     answer: any;
   }[];
 }
+
+export interface IReqEncryption {
+  title: string;
+  tag: string;
+}
+
+export interface IReqSignDocument {
+    encryption: string;
+    id: string;
+    docId: string;
+    data: string;
+  };

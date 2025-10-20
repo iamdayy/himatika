@@ -5,6 +5,7 @@
     "generate_activiness_letter_success": "Surat Keaktifan berhasil di-generate.",
     "generate_activiness_letter_loading": "Sedang meng-generate Surat Keaktifan...",
     "generate_activiness_letter": "Generate Surat Keaktifan",
+    "generate_activiness_letter_description": "Anda dapat meng-generate dan mengunduh surat keaktifan Anda di sini. Pastikan anda memiliki point yang cukup untuk generate surat keaktifan Anda.",
     "download_activiness_letter": "Unduh Surat Keaktifan",
     "generate_activiness_letter_confirm": "Apakah Anda yakin ingin meng-generate Surat Keaktifan?",
     "generate_activiness_letter_cancel": "Batal",
@@ -26,5 +27,8 @@
     "point_summary": "Ringkasan Poin",
     "no_agendas": "Tidak ada agenda yang diikuti.",
     "no_projects": "Tidak ada proyek yang diunggah.",
-    "no_aspirations": "Tidak ada aspirasi yang disampaikan."
+    "no_aspirations": "Tidak ada aspirasi yang disampaikan.",
+    "photo_profile": "Foto Profil",
+    "details": "Detail",
+    "organization": "Organisasi"
 }

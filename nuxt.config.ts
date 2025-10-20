@@ -29,12 +29,9 @@ export default defineNuxtConfig({
     midtrans_client_key: process.env.MIDTRANS_CLIENT_KEY,
     midtrans_server_key: process.env.MIDTRANS_SERVER_KEY,
     public: {
-      sign_service_uri: process.env.SIGN_SERVICE_URI,
       appname: process.env.APPNAME,
       api_uri: process.env.PUBLIC_URI_API,
       public_uri: process.env.PUBLIC_URI,
-      form_uri_api: process.env.FORM_URI_API,
-      form_uri: process.env.FORM_URI,
       version: process.env.VERSION,
     },
   },

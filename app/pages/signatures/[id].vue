@@ -9,7 +9,7 @@ import type { IConfig, IDoc, IMember } from '~~/types';
 import type { IConfigResponse, IDocResponse } from '~~/types/IResponse';
 
 
-const { $api, $signApi } = useNuxtApp();
+const { $api } = useNuxtApp();
 const { data: user } = useAuth();
 const overlay = useOverlay();
 const { $ts } = useI18n();
@@ -45,7 +45,7 @@ const trails = computed<AccordionItem[]>(() => {
 
 const getDocumentHash = async (pdfDoc: PDFDocument): Promise<string> => {
     const pdfBytes = await pdfDoc.save();
-    const hash = await crypto.subtle.digest('SHA-256', pdfBytes);
+    const hash = await crypto.subtle.digest('SHA-256', pdfBytes as Uint8Array<ArrayBuffer>);
     return Array.from(new Uint8Array(hash))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('').slice(0, 8);
@@ -64,7 +64,7 @@ const signDocument = () => {
                     toast.add({ title: $ts("error"), description: $ts("pdf_not_loaded"), color: 'error' });
                     return;
                 }
-                await $signApi<{ data: string }>('/sign', {
+                await $api<{ data: string }>('api/sign', {
                     method: 'POST',
                     body: {
                         encryption: config.value.enscriptActivinessLetter,
@@ -149,7 +149,7 @@ const links = computed(() => [{
                     <div
                         class="flex flex-col gap-2 ms-2 md:ms-6 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
                         <div class="flex items-center justify-between"
-                            v-for="sign, i in doc.signs?.filter(v => v.signed)" :key="i">
+                            v-for="sign, i in doc.signs" :key="i">
                             <div class="flex items-center gap-2">
                                 <NuxtImg provider="localProvider"
                                     :src="(sign.user as IMember).avatar || '/img/profile-blank.png'"
@@ -163,16 +163,16 @@ const links = computed(() => [{
                                     <span class="text-sm text-gray-500 dark:text-gray-400">
                                         {{
                                             $ts('signed_at', {
-                                                date: format(new Date(sign.signedAt!), 'EEEE dd MMMM yyyy HH:mm:ss', {
+                                                date:sign.signedAt ? format(new Date(sign.signedAt!), 'EEEE dd MMMM yyyy HH:mm:ss', {
                                                     locale: id,
-                                                })
+                                                }): '-',
                                             })
                                         }}
                                     </span>
                                 </div>
                             </div>
                             <UIcon :name="sign.signed ? 'i-heroicons-check-circle-solid' : 'i-heroicons-x-circle-solid'"
-                                class="text-green-500 dark:text-green-400 size-8" size="xl" />
+                                :class="['size-8', sign.signed ? 'text-green-500 dark:text-green-400 ': 'text-red-500 dark:text-red-400']" size="xl" />
                         </div>
                     </div>
                     <div class="md:px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">

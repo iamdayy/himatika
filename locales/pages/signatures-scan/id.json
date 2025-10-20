@@ -10,5 +10,8 @@
     "upload_pdf_description": "Silakan unggah dokumen PDF yang ingin Anda cek. Dokumen ini tidak akan disimpan di server kami dan hanya digunakan untuk tujuan verifikasi.",
     "scan_pdf_description": "Silakan pindai QR Code yang terdapat pada dokumen PDF yang ingin Anda cek. Dokumen ini tidak akan disimpan di server kami dan hanya digunakan untuk tujuan verifikasi.",
     "document_verified": "Dokumen telah diverifikasi",
-    "document_verified_description": "Dokumen telah diverifikasi dan telah ditandatangani oleh Pihak yang berwenang."
+    "document_verified_description": "Dokumen telah diverifikasi dan telah ditandatangani oleh Pihak yang berwenang.",
+    "verify_doc_qr_code_not_found": "QR Code tidak ditemukan",
+    "verify_doc_qr_code_not_found_description": "QR Code tidak ditemukan. Silakan coba lagi.",
+    "drag_or_drop_file": "Unggah atau letakkan file di sini"
 }

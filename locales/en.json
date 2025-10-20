@@ -1,4 +1,8 @@
 {
+    "active": "Active",
+    "inactive": "Inactive",
+    "male": "Male",
+    "female": "Female",
     "greeting": "Hi! How's it going?",
     "welcome": "Welcome to our app! Glad to have you!",
     "goodbye": "See you later! Have a great day!",

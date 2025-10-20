@@ -4,10 +4,9 @@ import type { ITagsResponse } from '~~/types/IResponse';
 /**
  * Composables
  */
-const { $api } = useNuxtApp();
+const { $api, $ts } = useNuxtApp();
 const toast = useToast();
 
-const { convert } = useImageToBase64();
 const { data } = useAsyncData(() => $api<ITagsResponse>("/api/doc/tags"));
 /**
  * Emits
@@ -49,8 +48,15 @@ const doc = ref<IDoc>({
  * Add new doc
  */
 const addDoc = async () => {
+    if (!file.value) {
+        toast.add({
+            title: $ts('file_required'),
+            color: 'error'
+        });
+    }
     emit('doc', {
         ...doc.value,
+        doc: file.value!,
         tags: tags.value
     });
 }

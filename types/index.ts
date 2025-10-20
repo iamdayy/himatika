@@ -420,12 +420,13 @@ export interface IPrivateKey {
   encrypted_key: string;
   metadata: {
     iv: string;
+    key: string;
     tag?: string;
   };
 }
 
 export interface IEncryption {
-  _id: string | Types.ObjectId;
+  _id?: string | Types.ObjectId;
   title: string;
   private_key: IPrivateKey;
   public_key: string;

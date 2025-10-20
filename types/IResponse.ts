@@ -6,6 +6,7 @@ import type {
   IConfig,
   IDoc,
   IDocGrouped,
+  IEncryption,
   IMember,
   IMessage,
   INews,
@@ -303,4 +304,12 @@ export interface IAnswersResponse extends IResponse {
       answer: string;
     }[];
   };
+}
+
+export interface IEncryptionsResponse extends IResponse {
+  data?: {
+    encryptions?: Omit<IEncryption, 'private_key'>[],
+    count?: number,
+    encryption?: Omit<IEncryption, '_id'>,
+  }
 }

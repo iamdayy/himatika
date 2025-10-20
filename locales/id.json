@@ -1,4 +1,8 @@
 {
+  "active": "Aktif",
+  "male": "Laki-laki",
+  "female": "Perempuan",
+    "inactive": "Tidak Aktif",
     "greeting": "Hai! Apa kabar?",
     "action": "Tindakan",
     "welcome": "Selamat datang di aplikasi kami! Senang bertemu denganmu!",

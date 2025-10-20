@@ -130,7 +130,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
               if (doc) {
                 return {
                   role: doc.dailyManagement.find(
-                    (daily) => (daily.member as IMember).id == id
+                    (daily) => (daily.member as IMember | null)?.id == id
                   )?.position,
                   period: doc.period,
                 };
