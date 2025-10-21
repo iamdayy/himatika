@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Analytics } from '@vercel/analytics/nuxt';
 import 'driver.js/dist/driver.css';
 const { x, y } = useMouse();
 const { width } = useWindowSize();
@@ -21,6 +22,7 @@ const position = computed(() => {
 });
 </script>
 <template>
+  <Analytics />
   <UApp>
     <div class="light-container" @mousemove="isActive = true" @mouseleave="isActive = false">
       <!-- Light effect -->
