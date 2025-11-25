@@ -4,6 +4,14 @@ import { ISetSessionParams } from "~~/types/IParam";
 import { SessionModel } from "../models/SessionModel";
 import { UserModel } from "../models/UserModel";
 
+const getSecretKey = () => {
+  const secretKey = useRuntimeConfig().jwtSecret;
+  if (!secretKey) {
+    throw new Error("JWT secret key is not configured.");
+  }
+  return secretKey;
+};
+
 /**
  * Checks the validity of a session token.
  * @param payload - The session token to verify.
@@ -23,7 +31,7 @@ export const checkSession = async (payload: string) => {
 
     const accessToken = jwt.verify(
       session.token,
-      "HimatikaUser"
+      getSecretKey()
     ) as jwt.JwtPayload;
 
     if (!accessToken) {
@@ -81,7 +89,7 @@ export const checkSession = async (payload: string) => {
  * @throws {H3Error} If the refresh token is invalid or the session is not found.
  */
 export const refreshSession = async (payload: string) => {
-  const refreshToken = jwt.verify(payload, "HimatikaUser") as jwt.JwtPayload;
+  const refreshToken = jwt.verify(payload, getSecretKey()) as jwt.JwtPayload;
 
   if (!refreshToken) {
     throw createError({
@@ -99,7 +107,7 @@ export const refreshSession = async (payload: string) => {
     });
   }
 
-  const token = jwt.sign({ user: session.user }, "HimatikaUser", {
+  const token = jwt.sign({ user: session.user }, getSecretKey(), {
     expiresIn: "10h",
   });
   session.token = token;
@@ -138,7 +146,7 @@ export const setSession = async (
  */
 export const exitSession = async (payload: string) => {
   try {
-    const session = jwt.verify(payload, "HimatikaUser") as jwt.JwtPayload;
+    const session = jwt.verify(payload, getSecretKey()) as jwt.JwtPayload;
     if (!session) {
       throw createError({
         statusMessage: "Unauthenticated!",

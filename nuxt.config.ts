@@ -14,9 +14,14 @@ export default defineNuxtConfig({
       },
     },
   },
-  ssr: false,
+  sourcemap: {
+    server: false,
+    client: false,
+  },
+  ssr: true,
   devtools: { enabled: true },
   runtimeConfig: {
+    jwtSecret: process.env.JWT_SECRET,
     mongodb_uri: process.env.HIMATIKA_MONGODB_URI,
     dbName: process.env.DBNAME,
     vercelBlobToken: process.env.BLOB_READ_WRITE_TOKEN,
