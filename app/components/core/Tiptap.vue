@@ -1,52 +1,55 @@
 <template>
-    <div class="overflow-hidden border rounded-md border-accent-2">
-        <!-- Editor toolbar -->
-        <div class="flex flex-wrap justify-between w-full border-b shadow-md border-accent-2 h-fit">
-            <!-- Main editing tools -->
-            <UFieldGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled"
-                :ui="{ rounded: 'rounded-none' }">
-                <UButton icon="i-heroicons-bold" :variant="editor?.isActive('bold') ? 'solid' : 'outline'"
-                    @click="editor?.chain().focus().toggleBold().run()"
-                    :disabled="!editor?.can().chain().focus().toggleBold().run()" />
-                <UButton icon="i-heroicons-italic" :variant="editor?.isActive('italic') ? 'solid' : 'outline'"
-                    @click="editor?.chain().focus().toggleItalic().run()"
-                    :disabled="!editor?.can().chain().focus().toggleItalic().run()" />
-                <UButton icon="i-heroicons-strikethrough" :variant="editor?.isActive('strike') ? 'solid' : 'outline'"
-                    @click="editor?.chain().focus().toggleStrike().run()"
-                    :disabled="!editor?.can().chain().focus().toggleStrike().run()" />
-                <UButton v-for="level in [1, 2, 3, 4, 5]" :key="level" :label="`h${level}`"
-                    :variant="editor?.isActive('heading', { level: level as 1 | 2 | 3 | 4 | 5 }) ? 'solid' : 'outline'"
-                    @click="editor?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 }).run()" />
-                <UButton icon="i-ph-paragraph" @click="editor?.chain().focus().setParagraph().run()" />
-                <UButton icon="i-ph-image" @click="openInput" />
-                <input class="hidden" id="tiptapFileInput" type="file" @input="handleImage" accept="image/*" />
-            </UFieldGroup>
-            <!-- Undo/Redo buttons -->
-            <UFieldGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled">
-                <UButton icon="i-heroicons-arrow-uturn-left" @click="editor?.chain().focus().undo().run()"
-                    :disabled="!editor?.can().chain().focus().undo().run()" />
-                <UButton icon="i-heroicons-arrow-uturn-right" @click="editor?.chain().focus().redo().run()"
-                    :disabled="!editor?.can().chain().focus().redo().run()" />
-            </UFieldGroup>
+    <ClientOnly fallback-tag="span" fallback="Loading player...">
+        <div class="overflow-hidden border rounded-md border-accent-2">
+            <!-- Editor toolbar -->
+            <div class="flex flex-wrap justify-between w-full border-b shadow-md border-accent-2 h-fit">
+                <!-- Main editing tools -->
+                <UFieldGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled"
+                    :ui="{ rounded: 'rounded-none' }">
+                    <UButton icon="i-heroicons-bold" :variant="editor?.isActive('bold') ? 'solid' : 'outline'"
+                        @click="editor?.chain().focus().toggleBold().run()"
+                        :disabled="!editor?.can().chain().focus().toggleBold().run()" />
+                    <UButton icon="i-heroicons-italic" :variant="editor?.isActive('italic') ? 'solid' : 'outline'"
+                        @click="editor?.chain().focus().toggleItalic().run()"
+                        :disabled="!editor?.can().chain().focus().toggleItalic().run()" />
+                    <UButton icon="i-heroicons-strikethrough"
+                        :variant="editor?.isActive('strike') ? 'solid' : 'outline'"
+                        @click="editor?.chain().focus().toggleStrike().run()"
+                        :disabled="!editor?.can().chain().focus().toggleStrike().run()" />
+                    <UButton v-for="level in [1, 2, 3, 4, 5]" :key="level" :label="`h${level}`"
+                        :variant="editor?.isActive('heading', { level: level as 1 | 2 | 3 | 4 | 5 }) ? 'solid' : 'outline'"
+                        @click="editor?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 }).run()" />
+                    <UButton icon="i-ph-paragraph" @click="editor?.chain().focus().setParagraph().run()" />
+                    <UButton icon="i-ph-image" @click="openInput" />
+                    <input class="hidden" id="tiptapFileInput" type="file" @input="handleImage" accept="image/*" />
+                </UFieldGroup>
+                <!-- Undo/Redo buttons -->
+                <UFieldGroup :size="responsiveUISizes.button" orientation="horizontal" v-if="editor && !disabled">
+                    <UButton icon="i-heroicons-arrow-uturn-left" @click="editor?.chain().focus().undo().run()"
+                        :disabled="!editor?.can().chain().focus().undo().run()" />
+                    <UButton icon="i-heroicons-arrow-uturn-right" @click="editor?.chain().focus().redo().run()"
+                        :disabled="!editor?.can().chain().focus().redo().run()" />
+                </UFieldGroup>
+            </div>
+            <!-- Floating menu for quick formatting -->
+            <FloatingMenu :editor="editor" :tippy-options="{ duration: 100 }" v-if="editor && !disabled">
+                <UFieldGroup :size="responsiveUISizes.floatingMenu" orientation="horizontal"
+                    :ui="{ rounded: 'rounded-full' }">
+                    <UButton v-for="level in [1, 2, 3]" :key="level" :label="`h${level}`"
+                        :variant="editor?.isActive('heading', { level: level as 1 | 2 | 3 }) ? 'solid' : 'outline'"
+                        @click="editor?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run()" />
+                    <UButton icon="i-ph-list-bullets" :variant="editor?.isActive('bulletList') ? 'solid' : 'outline'"
+                        @click="editor?.chain().focus().toggleBulletList().run()" />
+                    <UButton icon="i-ph-list-numbers" :variant="editor?.isActive('orderedList') ? 'solid' : 'outline'"
+                        @click="editor?.chain().focus().toggleOrderedList().run()" />
+                    <UButton icon="i-ph-arrow-elbow-down-left" variant="solid"
+                        @click="editor?.chain().focus().setHardBreak().run()" />
+                </UFieldGroup>
+            </FloatingMenu>
+            <!-- Main editor content area -->
+            <EditorContent :editor="editor" />
         </div>
-        <!-- Floating menu for quick formatting -->
-        <FloatingMenu :editor="editor" :tippy-options="{ duration: 100 }" v-if="editor && !disabled">
-            <UFieldGroup :size="responsiveUISizes.floatingMenu" orientation="horizontal"
-                :ui="{ rounded: 'rounded-full' }">
-                <UButton v-for="level in [1, 2, 3]" :key="level" :label="`h${level}`"
-                    :variant="editor?.isActive('heading', { level: level as 1 | 2 | 3 }) ? 'solid' : 'outline'"
-                    @click="editor?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run()" />
-                <UButton icon="i-ph-list-bullets" :variant="editor?.isActive('bulletList') ? 'solid' : 'outline'"
-                    @click="editor?.chain().focus().toggleBulletList().run()" />
-                <UButton icon="i-ph-list-numbers" :variant="editor?.isActive('orderedList') ? 'solid' : 'outline'"
-                    @click="editor?.chain().focus().toggleOrderedList().run()" />
-                <UButton icon="i-ph-arrow-elbow-down-left" variant="solid"
-                    @click="editor?.chain().focus().setHardBreak().run()" />
-            </UFieldGroup>
-        </FloatingMenu>
-        <!-- Main editor content area -->
-        <EditorContent :editor="editor" />
-    </div>
+    </ClientOnly>
 </template>
 
 <script setup lang="ts">

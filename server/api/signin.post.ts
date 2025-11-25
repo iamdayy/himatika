@@ -3,6 +3,13 @@ import { Types } from "mongoose";
 import { UserModel } from "~~/server/models/UserModel";
 import { setSession } from "../utils/Sessions";
 
+const getSecretKey = () => {
+  const secretKey = useRuntimeConfig().jwtSecret;
+  if (!secretKey) {
+    throw new Error("JWT secret key is not configured.");
+  }
+  return secretKey;
+};
 /**
  * Handles user sign-in process.
  *
@@ -38,8 +45,8 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 401,
-        statusMessage: t("login_page.user_not_found"),
-        data: { message: t("login_page.check_username"), name: "username" },
+      statusMessage: t("login_page.user_not_found"),
+      data: { message: t("login_page.check_username"), name: "username" },
     });
   }
   if (!user?.verified) {
@@ -61,10 +68,10 @@ export default defineEventHandler(async (event) => {
   }
 
   // Generate JWT tokens
-  const token = jwt.sign({ user: user._id }, "HimatikaUser", {
+  const token = jwt.sign({ user: user._id }, getSecretKey(), {
     expiresIn: "1w",
   });
-  const refreshToken = jwt.sign({ user: user._id }, "HimatikaUser", {
+  const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
     expiresIn: "90d",
   });
 

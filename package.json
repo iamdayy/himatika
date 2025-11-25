@@ -3,11 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
-    "generate": "nuxt generate",
-    "dev": "nuxt dev",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 nuxt build",
+  "generate": "cross-env NODE_OPTIONS=--max-old-space-size=8192 nuxt generate",
+  "dev": "nuxt dev",
+  "preview": "nuxt preview",
+  "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.80",
@@ -67,6 +67,7 @@
     "@types/node": "^24.5.2",
     "@types/otp-generator": "^4.0.2",
     "@types/qrcode": "^1.5.5",
+    "cross-env": "^10.1.0",
     "nuxt-file-storage": "^0.3.0",
     "nuxt-qrcode": "^0.4.8"
   }
