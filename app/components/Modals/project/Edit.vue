@@ -241,10 +241,11 @@ const inputSize = computed(() => {
                         <!-- Image upload -->
                         <UFormField class="col-span-full min-h-36" :label="$ts('image')">
                             <DropFile @change="onChangeImage" accept="image/*">
-                                <NuxtImg :src="fileToCropped.blob" v-if="file" />
+                                <NuxtImg :src="fileToCropped.blob" v-if="file" :alt="fileToCropped.name" class="mx-auto"
+                                    loading="lazy" />
                                 <div v-else-if="stateProject.image && typeof stateProject.image === 'string'">
                                     <NuxtImg provider="localProvider" :src="stateProject.image"
-                                        :alt="stateProject.title" class="mx-auto" />
+                                        :alt="stateProject.title" class="mx-auto" loading="lazy" />
                                 </div>
                             </DropFile>
                         </UFormField>
@@ -273,7 +274,7 @@ const inputSize = computed(() => {
                         <UFormField class="space-y-4 col-span-full" :label="$ts('progress')">
                             <USlider v-model="stateProject.progress" :min="0" :max="100" :step="5" />
                             <p class="text-sm text-gray-500 dark:text-gray-400 text-end">{{ stateProject.progress
-                                }}%
+                            }}%
                             </p>
                         </UFormField>
                     </div>

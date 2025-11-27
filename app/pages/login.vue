@@ -44,7 +44,11 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
     try {
         const route = useRoute();
         let redirectUrl = route.query.redirect as string;
-        let previousUrl = localStorage.getItem('previousUrl');
+        const previousUrlCookie = useCookie<string | null>('previousUrl');
+        const previousUrl = previousUrlCookie.value;
+        if (previousUrl) {
+            previousUrlCookie.value = null;
+        }
         if (useEmail.value) {
             await signIn({
                 email: event.data.email,
@@ -124,8 +128,8 @@ onMounted(() => {
         class="max-w-md border rounded-lg shadow-2xl card bg-gradient-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
         <div class="card-wrap">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm" id="img">
-                <nuxtImg provider="localProvider" class="w-auto h-10 mx-auto image" src="/img/logo.png"
-                    alt="Himatika" />
+                <nuxtImg provider="localProvider" class="w-auto h-10 mx-auto image" src="/img/logo.png" alt="Himatika"
+                    loading="lazy" />
             </div>
             <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
                 $ts('login') }}</h4>

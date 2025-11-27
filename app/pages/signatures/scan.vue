@@ -291,7 +291,9 @@ const tabs = computed(() => {
                         <p class="text-sm text-gray-500 dark:text-gray-200">{{ item.description }}</p>
                     </template>
                     <div class="flex flex-col items-center justify-center gap-2">
-                        <UFileUpload accept="pdf" format="pdf" v-model="pdfs" icon="i-heroicons-document" :label="$ts('drag_or_drop_file')" description="PDF (Max. 2MB)" layout="list" class="w-full" />
+                        <UFileUpload accept="pdf" format="pdf" v-model="pdfs" icon="i-heroicons-document"
+                            :label="$ts('drag_or_drop_file')" description="PDF (Max. 2MB)" layout="list"
+                            class="w-full" />
                     </div>
                 </UCard>
             </template>
@@ -321,13 +323,14 @@ const tabs = computed(() => {
                         <div class="flex items-center gap-2">
                             <NuxtImg provider="localProvider"
                                 :src="(sign.user as IMember).avatar || '/img/profile-blank.png'"
-                                class="w-12 h-12 rounded-full" />
+                                class="w-12 h-12 rounded-full" loading="lazy" />
                             <div class="flex flex-col">
                                 <span class="text-lg font-semibold text-gray-800 dark:text-gray-300">{{ (sign.user as
                                     IMember).fullName
-                                }}</span>
+                                    }}</span>
                                 <span class="text-sm text-gray-500 dark:text-gray-400">{{ sign.as }}</span>
-                                <UIcon name="i-heroicons-check-circle" v-if="sign.signed" class="text-green-500 dark:text-green-400" />
+                                <UIcon name="i-heroicons-check-circle" v-if="sign.signed"
+                                    class="text-green-500 dark:text-green-400" />
                                 <UIcon name="i-heroicons-x-circle" v-else class="text-red-500 dark:text-red-400" />
                             </div>
                         </div>
@@ -341,11 +344,11 @@ const tabs = computed(() => {
                         <div class="flex items-center gap-2">
                             <NuxtImg provider="localProvider"
                                 :src="(trail.user as IMember).avatar || '/img/profile-blank.png'"
-                                class="w-12 h-12 rounded-full" />
+                                class="w-12 h-12 rounded-full" loading="lazy" />
                             <div class="flex flex-col">
                                 <span class="text-lg font-semibold text-gray-800 dark:text-gray-300">{{ (trail.user as
                                     IMember).fullName
-                                }}</span>
+                                    }}</span>
                                 <span class="text-sm text-gray-500 dark:text-gray-400">{{ trail.action }}</span>
                             </div>
                         </div>

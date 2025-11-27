@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, UBadge, UButton, UCheckbox } from '#components';
+import { ModalsConfirmation, UBadge, UButton, UCheckbox, VideoPlayer } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { IAspiration, IDoc, IMember, IPhoto, IVideo, IVote } from '~~/types';
 import type { IAspirationResponse, IExportSheetResponse } from '~~/types/IResponse';
@@ -457,7 +457,7 @@ const links = computed(() => [{
                         <div class="flex flex-col items-center gap-2">
                             <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">{{
                                 $ts('show_deleted')
-                                }}</label>
+                            }}</label>
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </div>
                         <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"
@@ -478,17 +478,23 @@ const links = computed(() => [{
                                 <div v-for="(photo, i) in row.original.proofs?.photos" :key="i"
                                     class="w-1/2 p-1 md:w-1/4">
                                     <NuxtImg :src="photo.image as string" provider="localProvider"
-                                        :alt="'Proof ' + (i + 1)" class="object-cover w-full h-auto" />
+                                        :alt="'Proof ' + (i + 1)" class="object-cover w-full h-auto" loading="lazy" />
                                 </div>
                                 <div v-for="(video, i) in row.original.proofs?.videos" :key="i"
                                     class="w-1/2 p-1 md:w-1/4">
-                                    <NuxtImg :src="video.video as string" :alt="'Proof ' + (i + 1)"
+                                    <VideoPlayer :src="video.video as string" :alt="'Proof ' + (i + 1)"
                                         class="object-cover w-full h-auto" />
                                 </div>
                                 <div v-for="(document, i) in row.original.proofs?.docs" :key="i"
                                     class="w-1/2 p-1 md:w-1/4">
-                                    <!-- <NuxtImg :src="document.doc" :alt="'Proof ' + (i + 1)"
-                                        class="object-cover w-full h-auto" /> -->
+                                    <div
+                                        class="flex flex-col items-center justify-center p-4 border border-gray-300 rounded-lg dark:border-gray-600">
+                                        <i
+                                            class="i-heroicons-document-text-20-solid text-4xl text-gray-500 dark:text-gray-400"></i>
+                                        <span class="mt-2 text-sm text-center text-gray-600 dark:text-gray-300">
+                                            {{ document.doc }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

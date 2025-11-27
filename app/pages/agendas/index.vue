@@ -325,7 +325,7 @@ const links = computed(() => [{
                                             <NuxtImg provider="localProvider"
                                                 v-if="agenda.photos !== undefined && agenda.photos.length > 0"
                                                 :src="(agenda.photos[0]!.image as string)" alt="Agenda Image"
-                                                class="w-full h-full object-cover" />
+                                                class="w-full h-full object-cover" loading="lazy" />
                                             <div v-else
                                                 class="bg-gray-200 dark:bg-gray-700 w-full h-full flex items-center justify-center">
                                                 <UIcon name="i-heroicons-photo"

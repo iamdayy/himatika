@@ -24,7 +24,7 @@ useHead({
         <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
             <!-- Logo or back button -->
             <NuxtLink to="/" class="items-center space-x-3 rtl:space-x-reverse">
-                <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" />
+                <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" loading="lazy" />
             </NuxtLink>
 
             <!-- Theme toggle -->

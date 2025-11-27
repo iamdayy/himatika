@@ -76,7 +76,7 @@ const submitLike = async (id: string) => {
                                 Date(featuredNews.publishedAt!)) }}
                     </UBadge>
                     <NuxtImg provider="localProvider" :src="(featuredNews.mainImage as string)"
-                        :alt="featuredNews.title" class="object-cover size-full" />
+                        :alt="featuredNews.title" class="object-cover size-full" loading="lazy" />
                 </div>
                 <div class="px-2 py-4 pr-8 my-auto">
                     <ULink :to="`/news/${featuredNews.slug}`">
@@ -138,7 +138,7 @@ const submitLike = async (id: string) => {
                                 timeAgo(new Date(item.publishedAt!)) }}
                         </UBadge>
                         <NuxtImg provider="localProvider" :src="item.mainImage as string" :alt="item.title"
-                            class="object-cover w-full h-full" />
+                            class="object-cover w-full h-full" loading="lazy" />
                     </template>
                     <div class="space-y-2 md:space-y-3">
                         <ULink :to="`/news/${item.slug}`" class="text-sm font-bold md:text-xl">{{ item.title }}</ULink>

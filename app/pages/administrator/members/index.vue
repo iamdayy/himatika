@@ -134,6 +134,8 @@ const columns = computed<TableColumn<IMember>[]>(() => [
                     provider: 'localProvider',
                     src: row.original.avatar as string || '/img/profile-blank.png',
                     class: 'object-cover rounded-full max-w-12 aspect-square',
+                    alt: row.original.fullName,
+                    loading: 'lazy'
                 }),
                 h('div', {
                     class: 'flex flex-col items-start gap-1',

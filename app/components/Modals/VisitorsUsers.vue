@@ -208,7 +208,8 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                     </template>
                     <template #avatar-data="{ row }">
                         <UAvatar size="sm">
-                            <NuxtImg provider="localProvider" :src="row.avatar || '/img/profile-blank.png'" />
+                            <NuxtImg provider="localProvider" :src="row.avatar || '/img/profile-blank.png'"
+                                loading="lazy" />
                         </UAvatar>
                     </template>
                 </UTable>

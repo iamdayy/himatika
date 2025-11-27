@@ -128,7 +128,7 @@ useHead({
                 <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
                     <!-- Logo or back button -->
                     <NuxtLink to="/" class="items-center hidden space-x-3 md:flex rtl:space-x-reverse">
-                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" />
+                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" loading="lazy" />
                     </NuxtLink>
 
 
@@ -139,7 +139,8 @@ useHead({
                             variant="link" color="neutral" />
                         <template #title>
                             <NuxtLink to="/" class="items-center space-x-3 md:flex rtl:space-x-reverse">
-                                <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" />
+                                <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo"
+                                    loading="lazy" />
                             </NuxtLink>
                         </template>
                         <template #body>
@@ -161,7 +162,7 @@ useHead({
                         <UDropdownMenu :items="items" :content="{ side: 'bottom' }">
                             <NuxtImg v-if="isLoggedIn" provider="localProvider"
                                 :src="user?.member.avatar || '/img/profile-blank.png'"
-                                class="object-cover rounded-full max-w-8 aspect-square" />
+                                class="object-cover rounded-full max-w-8 aspect-square" loading="lazy" alt="Profile" />
                             <UButton v-else icon="i-heroicons-arrow-right-end-on-rectangle" variant="ghost"
                                 class="rounded-full" color="neutral" />
 

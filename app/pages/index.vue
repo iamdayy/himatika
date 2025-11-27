@@ -57,7 +57,7 @@ useSeoMeta({
     <section class="w-full mx-auto mt-8">
         <div class="text-center">
             <NuxtImg provider="localProvider" src="/img/logo.png" alt="Logo"
-                class="mx-auto my-2 w-36 md:w-full md:max-w-sm md:my-4 hero" />
+                class="mx-auto my-2 w-36 md:w-full md:max-w-sm md:my-4 hero" loading="lazy" />
 
             <h1
                 class="text-3xl font-bold tracking-tight text-gray-900 uppercase sm:text-4xl md:text-6xl lg:text-8xl hero title dark:text-gray-200">
@@ -87,8 +87,8 @@ useSeoMeta({
                 dot: 'w-6 h-1'
             }" class="overflow-hidden rounded-lg" loop dots arrows autoplay>
             <div class="relative w-full">
-                <NuxtImg provider="localProvider" :src="(item.image?.image as string)" class="w-full"
-                    draggable="false" />
+                <NuxtImg provider="localProvider" :src="(item.image?.image as string)" class="w-full" draggable="false"
+                    loading="lazy" alt="Carousel" />
                 <div class="absolute bottom-0 left-0 right-0 flex-col hidden p-4 text-white bg-black/50 md:flex">
                     <div class="flex justify-between flex-1 w-full gap-2">
                         <h3 class="md:text-xl text-sm font-bold line-clamp-1">{{ item.title }}</h3>

@@ -46,7 +46,7 @@ const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
         header: $ts('fullName'),
         cell: ({ row }) => {
             return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.NIM}` }, [
-                h(NuxtImg, { src: row.original.avatar || '/img/profile-blank.png', size: 'sm', provider: 'localProvider', class: "object-cover rounded-full max-w-8 aspect-square" }),
+                h(NuxtImg, { src: row.original.avatar || '/img/profile-blank.png', size: 'sm', provider: 'localProvider', class: "object-cover rounded-full max-w-8 aspect-square", loading: 'lazy', alt: row.original.fullName }),
                 h('div', undefined, [
                     h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.fullName),
                     h('p', { class: '' }, `${row.original.NIM}`)
@@ -407,7 +407,7 @@ onMounted(() => {
                 class="absolute z-10 w-full border-gray-200 bg-white/15 md:bg-transparent backdrop-blur-md md:border-none">
                 <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
                     <NuxtLink to="/" class="items-center hidden space-x-3 md:flex rtl:space-x-reverse">
-                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" />
+                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" loading="lazy" />
                     </NuxtLink>
 
                     <USlideover v-if="isMobile" v-model:open="openSlideOver" :overlay="false" :title="'HIMAPP'"
@@ -418,7 +418,8 @@ onMounted(() => {
                             <div class="flex-1 p-4">
                                 <div class="flex flex-row items-center justify-between">
                                     <NuxtLink to="/" class="items-center space-x-3 md:flex rtl:space-x-reverse">
-                                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" />
+                                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo"
+                                            loading="lazy" />
                                     </NuxtLink>
                                     <UButton color="neutral" variant="ghost" size="sm"
                                         icon="i-heroicons-x-mark-20-solid" square padded
@@ -429,11 +430,12 @@ onMounted(() => {
                                         <div class="flex items-center w-full gap-2">
                                             <NuxtImg provider="localProvider"
                                                 :src="user?.member.avatar || '/img/profile-blank.png'"
-                                                class="object-cover rounded-full max-w-12 max-h-12 aspect-square" />
+                                                class="object-cover rounded-full max-w-12 max-h-12 aspect-square"
+                                                loading="lazy" :alt="user?.member.fullName || 'Profile Image'" />
                                             <div class="overflow-ellipsis">
                                                 <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                     user?.username
-                                                }}
+                                                    }}
                                                 </h2>
                                                 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                     user?.member.NIM }}
@@ -457,7 +459,8 @@ onMounted(() => {
                         <UDropdownMenu :items="items" :popper="{ placement: 'bottom-start' }">
                             <NuxtImg provider="localProvider" v-if="isLoggedIn"
                                 :src="user?.member.avatar || '/img/profile-blank.png'"
-                                class="object-cover rounded-full max-w-8 aspect-square" />
+                                class="object-cover rounded-full max-w-8 aspect-square" loading="lazy"
+                                :alt="user?.member.fullName || 'Profile Image'" />
                             <UAvatar v-else icon="i-heroicons-arrow-right-end-on-rectangle" />
 
                             <template #item="{ item }">
@@ -484,7 +487,8 @@ onMounted(() => {
                                     <div class="flex items-center w-full gap-6">
                                         <NuxtImg provider="localProvider"
                                             :src="user?.member.avatar || '/img/profile-blank.png'"
-                                            class="object-cover rounded-full max-w-16 lg:max-w-24 aspect-square" />
+                                            class="object-cover rounded-full max-w-16 lg:max-w-24 aspect-square"
+                                            loading="lazy" :alt="user?.member.fullName || 'Profile Image'" />
                                         <div>
                                             <h2
                                                 class="text-lg font-semibold text-gray-800 lg:text-2xl lg:font-bold dark:text-gray-100">
@@ -514,7 +518,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-calendar" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
@@ -530,7 +534,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         projectsMe.length
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
@@ -544,7 +548,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         aspirations.length
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
@@ -678,7 +682,7 @@ onMounted(() => {
                                 </div>
                                 <div class="max-w-md mx-auto overflow-hidden rounded-lg">
                                     <NuxtImg provider="localProvider" :src="(project.image as string)"
-                                        :alt="project.title" class="object-cover w-full h-full" />
+                                        :alt="project.title" class="object-cover w-full h-full" loading="lazy" />
                                 </div>
                             </template>
                             <div class="space-y-2">

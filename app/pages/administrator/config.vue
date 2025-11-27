@@ -438,7 +438,8 @@ const links = computed(() => [{
                 <UFormField :label="$ts('carousel')">
                     <div class="flex flex-col gap-2 px-2 md:gap-4 md:px-8">
                         <DropFile @change="onChangeImage" accept="image/*" :disabled="notEditMode && !isSaving">
-                            <NuxtImg :src="fileToCropped.blob" v-if="file" />
+                            <NuxtImg :src="fileToCropped.blob" v-if="file" :alt="fileToCropped.name" class="mx-auto"
+                                loading="lazy" />
                         </DropFile>
                         <UButton block @click="addPhoto" :disabled="notEditMode && !isSaving"
                             :size="responsiveUISizes.button">
@@ -447,7 +448,7 @@ const links = computed(() => [{
                     <div class="flex flex-wrap gap-2 my-2 md:my-4">
                         <div class="relative inline-block max-w-[240px]" v-for="img, i in Config.carousels" :key="i">
                             <NuxtImg provider="localProvider" :src="((img as ICarousel).image?.image as string)"
-                                class="object-cover rounded-lg shadow-md" />
+                                class="object-cover rounded-lg shadow-md" alt="Carousel Image" loading="lazy" />
                             <UButton icon="i-heroicons-x-mark" color="neutral" variant="soft" size="xs"
                                 class="absolute top-2 right-2 !bg-white/80 hover:!bg-white/100"
                                 @click="deletePhoto(i, img.image?._id!)" :disabled="notEditMode && !isSaving" />

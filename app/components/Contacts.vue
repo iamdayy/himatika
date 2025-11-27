@@ -93,8 +93,6 @@ const responsiveUISizes = computed<{ [key: string]: 'lg' | 'md' }>(() => ({
 <template>
     <div class="flex items-center justify-center">
         <div class="text-center">
-            <!-- <NuxtImg provider="localProvider" src="/img/handshake.png" alt="Working" width="300" height="300"
-                class="object-cover w-full mx-auto mb-8 rounded-full shadow-lg max-w-48" /> -->
             <h1 class="mb-8 text-2xl font-semibold text-gray-800 md:text-4xl md:font-bold dark:text-gray-200">
                 {{ $ts('contact_message') }}
             </h1>

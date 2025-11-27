@@ -224,7 +224,7 @@ const links = computed(() => [{
                                         council.position }}</h2>
                                 <NuxtImg :src="(council.image as string)" :alt="council.name" :style="imageDimensions"
                                     class="object-cover mx-auto my-4 rounded-full max-w-48 aspect-square"
-                                    provider="localProvider" />
+                                    provider="localProvider" loading="lazy" />
                                 <div class="absolute bottom-16">
                                     <h1
                                         :class="['mb-2 font-semibold text-gray-800 dark:text-gray-200 -translate-x-14', responsiveClasses.title]">
@@ -250,7 +250,7 @@ const links = computed(() => [{
                             <NuxtImg :src="(organizer?.advisor.image as string)" :alt="organizer?.advisor.name"
                                 :style="imageDimensions"
                                 class="object-cover mx-auto my-4 rounded-full max-w-48 aspect-square"
-                                provider="localProvider" />
+                                provider="localProvider" loading="lazy" />
                             <div class="absolute bottom-16">
                                 <h1
                                     :class="['mb-2 font-semibold text-gray-800 dark:text-gray-200 -translate-x-14', responsiveClasses.title]">

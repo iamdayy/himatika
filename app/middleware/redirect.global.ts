@@ -1,9 +1,10 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  // if (!import.meta.client) return;
+  if (import.meta.server) return;
   if (to.path === "/login") {
     if (from.path === "/verify") {
       return;
     }
-    localStorage.setItem("previousUrl", from.fullPath);
+    const previousUrl = useCookie("previousUrl");
+    previousUrl.value = from.fullPath;
   }
 });

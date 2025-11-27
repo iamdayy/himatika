@@ -9,7 +9,7 @@ const perPage = ref(6);
 const sortBy = ref('Published');
 const order = ref('desc');
 const { $api } = useNuxtApp();
-const { data: projects, refresh: refreshProjects } = await useLazyAsyncData('projects', async () => $api<IProjectsResponse>('/api/projects', {
+const { data: projects, refresh: refreshProjects } = await useLazyAsyncData('projects', async () => $api<IProjectsResponse>('/api/project', {
     method: 'get',
     query: {
         page: page.value,
@@ -113,7 +113,7 @@ const AddModal = () => {
                                 icon="i-heroicons-arrow-top-right-on-square" />
                         </div>
                         <NuxtImg provider="localProvider" :src="(project.image as string)" :alt="project.title"
-                            class="object-cover size-full" />
+                            class="object-cover size-full" loading="lazy" />
                     </div>
                 </template>
                 <div class="space-y-2">

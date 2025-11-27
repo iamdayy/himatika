@@ -258,12 +258,12 @@ const links = [{ label: $ts('profile'), icon: 'i-heroicons-user', to: '/profile'
                                 <div v-for="(photo, i) in row.original.proofs?.photos" :key="i"
                                     class="w-1/2 p-1 md:w-1/4">
                                     <NuxtImg :src="photo.image as string" provider="localProvider"
-                                        :alt="'Proof ' + (i + 1)" class="object-cover w-full h-auto" />
+                                        :alt="'Proof ' + (i + 1)" class="object-cover w-full h-auto" loading="lazy" />
                                 </div>
                                 <div v-for="(video, i) in row.original.proofs?.videos" :key="i"
                                     class="w-1/2 p-1 md:w-1/4">
-                                    <NuxtImg :src="video.video as string" :alt="'Proof ' + (i + 1)"
-                                        class="object-cover w-full h-auto" />
+                                    <!-- <NuxtImg :src="video.video as string" :alt="'Proof ' + (i + 1)"
+                                        class="object-cover w-full h-auto" /> -->
                                 </div>
                                 <div v-for="(document, i) in row.original.proofs?.docs" :key="i"
                                     class="w-1/2 p-1 md:w-1/4">

@@ -6,7 +6,7 @@ import { id } from 'date-fns/locale';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import PDFViewer from '~/components/PDFViewer.vue';
-import type { IConfig, IDoc, IMember } from '~~/types';
+import type { IConfig, IDoc, IMember, IOverlayLocation } from '~~/types';
 import type { IReqSignDocument } from '~~/types/IRequestPost';
 import type { IConfigResponse, IDocResponse } from '~~/types/IResponse';
 
@@ -56,55 +56,55 @@ const getDocumentHash = async (pdfDoc: PDFDocument): Promise<string> => {
 };
 
 async function findTextCoordinates(
-  searchText: string
+    searchText: string
 ): Promise<IOverlayLocation[]> {
-  const matchingLocations: IOverlayLocation[] = [];
-  try {
+    const matchingLocations: IOverlayLocation[] = [];
+    try {
 
-    // Memuat dokumen PDF dari buffer
-    const loadingTask = pdfjs.getDocument({url: doc.value.doc as string });
-    const pdfDocument = await loadingTask.promise;
+        // Memuat dokumen PDF dari buffer
+        const loadingTask = pdfjs.getDocument({ url: doc.value.doc as string });
+        const pdfDocument = await loadingTask.promise;
 
-    // Iterasi melalui setiap halaman PDF
-    for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-      const page = await pdfDocument.getPage(pageNum);
-      const textContent = await page.getTextContent();
+        // Iterasi melalui setiap halaman PDF
+        for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+            const page = await pdfDocument.getPage(pageNum);
+            const textContent = await page.getTextContent();
 
-      // Iterasi melalui setiap item teks di halaman
-      for (const item of textContent.items) {
-        // Konversi item.item ke any untuk menghindari error tipe jika item.str bukan string
-        const textItem = item as any; // Cast ke any untuk akses str dan transform
+            // Iterasi melalui setiap item teks di halaman
+            for (const item of textContent.items) {
+                // Konversi item.item ke any untuk menghindari error tipe jika item.str bukan string
+                const textItem = item as any; // Cast ke any untuk akses str dan transform
 
-        if (textItem.str && textItem.str.includes(searchText)) {
-          // Mendapatkan transformasi matriks untuk posisi teks
-          const transform = textItem.transform;
+                if (textItem.str && textItem.str.includes(searchText)) {
+                    // Mendapatkan transformasi matriks untuk posisi teks
+                    const transform = textItem.transform;
 
-          // Koordinat (x, y) dari teks item berada di transform [4] dan [5]
-          // PDF.js menggunakan sistem koordinat di mana Y=0 adalah di bagian bawah halaman.
-          // Jika Anda butuh Y dari atas, Anda perlu menguranginya dari tinggi halaman.
-          const viewport = page.getViewport({ scale: 1 }); // Skala 1 untuk koordinat asli PDF
+                    // Koordinat (x, y) dari teks item berada di transform [4] dan [5]
+                    // PDF.js menggunakan sistem koordinat di mana Y=0 adalah di bagian bawah halaman.
+                    // Jika Anda butuh Y dari atas, Anda perlu menguranginya dari tinggi halaman.
+                    const viewport = page.getViewport({ scale: 1 }); // Skala 1 untuk koordinat asli PDF
 
-          const x = transform[4];
-          const y = viewport.height - transform[5]; // Konversi Y dari bawah ke atas
+                    const x = transform[4];
+                    const y = viewport.height - transform[5]; // Konversi Y dari bawah ke atas
 
-          matchingLocations.push({
-            text: textItem.str,
-            page: pageNum,
-            x: x,
-            y: y,
-            width: textItem.width,
-            height: textItem.height,
-          });
+                    matchingLocations.push({
+                        text: textItem.str,
+                        page: pageNum,
+                        x: x,
+                        y: y,
+                        width: textItem.width,
+                        height: textItem.height,
+                    });
+                }
+            }
+            page.cleanup(true); // Penting untuk membebaskan memori
         }
-      }
-      page.cleanup(true); // Penting untuk membebaskan memori
-    }
 
-    return matchingLocations;
-  } catch (error) {
-    console.error("Error finding text coordinates in PDF:", error);
-    throw new Error("Failed to process PDF for text coordinates.");
-  }
+        return matchingLocations;
+    } catch (error) {
+        console.error("Error finding text coordinates in PDF:", error);
+        throw new Error("Failed to process PDF for text coordinates.");
+    }
 }
 
 const signDocument = () => {
@@ -206,12 +206,11 @@ const links = computed(() => [{
                     </div>
                     <div
                         class="flex flex-col gap-2 ms-2 md:ms-6 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
-                        <div class="flex items-center justify-between"
-                            v-for="sign, i in doc.signs" :key="i">
+                        <div class="flex items-center justify-between" v-for="sign, i in doc.signs" :key="i">
                             <div class="flex items-center gap-2">
                                 <NuxtImg provider="localProvider"
                                     :src="(sign.user as IMember).avatar || '/img/profile-blank.png'"
-                                    class="w-12 h-12 rounded-full" />
+                                    class="w-12 h-12 rounded-full" loading="lazy" />
                                 <div class="flex flex-col">
                                     <span class="text-lg font-semibold text-gray-800 dark:text-gray-300">{{
                                         (sign.user as IMember)
@@ -221,16 +220,19 @@ const links = computed(() => [{
                                     <span class="text-sm text-gray-500 dark:text-gray-400">
                                         {{
                                             $ts('signed_at', {
-                                                date:sign.signedAt ? format(new Date(sign.signedAt!), 'EEEE dd MMMM yyyy HH:mm:ss', {
-                                                    locale: id,
-                                                }): '-',
+                                                date: sign.signedAt ?
+                                                    format(new Date(sign.signedAt!), 'EEEE dd MMMM yyyy HH:mm: ss', {
+                                                        locale: id,
+                                                    }) :
+                                                    '-',
                                             })
                                         }}
                                     </span>
                                 </div>
                             </div>
                             <UIcon :name="sign.signed ? 'i-heroicons-check-circle-solid' : 'i-heroicons-x-circle-solid'"
-                                :class="['size-8', sign.signed ? 'text-green-500 dark:text-green-400 ': 'text-red-500 dark:text-red-400']" size="xl" />
+                                :class="['size-8', sign.signed ? 'text-green-500 dark:text-green-400 ' : 'text-red-500 dark:text-red-400']"
+                                size="xl" />
                         </div>
                     </div>
                     <div class="md:px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">
@@ -240,7 +242,7 @@ const links = computed(() => [{
                         <UAccordion :items="trails">
                             <template #leading="{ item }">
                                 <NuxtImg provider="localProvider" :src="(item.icon as string)"
-                                    class="w-12 h-12 rounded-full" />
+                                    class="w-12 h-12 rounded-full" loading="lazy" />
                             </template>
                         </UAccordion>
                     </div>

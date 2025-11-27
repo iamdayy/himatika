@@ -203,7 +203,8 @@ const links = computed<NavigationMenuItem[][]>(() => {
                             <div class="flex-1 p-4">
                                 <div class="flex flex-row items-center justify-between">
                                     <NuxtLink to="/" class="items-center space-x-3 md:flex rtl:space-x-reverse">
-                                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" />
+                                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo"
+                                            loading="lazy" />
                                     </NuxtLink>
                                     <UButton color="neutral" variant="ghost" size="sm"
                                         icon="i-heroicons-x-mark-20-solid" square padded
@@ -214,11 +215,12 @@ const links = computed<NavigationMenuItem[][]>(() => {
                                         <div class="flex items-center w-full gap-2">
                                             <NuxtImg provider="localProvider"
                                                 :src="user?.member.avatar || '/img/profile-blank.png'"
-                                                class="object-cover rounded-full max-w-12 max-h-12 aspect-square" />
+                                                class="object-cover rounded-full max-w-12 max-h-12 aspect-square"
+                                                loading="lazy" alt="Profile" />
                                             <div class="overflow-ellipsis">
                                                 <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                     user?.username
-                                                }}
+                                                    }}
                                                 </h2>
                                                 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                     user?.member.NIM }}
@@ -257,7 +259,7 @@ const links = computed<NavigationMenuItem[][]>(() => {
                         <UDropdownMenu :items="items">
                             <NuxtImg v-if="isLoggedIn" provider="localProvider"
                                 :src="user?.member.avatar || '/img/profile-blank.png'"
-                                class="object-cover rounded-full max-w-8 aspect-square" />
+                                class="object-cover rounded-full max-w-8 aspect-square" loading="lazy" alt="Profile" />
                             <UAvatar v-else icon="i-heroicons-arrow-right-end-on-rectangle" />
 
                             <template #account="{ item }">

@@ -356,7 +356,7 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('citizenship')
-                                    }}</dt>
+                                        }}</dt>
                                     <UInput v-model="member.citizen" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ user?.member.citizen }}</dd>
                                 </div>
@@ -479,7 +479,7 @@ const breadcumbs = computed(() => [
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{
                                                     member.point[index]!.point
-                                                    }} pts</UBadge>
+                                                }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -491,7 +491,7 @@ const breadcumbs = computed(() => [
                                                         member.point[index]!.activities.agendas.committees +
                                                         member.point[index]!.activities.agendas.participants }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
-                                                        }}
+                                                    }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -501,7 +501,7 @@ const breadcumbs = computed(() => [
                                                         0
                                                     }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project')
-                                                        }}
+                                                    }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -510,7 +510,7 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('aspiration')
-                                                        }}</div>
+                                                    }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -607,7 +607,7 @@ const breadcumbs = computed(() => [
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                    }}</p>
+                                                                        }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -633,7 +633,7 @@ const breadcumbs = computed(() => [
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
                                                             <h3 class="text-lg font-semibold">{{ $ts('aspiration')
-                                                                }}
+                                                            }}
                                                             </h3>
                                                             <UBadge variant="subtle">{{
                                                                 getAspirationsByRange(member.point[index]!.range)?.length
@@ -682,7 +682,7 @@ const breadcumbs = computed(() => [
                     <!-- User avatar and member summary -->
                     <div id="avatar" class="relative w-56 h-56 mx-auto -mt-32 overflow-hidden rounded-full group">
                         <NuxtImg provider="localProvider" :src="user?.member.avatar || '/img/profile-blank.png'"
-                            class="object-cover w-full aspect-square" />
+                            class="object-cover w-full aspect-square" loading="lazy" />
                         <div
                             class="absolute top-0 left-0 flex items-center justify-center w-full h-0 gap-2 duration-500 rounded-full opacity-0 bg-accent-2/60 bg-opacity-95 group-hover:h-full group-hover:opacity-100">
                             <label for="inputAvatar" class="cursor-pointer">

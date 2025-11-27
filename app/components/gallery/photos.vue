@@ -112,7 +112,7 @@ const getImageStyles = (index: number, groupSize: number) => {
                                     :class="getImageClasses(i, group.photos.length)"
                                     :style="getImageStyles(i, group.photos.length)">
                                     <NuxtImg provider="localProvider" :src="(photo.image as string)"
-                                        class="object-cover w-full h-full" />
+                                        class="object-cover w-full h-full" loading="lazy" />
                                 </div>
                             </div>
                             <div class="p-4">

@@ -81,26 +81,26 @@ const isMobile = computed(() => width.value < 640)
  */
 const columns = computed<TableColumn<ICommittee>[]>(() => {
     const baseColumns: TableColumn<ICommittee>[] = [
-        
-            {
-                id: 'select',
-                header: ({ table }) =>
-                    h(UCheckbox, {
-                        modelValue: table.getIsSomePageRowsSelected()
-                            ? 'indeterminate'
-                            : table.getIsAllPageRowsSelected(),
-                        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-                            table.toggleAllPageRowsSelected(!!value),
-                        'aria-label': 'Select all'
-                    }),
-                cell: ({ row }) =>
-                    h(UCheckbox, {
-                        modelValue: row.getIsSelected(),
-                        size: responsiveUISizes.value.input,
-                        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-                        'aria-label': 'Select row'
-                    })
-            },
+
+        {
+            id: 'select',
+            header: ({ table }) =>
+                h(UCheckbox, {
+                    modelValue: table.getIsSomePageRowsSelected()
+                        ? 'indeterminate'
+                        : table.getIsAllPageRowsSelected(),
+                    'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                        table.toggleAllPageRowsSelected(!!value),
+                    'aria-label': 'Select all'
+                }),
+            cell: ({ row }) =>
+                h(UCheckbox, {
+                    modelValue: row.getIsSelected(),
+                    size: responsiveUISizes.value.input,
+                    'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                    'aria-label': 'Select row'
+                })
+        },
         {
             accessorKey: 'fullName',
             header: $ts('name'),
@@ -113,6 +113,8 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
                         provider: 'localProvider',
                         src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
                         class: 'object-cover rounded-full max-w-12 aspect-square',
+                        alt: (row.original.member as IMember | undefined)?.fullName,
+                        loading: 'lazy'
                     }),
                     h('div', {
                         class: 'flex flex-col items-start gap-1',
@@ -165,7 +167,7 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
             {
                 accessorKey: 'paid',
                 header: $ts('payment_status'),
-                
+
                 cell: ({ row }) => {
                     if (!row.original.payment) return '-';
                     return h(UBadge, {
@@ -591,7 +593,7 @@ useHead({
                     :loading="pending" :loading-icon="pending ? 'i-heroicons-arrow-path' : undefined"
                     :size="responsiveUISizes.input" class="w-full md:w-auto" />
 
-                 <div class="flex flex-wrap gap-1.5 items-center justify-center md:justify-end">
+                <div class="flex flex-wrap gap-1.5 items-center justify-center md:justify-end">
                     <div class="flex items-center gap-1.5" v-if="isCommittee">
                         <UButton v-if="selectedCommittee.length >= 1" icon="i-heroicons-arrow-down-tray" trailing
                             color="neutral" :size="responsiveUISizes.button" @click="generateXlsx">

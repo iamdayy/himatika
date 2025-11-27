@@ -188,14 +188,14 @@ useSeoMeta({
                             <div class="items-center block p-3 sm:flex">
                                 <NuxtImg provider="localProvider" class="w-12 h-12 mb-3 rounded-full me-3 sm:mb-0"
                                     :src="(doc.uploader as IMember).avatar || '/img/profile-blank.png'"
-                                    :alt="(doc.uploader as IMember).fullName" />
+                                    :alt="(doc.uploader as IMember).fullName" loading="lazy" />
                                 <div class="flex items-center justify-between w-full text-gray-600 dark:text-gray-400">
                                     <ULink :to="`/signatures/${doc._id}`"
                                         class="text-sm font-normal text-gray-500 dark:text-gray-300">
                                         <span>{{ doc.label }}</span> |
                                         <span class="font-semibold text-gray-800 dark:text-gray-200">{{ (doc.uploader as
                                             IMember).fullName
-                                        }}</span>
+                                            }}</span>
                                     </ULink>
                                     <span
                                         class="inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400">
@@ -213,7 +213,7 @@ useSeoMeta({
                         <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                             <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                                 <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
-                                    }}</span>
+                                }}</span>
                                 <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                             </div>
                             <div class="mb-2 sm:mb-0">
@@ -236,14 +236,14 @@ useSeoMeta({
                             <div class="items-center block p-3 sm:flex">
                                 <NuxtImg provider="localProvider" class="w-12 h-12 mb-3 rounded-full me-3 sm:mb-0"
                                     :src="(doc.uploader as IMember).avatar || '/img/profile-blank.png'"
-                                    :alt="(doc.uploader as IMember).fullName" />
+                                    :alt="(doc.uploader as IMember).fullName" loading="lazy" />
                                 <div class="flex items-center justify-between w-full text-gray-600 dark:text-gray-400">
                                     <ULink :to="`/signatures/${doc._id}`"
                                         class="text-sm font-normal text-gray-500 dark:text-gray-300">
                                         <span>{{ doc.label }}</span> |
                                         <span class="font-semibold text-gray-800 dark:text-gray-200">{{ (doc.uploader as
                                             IMember).fullName
-                                        }}</span>
+                                            }}</span>
                                     </ULink>
                                     <span
                                         class="inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400">
@@ -261,7 +261,7 @@ useSeoMeta({
                         <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                             <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                                 <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
-                                    }}</span>
+                                }}</span>
                                 <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                             </div>
                             <div class="mb-2 sm:mb-0">
