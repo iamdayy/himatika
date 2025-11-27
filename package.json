@@ -5,7 +5,7 @@
   "scripts": {
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 nuxt build",
   "generate": "cross-env NODE_OPTIONS=--max-old-space-size=8192 nuxt generate",
-  "dev": "nuxt dev",
+  "dev": "HOST=0.0.0.0 PORT=3000 nuxt dev",
   "preview": "nuxt preview",
   "postinstall": "nuxt prepare"
   },

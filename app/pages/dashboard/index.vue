@@ -5,7 +5,7 @@ import { ModalsActions, ModalsQrReader, NuxtImg, NuxtLink, UAvatar } from '#comp
 import type { TableColumn } from "#ui/types";
 import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 import type { DriveStep } from "driver.js";
-import type { IAgendaResponse, IProjectsResponse, IResponse } from "~~/types/IResponse";
+import type { IAgendaResponse, IProjectsResponse } from "~~/types/IResponse";
 interface IPoint {
     avatar?: string;
     fullName: string;
@@ -16,6 +16,7 @@ interface IPoint {
 }
 const config = useRuntimeConfig();
 const { $ts, $switchLocale, $getLocale } = useI18n();
+const router = useRouter();
 /**
  * Set page metadata
  */
@@ -77,7 +78,7 @@ const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
 /**
  * Get user stats
  */
-const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations, pointsRefresh } = useStats()
+const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations } = useStats()
 const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/projects'), {
     transform: (data) => ({
         data: data.data?.projects || [],
@@ -162,15 +163,9 @@ const openQrReader = () => {
         },
         async onConfirm(data?: string) {
             if (!data) return;
-            try {
-                const response = await $api<IResponse>(`/api/agenda/${data}/visited`);
-                toast.add({ title: response.statusMessage });
-                pointsRefresh();
-            } catch (error) {
-                toast.add({ title: $ts('error') });
-            } finally {
-                QrReaderModal.close();
-            }
+            router.push(`/agendas/${data}/participant/register`);
+            toast.add({ title: $ts('success') });
+            QrReaderModal.close();
         }
     })
 };
@@ -435,7 +430,7 @@ onMounted(() => {
                                             <div class="overflow-ellipsis">
                                                 <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                     user?.username
-                                                    }}
+                                                }}
                                                 </h2>
                                                 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                     user?.member.NIM }}
@@ -518,7 +513,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                    }}</h2>
+                                        }}</h2>
                                     <UIcon name="i-heroicons-calendar" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
@@ -534,7 +529,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         projectsMe.length
-                                    }}</h2>
+                                        }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
@@ -548,7 +543,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         aspirations.length
-                                    }}</h2>
+                                        }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
