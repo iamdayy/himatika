@@ -70,7 +70,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
             if (doc) {
               return {
                 role: doc.dailyManagement.find(
-                  (daily) => (daily.member as IMember).id == id
+                  (daily) => (daily.member as IMember)?.id == id
                 )?.position,
                 period: doc.period,
               };
@@ -210,7 +210,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
           if (doc) {
             return {
               role: doc.dailyManagement.find(
-                (daily) => (daily.member as IMember).id == id
+                (daily) => (daily.member as IMember)?.id == id
               )?.position,
               period: doc.period,
             };

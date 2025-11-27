@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { ParsedFile } from "~~/server/utils/customReadMultipartFormData";
 const config = useRuntimeConfig();
 /**
  * Represents a row of data from the Excel sheet.
@@ -15,7 +16,9 @@ interface DataRow {
 export default defineEventHandler(async (event) => {
   try {
     // Read the uploaded file
-    const { file } = await customReadMultipartFormData<{ file: File }>(event);
+    const { file } = await customReadMultipartFormData<{ file: ParsedFile }>(
+      event
+    );
 
     if (!file) {
       throw createError({
@@ -25,9 +28,8 @@ export default defineEventHandler(async (event) => {
     }
     // Read the Excel workbook
     const workbook = new ExcelJS.Workbook();
-    // const excelPath = path.join(config.storageDir, excelUrl as string);
 
-    await workbook.xlsx.load(file);
+    await workbook.xlsx.load((file as ParsedFile).data);
     const worksheet = workbook.getWorksheet("template");
 
     const jsonData: DataRow[] = [];

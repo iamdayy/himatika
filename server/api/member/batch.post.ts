@@ -10,7 +10,15 @@ import { IResponse } from "~~/types/IResponse";
 export default defineEventHandler(
   async (
     event
-  ): Promise<IResponse & { data?: { failedMembers: IMember[] } }> => {
+  ): Promise<
+    IResponse & {
+      data?: {
+        failedMembers: IMember[];
+        savedCount: number;
+        failedCount: number;
+      };
+    }
+  > => {
     // try {
     // Ensure the user is authenticated and has the necessary permissions
     const user = event.context.user;
@@ -44,6 +52,7 @@ export default defineEventHandler(
 
       savedCount = result.length; // Count the number of successfully inserted members
     } catch (error: any) {
+      console.log(error);
       // Handle the error but do not throw it, allowing the response to continue
       if (error.writeErrors) {
         savedCount = body.length - error.writeErrors.length; // Count of successful inserts
@@ -62,7 +71,7 @@ export default defineEventHandler(
     return {
       statusCode: 200,
       statusMessage: `Successfully saved ${savedCount} new college members. ${failedCount} members failed to save.`,
-      data: { failedMembers },
+      data: { failedMembers, savedCount, failedCount },
     };
   }
 );

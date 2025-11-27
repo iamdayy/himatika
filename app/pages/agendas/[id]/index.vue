@@ -323,6 +323,7 @@ const createQRDoc = async () => {
                 const response = await makeAgendaPrecenceWithQRCode();
                 toast.add({ title: response.statusMessage });
             } catch (error: any) {
+                console.log(error);
                 toast.add({ title: "Failed to create document" });
             }
         }
@@ -697,7 +698,7 @@ useSeoMeta({
                                 <span class="text-gray-600 dark:text-gray-300">{{ $ts('register_as') }}</span>
                                 <span class="font-medium">{{ isRegistered() === 'Committee' ? $ts('committee') :
                                     $ts('participant')
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div v-if="isRegistered() !== false" class="flex items-center justify-between">
                                 <span class="text-gray-600 dark:text-gray-300">ID</span>
@@ -748,7 +749,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                            }}:</span>
+                                        }}:</span>
                                         <UIcon
                                             :name="agenda.configuration.committee.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.committee.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -772,7 +773,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.committee.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                            }}:</span>
+                                        }}:</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.committee.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.committee.canRegisterUntil) }}
@@ -808,7 +809,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                        }}</span>
+                                            }}</span>
                                         <UIcon
                                             :name="agenda.configuration.participant.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.participant.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -832,7 +833,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.participant.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                        }}</span>
+                                            }}</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.participant.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.participant.canRegisterUntil) }}
@@ -1097,20 +1098,19 @@ useSeoMeta({
                 </template>
             </UCard>
 
-            <!-- <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12" v-if="isCommittee">
+            <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12" v-if="isCommittee">
                 <template #header>
                     <div class="flex items-center justify-between mb-4">
-                        <h2
-                            :class="['font-normal leading-tight text-neutral-800 dark:text-neutral-200 ms-2', responsiveClasses.listTitle]">
+                        <h2 class="font-normal leading-tight text-neutral-800 dark:text-neutral-200 ms-2">
                             {{ $ts('qr_code_presence') }}
                         </h2>
                     </div>
                 </template>
                 <div class="flex flex-col items-center justify-center">
-                    <Qrcode :value="id" variant="rounded" class="max-w-md" />
+                    <Qrcode :value="(id as string)" variant="rounded" class="max-w-md" />
                     <p class="mt-4 text-center text-error-500">{{ $ts('qr_code_presence_desc') }}</p>
                 </div>
-                <template #footer>
+                <!-- <template #footer>
                     <div class="space-y-2">
                         <UButton block :size="responsiveUISizes.button" icon="i-heroicons-archive-box"
                             :disabled="checkQRDocIsExist()" @click="createQRDoc">
@@ -1121,8 +1121,8 @@ useSeoMeta({
                             {{ $ts('download') }}
                         </UButton>
                     </div>
-                </template>
-            </UCard> -->
+                </template> -->
+            </UCard>
         </div>
         <UCard v-else>
             <USkeleton class="w-full h-64 mb-4" />

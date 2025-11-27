@@ -44,11 +44,15 @@ function monthToRomanFromDate(): string {
 export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   const config = useRuntimeConfig();
   const { $api } = useNuxtApp();
-  const { data: organizers } = useAsyncData('organizers', () => $api<IOrganizerResponse>("/api/organizer"), {
-    transform: (data) => {
-      return data.data?.organizers || [];
+  const { data: organizers } = useAsyncData(
+    "organizers",
+    () => $api<IOrganizerResponse>("/api/organizer"),
+    {
+      transform: (data) => {
+        return data.data?.organizers || [];
+      },
     }
-  });
+  );
   const { data: user } = useAuth();
   const { data: lastDocNumber } = useAsyncData<IResponse & { data?: number }>(
     () => $api("/api/doc/numbering/last")
@@ -60,19 +64,22 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   const organizer = computed(() =>
     organizers.value ? organizers.value[0] : undefined
   );
-  const chairman = computed<IMember>(() =>
-    organizer.value?.dailyManagement.find(
-      (dm) => dm.position.includes("Ketua") || dm.position.includes("Chairman")
-    )?.member as IMember
+  const chairman = computed<IMember>(
+    () =>
+      organizer.value?.dailyManagement.find(
+        (dm) =>
+          dm.position.includes("Ketua") || dm.position.includes("Chairman")
+      )?.member as IMember
   );
-  const secretary = computed<IMember>(() =>
-    organizer.value?.dailyManagement.find(
-      (dm) =>
-        dm.position.includes("Sekretaris") || dm.position.includes("Secretary")
-    )?.member as IMember
+  const secretary = computed<IMember>(
+    () =>
+      organizer.value?.dailyManagement.find(
+        (dm) =>
+          dm.position.includes("Sekretaris") ||
+          dm.position.includes("Secretary")
+      )?.member as IMember
   );
   const member = computed(() => user?.value?.member as unknown as IMember);
-  
 
   async function generateQRCode(data: string): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
@@ -377,11 +384,17 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       const chairmanSignatureY =
         signatureY -
         signatureSpacing -
-        timesRomanFont.widthOfTextAtSize(`/${chairman.value.NIM}signature/`, 12); // Height for each signature section
+        timesRomanFont.widthOfTextAtSize(
+          `/${chairman.value.NIM}signature/`,
+          12
+        ); // Height for each signature section
       const secretarySignatureY =
         signatureY -
         signatureSpacing -
-        timesRomanFont.widthOfTextAtSize(`/${secretary.value.NIM}signature/`, 12); // Height for each signature section
+        timesRomanFont.widthOfTextAtSize(
+          `/${secretary.value.NIM}signature/`,
+          12
+        ); // Height for each signature section
       // Left (Ketua Umum)
       const leftSignatureX = pageWidth / 4; // Centered in the left quarter of the page
       page.setFont(timesRomanBoldFont);
@@ -396,7 +409,10 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       page.drawText(`/${chairman.value.NIM}signature/`, {
         x:
           leftSignatureX -
-          timesRomanFont.widthOfTextAtSize(`/${chairman.value.NIM}signature/`, 12) /
+          timesRomanFont.widthOfTextAtSize(
+            `/${chairman.value.NIM}signature/`,
+            12
+          ) /
             2,
         y: chairmanSignatureY,
         color: rgb(0.5, 0.5, 0.5),
@@ -413,13 +429,15 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         start: {
           x:
             leftSignatureX -
-            timesRomanBoldFont.widthOfTextAtSize(chairman.value.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(chairman.value.fullName, 12) /
+              2,
           y: chairmanSignatureY - signatureSpacing - 2,
         },
         end: {
           x:
             leftSignatureX +
-            timesRomanBoldFont.widthOfTextAtSize(chairman.value.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(chairman.value.fullName, 12) /
+              2,
           y: chairmanSignatureY - signatureSpacing - 2,
         },
         thickness: 0.5,
@@ -429,7 +447,8 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       page.drawText(chairman.value.NIM.toString(), {
         x:
           leftSignatureX -
-          timesRomanFont.widthOfTextAtSize(chairman.value.NIM.toString(), 12) / 2,
+          timesRomanFont.widthOfTextAtSize(chairman.value.NIM.toString(), 12) /
+            2,
         y: chairmanSignatureY - 2 * signatureSpacing,
       });
 
@@ -447,7 +466,10 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       page.drawText(`/${secretary.value.NIM}signature/`, {
         x:
           rightSignatureX -
-          timesRomanFont.widthOfTextAtSize(`/${secretary.value.NIM}signature/`, 12) /
+          timesRomanFont.widthOfTextAtSize(
+            `/${secretary.value.NIM}signature/`,
+            12
+          ) /
             2,
         y: secretarySignatureY,
         color: rgb(0.5, 0.5, 0.5),
@@ -457,20 +479,23 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       page.drawText(secretary.value.fullName, {
         x:
           rightSignatureX -
-          timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) / 2,
+          timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) /
+            2,
         y: secretarySignatureY - signatureSpacing,
       });
       page.drawLine({
         start: {
           x:
             rightSignatureX -
-            timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) /
+              2,
           y: secretarySignatureY - signatureSpacing - 2,
         },
         end: {
           x:
             rightSignatureX +
-            timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) / 2,
+            timesRomanBoldFont.widthOfTextAtSize(secretary.value.fullName, 12) /
+              2,
           y: secretarySignatureY - signatureSpacing - 2,
         },
         thickness: 0.5,
@@ -480,7 +505,8 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       page.drawText(secretary.value.NIM.toString(), {
         x:
           rightSignatureX -
-          timesRomanFont.widthOfTextAtSize(secretary.value.NIM.toString(), 12) / 2,
+          timesRomanFont.widthOfTextAtSize(secretary.value.NIM.toString(), 12) /
+            2,
         y: secretarySignatureY - 2 * signatureSpacing,
       });
 
@@ -668,11 +694,13 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       if (!Uint8Data || !(Uint8Data instanceof Uint8Array)) {
         throw new Error("failed_generate_pdf");
       }
-      const docFile = new File([(Uint8Data as Uint8Array<ArrayBuffer>)], `Surat Keterangan Aktif ${user?.value?.member.NIM} Semester ${data.semester}.pdf`, {
-        type: "application/pdf",
-      });
-
-
+      const docFile = new File(
+        [Uint8Data as Uint8Array<ArrayBuffer>],
+        `Surat Keterangan Aktif ${user?.value?.member.NIM} Semester ${data.semester}.pdf`,
+        {
+          type: "application/pdf",
+        }
+      );
 
       const docData: IDoc = {
         label: `Surat Keterangan Aktif ${user?.value?.member.NIM} Semester ${data.semester}`,
@@ -705,7 +733,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
           },
         ],
       };
-      
+
       const formData = new CustomFormData<IDoc>();
       formData.append("label", docData.label);
       formData.append("no", docData.no);
@@ -930,7 +958,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       const pdfBytes = await pdfDoc.save();
 
       const docFile = new File(
-        [(pdfBytes as Uint8Array<ArrayBuffer>)],
+        [pdfBytes as Uint8Array<ArrayBuffer>],
         `Agenda ${agenda.title} QR Code.pdf`,
         {
           type: "application/pdf",
@@ -976,6 +1004,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         response = ress;
       }
     } catch (error) {
+      console.log(error);
       throw error;
     }
 

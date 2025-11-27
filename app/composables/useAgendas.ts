@@ -1,7 +1,7 @@
 import type { IAgenda, IMember, IUser, TPaymentStatus } from "~~/types";
 
 export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
-  const { organizer } = useOrganizer();
+  const { organizer, isOrganizer } = useOrganizer();
   const { canMeRegister } = useCanMeRegister();
 
   const { data: dataUser, status } = useAuth();
@@ -264,6 +264,9 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
     }
     if (!agenda.value.committees) {
       return false;
+    }
+    if (isOrganizer.value) {
+      return true;
     }
     return agenda.value.committees?.some(
       (comm) =>

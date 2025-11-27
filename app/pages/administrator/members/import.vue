@@ -3,7 +3,7 @@ import { ModalsMemberEdit, NuxtImg, UButton, UCheckbox } from '#components';
 import type { TableColumn } from '@nuxt/ui';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { IMember } from '~~/types';
-import type { IExportSheetResponse, IResponse } from '~~/types/IResponse';
+import type { IResponse } from '~~/types/IResponse';
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 // Define page metadata
 definePageMeta({
@@ -124,6 +124,8 @@ const DataFromCSV = ref<IMember[]>([]);
 const selectedRows = ref<{
     [key: number]: boolean;
 }>({});
+const failedUpload = ref<boolean>(false);
+
 const selectedCollegers = computed<IMember[]>(() => {
     return DataFromCSV.value.filter((row: IMember, index) => {
         return selectedRows.value[index] !== undefined && selectedRows.value[index] !== null;
@@ -134,9 +136,8 @@ const selectedCollegers = computed<IMember[]>(() => {
  * Handle file upload and parse CSV data
  * @param {File} file - The uploaded CSV file
  */
-const onChangeXlsx = async (files: FileList) => {
+const onChangeXlsx = async (file?: File | null) => {
     loading.value = true;
-    const file = files[0];
     if (!file) {
         toast.add({ title: $ts('file_not_found') });
         loading.value = false;
@@ -167,15 +168,16 @@ const onChangeXlsx = async (files: FileList) => {
 const addCollegers = async () => {
     loading.value = true;
     try {
-        const added = await $api<IResponse & { data: { failedMembers: IMember[] } }>("/api/member/batch", {
+        const added = await $api<IResponse & { data: { failedMembers: IMember[]; savedCount: number; failedCount: number } }>("/api/member/batch", {
             method: "post",
             body: selectedCollegers.value
         });
         loading.value = false;
         if (added.data) {
             DataFromCSV.value = added.data?.failedMembers;
+            failedUpload.value = added.data?.failedMembers.length > 0;
         }
-        toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers') });
+        toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers', { success: added.data?.savedCount, failed: added.data?.failedCount }) });
     } catch (error) {
         toast.add({ title: $ts('failed'), description: $ts('failed_to_add_collegers') });
     }
@@ -194,7 +196,7 @@ const downloadTemplate = async () => {
         semester: 1,
         enteredYear: new Date().getFullYear(),
     }
-    const response = await $api<IExportSheetResponse>('/api/sheet/export', {
+    const response = await $api<Blob>('/api/sheet/export', {
         method: "post",
         headers: {
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -203,18 +205,38 @@ const downloadTemplate = async () => {
             data: [member],
             title: 'template'
         }
-    })
+    });
+    const title = `template-${new Date()}`;
+    const url = window.URL.createObjectURL(response);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
 
-    if (!response.data) {
-        return
-    }
-    const title = `template-${new Date()}`
-    const link = document.createElement('a');
-    link.href = response.data.url;
-    link.setAttribute('download',
-        `${title}.xlsx`); // Nama file yang diunduh
-    document.body.appendChild(link);
-    link.click();
+const downloadFailedMembers = async () => {
+    const response = await $api<Blob>('/api/sheet/export', {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+        body: {
+            data: DataFromCSV.value,
+            title: 'failed-members'
+        }
+    });
+    const title = `failed-members-${new Date()}`;
+    const url = window.URL.createObjectURL(response);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
 }
 
 /**
@@ -276,7 +298,15 @@ const links = computed(() => [{
                 </div>
             </template>
             <div class="px-2 py-6 md:py-12 md:px-8">
-                <DropFile @change="onChangeXlsx" />
+                <UFileUpload @update:model-value="onChangeXlsx" :label="$ts('drop_zone')"
+                    :description="$ts('drop_zone_hint', { count: 1, format: '.xlsx', size: '5MB' })" layout="list"
+                    position="inside" :max-file-size="5 * 1024 * 1024"
+                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx">
+                    <template #actions="{ open }">
+                        <UButton :label="$ts('select')" icon="i-lucide-upload" color="neutral" variant="outline"
+                            @click="open()" />
+                    </template>
+                </UFileUpload>
                 <div class="w-full p-2 mx-auto my-3 text-center">
                     <UButton variant="subtle" @click="downloadTemplate" :size="responsiveUISizes.button"
                         icon="i-heroicons-arrow-down-on-square">
@@ -284,6 +314,37 @@ const links = computed(() => [{
                     </UButton>
                 </div>
             </div>
+            <USeparator class="my-2 md:my-4" />
+            <div class="flex justify-between p-2 md:p-4 items-center">
+                <div class="flex flex-col">
+                    <h2 class="text-md font-semibold text-gray-600 md:text-lg md:font-bold dark:text-gray-200">
+                        {{ $ts('preview_data') }}
+                    </h2>
+                    <p class="text-sm font-light text-gray-600 dark:text-gray-300">
+                        {{ $ts('preview_data_hint') }}
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-light text-gray-600 dark:text-gray-300">
+                        {{ selectedCollegers.length }} {{ $ts('selected') }}
+                    </span>
+                    <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
+                        :disabled="DataFromCSV.length <= 0"
+                        :label="$ts('add_member', { count: selectedCollegers.length })" variant="solid"
+                        color="primary" />
+                    <UButton v-if="failedUpload" @click="downloadFailedMembers" :size="responsiveUISizes.button"
+                        icon="i-heroicons-arrow-down-on-square" variant="outline" :loading="loading"
+                        :disabled="DataFromCSV.length <= 0" :label="$ts('download_failed_member')" color="error" />
+                </div>
+            </div>
+            <UAlert v-if="DataFromCSV.length > 0" class="mx-2 mb-4" color="warning" close :title="$ts('warning')"
+                :description="$ts('import_warning_hint')" />
+            <UAlert v-if="DataFromCSV.length == 0" class="mx-2 mb-4" color="info" close :title="$ts('info')"
+                :description="$ts('no_data_hint')" />
+            <UAlert v-if="failedUpload" class="mx-2 mb-4" color="error" close :title="$ts('error_upload')"
+                :description="$ts('some_members_failed_to_upload')" />
+            <USeparator class="my-2 md:my-4" />
             <!-- Table -->
             <UTable v-model:row-selection="selectedRows" :data="DataFromCSV" :columns="columns" :loading="loading">
             </UTable>
