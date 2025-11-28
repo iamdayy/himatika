@@ -143,7 +143,7 @@ const links = computed(() => [{
                                         :class="getImageClasses(i, group.photos.length)"
                                         :style="getImageStyles(i, group.photos.length)">
                                         <NuxtImg provider="localProvider" :src="(photo.image as string)"
-                                            class="object-cover w-full h-full" />
+                                            class="object-cover w-full h-full" :alt="photo.title" loading="lazy" />
                                     </div>
                                 </div>
                                 <div class="z-50 p-4">

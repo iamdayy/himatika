@@ -12,7 +12,7 @@ const config = computed(() => data.value?.data);
             <div class="flex flex-col items-center md:flex-row">
                 <!-- Organization logo -->
                 <NuxtImg class="object-contain w-24 mb-4 md:w-32 md:mb-0" provider="localProvider" src="/img/logo.png"
-                    alt="Logo" />
+                    alt="Logo" loading="lazy" />
                 <div class="w-full text-center md:pl-4 md:text-left">
                     <!-- Organization name -->
                     <h4 class="text-xl font-bold text-gray-600 md:text-3xl text-uppercase dark:text-gray-300">{{

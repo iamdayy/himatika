@@ -64,7 +64,8 @@ const imageDimensions = computed(() => ({
             </div>
         </div>
         <div class="img-wrapper" :style="imageDimensions">
-            <NuxtImg :src='img' alt='' class="object-cover rounded-full aspect-square" provider="localProvider" />
+            <NuxtImg :src='img' alt='' class="object-cover rounded-full aspect-square" provider="localProvider"
+                loading="lazy" />
         </div>
     </div>
 </template>

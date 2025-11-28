@@ -9,7 +9,8 @@
                         <div class="flex-shrink-0">
                             <NuxtImg provider="localProvider"
                                 :src="member.avatar || '/placeholder.svg?height=120&width=120'" :alt="member.fullName"
-                                class="ring-4 ring-white shadow-lg rounded-full max-w-[120px] max-h-[120px]" />
+                                class="ring-4 ring-white shadow-lg rounded-full max-w-[120px] max-h-[120px]"
+                                loading="lazy" />
                         </div>
 
                         <!-- Basic Info -->
@@ -164,7 +165,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
                                         $ts('generation')
-                                    }}</label>
+                                        }}</label>
                                     <p class="text-sm">{{ member.enteredYear || 'Not specified' }}</p>
                                 </div>
                             </div>
@@ -213,7 +214,7 @@
                                                     {{ member.point[index]!.semester
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{ member.point[index]!.point
-                                                    }} pts</UBadge>
+                                                }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -229,7 +230,7 @@
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{ member.point[index]!.activities.projects
-                                                        }}</div>
+                                                    }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project') }}
                                                     </div>
                                                 </div>
@@ -237,7 +238,7 @@
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.aspirations }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('aspiration')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -315,7 +316,7 @@
                                                                 getProjectsByRange(member.point[index]!.range)?.length
                                                                 ||
                                                                 0
-                                                                }} projects</UBadge>
+                                                            }} projects</UBadge>
                                                         </div>
                                                     </template>
 
@@ -329,7 +330,7 @@
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                        }}</p>
+                                                                    }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">

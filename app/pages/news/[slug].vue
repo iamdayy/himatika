@@ -125,7 +125,7 @@ const submitLikeComment = async (id?: string) => {
             </template>
             <div class="mx-auto mb-6 space-y-2 max-w-screen-2xl">
                 <NuxtImg provider="localProvider" :src="news?.mainImage as string" w="128"
-                    class="object-cover w-full rounded" />
+                    class="object-cover w-full rounded" loading="lazy" />
             </div>
             <div class="text-gray-900 dark:text-gray-100">
                 <CoreContent :content="news?.body!" />
@@ -198,7 +198,8 @@ const submitLikeComment = async (id?: string) => {
                     <div class="flex items-center mt-4 text-sm text-gray-500">
                         <NuxtImg class="w-6 h-6 mr-2 rounded-full" provider="localProvider"
                             :src="comment.author ? (comment.author as IMember).avatar : '/img/profile-blank.png'"
-                            :alt="comment.author ? (comment.author as IMember).fullName : $ts('anonymous')" />
+                            :alt="comment.author ? (comment.author as IMember).fullName : $ts('anonymous')"
+                            loading="lazy" />
 
                         <span>{{ comment.author ? (comment.author as IMember).fullName : $ts('anonymous') }}</span>
                         <span class="mx-2">•</span>

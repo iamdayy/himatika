@@ -37,7 +37,8 @@
                     class="mb-6">
                     <div class="relative h-[30rem]">
                         <NuxtImg provider="localProvider" :src="(mainArticle.mainImage as string)"
-                            :alt="mainArticle.title" class="absolute inset-0 object-cover w-full h-full" />
+                            :alt="mainArticle.title" class="absolute inset-0 object-cover w-full h-full"
+                            loading="lazy" />
                         <div
                             class="absolute inset-0 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent to-70%">
                         </div>
@@ -77,7 +78,9 @@
                                         <UIcon name="i-heroicons-chat-bubble-left-ellipsis" />
                                     </div>
                                     <span class="mx-2">•</span>
-                                    <span>{{ calculateReadingTime(mainArticle.body) }} {{ $ts('min_read') }}</span>
+                                    <ClientOnly>
+                                        <span>{{ calculateReadingTime(mainArticle.body) }} {{ $ts('min_read') }}</span>
+                                    </ClientOnly>
                                 </div>
                                 <UButton color="neutral" variant="subtle" :to="`/news/${mainArticle.slug}`">
                                     {{ $ts('read_more') }}
@@ -141,7 +144,9 @@
                                                 'not published'
                                         }}</h1>
                                 </div>
-                                <h2>{{ calculateReadingTime(news.body) }} {{ $ts('min_read') }}</h2>
+                                <ClientOnly>
+                                    <h2>{{ calculateReadingTime(news.body) }} {{ $ts('min_read') }}</h2>
+                                </ClientOnly>
                             </div>
                         </template>
                     </UCard>

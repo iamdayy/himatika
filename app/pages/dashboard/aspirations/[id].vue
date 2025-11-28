@@ -107,8 +107,8 @@
                                 <div class="flex flex-wrap gap-4">
                                     <div v-for="photo, i in photos" :key="i" class="relative max-w-md group">
                                         <NuxtImg provider="localProvider" class="rounded-lg max-h-[250px]"
-                                            :src="(photo.image as string)" :alt="`${i}`"
-                                            @click="openImageModal(photo)" />
+                                            :src="(photo.image as string)" :alt="`${i}`" @click="openImageModal(photo)"
+                                            loading="lazy" />
                                         <div
                                             class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent h-[25px] backdrop-blur-sm">
                                         </div>

@@ -61,7 +61,7 @@
                                                     '2-digit', minute: '2-digit'
                                             }) }}</span>
                                     <span class="text-xs text-gray-600 dark:text-gray-200 md:text-sm">{{ event.title
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                             <div v-else class="flex flex-wrap gap-px">
@@ -137,7 +137,7 @@
                                                         }) }}</div>
                                                 <div class="text-2xl font-bold text-orange-500">{{ new
                                                     Date(agenda.date.start as string).getDate()
-                                                }}
+                                                    }}
                                                 </div>
                                             </div>
                                             <div class="flex-grow ml-4">
@@ -161,7 +161,8 @@
                                                     <NuxtImg provider="localProvider"
                                                         v-for="(committee, pIndex) in agenda.committees" :key="pIndex"
                                                         :src="(committee.member as IMember).avatar || '/img/profile-blank.png'"
-                                                        class="w-8 max-w-sm -ml-2 border-2 border-white rounded-full first:ml-0" />
+                                                        class="w-8 max-w-sm -ml-2 border-2 border-white rounded-full first:ml-0"
+                                                        loading="lazy" />
                                                 </div>
                                             </div>
                                         </div>

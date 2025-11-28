@@ -271,7 +271,7 @@ onMounted(() => {
             <div class="my-4">
                 <label for="council" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('council')
-                    }}</label>
+                }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
                     <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
                         <UFormField class="col-span-12" :label="$ts('name')" required>
@@ -287,12 +287,12 @@ onMounted(() => {
                             <DropFile :identifier="i" @change="v => onChangeImages(v, i)" accept="image/*">
                                 <div v-if="filesToCropped[i]!.blob">
                                     <NuxtImg :src="filesToCropped[i]!.blob" :alt="filesToCropped[i]!.name"
-                                        class="mx-auto" />
+                                        class="mx-auto" loading="lazy" />
                                 </div>
                                 <div
                                     v-else-if="organizer.council[i]!.image && typeof organizer.council[i]!.image === 'string'">
                                     <NuxtImg provider="localProvider" :src="organizer.council[i]!.image"
-                                        :alt="organizer.council[i]!.name" class="mx-auto" />
+                                        :alt="organizer.council[i]!.name" class="mx-auto" loading="lazy" />
                                 </div>
                             </DropFile>
                         </UFormField>
@@ -302,7 +302,7 @@ onMounted(() => {
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('advisor')
-                }}</label>
+                    }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="advisor">
                     <UFormField class="col-span-12" :label="$ts('name')" required>
                         <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
@@ -317,11 +317,12 @@ onMounted(() => {
                             @change="v => onChangeImages(v, organizer.council.length)" accept="image/*">
                             <div v-if="filesToCropped[organizer.council.length]!.blob">
                                 <NuxtImg :src="filesToCropped[organizer.council.length]!.blob"
-                                    :alt="filesToCropped[organizer.council.length]!.name" class="mx-auto" />
+                                    :alt="filesToCropped[organizer.council.length]!.name" class="mx-auto"
+                                    loading="lazy" />
                             </div>
                             <div v-else-if="organizer.advisor.image && typeof organizer.advisor.image === 'string'">
                                 <NuxtImg provider="localProvider" :src="(organizer.advisor.image as string)"
-                                    :alt="organizer.advisor.name" class="mx-auto" />
+                                    :alt="organizer.advisor.name" class="mx-auto" loading="lazy" />
                             </div>
                         </DropFile>
                     </UFormField>

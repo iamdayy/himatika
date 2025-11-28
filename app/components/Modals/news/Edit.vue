@@ -208,8 +208,10 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                 </UFormField>
                 <!-- Image upload -->
                 <UFormField class="min-h-36" :label="$ts('image')">
-                    <NuxtImg :src="(news.mainImage as string)" :alt="news.title" v-if="news.mainImage && !file" />
-                    <UFileUpload :size="responsiveUISizes.input" v-model="file" @update:model-value="onChangeImage" accept="image/*">
+                    <NuxtImg :src="(news.mainImage as string)" :alt="news.title" v-if="news.mainImage && !file"
+                        loading="lazy" />
+                    <UFileUpload :size="responsiveUISizes.input" v-model="file" @update:model-value="onChangeImage"
+                        accept="image/*">
                     </UFileUpload>
                 </UFormField>
                 <!-- Description input -->
@@ -237,11 +239,13 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
         <template #footer>
             <div class="flex flex-row justify-between w-full gap-2">
                 <!-- Cancel button -->
-                <UButton @click="emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button" color="error" :loading="loading" :disabled="loading" />
+                <UButton @click="emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button" color="error"
+                    :loading="loading" :disabled="loading" />
 
 
                 <!-- Submit button -->
-                <UButton @click="editNews" :label="$ts('save')" :size="responsiveUISizes.button" :loading="loading" :disabled="loading" />
+                <UButton @click="editNews" :label="$ts('save')" :size="responsiveUISizes.button" :loading="loading"
+                    :disabled="loading" />
             </div>
         </template>
     </UModal>

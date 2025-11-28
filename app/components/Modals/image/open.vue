@@ -128,7 +128,7 @@ const handleClose = () => {
                             transform: `scale(${zoomLevel}) translate(${translateX / zoomLevel}px, ${translateY / zoomLevel}px)`,
                             transformOrigin: 'center',
                             objectFit: 'contain'
-                        }" />
+                        }" loading="lazy" />
                 </div>
 
                 <!-- Bottom controls -->

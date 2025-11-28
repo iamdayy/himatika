@@ -155,7 +155,7 @@ const links = computed(() => [{
             <UCard class="mt-2" :ui="{ header: 'p-0 sm:p-0', root: 'overflow-hidden' }">
                 <template #header>
                     <NuxtImg provider="localProvider" :src="project.image as string" :alt="project.title" size="3xl"
-                        class="object-cover w-full h-64" />
+                        class="object-cover w-full h-64" loading="lazy" />
                 </template>
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
@@ -194,7 +194,7 @@ const links = computed(() => [{
                         </div>
                         <div class="flex items-center gap-2">
                             <UBadge v-for="(tag, index) in project.tags" :key="index" color="secondary" size="lg">{{ tag
-                            }}
+                                }}
                             </UBadge>
                         </div>
                     </div>

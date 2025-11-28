@@ -35,9 +35,10 @@ const onDetect = async (value: string) => {
     name.value = fullName;
     ConfirmationModal.open({
         title: 'Qr code confirmation',
-        body: `get (${value}) from QR Code, sure to visit this agenda?.`,
+        body: `get (${name.value}) from QR Code, sure to visit this agenda?.`,
         onConfirm: () => {
-            emit('confirm', data.value)
+            emit('confirm', data.value);
+            ConfirmationModal.close();
         }
     })
 }

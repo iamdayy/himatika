@@ -323,6 +323,7 @@ const createQRDoc = async () => {
                 const response = await makeAgendaPrecenceWithQRCode();
                 toast.add({ title: response.statusMessage });
             } catch (error: any) {
+                console.log(error);
                 toast.add({ title: "Failed to create document" });
             }
         }
@@ -967,7 +968,7 @@ useSeoMeta({
                                             class="relative w-full group rounded-lg overflow-hidden">
                                             <NuxtImg provider="localProvider" class="object-cover w-full h-full"
                                                 :src="(photo.image as string)" :alt="`${i}`"
-                                                @click="openImageModal(photo)" />
+                                                @click="openImageModal(photo)" loading="lazy" />
                                             <div
                                                 class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent h-[50px] backdrop-blur-md">
                                             </div>
@@ -1097,20 +1098,19 @@ useSeoMeta({
                 </template>
             </UCard>
 
-            <!-- <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12" v-if="isCommittee">
+            <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12" v-if="isCommittee">
                 <template #header>
                     <div class="flex items-center justify-between mb-4">
-                        <h2
-                            :class="['font-normal leading-tight text-neutral-800 dark:text-neutral-200 ms-2', responsiveClasses.listTitle]">
+                        <h2 class="font-normal leading-tight text-neutral-800 dark:text-neutral-200 ms-2">
                             {{ $ts('qr_code_presence') }}
                         </h2>
                     </div>
                 </template>
                 <div class="flex flex-col items-center justify-center">
-                    <Qrcode :value="id" variant="rounded" class="max-w-md" />
+                    <Qrcode :value="(id as string)" variant="rounded" class="max-w-md" />
                     <p class="mt-4 text-center text-error-500">{{ $ts('qr_code_presence_desc') }}</p>
                 </div>
-                <template #footer>
+                <!-- <template #footer>
                     <div class="space-y-2">
                         <UButton block :size="responsiveUISizes.button" icon="i-heroicons-archive-box"
                             :disabled="checkQRDocIsExist()" @click="createQRDoc">
@@ -1121,8 +1121,8 @@ useSeoMeta({
                             {{ $ts('download') }}
                         </UButton>
                     </div>
-                </template>
-            </UCard> -->
+                </template> -->
+            </UCard>
         </div>
         <UCard v-else>
             <USkeleton class="w-full h-64 mb-4" />

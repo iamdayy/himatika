@@ -212,7 +212,7 @@ const links = computed(() => [{
                         </div>
                         <div class="max-w-md mx-auto overflow-hidden rounded-lg">
                             <NuxtImg provider="localProvider" :src="(project.image as string)" :alt="project.title"
-                                class="object-cover w-full h-full" />
+                                class="object-cover w-full h-full" loading="lazy" />
                         </div>
                     </template>
                     <div class="space-y-2">
