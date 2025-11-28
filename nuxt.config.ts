@@ -47,6 +47,7 @@ export default defineNuxtConfig({
     "nuxt-i18n-micro",
     "nuxt-qrcode",
     "@vueuse/nuxt",
+    "@pinia/nuxt",
   ],
   css: ["./app/assets/css/main.css"],
   colorMode: {
@@ -115,8 +116,9 @@ export default defineNuxtConfig({
         cookieName: "auth.token",
         headerName: "Authorization",
         maxAgeInSeconds: 604800,
-        sameSiteAttribute: "none",
-        secureCookieAttribute: true,
+        sameSiteAttribute:
+          process.env.NODE_ENV === "production" ? "none" : "lax",
+        secureCookieAttribute: process.env.NODE_ENV === "production",
         cookieDomain: process.env.COOKIE_DOMAIN,
       },
       refresh: {
@@ -126,9 +128,10 @@ export default defineNuxtConfig({
           cookieName: "auth.refresh-token",
           signInResponseRefreshTokenPointer: "/refreshToken",
           refreshRequestTokenPointer: "/refreshToken",
-          // maxAgeInSeconds: 2592000,
-          // sameSiteAttribute: "none",
-          // secureCookieAttribute: true,
+          sameSiteAttribute:
+            process.env.NODE_ENV === "production" ? "none" : "lax",
+          secureCookieAttribute: process.env.NODE_ENV === "production",
+          cookieDomain: process.env.COOKIE_DOMAIN,
         },
       },
       session: {
@@ -170,7 +173,7 @@ export default defineNuxtConfig({
       },
     },
     sessionRefresh: {
-      enableOnWindowFocus: true,
+      enableOnWindowFocus: false,
       enablePeriodically: 1000 * 60 * 60,
     },
   },

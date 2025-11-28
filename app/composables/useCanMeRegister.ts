@@ -1,6 +1,7 @@
 import type { TRole } from "~~/types";
 export const useCanMeRegister = () => {
-  const { organizer } = useOrganizer();
+  const organizerStore = useOrganizerStore();
+  const { organizer } = storeToRefs(organizerStore);
   const { data: user } = useAuth();
   const canMeRegister = (canRegister: TRole, date?: Date) => {
     if (date) {

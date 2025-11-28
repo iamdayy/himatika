@@ -25,7 +25,8 @@ const { $api } = useNuxtApp();
 /**
  * User role and department hooks
  */
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 
 /**
  * Modal and toast hooks

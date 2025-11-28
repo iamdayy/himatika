@@ -304,7 +304,8 @@ const { $ts } = useI18n();
 const { data, refresh } = useLazyAsyncData<IAspirationResponse>('aspiration', () => $api(`api/aspiration`, {
     query: { id },
 }));
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 
 const toast = useToast();
 const overlay = useOverlay();

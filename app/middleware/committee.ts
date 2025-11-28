@@ -15,9 +15,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     transform: (data: IAgendaResponse) => data.data?.agenda,
   });
   const { isCommittee } = useAgendas(agenda);
-  const { isOrganizer } = useOrganizer();
+  const organizerState = useOrganizerStore();
+  const { isOrganizer } = storeToRefs(organizerState);
   if (!isCommittee.value) {
-    if (isOrganizer) {
+    if (isOrganizer.value) {
       return;
     }
     return abortNavigation();

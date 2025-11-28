@@ -41,7 +41,8 @@ const { $ts } = useI18n();
 /**
  * User role and department hooks
  */
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 
 /**
  * Modal and toast hooks
@@ -457,7 +458,7 @@ const links = computed(() => [{
                         <div class="flex flex-col items-center gap-2">
                             <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">{{
                                 $ts('show_deleted')
-                            }}</label>
+                                }}</label>
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </div>
                         <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"

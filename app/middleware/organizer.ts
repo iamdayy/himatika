@@ -1,5 +1,9 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const { isOrganizer } = useOrganizer();
+  if (!process.client) {
+    return;
+  }
+  const organizerState = useOrganizerStore();
+  const { isOrganizer } = storeToRefs(organizerState);
   if (!isOrganizer.value) {
     return abortNavigation();
   }

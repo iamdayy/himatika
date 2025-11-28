@@ -14,7 +14,8 @@ const route = useRoute();
 const { $ts } = useI18n();
 const id = route.params.id;
 
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const overlay = useOverlay();
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 const addPhotoModalComp = overlay.create(ModalsImageAdd);
@@ -698,7 +699,7 @@ useSeoMeta({
                                 <span class="text-gray-600 dark:text-gray-300">{{ $ts('register_as') }}</span>
                                 <span class="font-medium">{{ isRegistered() === 'Committee' ? $ts('committee') :
                                     $ts('participant')
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div v-if="isRegistered() !== false" class="flex items-center justify-between">
                                 <span class="text-gray-600 dark:text-gray-300">ID</span>
@@ -749,7 +750,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                        }}:</span>
+                                            }}:</span>
                                         <UIcon
                                             :name="agenda.configuration.committee.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.committee.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -773,7 +774,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.committee.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                        }}:</span>
+                                            }}:</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.committee.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.committee.canRegisterUntil) }}
@@ -809,7 +810,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                            }}</span>
+                                        }}</span>
                                         <UIcon
                                             :name="agenda.configuration.participant.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.participant.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -833,7 +834,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.participant.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                            }}</span>
+                                        }}</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.participant.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.participant.canRegisterUntil) }}

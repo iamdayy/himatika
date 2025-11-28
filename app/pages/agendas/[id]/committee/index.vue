@@ -52,7 +52,8 @@ const toast = useToast();
 const agenda = computed<IAgenda | undefined>(() => data.value?.data?.agenda);
 const { isCommittee, isRegistered, payStatus, registeredId, canMeUnregister } = useAgendas(agenda);
 const { canMeRegister } = useCanMeRegister();
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 
 const selectedRows = ref<{
     [key: number]: boolean
