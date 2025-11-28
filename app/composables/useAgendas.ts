@@ -1,8 +1,8 @@
 import type { IAgenda, IMember, IUser, TPaymentStatus } from "~~/types";
 
 export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
-  const { organizer, isOrganizer } = useOrganizer();
-  const { canMeRegister } = useCanMeRegister();
+  const organizerState = useOrganizerStore();
+  const { organizer, isOrganizer } = storeToRefs(organizerState);
 
   const { data: dataUser, status } = useAuth();
   const user = computed(() => dataUser.value as IUser);

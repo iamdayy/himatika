@@ -31,7 +31,8 @@ const overlay = useOverlay();
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const { $api, $pageGuide } = useNuxtApp();
 const page = ref(0);
 const perPage = ref(0);

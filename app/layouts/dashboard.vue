@@ -19,7 +19,8 @@ const isDarkMode = useDark({
     valueDark: 'dark',
     valueLight: 'light',
 })
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const { $ts, $switchLocale, $getLocale } = useI18n();
 
 /**
@@ -220,7 +221,7 @@ const links = computed<NavigationMenuItem[][]>(() => {
                                             <div class="overflow-ellipsis">
                                                 <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                     user?.username
-                                                    }}
+                                                }}
                                                 </h2>
                                                 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                     user?.member.NIM }}

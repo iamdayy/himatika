@@ -9,7 +9,8 @@ definePageMeta({
     layout: 'dashboard',
 });
 const overlay = useOverlay();
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const { $api, $pageGuide } = useNuxtApp();
 const toast = useToast();
 const { width } = useWindowSize();

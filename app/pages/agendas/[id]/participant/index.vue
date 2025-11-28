@@ -79,7 +79,8 @@ const isMobile = computed(() => width.value < 640)
 /**
  * Computed property for responsive table columns
  */
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const columns = computed<TableColumn<IParticipant>[]>(() => {
     const baseColumns: TableColumn<IParticipant>[] = [
 

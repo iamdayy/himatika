@@ -26,7 +26,8 @@ const {
     }
 );
 // Retrieve organizer status and list of organizers
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const overlay = useOverlay();
 const { $ts } = useI18n();
 

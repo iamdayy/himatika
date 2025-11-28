@@ -15,7 +15,8 @@ const ip = await $fetch('/api/ip');
 const { $api } = useNuxtApp();
 const overlay = useOverlay();
 const toast = useToast();
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const { $ts } = useI18n();
 
 const AddNewsModal = overlay.create(ModalsNewsAdd);
@@ -50,7 +51,7 @@ const archived = ref(true);
 /**
  * Fetch newss data
  */
-const { data, refresh, pending } = useLazyAsyncData('news',() => $api<INewsResponse>('/api/news', {
+const { data, refresh, pending } = useLazyAsyncData('news', () => $api<INewsResponse>('/api/news', {
     query: {
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,
@@ -361,11 +362,11 @@ useSeoMeta({
                 <UCard :ui="{ root: 'overflow-hidden', body: 'p-0 sm:p-0 px-0 md:px-0' }"
                     v-for="news, i in (data.data?.news as INews[])" :key="i">
                     <div class="relative h-48">
-                            <img :src="(news.mainImage as string)" :alt="news.title"
-                                class="absolute inset-0 object-cover w-full h-full" />
-                            <UBadge class="absolute top-2 left-2">{{
-                                (news.category as ICategory).title }}</UBadge>
-                        </div>
+                        <img :src="(news.mainImage as string)" :alt="news.title"
+                            class="absolute inset-0 object-cover w-full h-full" />
+                        <UBadge class="absolute top-2 left-2">{{
+                            (news.category as ICategory).title }}</UBadge>
+                    </div>
                     <div class="min-h-[6rem] space-y-2 px-4 py-1">
                         <NuxtLink :to="`/news/${news.slug}`">
                             <h2 class="text-sm font-semibold sm:text-lg md:text-xl lg:text-2xl line-clamp-2">{{

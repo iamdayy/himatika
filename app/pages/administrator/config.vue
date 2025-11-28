@@ -34,7 +34,8 @@ const { data: enscriptions } = await useAsyncData(() => $fetch<IEncryptionsRespo
         }));
     }
 });
-const { organizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { organizer } = storeToRefs(organizerStore);
 const toast = useToast();
 const { $api } = useNuxtApp();
 const overlay = useOverlay();

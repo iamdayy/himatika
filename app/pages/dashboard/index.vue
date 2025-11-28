@@ -5,6 +5,7 @@ import { ModalsActions, ModalsQrReader, NuxtImg, NuxtLink, UAvatar } from '#comp
 import type { TableColumn } from "#ui/types";
 import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
 import type { DriveStep } from "driver.js";
+import { useStatsStore } from "~/stores/useStatsStore";
 import type { IAgendaResponse, IProjectsResponse } from "~~/types/IResponse";
 interface IPoint {
     avatar?: string;
@@ -78,7 +79,8 @@ const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
 /**
  * Get user stats
  */
-const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations } = useStats()
+const statsStore = useStatsStore();
+const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations } = storeToRefs(statsStore);
 const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/projects'), {
     transform: (data) => ({
         data: data.data?.projects || [],
@@ -88,7 +90,8 @@ const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/pr
 const toast = useToast();
 const overlay = useOverlay();
 const { width } = useWindowSize();
-const { isOrganizer } = useOrganizer();
+const organizerStore = useOrganizerStore();
+const { isOrganizer } = storeToRefs(organizerStore);
 const { data: configData } = useAsyncData(() => $api('/api/config'));
 
 
@@ -328,6 +331,7 @@ const carouselRef = ref()
  * Set up carousel auto-rotation
  */
 onMounted(() => {
+    statsStore.init();
     setInterval(() => {
         if (!carouselRef.value) return
 
