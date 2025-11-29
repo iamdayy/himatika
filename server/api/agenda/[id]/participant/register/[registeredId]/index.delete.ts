@@ -51,10 +51,11 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const isCommittee = agenda.committees?.find(
       (c) => (c.member as IMember).NIM === user.member.NIM
     );
-    if (!isCommittee && !meIsParticipant) {
+    if (!isCommittee && !meIsParticipant && !user.member.organizer) {
       return {
         statusCode: 401,
-        statusMessage: "Cannot delete other's participant or not a committee",
+        statusMessage:
+          "Cannot delete other's participant or yaourself when you are not committee or the organizer",
       };
     }
     agenda.participants = agenda.participants?.filter(

@@ -699,7 +699,7 @@ useSeoMeta({
                                 <span class="text-gray-600 dark:text-gray-300">{{ $ts('register_as') }}</span>
                                 <span class="font-medium">{{ isRegistered() === 'Committee' ? $ts('committee') :
                                     $ts('participant')
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div v-if="isRegistered() !== false" class="flex items-center justify-between">
                                 <span class="text-gray-600 dark:text-gray-300">ID</span>
@@ -750,7 +750,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                            }}:</span>
+                                        }}:</span>
                                         <UIcon
                                             :name="agenda.configuration.committee.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.committee.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -774,7 +774,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.committee.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                            }}:</span>
+                                        }}:</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.committee.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.committee.canRegisterUntil) }}
@@ -810,7 +810,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                        }}</span>
+                                            }}</span>
                                         <UIcon
                                             :name="agenda.configuration.participant.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.participant.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -834,7 +834,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.participant.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                        }}</span>
+                                            }}</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.participant.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.participant.canRegisterUntil) }}
@@ -903,15 +903,16 @@ useSeoMeta({
                         </template>
                     </UCard>
                     <!-- Registered Participants -->
-                    <UCard v-if="agenda.participants && agenda.participants.length" class="mt-6">
+                    <UCard class="mt-6">
                         <template #header>
                             <div class="flex items-center justify-between">
                                 <h2 class="text-xl font-semibold">{{ $ts('registered_participant') }}</h2>
-                                <UBadge color="secondary">{{ agenda.participants.length }} {{ $ts('participant') }}
+                                <UBadge color="secondary" v-if="agenda.participants && agenda.participants.length">{{
+                                    agenda.participants.length }} {{ $ts('participant') }}
                                 </UBadge>
                             </div>
                         </template>
-                        <div class="space-y-4">
+                        <div class="space-y-4" v-if="agenda.participants && agenda.participants.length">
                             <div v-for="participant, i in agenda.participants.slice(0, 3)" :key="i"
                                 class="flex items-center justify-between p-4 bg-gray-50/20 rounded-lg">
                                 <div class="flex items-center gap-3">
@@ -930,6 +931,10 @@ useSeoMeta({
                                 </div>
                             </div>
                         </div>
+
+                        <div class="p-4 text-gray-600 dark:text-gray-300" v-else>
+                            {{ $ts('no_participant_registered_description') }}
+                        </div>
                         <template #footer>
                             <UButton :to="`/agendas/${id}/participant`" class="w-full" color="primary" size="sm" block
                                 v-if="canSeeAllParticipants">
@@ -937,14 +942,6 @@ useSeoMeta({
                                 {{ $ts('see_more') }}
                             </UButton>
                         </template>
-                    </UCard>
-                    <UCard v-else class="mt-6">
-                        <template #header>
-                            <h2 class="text-xl font-semibold">{{ $ts('no_participant_registered') }}</h2>
-                        </template>
-                        <div class="p-4 text-gray-600 dark:text-gray-300">
-                            {{ $ts('no_participant_registered_description') }}
-                        </div>
                     </UCard>
                 </div>
             </div>
