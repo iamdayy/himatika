@@ -586,6 +586,10 @@ useHead({
             <template #header>
                 <div class="flex items-center justify-between w-full">
                     <h2 class="text-xl font-semibold dark:text-neutral-200">{{ $ts('committee') }}</h2>
+                    <div class="flex items-center gap-2">
+                        <UButton :to="`/agendas/${id}/committee/add`" :label="$ts('add')" icon="i-heroicons-plus-circle"
+                            :size="responsiveUISizes.button" variant="outline" v-if="isCommittee" />
+                    </div>
                 </div>
             </template>
             <!-- Header and Action buttons -->

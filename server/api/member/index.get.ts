@@ -24,7 +24,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
     const user = event.context.user;
     if (!user) {
       throw createError({
-        statusCode: 403,
+        statusCode: 401,
         statusMessage: "You must be logged in to access this",
       });
     }
@@ -154,7 +154,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
 
     if (!user.member.organizer) {
       throw createError({
-        statusCode: 403,
+        statusCode: 401,
         statusMessage: "You must be admin / departement to access this",
       });
     }
@@ -281,9 +281,9 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       },
     };
   } catch (error: any) {
-    return {
-      statusCode: 500,
+    throw createError({
+      statusCode: error.statusCode || 500,
       statusMessage: error.message,
-    };
+    });
   }
 });
