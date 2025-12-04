@@ -17,7 +17,7 @@ definePageMeta({
  * Set page title
  */
 useHead({
-    title: 'Users'
+    title: () => `${useI18n().t('member')}`
 });
 
 const { $api } = useNuxtApp();
@@ -328,7 +328,7 @@ const { data, pending, refresh } = await useLazyAsyncData('users', () => $api<IM
             length: 0
         }
     }),
-    watch: [() => pagination.value.pageIndex, search, () => pagination.value.pageSize, () => sort.value.column, () => sort.value.direction, filter, filterBy, deleted]
+    watch: [() => pagination.value.pageIndex, search, () => pagination.value.pageSize, () => sort.value.column, () => sort.value.direction, filter, filterBy, deleted, NIM],
 });
 
 const filters = computed(() => {
@@ -558,7 +558,7 @@ const links = computed(() => [{
                 <!-- Filters -->
                 <div class="flex flex-col items-center justify-between gap-3 px-2 md:px-4 md:flex-row">
                     <div class="flex flex-row items-center gap-3">
-                        <UInput v-model="NIM" :placeholder="$ts('search_placeholder', { key: 'NIM' })" :disabled="NIM"
+                        <UInput v-model="NIM" :placeholder="$ts('search_placeholder', { key: 'NIM' })"
                             @keyup.enter="refresh()" :loading="pending" :size="responsiveUISizes.input"
                             class="hidden w-full md:w-auto md:block">
                             <template #trailing>
@@ -579,8 +579,8 @@ const links = computed(() => [{
                             class="w-full md:w-40" />
 
                         <UButton icon="i-heroicons-funnel" color="neutral" variant="outline"
-                            :size="responsiveUISizes.button" :disabled="search === '' && filter.length === 0"
-                            @click="resetFilters">
+                            :size="responsiveUISizes.button"
+                            :disabled="search === '' && NIM === '' && filter.length === 0" @click="resetFilters">
                             Reset
                         </UButton>
                     </div>

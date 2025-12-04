@@ -12,6 +12,8 @@ const getSecretKey = () => {
   return secretKey;
 };
 
+// TODO: Refactor for better session management
+
 /**
  * Checks the validity of a session token.
  * @param payload - The session token to verify.
@@ -48,7 +50,6 @@ export const checkSession = async (payload: string) => {
         statusCode: 401,
       });
     }
-
 
     return {
       username: user.username,
