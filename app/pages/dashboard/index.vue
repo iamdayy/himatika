@@ -81,7 +81,7 @@ const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
  */
 const statsStore = useStatsStore();
 const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations } = storeToRefs(statsStore);
-const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/projects'), {
+const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
     transform: (data) => ({
         data: data.data?.projects || [],
         count: data.data?.length || 0
@@ -434,7 +434,7 @@ onMounted(() => {
                                             <div class="overflow-ellipsis">
                                                 <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                     user?.username
-                                                }}
+                                                    }}
                                                 </h2>
                                                 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                     user?.member.NIM }}
@@ -517,7 +517,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-calendar" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
@@ -533,7 +533,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         projectsMe.length
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <ClientOnly>
@@ -547,7 +547,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         aspirations.length
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <ClientOnly>

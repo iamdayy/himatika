@@ -73,7 +73,7 @@ export const refreshAuth = async (event: H3Event) => {
     }
     const token = await refreshSession(refreshToken);
 
-    return { token, refreshToken };
+    return token;
   } catch (error: any) {
     throw createError({
       statusCode: 401,

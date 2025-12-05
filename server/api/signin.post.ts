@@ -68,8 +68,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Generate JWT tokens
+  // Disarankan: Access Token pendek (1 hari), Refresh Token panjang (90 hari)
   const token = jwt.sign({ user: user._id }, getSecretKey(), {
-    expiresIn: "1w",
+    expiresIn: "1d", // Sebelumnya 1w (terlalu lama untuk access token)
   });
   const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
     expiresIn: "90d",
