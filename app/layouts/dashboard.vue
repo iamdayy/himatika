@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { DropdownMenuItem, NavigationMenuItem } from '#ui/types';
+import type { DropdownMenuItem } from '#ui/types';
 
 /**
  * Authentication management
@@ -18,9 +18,8 @@ const isDarkMode = useDark({
     attribute: 'class',
     valueDark: 'dark',
     valueLight: 'light',
-})
-const organizerStore = useOrganizerStore();
-const { isOrganizer } = storeToRefs(organizerStore);
+});
+const { links } = useDashboardNavigation();
 const { $ts, $switchLocale, $getLocale } = useI18n();
 
 /**
@@ -31,7 +30,7 @@ const { $ts, $switchLocale, $getLocale } = useI18n();
 const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
     [{
         label: user.value?.username || '',
-        slot: 'account',
+        slot: 'account' as const,
         disabled: true
     }],
     [{
@@ -63,7 +62,7 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
         onSelect: () => signOut({ callbackUrl: '/login' }),
         icon: 'i-heroicons-arrow-right-start-on-rectangle'
     }]
-])
+] satisfies DropdownMenuItem[][]);
 
 // Dropdown items for non-logged-in users
 const itemsNotLogged = computed<DropdownMenuItem[][]>(() => [
@@ -97,7 +96,7 @@ const languages = computed<DropdownMenuItem[][]>(() => [
 ])
 
 // Computed property to determine which items to show based on login status
-const items = computed(() => isLoggedIn.value ? itemsIsLogged.value : itemsNotLogged.value);
+const items = computed(() => (isLoggedIn.value ? itemsIsLogged.value : itemsNotLogged.value) satisfies DropdownMenuItem[][]);
 
 /**
  * Set up page head with dynamic title
@@ -111,84 +110,7 @@ useHead({
 /**
  * Slide-over state
  */
-const openSlideOver = ref<boolean>(false)
-
-/**
- * Vertical navigation links
- */
-const links = computed<NavigationMenuItem[][]>(() => {
-    const links: NavigationMenuItem[][] = [
-        [
-            {
-                label: user?.value?.member.fullName || "",
-                disabled: true
-            },
-        ],
-        [
-            {
-                label: $ts('dashboard'),
-                icon: 'i-heroicons-rectangle-group',
-                to: '/dashboard'
-            },
-            {
-                label: $ts('agenda'),
-                icon: 'i-heroicons-calendar',
-                to: '/dashboard/agendas'
-            },
-            {
-                label: $ts('project'),
-                icon: 'i-heroicons-code-bracket',
-                to: '/dashboard/projects'
-            },
-            {
-                label: $ts('aspiration'),
-                icon: 'i-heroicons-clipboard-document-list',
-                to: '/dashboard/aspirations'
-            },
-        ],
-    ]
-    if (isOrganizer.value) {
-        links.push([
-            {
-                label: $ts('member'),
-                icon: 'i-heroicons-users',
-                to: '/administrator/members'
-            },
-            {
-                label: $ts('organizer'),
-                icon: 'i-heroicons-user-group',
-                to: '/administrator/organizer'
-            },
-            {
-                label: $ts('news'),
-                icon: 'i-heroicons-clipboard-document-list',
-                to: '/administrator/news'
-            },
-            {
-                label: $ts('gallery'),
-                icon: 'i-heroicons-photo',
-                to: '/administrator/photos'
-            },
-            {
-                label: $ts('signature'),
-                icon: 'i-heroicons-finger-print',
-                to: '/signatures'
-            },
-            {
-                label: $ts('message'),
-                icon: 'i-heroicons-archive-box',
-                to: '/administrator/messages'
-            },
-            {
-                label: $ts('config'),
-                icon: 'i-heroicons-cog',
-                to: '/administrator/config'
-            },
-
-        ])
-    }
-    return links;
-})
+const openSlideOver = ref<boolean>(false);
 </script>
 
 <template>

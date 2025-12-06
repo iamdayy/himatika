@@ -6,33 +6,24 @@ import { ISessionSchema } from "~~/types/ISchemas";
  */
 const sessionSchema = new Schema<ISessionSchema>(
   {
-    /**
-     * The authentication token for the session.
-     */
     token: {
       type: String,
+      index: true,
     },
-    /**
-     * The refresh token for the session. Required for token renewal.
-     */
     refreshToken: {
       type: String,
       required: true,
+      index: true,
     },
-    /**
-     * Reference to the User associated with this session.
-     */
+    previousRefreshToken: {
+      type: String,
+      index: true,
+    },
     user: {
       type: Types.ObjectId,
       ref: "User",
     },
-    /**
-     * The date and time when the session was created.
-     */
     createdAt: Date,
-    /**
-     * The date and time when the session was last updated.
-     */
     updatedAt: Date,
   },
   {
@@ -40,12 +31,9 @@ const sessionSchema = new Schema<ISessionSchema>(
   }
 );
 
-// Index to automatically expire sessions after 7 days (604800 seconds)
-sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+// TTL index sesuai durasi refresh token (90 hari)
+sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
 
-/**
- * Mongoose model for the Session collection.
- */
 export const SessionModel = mongoose.model<ISessionSchema>(
   "Session",
   sessionSchema

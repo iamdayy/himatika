@@ -29,8 +29,7 @@ export default defineEventHandler(
       // Fetch multiple agendas based on user roles
       const user = event.context.user;
       const roles: string[] = ["Public"];
-      const auth = checkAuth(event);
-      if (auth) {
+      if (user) {
         roles.push("Member");
         if (event.context.organizer) {
           roles.push("Organizer");

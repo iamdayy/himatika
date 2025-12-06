@@ -3,7 +3,7 @@ import type { ICategory, IMember } from "~~/types";
 
 import { ModalsActions, ModalsQrReader, NuxtImg, NuxtLink, UAvatar } from '#components';
 import type { TableColumn } from "#ui/types";
-import type { DropdownMenuItem, NavigationMenuItem } from "@nuxt/ui";
+import type { DropdownMenuItem } from "@nuxt/ui";
 import type { DriveStep } from "driver.js";
 import { useStatsStore } from "~/stores/useStatsStore";
 import type { IAgendaResponse, IProjectsResponse } from "~~/types/IResponse";
@@ -80,8 +80,12 @@ const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
  * Get user stats
  */
 const statsStore = useStatsStore();
+await useAsyncData('dashboard-stats', async () => {
+    await statsStore.init();
+    return true; // Return sesuatu agar useAsyncData tahu proses selesai
+});
 const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations } = storeToRefs(statsStore);
-const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/projects'), {
+const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
     transform: (data) => ({
         data: data.data?.projects || [],
         count: data.data?.length || 0
@@ -90,8 +94,7 @@ const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/pr
 const toast = useToast();
 const overlay = useOverlay();
 const { width } = useWindowSize();
-const organizerStore = useOrganizerStore();
-const { isOrganizer } = storeToRefs(organizerStore);
+const { links } = useDashboardNavigation();
 const { data: configData } = useAsyncData(() => $api('/api/config'));
 
 
@@ -252,77 +255,6 @@ const languages = computed<DropdownMenuItem[][]>(() => [
 const items = computed(() => isLoggedIn.value ? itemsIsLogged.value : itemsNotLogged.value);
 
 /**
- * Vertical navigation links
- */
-const links = computed<NavigationMenuItem[][]>(() => {
-    const links = [
-        [
-            {
-                label: $ts('dashboard'),
-                icon: 'i-heroicons-rectangle-group',
-                to: '/dashboard'
-            },
-            {
-                label: $ts('agenda'),
-                icon: 'i-heroicons-calendar',
-                to: '/dashboard/agendas'
-            },
-            {
-                label: $ts('project'),
-                icon: 'i-heroicons-code-bracket',
-                to: '/dashboard/projects'
-            },
-            {
-                label: $ts('aspiration'),
-                icon: 'i-heroicons-clipboard-document-list',
-                to: '/dashboard/aspirations'
-            },
-        ],
-    ]
-    if (isOrganizer.value) {
-        links.push([
-            {
-                label: $ts('member'),
-                icon: 'i-heroicons-users',
-                to: '/administrator/members'
-            },
-            {
-                label: $ts('organizer'),
-                icon: 'i-heroicons-user-group',
-                to: '/administrator/organizer'
-            },
-            {
-                label: $ts('news'),
-                icon: 'i-heroicons-clipboard-document-list',
-                to: '/administrator/news'
-            },
-            {
-                label: $ts('gallery'),
-                icon: 'i-heroicons-photo',
-                to: '/administrator/photos'
-            },
-            {
-                label: $ts('signature'),
-                icon: 'i-heroicons-finger-print',
-                to: '/signatures'
-            },
-            {
-                label: $ts('message'),
-                icon: 'i-heroicons-archive-box',
-                to: '/administrator/messages'
-            },
-            {
-                label: $ts('config'),
-                icon: 'i-heroicons-cog',
-                to: '/administrator/config'
-            },
-
-        ])
-    }
-    return links;
-})
-
-/**
  * Reference to the carousel component
  */
 const carouselRef = ref()
@@ -331,7 +263,6 @@ const carouselRef = ref()
  * Set up carousel auto-rotation
  */
 onMounted(() => {
-    statsStore.init();
     setInterval(() => {
         if (!carouselRef.value) return
 
@@ -520,11 +451,9 @@ onMounted(() => {
                                         }}</h2>
                                     <UIcon name="i-heroicons-calendar" class="text-6xl" />
                                 </div>
-                                <ClientOnly>
-                                    <UProgress
-                                        :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!)"
-                                        :max="agendasCanMeRegistered?.length" indicator />
-                                </ClientOnly>
+                                <UProgress
+                                    :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
+                                    :max="agendasCanMeRegistered?.length || 100" indicator />
                             </UCard>
                             <UCard class="w-full lg:w-1/3" id="card-projects">
                                 <template #header>
@@ -536,9 +465,8 @@ onMounted(() => {
                                         }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
-                                <ClientOnly>
-                                    <UProgress :model-value="projectsMe.length" :max="data?.count" indicator />
-                                </ClientOnly>
+                                <UProgress :model-value="projectsMe.length || 0" :color="color"
+                                    :max="data?.count || 100" indicator />
                             </UCard>
                             <UCard class="w-full lg:w-1/3" id="card-projects">
                                 <template #header>
@@ -550,10 +478,8 @@ onMounted(() => {
                                         }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
-                                <ClientOnly>
-                                    <UProgress :model-value="Math.ceil(aspirations.length / 5)"
-                                        :max="['Pasif!', 'Baik', 'Kritis!', 'Menyala 🔥']" :color="color" />
-                                </ClientOnly>
+                                <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
+                                    :max="['Pasif!', 'Baik', 'Kritis!', 'Menyala 🔥']" :color="color" />
                             </UCard>
                         </div>
                         <UCard class="w-full" id="card-point">
@@ -572,10 +498,8 @@ onMounted(() => {
                                 </h2>
                                 <UIcon name="i-heroicons-arrow-trending-up" class="text-6xl" />
                             </div>
-                            <ClientOnly>
-                                <UProgress :model-value="(user?.member.point[0]!.point || 0)"
-                                    :max="configData?.data.minPoint" />
-                            </ClientOnly>
+                            <UProgress :model-value="(user?.member.point[0]!.point || 0)"
+                                :max="configData?.data.minPoint || 100" indicator />
                             <template #footer>
                                 <div class="flex items-center justify-between w-full">
                                     <UTable :columns="pointLeaderBoardColumn" :data="points" class="w-full" responsive>
