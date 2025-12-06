@@ -123,21 +123,14 @@ export const refreshSession = async (payload: string) => {
       const newToken = jwt.sign({ user: session.user }, getSecretKey(), {
         expiresIn: "1d",
       });
-      const newRefreshToken = jwt.sign({ user: session.user }, getSecretKey(), {
-        expiresIn: "90d",
-      });
-
-      // Simpan token lama ke history
-      session.previousRefreshToken = session.refreshToken;
       // Update token baru
-      session.refreshToken = newRefreshToken;
       session.token = newToken;
 
       await session.save();
 
       return {
         token: newToken,
-        refreshToken: newRefreshToken,
+        refreshToken: session.refreshToken,
       };
     }
 
@@ -148,7 +141,7 @@ export const refreshSession = async (payload: string) => {
     });
   } catch (error: any) {
     throw createError({
-      statusMessage: "Unauthenticated!",
+      statusMessage: error.message || "Failed to refresh session",
       statusCode: 401,
     });
   }

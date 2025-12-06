@@ -97,7 +97,10 @@ export interface IPaymentResponse extends IResponse {
 export interface IAgendaMeResponse extends IResponse {
   /** An array of agendas matching the query. */
   data?: {
-    agendas?: IAgenda[];
+    agendas?: {
+      participant?: IAgenda[];
+      committee?: IAgenda[];
+    };
     length?: number;
   };
 }
@@ -308,8 +311,8 @@ export interface IAnswersResponse extends IResponse {
 
 export interface IEncryptionsResponse extends IResponse {
   data?: {
-    encryptions?: Omit<IEncryption, 'private_key'>[],
-    count?: number,
-    encryption?: Omit<IEncryption, '_id'>,
-  }
+    encryptions?: Omit<IEncryption, "private_key">[];
+    count?: number;
+    encryption?: Omit<IEncryption, "_id">;
+  };
 }

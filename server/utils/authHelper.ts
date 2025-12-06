@@ -62,7 +62,7 @@ export const ensureAuth = async (event: H3Event) => {
  */
 export const refreshAuth = async (event: H3Event) => {
   try {
-    const refreshToken = getCookie(event, "auth.refresh-token");
+    const { refreshToken } = await readBody(event);
 
     if (typeof refreshToken === "undefined") {
       throw createError({

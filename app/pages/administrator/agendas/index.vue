@@ -33,7 +33,7 @@ const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
-const { $api, $pageGuide } = useNuxtApp();
+const { $api, $pageGuide, $ts } = useNuxtApp();
 const page = ref(0);
 const perPage = ref(0);
 const upcomingOnly = ref(false);
@@ -200,24 +200,29 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
     input: isMobile.value ? 'xs' : 'md',
 }));
 const links = computed(() => [{
-    label: 'Dashboard',
+    label: $ts('dashboard'),
     icon: 'i-heroicons-home',
     to: '/dashboard'
-}, {
-    label: 'Agendas',
+},
+{
+    label: $ts('administrator'),
+    icon: 'i-heroicons-shield-check',
+},
+{
+    label: $ts('agendas'),
     icon: 'i-heroicons-calendar',
 }]);
 const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
     const options: DropdownMenuItem[][] = [
         [
             {
-                label: 'View',
+                label: $ts('open'),
                 icon: 'i-heroicons-eye',
                 to: `/agendas/${agenda.value?._id}`,
                 target: '_blank'
             },
             {
-                label: 'Copy Link',
+                label: $ts('copy-link'),
                 icon: 'i-heroicons-clipboard',
                 onSelect: () => {
                     navigator.clipboard.writeText(`${window.location.origin}/agendas/${agenda.value?._id}`);
@@ -228,7 +233,7 @@ const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
                 },
             },
             {
-                label: 'Share',
+                label: $ts('share'),
                 icon: 'i-heroicons-share',
                 onSelect: () => navigator.share({
                     title: agenda.value?.title,
@@ -239,20 +244,20 @@ const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
         ]]
     if (isOrganizer) {
         options[0]!.push({
-            label: 'Edit',
+            label: $ts('edit'),
             icon: 'i-heroicons-pencil',
             to: `/agendas/${agenda.value?._id}/edit`,
         });
         options.push([
             {
-                label: 'Delete',
+                label: $ts('delete'),
                 icon: 'i-heroicons-trash',
                 onSelect: async () => deleteModal()
             }
         ])
         if (agenda.value?.registerLink) {
             options[0]!.push({
-                label: 'Form',
+                label: $ts('form'),
                 icon: 'i-heroicons-link',
                 onSelect: async () => {
                     window.open((agenda.value?.registerLink as string).replace('question', 'form'), '_blank');
@@ -368,7 +373,7 @@ const selectDate = (date: Date) => {
                     :class="['px-4 py-4 border-gray-400 w-full', responsiveClasses.eventDetailsWrapper]">
                     <h5 v-if="!agenda"
                         class="my-12 mb-4 text-2xl font-semibold text-center text-yellow-300 dark:text-yellow-200">
-                        No Agenda Selected
+                        {{ $ts('noAgendaSelected') }}
                     </h5>
                     <div v-else>
                         <div class="flex items-center justify-between">
@@ -419,7 +424,7 @@ const selectDate = (date: Date) => {
                             <li class="flex items-center justify-center">
                                 <UButton color="neutral" variant="link" :size="responsiveUISizes.button"
                                     icon="i-heroicons-arrow-long-right" :to="`/agendas/${agenda._id}`" trailing>
-                                    See More
+                                    {{ $ts('seeMore') }}
                                 </UButton>
                             </li>
                         </ul>

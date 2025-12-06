@@ -11,11 +11,11 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     // Request Interceptor: Pasang token terbaru
     async onRequest({ options }) {
-      const token = useCookie("auth.token"); // Asumsi token disimpan di cookie 'token'
+      const { token } = useAuthState();
       if (token.value) {
         options.headers = {
           ...options.headers,
-          Authorization: `Bearer ${token.value}`,
+          Authorization: token.value,
         } as any;
       }
     },
@@ -23,14 +23,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     // Response Error Interceptor: Handle 401 & Locking
     async onResponseError({ response, options, request }) {
       if (response.status === 401) {
-        const token = useCookie("auth.token");
-        const refreshToken = useCookie("auth.refresh-token");
+        const { token, refreshToken, setToken } = useAuthState();
 
         // Jika tidak ada refresh token, langsung logout (tidak bisa diselamatkan)
         if (!refreshToken.value) {
-          // Logic logout (bersihkan cookie & redirect)
-          token.value = null;
-          refreshToken.value = null;
           nuxtApp.runWithContext(() => navigateTo("/login"));
           return Promise.reject();
         }
@@ -46,17 +42,15 @@ export default defineNuxtPlugin((nuxtApp) => {
             body: { refreshToken: refreshToken.value },
           })
             .then((res: any) => {
-              // Sukses: Update Token di Cookie/Store
-              token.value = res.token;
-              refreshToken.value = res.refreshToken;
-              // Reset lock agar refresh berikutnya bisa dilakukan di masa depan
+              // Update token baru ke state
+              setToken(res.token);
+              // Sukses: Update token baru
               isRefreshing = null;
+              return Promise.resolve();
             })
             .catch((error) => {
               // Gagal: Token refresh expired/invalid
               isRefreshing = null; // Reset lock
-              token.value = null;
-              refreshToken.value = null;
               nuxtApp.runWithContext(() => navigateTo("/login"));
               return Promise.reject(error);
             });
