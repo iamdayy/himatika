@@ -60,6 +60,7 @@ const links = computed(() => [
     { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
     { label: $ts('agenda'), to: '/dashboard/agendas', icon: 'i-heroicons-clipboard-document-list' },
     { label: agenda.value?.title || '', to: `/agendas/${id}`, icon: 'i-heroicons-document' },
+    { label: $ts('committee'), to: `/agendas/${id}/committee`, icon: 'i-heroicons-users' },
     { label: $ts('questions'), icon: 'i-heroicons-document' },
 ]);
 definePageMeta({

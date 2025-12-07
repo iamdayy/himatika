@@ -67,10 +67,9 @@ export default defineEventHandler(async (event) => {
       }
 
       // Handle file type
-      console.log(question.answer);
       if (question.type === "file" && q.answer === "[[FILE]]") {
         const filePart = multipart?.find((p) => p.name === questionId);
-        const file = filePart as File | undefined;
+        const file = filePart;
         if (!file) {
           throw createError({
             statusCode: 404,
@@ -79,7 +78,9 @@ export default defineEventHandler(async (event) => {
         }
 
         const BASE_FILE_FOLDER = `/uploads/img/agenda/${agenda._id}/answers/${registeredId}`;
-        const fileName = `${BASE_FILE_FOLDER}/${file.name}.${file.type}`;
+        const fileName = `${BASE_FILE_FOLDER}/${file.name}-${Date.now()}.${
+          file.type
+        }`;
 
         if (!file.type) {
           throw createError({
@@ -90,7 +91,7 @@ export default defineEventHandler(async (event) => {
         if (q.answer) {
           await del(q.answer);
         }
-        const { url } = await put(fileName, file, {
+        const { url } = await put(fileName, file.data, {
           access: "public",
         });
         q.answer = url;

@@ -276,6 +276,12 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
   //   type: [AnswerSchema],
   // },
 });
+CommitteeSchema.virtual("answers", {
+  ref: AnswerModel,
+  localField: "_id",
+  foreignField: "answerer",
+  justOne: false,
+});
 
 /**
  * Schema for representing a participant participant.

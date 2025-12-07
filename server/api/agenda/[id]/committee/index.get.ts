@@ -1,7 +1,9 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { AnswerModel } from "~~/server/models/AnswerModel";
 import { IMember } from "~~/types";
 import { IReqAgendaCommitteeQuery } from "~~/types/IRequestPost";
 import { IAgendaCommitteeResponse } from "~~/types/IResponse";
+import { ICommitteeSchema } from "~~/types/ISchemas";
 
 export default defineEventHandler(
   async (event): Promise<IAgendaCommitteeResponse> => {
@@ -16,7 +18,14 @@ export default defineEventHandler(
       if (!user) {
         showNotApproved = false;
       }
-      const agenda = await AgendaModel.findById(id);
+      const agenda = await AgendaModel.findById(id).populate({
+        path: "committees",
+        populate: {
+          path: "answers",
+          model: AnswerModel,
+          select: "question value",
+        },
+      });
       if (!agenda) {
         return {
           statusCode: 404,
@@ -39,7 +48,13 @@ export default defineEventHandler(
         showNotApproved = true;
       }
       const committees =
-        agenda.committees
+        (agenda.committees as ICommitteeSchema[])
+          ?.map((committee) => {
+            return {
+              ...committee.toObject(),
+              answers: committee.answers,
+            };
+          })
           ?.slice(
             (Number(page) - 1) * Number(perPage),
             Number(perPage) * Number(page)

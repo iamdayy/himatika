@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, ModalsQrReader, NuxtImg, UCheckbox } from '#components';
+import { ModalsCommitteeView, ModalsConfirmation, ModalsQrReader, NuxtImg, UCheckbox } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, ICommittee, IMember } from '~~/types';
@@ -33,6 +33,7 @@ const overlay = useOverlay();
 
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 const QRCodeModalComp = overlay.create(ModalsQrReader);
+const CommitteeModal = overlay.create(ModalsCommitteeView);
 
 
 
@@ -226,6 +227,11 @@ function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
             label: $ts('action')
         },
         {
+            icon: 'i-heroicons-eye-20-solid',
+            label: $ts('view'),
+            onSelect: () => openCommitteeModal(row.original)
+        },
+        {
             icon: 'i-heroicons-check-circle',
             label: $ts('set_visit_status'),
             disabled: row.original.visiting || row.original.payment?.status !== 'success' || !row.original.approved || !isCommittee,
@@ -351,7 +357,11 @@ const perPageOptions = computed(() => {
 
     return filteredOptions;
 });
-
+const openCommitteeModal = (committee: ICommittee) => {
+    CommitteeModal.open({
+        committee,
+    });
+}
 const deleteCommittee = async (committeeId: string) => {
     ConfirmationModal.open({
         title: $ts('delete_committee'),

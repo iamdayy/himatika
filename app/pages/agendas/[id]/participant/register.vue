@@ -335,9 +335,6 @@ async function handleAnswer() {
     try {
         const formData = new FormData();
         const answersPayload = questions.value?.map((q) => {
-            // For file inputs, we will append them separately and put a placeholder here.
-            console.log(q.answer);
-            console.log(q.question);
             if (q.question.type === 'file' && (q.answer as any) instanceof File) {
                 formData.append(q.question._id as string, q.answer);
                 return { questionId: q.question._id, answer: '[[FILE]]' };

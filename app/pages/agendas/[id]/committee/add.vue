@@ -188,7 +188,7 @@ definePageMeta({
                 <div class="flex flex-col gap-4">
                     <h3 class="text-lg font-semibold dark:text-neutral-200">{{ $ts('committee-to-register') }} ({{
                         stagedCommittees.length
-                    }})</h3>
+                        }})</h3>
                     <div class="flex flex-col gap-2 overflow-y-auto max-h-96">
                         <UCard v-for="committee in stagedCommittees" :key="committee.member.NIM" class="p-2">
                             <div class="flex items-start justify-between">
@@ -205,7 +205,7 @@ definePageMeta({
                                 <UButton icon="i-heroicons-x-mark" color="error" variant="ghost"
                                     @click="removeFromStaging(committee.member)" />
                             </div>
-                            <UInput v-model="committee.job" :placeholder="$ts('job-description')" class="mt-2" />
+                            <UInput v-model="committee.job" :placeholder="$ts('job')" class="mt-2" />
                         </UCard>
                         <div v-if="stagedCommittees.length === 0" class="text-center text-gray-500">
                             {{ $ts('no-committee-selected') }}

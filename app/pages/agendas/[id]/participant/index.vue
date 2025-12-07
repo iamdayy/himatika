@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, ModalsQrReader, NuxtImg, UCheckbox } from '#components';
+import { ModalsConfirmation, ModalsParticipantView, ModalsQrReader, NuxtImg, UCheckbox } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, IGuest, IMember, IParticipant, IQuestion } from '~~/types';
@@ -34,6 +34,7 @@ const overlay = useOverlay();
 
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 const QRCodeModalComp = overlay.create(ModalsQrReader);
+const ParticipantViewModal = overlay.create(ModalsParticipantView);
 
 
 
@@ -247,6 +248,11 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
         {
             type: 'label',
             label: $ts('action')
+        },
+        {
+            icon: 'i-heroicons-eye-20-solid',
+            label: $ts('view'),
+            onSelect: () => openParticipantModal(row.original)
         },
         {
             icon: 'i-heroicons-check-circle',
@@ -498,7 +504,11 @@ const setBatch = async (field: 'payment' | 'visiting') => {
         }
     });
 }
-
+const openParticipantModal = (participant: IParticipant) => {
+    ParticipantViewModal.open({
+        participant,
+    });
+}
 const openSetVisitedModal = (registeredId: string) => {
     ConfirmationModal.open({
         title: $ts('set_visit_status'),
