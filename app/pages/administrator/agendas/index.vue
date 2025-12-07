@@ -331,7 +331,7 @@ const selectDate = (date: Date) => {
                     </h1>
                     <div class="min-w-24">
                         <UButton label="New" id="add-agenda" :size="responsiveUISizes.button"
-                            to="/dashboard/agendas/create" v-if="isOrganizer" block />
+                            to="/administrator/agendas/create" v-if="isOrganizer" block />
                     </div>
                 </div>
 

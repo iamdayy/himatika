@@ -240,7 +240,7 @@ function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
         {
             icon: 'i-heroicons-check-circle',
             label: $ts('set_approved'),
-            disabled: row.original.approved || (!isOrganizer.value && !isCommittee) || row.original.payment?.status !== 'success',
+            disabled: row.original.approved || (!isOrganizer.value && !isCommittee) || (agenda.value?.configuration.committee.pay && row.original.payment?.status !== 'success'),
             onSelect: () => setApproved(row.original._id as string),
         },
         {
