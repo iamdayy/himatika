@@ -1,1 +1,20 @@
-{}
+{
+    "general_information": "Informasi Umum",
+    "general_information_description": "Informasi umum tentang agenda",
+    "agenda_configuration_description": "Konfigurasi pengaturan agenda",
+    "committee_description": "Panitia yang bertanggung jawab untuk agenda ini",
+    "review_your_agenda": "Tinjau Agenda Anda",
+    "review_your_agenda_description": "Tinjau agenda Anda sebelum mengirimkannya",
+    "success_to_add_agenda": "Berhasil menambahkan agenda {title} pada {date}", 
+    "failed_to_add_agenda": "Gagal menambahkan agenda {title} pada {date}",
+    "job_available_already_exists": "Jabatan {job} sudah ada di agenda ini",
+    "job_available_not_found": "Jabatan {job} tidak ditemukan di agenda ini",
+    "reqruitment_already_exists": "Persyaratan {req} sudah ada di agenda ini",
+    "reqruitment_not_found": "Persyaratan {req} tidak ditemukan di agenda ini",
+    "delete_job_available": "Hapus Jabatan",
+    "delete_job_available_confirmation": "Apakah Anda yakin ingin menghapus jabatan {job} ini?",
+    "delete_reqruitment": "Hapus Persyaratan",
+    "delete_reqruitment_confirmation": "Apakah Anda yakin ingin menghapus persyaratan {req} ini?",
+    "enable_form": "Aktifkan Pertanyaan",
+    "count": "Jumlah"
+}
