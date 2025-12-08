@@ -21,7 +21,7 @@
                                     {{ index + 1 }}
                                 </span>
                                 <h1 class="text-nowrap">{{ step.label }}</h1>
-                                <span v-if="stepHasErrors(index) && attemptedSteps[index]" class="ml-2 text-red-500">
+                                <span v-if="stepHasErrors(index) && attemptedSteps[index]!" class="ml-2 text-red-500">
                                     ⚠️
                                 </span>
                             </div>
@@ -37,10 +37,10 @@
             </div>
 
             <div class="p-6">
-                <h2 v-if="showStepTitle" class="mb-1 text-xl font-semibold">{{ steps[modelValue].title }}</h2>
-                <p v-if="showStepDescription && steps[modelValue].description"
+                <h2 v-if="showStepTitle" class="mb-1 text-xl font-semibold">{{ steps[modelValue]!.title }}</h2>
+                <p v-if="showStepDescription && steps[modelValue]!.description"
                     class="mb-6 text-gray-700 dark:text-gray-300">
-                    {{ steps[modelValue].description }}
+                    {{ steps[modelValue]!.description }}
                 </p>
 
                 <!-- Validation warning message -->
@@ -52,7 +52,7 @@
                         <div class="flex items-center">
                             <span class="mr-2">⚠️</span>
                             <span v-if="invalidStepIndex !== null">
-                                Please complete Step {{ invalidStepIndex + 1 }}: {{ steps[invalidStepIndex].title }}
+                                Please complete Step {{ invalidStepIndex + 1 }}: {{ steps[invalidStepIndex]!.title }}
                                 before proceeding.
                             </span>
                             <span v-else>
@@ -168,18 +168,18 @@ const stepValidationErrors = reactive<StepValidationErrors>({});
 
 // Get current step's form data
 const currentStepFormData = computed(() => {
-    return props.steps[props.modelValue].formData;
+    return props.steps[props.modelValue]!.formData;
 });
 
 // Get current step errors
 const getCurrentStepErrors = (): Record<string, FormError | undefined> => {
-    const stepId = props.steps[props.modelValue].id;
+    const stepId = props.steps[props.modelValue]!.id;
     return stepValidationErrors[stepId] || {};
 };
 
 // Validate a specific field for the current step
 const validateFieldForCurrentStep = (fieldName: string): void => {
-    const stepId = props.steps[props.modelValue].id;
+    const stepId = props.steps[props.modelValue]!.id;
     validateField(fieldName, stepId, props.modelValue);
 };
 
@@ -215,7 +215,7 @@ const validateField = async (fieldName: string, stepId: string, stepIndex: numbe
 
 // Validate a specific step
 const validateStep = async (stepIndex: number): Promise<boolean> => {
-    const step = props.steps[stepIndex];
+    const step = props.steps[stepIndex]!;
     const stepId = step.id;
     let isValid = true;
     const stepErrors: Record<string, FormError> = {};
@@ -266,7 +266,7 @@ const validateStep = async (stepIndex: number): Promise<boolean> => {
 
 // Execute onNext function for a specific step
 const executeOnNext = async (stepIndex: number): Promise<{ success: boolean; error?: FormError }> => {
-    const step = props.steps[stepIndex];
+    const step = props.steps[stepIndex]!;
     const stepId = step.id;
 
     try {
@@ -330,13 +330,13 @@ const tryNextOrComplete = (): void => {
 const isStepInvalid = (stepIndex: number): boolean => {
     if (!attemptedSteps[stepIndex]) return false;
 
-    const stepId = props.steps[stepIndex].id;
+    const stepId = props.steps[stepIndex]!.id;
     return !!stepValidationErrors[stepId] && Object.keys(stepValidationErrors[stepId]).length > 0;
 };
 
 // Check if a step has errors (for displaying warning icon)
 const stepHasErrors = (stepIndex: number): boolean => {
-    const stepId = props.steps[stepIndex].id;
+    const stepId = props.steps[stepIndex]!.id;
     return !!stepValidationErrors[stepId] && Object.keys(stepValidationErrors[stepId]).length > 0;
 };
 
@@ -350,7 +350,7 @@ const tryNextStep = async (): Promise<void> => {
         showValidationAlert.value = true;
         invalidStepIndex.value = props.modelValue;
 
-        const stepId = props.steps[props.modelValue].id;
+        const stepId = props.steps[props.modelValue]!.id;
         emit('validation-error', {
             stepIndex: props.modelValue,
             stepId,
@@ -371,7 +371,7 @@ const tryNextStep = async (): Promise<void> => {
         invalidStepIndex.value = props.modelValue;
 
         if (error) {
-            const stepId = props.steps[props.modelValue].id;
+            const stepId = props.steps[props.modelValue]!.id;
             emit('validation-error', {
                 stepIndex: props.modelValue,
                 stepId,
@@ -410,7 +410,7 @@ const tryComplete = async (): Promise<void> => {
             showValidationAlert.value = true;
             invalidStepIndex.value = props.modelValue;
 
-            const stepId = props.steps[props.modelValue].id;
+            const stepId = props.steps[props.modelValue]!.id;
             emit('validation-error', {
                 stepIndex: props.modelValue,
                 stepId,
@@ -432,7 +432,7 @@ const tryComplete = async (): Promise<void> => {
             invalidStepIndex.value = props.modelValue;
 
             if (error) {
-                const stepId = props.steps[props.modelValue].id;
+                const stepId = props.steps[props.modelValue]!.id;
                 emit('validation-error', {
                     stepIndex: props.modelValue,
                     stepId,
@@ -456,7 +456,7 @@ const tryComplete = async (): Promise<void> => {
         }
 
         if (firstInvalidStep !== null) {
-            const stepId = props.steps[firstInvalidStep].id;
+            const stepId = props.steps[firstInvalidStep]!.id;
             emit('validation-error', {
                 stepIndex: firstInvalidStep,
                 stepId,
@@ -479,7 +479,7 @@ const tryComplete = async (): Promise<void> => {
         invalidStepIndex.value = props.modelValue;
 
         if (error) {
-            const stepId = props.steps[props.modelValue].id;
+            const stepId = props.steps[props.modelValue]!.id;
             emit('validation-error', {
                 stepIndex: props.modelValue,
                 stepId,
@@ -510,7 +510,7 @@ const showValidationWarning = (targetStepIndex: number): void => {
         // Navigate to the first invalid step
         goToStep(firstInvalidStep);
 
-        const stepId = props.steps[firstInvalidStep].id;
+        const stepId = props.steps[firstInvalidStep]!.id;
         emit('validation-error', {
             stepIndex: firstInvalidStep,
             stepId,
@@ -565,7 +565,7 @@ const goToStep = (index: number): void => {
     emit('step-change', {
         previousStep: props.modelValue,
         currentStep: index,
-        stepId: props.steps[index].id
+        stepId: props.steps[index]!.id
     });
 };
 
@@ -616,7 +616,7 @@ const navigateToStep = async (target: number | string, skipValidation = false): 
         if (firstInvalidStep !== null) {
             goToStep(firstInvalidStep);
 
-            const stepId = props.steps[firstInvalidStep].id;
+            const stepId = props.steps[firstInvalidStep]!.id;
             emit('validation-error', {
                 stepIndex: firstInvalidStep,
                 stepId,
@@ -629,7 +629,7 @@ const navigateToStep = async (target: number | string, skipValidation = false): 
 
 // Reset validation for a specific step
 const resetStepValidation = (stepIndex: number): void => {
-    const stepId = props.steps[stepIndex].id;
+    const stepId = props.steps[stepIndex]!.id;
     delete stepValidationErrors[stepId];
     attemptedSteps[stepIndex] = false;
     completedSteps[stepIndex] = false;
