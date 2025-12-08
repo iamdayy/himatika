@@ -52,42 +52,38 @@ export default defineEventHandler(async (event): Promise<IAgendaMeResponse> => {
       };
     }
 
-    if (status === "members") {
-      const agendasparticipants = await AgendaModel.find({
-        "participants.member": member._id,
-        ...query,
-      })
-        .skip(skip)
-        .limit(limit)
-        .sort(sortOpt);
-      const agendasparticipantsCount = await AgendaModel.countDocuments({
-        "participants.member": member._id,
-        ...query,
-      });
-      agendas = agendasparticipants as IAgenda[];
-      length = agendasparticipantsCount;
-    } else {
-      const agendascommittees = await AgendaModel.find({
-        "committees.member": member._id,
-        ...query,
-      })
-        .skip(skip)
-        .limit(limit)
-        .sort(sortOpt);
-      const agendascommitteesCount = await AgendaModel.countDocuments({
-        "committees.member": member._id,
-        ...query,
-      });
-      agendas = agendascommittees as IAgenda[];
-      length = agendascommitteesCount;
-    }
+    const agendasparticipants = await AgendaModel.find({
+      "participants.member": member._id,
+      ...query,
+    })
+      .skip(skip)
+      .limit(limit)
+      .sort(sortOpt);
+    const agendasparticipantsCount = await AgendaModel.countDocuments({
+      "participants.member": member._id,
+      ...query,
+    });
+    const agendascommittees = await AgendaModel.find({
+      "committees.member": member._id,
+      ...query,
+    })
+      .skip(skip)
+      .limit(limit)
+      .sort(sortOpt);
+    const agendascommitteesCount = await AgendaModel.countDocuments({
+      "committees.member": member._id,
+      ...query,
+    });
 
     return {
       statusCode: 200,
       statusMessage: "Success",
       data: {
-        agendas: agendas as IAgenda[],
-        length,
+        agendas: {
+          participant: agendasparticipants,
+          committee: agendascommittees,
+        },
+        length: agendasparticipantsCount + agendascommitteesCount,
       },
     };
   } catch (error: any) {

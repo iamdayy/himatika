@@ -153,6 +153,7 @@ export interface IUser {
 export interface ISession {
   token: string;
   refreshToken: string;
+  previousRefreshToken?: string;
   user: Types.ObjectId | IUser;
 }
 

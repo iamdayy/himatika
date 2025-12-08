@@ -31,6 +31,12 @@ export default defineEventHandler(
           statusMessage: "Agenda not found",
         });
       }
+      if (!job) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Job is required",
+        });
+      }
 
       const user = ev.context.user;
       if (user) {
@@ -68,15 +74,13 @@ export default defineEventHandler(
           });
         }
 
-        const committeeToUpdate = agenda.committees?.find((item) => {
-          if (item.job === job && !item.member) {
-            return true;
-          }
-          return false;
+        // Add the user as committee to the agenda
+        agenda.committees?.push({
+          _id: committeeId,
+          job: job,
+          member: me._id as Types.ObjectId,
+          approved: false,
         });
-        if (committeeToUpdate) {
-          committeeToUpdate.member = me;
-        }
       } else {
         throw createError({
           statusCode: 401,

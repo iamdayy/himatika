@@ -104,7 +104,7 @@ const links = computed(() => [
 const steps = computed<Step[]>(() => {
     const steps: Step[] = [
         { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: committee.value ? refreshCommittee : register },
-        { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: undefined },
+        { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
         { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method === 'transfer' ? payment : undefined },
         { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
         { id: 'success', label: $ts('success'), title: $ts('success'), formData: {} }
@@ -220,8 +220,6 @@ async function handleAnswer() {
         const formData = new FormData();
         const answersPayload = questions.value?.map((q) => {
             // For file inputs, we will append them separately and put a placeholder here.
-            console.log(q.answer);
-            console.log(q.question);
             if (q.question.type === 'file' && (q.answer as any) instanceof File) {
                 formData.append(q.question._id as string, q.answer);
                 return { questionId: q.question._id, answer: '[[FILE]]' };

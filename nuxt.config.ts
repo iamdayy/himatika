@@ -127,6 +127,7 @@ export default defineNuxtConfig({
         token: {
           cookieName: "auth.refresh-token",
           signInResponseRefreshTokenPointer: "/refreshToken",
+          refreshResponseTokenPointer: "/token",
           refreshRequestTokenPointer: "/refreshToken",
           sameSiteAttribute:
             process.env.NODE_ENV === "production" ? "none" : "lax",

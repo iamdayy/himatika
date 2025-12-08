@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { UserModel } from "~~/server/models/UserModel";
 import { IMember } from "~~/types";
 import { IReqRegister } from "~~/types/IRequestPost";
@@ -14,104 +14,130 @@ import { MemberModel } from "../models/MemberModel";
 export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
   // Read the request body
   let registered = null;
-  const t = await useTranslationServerMiddleware(event);
-  const body = await readBody<IReqRegister>(event);
-  const memberFound = await MemberModel.findOne({ NIM: body.NIM });
-  const emailExists = await MemberModel.exists({ email: body.email });
-  const userFound = await UserModel.findOne({
-    $or: [{ username: body.username }, { member: memberFound?._id }],
-  });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const body = await readBody<IReqRegister>(event);
+    const t = await useTranslationServerMiddleware(event);
+    const memberFound = await MemberModel.findOne({ NIM: body.NIM });
+    const emailExists = await MemberModel.exists({ email: body.email });
+    const userFound = await UserModel.findOne({
+      $or: [{ username: body.username }, { member: memberFound?._id }],
+    });
 
-  if (!memberFound) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: t('register_page.nim_not_found'),
-      data: { message: t('register_page.check_nim'), path: "NIM" },
-    });
-  }
-  if (
-    emailExists &&
-    (emailExists._id as Types.ObjectId).toString() !==
-      (memberFound._id as Types.ObjectId).toString()
-  ) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: t('register_page.email_already_registered'),
-      data: { message: t('register_page.check_email'), path: "email" },
-    });
-  }
-  if (memberFound?.status != "free") {
-    throw createError({
-      statusCode: 400,
-      statusMessage: t('register_page.member_not_free'),
-      data: { message: t('register_page.check_member'), path: "NIM" },
-    });
-  }
-  if (body.password !== body.password_confirmation) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: t('register_page.password_not_match'),
-      data: { message: t('register_page.check_password'), path: "password" },
-    });
-  }
-  if (userFound) {
+    if (!memberFound) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: t("register_page.nim_not_found"),
+        data: { message: t("register_page.check_nim"), path: "NIM" },
+      });
+    }
     if (
-      (userFound.member as IMember).id !==
-      (memberFound._id as Types.ObjectId).toString()
+      emailExists &&
+      (emailExists._id as Types.ObjectId).toString() !==
+        (memberFound._id as Types.ObjectId).toString()
     ) {
       throw createError({
         statusCode: 400,
-        statusMessage: t('register_page.username_already_registered'),
-        data: { message: t('register_page.check_username'), path: "username" },
+        statusMessage: t("register_page.email_already_registered"),
+        data: { message: t("register_page.check_email"), path: "email" },
       });
     }
-    userFound.username = body.username;
-    userFound.password = body.password;
-    registered = await userFound.save();
-  } else {
-    // Prepare the user registration form
-    const form = {
-      ...body,
-      username: deleteWhiteSpaceOnFirstAndLastChar(body.username),
-      member: memberFound.id,
-    };
-    const userAlreadyExists = await UserModel.findOne({
-      member: memberFound._id,
-    });
-    if (userAlreadyExists) {
+    if (memberFound?.status != "free") {
       throw createError({
-        statusCode: 405,
-        statusMessage: t('register_page.member_already_registered'),
+        statusCode: 400,
+        statusMessage: t("register_page.member_not_free"),
+        data: { message: t("register_page.check_member"), path: "NIM" },
+      });
+    }
+    if (body.password !== body.password_confirmation) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: t("register_page.password_not_match"),
+        data: { message: t("register_page.check_password"), path: "password" },
+      });
+    }
+    if (userFound) {
+      if (
+        (userFound.member as IMember).id !==
+        (memberFound._id as Types.ObjectId).toString()
+      ) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: t("register_page.username_already_registered"),
+          data: {
+            message: t("register_page.check_username"),
+            path: "username",
+          },
+        });
+      }
+      userFound.username = body.username;
+      userFound.password = body.password;
+      registered = await userFound.save({ session });
+      if (!registered) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: t("register_page.registration_failed"),
+          data: {
+            message: t("register_page.registration_again"),
+            path: "password",
+          },
+        });
+      }
+    } else {
+      // Prepare the user registration form
+      const form = {
+        ...body,
+        username: deleteWhiteSpaceOnFirstAndLastChar(body.username),
+        member: memberFound.id,
+      };
+      const userAlreadyExists = await UserModel.findOne({
+        member: memberFound._id,
+      });
+      if (userAlreadyExists) {
+        throw createError({
+          statusCode: 405,
+          statusMessage: t("register_page.member_already_registered"),
+          data: {
+            message: t("register_page.check_member"),
+            path: "changeEmail",
+          },
+        });
+      }
+
+      // Create a new user instance and save it
+      const user = new UserModel(form);
+      registered = await user.save();
+    }
+
+    memberFound.email = body.email;
+    await memberFound.save({ session });
+    await session.commitTransaction();
+
+    // Check if the user was successfully registered
+    if (!registered) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: t("register_page.registration_failed"),
         data: {
-          message: t('register_page.check_member'),
-          path: "changeEmail",
+          message: t("register_page.registration_again"),
+          path: "password",
         },
       });
     }
 
-    // Create a new user instance and save it
-    const user = new UserModel(form);
-    registered = await user.save();
+    // Return the registered user data
+    return {
+      statusCode: 200,
+      statusMessage: t("register_page.registration_success"),
+      data: registered,
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    return Promise.reject(error);
+  } finally {
+    await session.endSession();
   }
-
-  memberFound.email = body.email;
-  await memberFound.save();
-
-  // Check if the user was successfully registered
-  if (!registered) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: t('register_page.registration_failed'),
-      data: { message: t('register_page.registration_again'), path: "password" },
-    });
-  }
-
-  // Return the registered user data
-  return {
-    statusCode: 200,
-    statusMessage: t('register_page.registration_success'),
-    data: registered,
-  };
 });
 
 function deleteWhiteSpaceOnFirstAndLastChar(str: string) {

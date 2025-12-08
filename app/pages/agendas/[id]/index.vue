@@ -3,7 +3,7 @@ import { ModalsConfirmation, ModalsDocAdd, ModalsImageAdd, ModalsImageOpen, Moda
 import type { DropdownMenuItem, TabsItem } from '@nuxt/ui';
 import type { DriveStep } from 'driver.js';
 import { CustomFormData } from '~/helpers/CustomFormData';
-import type { ICategory, IDoc, IMember, IPhoto, IVideo } from '~~/types';
+import type { ICategory, ICommittee, IDoc, IMember, IParticipant, IPhoto, IVideo } from '~~/types';
 import type { IAgendaResponse, IResponse } from '~~/types/IResponse';
 
 definePageMeta({
@@ -559,11 +559,17 @@ function formatDateRange(date: any): string {
 }
 
 
-function getMemberName(member: IMember): string {
+function getMemberName(user: IParticipant | ICommittee): string {
+    const member = user.member as IMember | string | undefined;
     if (typeof member === 'object' && member?.fullName) {
         return member.fullName
+    } else if (typeof member === 'string') {
+        return member
+    } else if (user && 'guest' in user && user.guest) {
+        return user.guest.fullName || 'Guest Member'
+    } else {
+        return 'Unknown Member'
     }
-    return 'Unknown Member'
 }
 
 
@@ -699,7 +705,7 @@ useSeoMeta({
                                 <span class="text-gray-600 dark:text-gray-300">{{ $ts('register_as') }}</span>
                                 <span class="font-medium">{{ isRegistered() === 'Committee' ? $ts('committee') :
                                     $ts('participant')
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div v-if="isRegistered() !== false" class="flex items-center justify-between">
                                 <span class="text-gray-600 dark:text-gray-300">ID</span>
@@ -750,7 +756,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                        }}:</span>
+                                            }}:</span>
                                         <UIcon
                                             :name="agenda.configuration.committee.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.committee.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -774,7 +780,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.committee.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                        }}:</span>
+                                            }}:</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.committee.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.committee.canRegisterUntil) }}
@@ -810,7 +816,7 @@ useSeoMeta({
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('payment_required')
-                                            }}</span>
+                                        }}</span>
                                         <UIcon
                                             :name="agenda.configuration.participant.pay ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'"
                                             :class="`w-5 h-5 ${agenda.configuration.participant.pay ? 'text-green-500' : 'text-red-500'}`" />
@@ -834,7 +840,7 @@ useSeoMeta({
                                     <div class="flex justify-between"
                                         v-if="agenda.configuration.participant.canRegister !== 'None'">
                                         <span class="text-gray-600 dark:text-gray-300">{{ $ts('registration_period')
-                                            }}</span>
+                                        }}</span>
                                         <span
                                             :class="`font-medium ${new Date(agenda.configuration.participant.canRegisterUntil.end) < new Date() ? 'text-red-500' : ''}`">
                                             {{ formatDateRange(agenda.configuration.participant.canRegisterUntil) }}
@@ -876,11 +882,10 @@ useSeoMeta({
                             <div v-for="committee, i in agenda.committees.slice(0, 3)" :key="i"
                                 class="flex items-center justify-between p-4 bg-gray-50/20 rounded-lg">
                                 <div class="flex items-center gap-3">
-                                    <UAvatar :alt="getMemberName(committee.member as IMember)" size="md" />
+                                    <UAvatar :alt="getMemberName(committee)" size="md" />
                                     <div>
                                         <p class="font-medium text-gray-900 dark:text-gray-200">{{
-                                            getMemberName(committee.member as
-                                                IMember) }}
+                                            getMemberName(committee) }}
                                         </p>
                                         <p class="text-sm text-gray-600 dark:text-gray-300">{{ committee.job }}</p>
                                     </div>
@@ -916,11 +921,10 @@ useSeoMeta({
                             <div v-for="participant, i in agenda.participants.slice(0, 3)" :key="i"
                                 class="flex items-center justify-between p-4 bg-gray-50/20 rounded-lg">
                                 <div class="flex items-center gap-3">
-                                    <UAvatar :alt="getMemberName(participant.member as IMember)" size="md" />
+                                    <UAvatar :alt="getMemberName(participant)" size="md" />
                                     <div>
                                         <p class="font-medium text-gray-900 dark:text-gray-200">{{
-                                            getMemberName(participant.member as
-                                                IMember) }}
+                                            getMemberName(participant) }}
                                         </p>
                                     </div>
                                 </div>

@@ -44,7 +44,7 @@ export default defineEventHandler(async (event): Promise<IPointResponse> => {
           if (doc) {
             return {
               role: doc.dailyManagement.find(
-                (daily) => (daily.member as IMember).id == id
+                (daily) => (daily.member as IMember)?.id == id
               )?.position,
               period: doc.period,
             };
@@ -100,7 +100,7 @@ export default defineEventHandler(async (event): Promise<IPointResponse> => {
         if (a.point === b.point) {
           return a.no - b.no;
         }
-        return (b.point ?? 0) - (a.point ?? 0);
+        return (b.point?.[0]?.point ?? 0) - (a.point?.[0]?.point ?? 0);
       });
     const me = points.find(
       (point) => point.NIM === event.context.user.member.NIM
@@ -122,6 +122,7 @@ export default defineEventHandler(async (event): Promise<IPointResponse> => {
       },
     };
   } catch (error: any) {
+    console.error(error);
     return {
       statusCode: 500,
       statusMessage: error.message,

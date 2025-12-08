@@ -59,7 +59,7 @@ export default defineEventHandler(
 
         // Check if the user is already participant
         const isParticipant = agenda.participants?.some(
-          (item) => (item.member as IMember).NIM == me.NIM
+          (item) => (item.member as IMember)?.NIM == me.NIM
         );
         if (isParticipant) {
           throw createError({

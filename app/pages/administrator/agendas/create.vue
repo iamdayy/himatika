@@ -129,28 +129,65 @@ const configurationState = reactiveComputed<IAgendaConfiguration>(() => {
     };
 });
 type ICommitteeState = {
-    [key: string]: ICommittee;
-}
-const committeesState = reactiveComputed<ICommitteeState>(() => {
-    const committees: ICommitteeState = {};
-    if (!configurationState.committee.jobAvailables) {
-        return committees;
-    }
-    for (let i = 0; i < configurationState.committee.jobAvailables.length; i++) {
-        const jobAvailable: IJob = configurationState.committee.jobAvailables[i]!;
-        for (let j = 0; j < jobAvailable.count; j++) {
-            const key = jobAvailable.count > 1 ? `${jobAvailable.label} ${j + 1}` : jobAvailable.label;
-            committees[key] = {
-                job: key,
-                member: 0,
-                approved: true,
-                approvedAt: new Date(),
-            };
-        }
-    }
-    return committees;
+    [key: number]: ICommittee;
+};
+// const committeesState = reactiveComputed<ICommitteeState>(() => {
+//     const committees: ICommitteeState = {};
+//     if (!configurationState.committee.jobAvailables) {
+//         return committees;
+//     }
+//     for (let i = 0; i < configurationState.committee.jobAvailables.length; i++) {
+//         const jobAvailable: IJob = configurationState.committee.jobAvailables[i]!;
+//         for (let j = 0; j < jobAvailable.count; j++) {
+//             const key = jobAvailable.count > 1 ? `${jobAvailable.label} ${j + 1}` : jobAvailable.label;
+//             committees[key] = {
+//                 job: key,
+//                 member: 0,
+//                 approved: true,
+//                 approvedAt: new Date(),
+//             };
+//         }
+//     }
+//     return committees;
+// });
+const jobsCommittee = computed(() => [
+    { label: 'PIC/Penanggung Jawab' },
+    {
+        label: 'Ketua Pelaksana',
+    },
+    {
+        label: 'Sekretaris',
+    },
+    {
+        label: 'Bendahara',
+    },
+    {
+        label: 'Humas',
+    },
+    {
+        label: 'Logistik',
+    },
+    {
+        label: 'Dokumentasi',
+    },
+    {
+        label: 'Acara',
+    },
+    {
+        label: 'Sponsorship',
+    },
+]);
+const committeesStateRef = ref<ICommitteeState>({
+    1: {
+        job: 'PIC/Penanggung Jawab',
+        member: 0,
+        approved: true,
+        approvedAt: new Date(),
+    },
 });
-
+const committeesState = reactiveComputed<ICommitteeState>(() => {
+    return committeesStateRef.value;
+});
 const state = reactiveComputed<IReqAgenda>(() => {
     return {
         title: '',
@@ -225,7 +262,13 @@ const configurationStateRules = reactiveComputed<FieldValidationRules<IAgendaCon
 const committeesStateRules = reactiveComputed<FieldValidationRules<ICommitteeState>>(() => {
     const rules: FieldValidationRules<ICommitteeState> = {};
     for (const key in committeesState) {
+        // rules[key] = (value) => {
+        //     return null;
+        // };
         rules[key] = (value) => {
+            if (!value) {
+                return { path: key, message: $ts('member_required') };
+            }
             return null;
         };
     }
@@ -322,6 +365,22 @@ async function onSubmit() {
     } finally {
         loading.value = false;
     }
+};
+
+const addCommittee = () => {
+    const newIndex = Object.keys(committeesState).length + 1;
+    committeesStateRef.value = {
+        ...committeesState,
+        [newIndex]: {
+            job: '',
+            member: 0,
+            approved: true,
+            approvedAt: new Date(),
+        }
+    };
+};
+const removeCommittee = (index: number) => {
+    delete committeesState[index];
 };
 
 const addNewCategory = async (category: string) => {
@@ -719,28 +778,7 @@ const links = [
                                         </template>
                                     </UCollapsible>
                                 </UFormField>
-                                <UFormField :label="$ts('job_available')" :error="errors.jobAvailables?.message">
-                                    <UButton icon="i-heroicons-plus" color="neutral" variant="subtle"
-                                        @click="addNewJob()" block class="mb-2" :size="responsiveUISizes.button" />
-                                    <UCollapsible v-for="(job, index) in configurationState.committee.jobAvailables"
-                                        :key="index" v-if="configurationState.committee.jobAvailables">
-                                        <div class="flex flex-row gap-2 items-center w-full mb-2">
-                                            <UButton :label="`${job.label}`" color="neutral" variant="outline"
-                                                trailing-icon="i-lucide-chevron-down" block
-                                                :size="responsiveUISizes.button" />
-                                            <UButton icon="i-heroicons-pencil" color="neutral" variant="outline"
-                                                @click="editJob(job, index)" :size="responsiveUISizes.button" />
-                                            <UButton icon="i-heroicons-trash" color="neutral" variant="outline"
-                                                @click="deleteJob(index)" :size="responsiveUISizes.button" />
-                                        </div>
-                                        <template #content>
-                                            <div class="p-2">
-                                                <h1 class="text-lg font-semibold mb-2">{{ $ts('count') }}</h1>
-                                                {{ job.count }}
-                                            </div>
-                                        </template>
-                                    </UCollapsible>
-                                </UFormField>
+
                             </div>
                             <div class="space-y-2">
                                 <USeparator class="my-2" :label="$ts('participant')" />
@@ -828,20 +866,55 @@ const links = [
                 </div>
                 <div v-else-if="step?.id === 'step3'">
                     <div class="p-2 space-y-2">
-                        <UFormField v-for="(committee, index) in committeesState" :key="index" :label="index as string"
-                            :error="errors[index]?.message" class="w-full">
-                            <USelectMenu :items="members" :loading="memberstatus === 'pending'"
-                                v-model:search-term="memberSearchTerm" :filter-fields="['label', 'email']"
-                                icon="i-lucide-user" :placeholder="$ts('search')"
-                                v-model="(committeesState[index]!.member as number)" value-key="value" class="w-full"
-                                :size="responsiveUISizes.input">
-                                <template #item-label="{ item }">
-                                    {{ item.label }}
-                                    <span class="text-(--ui-text-muted)">
-                                        {{ item.value }}
-                                    </span>
+                        <div class="flex flex-row justify-between items-center mb-2 w-full gap-2"
+                            v-for="(committee, index) in committeesState" :key="index">
+                            <UFormField :label="$ts('committee')" :error="errors[index]?.message" class="basis-1/3">
+                                <USelectMenu :items="jobsCommittee" icon="i-lucide-user" :placeholder="$ts('search')"
+                                    v-model="(committeesState[index]!.job)" class="w-full" value-key="label"
+                                    :size="responsiveUISizes.input">
+                                </USelectMenu>
+                            </UFormField>
+                            <UFormField :label="$ts('member')" :error="errors[index]?.message" class="w-full">
+                                <USelectMenu :items="members" :loading="memberstatus === 'pending'"
+                                    v-model:search-term="memberSearchTerm" :filter-fields="['label', 'email']"
+                                    icon="i-lucide-user" :placeholder="$ts('search')"
+                                    v-model="(committeesState[index]!.member as number)" value-key="value"
+                                    class="w-full" :size="responsiveUISizes.input">
+                                    <template #item-label="{ item }">
+                                        {{ item.label }}
+                                        <span class="text-(--ui-text-muted)">
+                                            {{ item.value }}
+                                        </span>
+                                    </template>
+                                </USelectMenu>
+                            </UFormField>
+                            <UButton icon="i-heroicons-trash" color="error" variant="soft"
+                                @click="removeCommittee(Number(index))" class="mt-4" />
+                        </div>
+                        <UButton icon="i-heroicons-plus" color="neutral" variant="subtle" @click="addCommittee()" block
+                            class="mb-2" :size="responsiveUISizes.button">
+                            {{ $ts('add_committee') }}
+                        </UButton>
+                        <UFormField :label="$ts('job_available')" :error="errors.jobAvailables?.message">
+                            <UButton icon="i-heroicons-plus" color="neutral" variant="subtle" @click="addNewJob()" block
+                                class="mb-2" :size="responsiveUISizes.button" />
+                            <UCollapsible v-for="(job, index) in configurationState.committee.jobAvailables"
+                                :key="index" v-if="configurationState.committee.jobAvailables">
+                                <div class="flex flex-row gap-2 items-center w-full mb-2">
+                                    <UButton :label="`${job.label}`" color="neutral" variant="outline"
+                                        trailing-icon="i-lucide-chevron-down" block :size="responsiveUISizes.button" />
+                                    <UButton icon="i-heroicons-pencil" color="neutral" variant="outline"
+                                        @click="editJob(job, index)" :size="responsiveUISizes.button" />
+                                    <UButton icon="i-heroicons-trash" color="neutral" variant="outline"
+                                        @click="deleteJob(index)" :size="responsiveUISizes.button" />
+                                </div>
+                                <template #content>
+                                    <div class="p-2">
+                                        <h1 class="text-lg font-semibold mb-2">{{ $ts('count') }}</h1>
+                                        {{ job.count }}
+                                    </div>
                                 </template>
-                            </USelectMenu>
+                            </UCollapsible>
                         </UFormField>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IResponse } from '~/types/IResponse';
+import type { IResponse } from '~~/types/IResponse';
 
 const toast = useToast();
 const { $api } = useNuxtApp();

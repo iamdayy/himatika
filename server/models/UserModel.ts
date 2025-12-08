@@ -54,6 +54,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
     member: {
       type: Types.ObjectId,
       ref: "Member",
+      unique: true,
       autopopulate: {
         match: {
           status: "active",
