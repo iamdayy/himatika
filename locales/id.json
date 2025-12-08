@@ -313,7 +313,7 @@
       "nim_not_found": "NIM tidak ditemukan",
       "check_nim": "Silakan periksa kembali NIM Anda. Pastikan NIM sudah sesuai!",
       "email_already_registered": "Email sudah terdaftar",
-      "check_email": "Silakan periksa kembali email Anda. Pastikan email belum digunakan dan aktif!",
+      "check_email": "Silakan periksa kembali email Anda. Pastikan email belum digunakan dan aktif atau periksa OTP Anda untuk verifikasi email!",
       "member_not_free": "Keanggotaan tidak Ditemukan",
       "check_member": "Silakan periksa kembali keanggotaan Anda. Pastikan anda adalah mahasiswa Informatika aktif dan NIM belum pernah mendaftar sebelumnya!",
       "password_not_match": "Konfirmasi Password tidak sama",

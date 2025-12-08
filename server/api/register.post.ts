@@ -1,6 +1,5 @@
 import mongoose, { Types } from "mongoose";
 import { UserModel } from "~~/server/models/UserModel";
-import { IMember } from "~~/types";
 import { IReqRegister } from "~~/types/IRequestPost";
 import { IRegisterResponse } from "~~/types/IResponse";
 import { MemberModel } from "../models/MemberModel";
@@ -58,19 +57,6 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
       });
     }
     if (userFound) {
-      if (
-        (userFound.member as IMember).id !==
-        (memberFound._id as Types.ObjectId).toString()
-      ) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: t("register_page.username_already_registered"),
-          data: {
-            message: t("register_page.check_username"),
-            path: "username",
-          },
-        });
-      }
       userFound.username = body.username;
       userFound.password = body.password;
       registered = await userFound.save({ session });
