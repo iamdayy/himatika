@@ -64,6 +64,7 @@ const memberSchema = new Schema<IMemberSchema, MemberModel, MemberMethods>(
     sex: {
       type: String,
       enum: ["female", "male"],
+      default: "male",
     },
     religion: {
       type: String,
@@ -200,7 +201,11 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     if (asp.archived) {
       return false; // Skip archived aspirations
     }
-    if (asp.createdAt && rangeDate.start >= asp.createdAt && rangeDate.end <= asp.createdAt) {
+    if (
+      asp.createdAt &&
+      rangeDate.start >= asp.createdAt &&
+      rangeDate.end <= asp.createdAt
+    ) {
       return true; // Include aspirations that fall within the date range
     }
   });
@@ -350,8 +355,6 @@ memberSchema.virtual("organizersConsiderationBoard", {
     "period.end": { $gte: new Date() },
   },
 });
-
-
 
 // Virtual for dailyManagement
 memberSchema.virtual("organizersDailyManagement", {
