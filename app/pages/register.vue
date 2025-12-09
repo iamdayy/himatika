@@ -397,6 +397,10 @@ onBeforeUnmount(() => {
 
                     <div v-if="step?.id === 'account'" class="space-y-3">
                         <div class="px-1 space-y-6 overflow-y-scroll no-scrollbar">
+                            <UFormField :label="$ts('NIM')" id="NIM" name="NIM" :error="errors.NIM?.message">
+                                <UInput type="number" :size="responsiveUISizes.input" disabled required
+                                    v-model="stateVerifyNIM.NIM" color="neutral" variant="outline" />
+                            </UFormField>
                             <UFormField :label="$ts('username')" id="username" name="username"
                                 :error="errors.username?.message">
                                 <UInput type="text" autocomplete="username" :size="responsiveUISizes.input" required

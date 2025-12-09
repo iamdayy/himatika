@@ -86,7 +86,7 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
           statusMessage: t("register_page.member_already_registered"),
           data: {
             message: t("register_page.check_member"),
-            path: "changeEmail",
+            path: "email",
           },
         });
       }
