@@ -45,6 +45,7 @@
 * - `registerAsOptions`: Options for the "register as" radio group.
 */
 <script setup lang='ts'>
+import type { IPaymentMethod } from '~~/types';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
 import type { IPaymentBody } from '~~/types/IRequestPost';
 import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, IParticipantResponse, IResponse } from '~~/types/IResponse';
@@ -73,16 +74,16 @@ const { data: agenda, refresh } = useAsyncData('agenda', async () => $api<IAgend
 }), {
     transform: (data) => data.data?.agenda,
 });
-const { data: participantData, refresh: refreshParticipant } = useLazyAsyncData<IParticipantResponse>(() => $api(`/api/agenda/${id}/participant/me`, {
+const { data: participantData, refresh: refreshParticipant } = useAsyncData<IParticipantResponse>(() => $api(`/api/agenda/${id}/participant/me`, {
     method: 'GET',
     query: {
         participantId: participantId || undefined,
     }
 }));
 const participant = computed(() => participantData.value?.data?.participant);
-const registrationId = computed(() => participant.value?._id || participantId);
+const registrationId = computed(() => participantId || participant.value?._id || '');
 
-const { data: questions } = useLazyAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
+const { data: questions, refresh: refreshQuestions } = useAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
     method: 'GET',
 }), {
     transform: (data) => {
@@ -101,9 +102,9 @@ const links = computed(() => [
 ]);
 const steps = computed<Step[]>(() => {
     const steps: Step[] = [
-        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value ? refreshParticipant : register },
+        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value ? nextToAnswerQuestion : register },
         { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
-        { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method === 'transfer' ? payment : undefined },
+        { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method !== 'cash' ? payment : undefined },
         { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
         { id: 'success', label: $ts('success'), title: $ts('success'), formData: {} }
     ];
@@ -135,8 +136,7 @@ const formRegistration = reactiveComputed(() => ({
     instance: participant.value?.guest?.instance || '',
 }));
 const formPayment = reactiveComputed(() => ({
-    method: participant.value?.payment?.method || 'transfer',
-    type: participant.value?.payment?.type || 'bank_transfer',
+    method: participant.value?.payment?.method || 'bank_transfer',
     status: participant.value?.payment?.status || 'pending',
     order_id: participant.value?.payment?.order_id || '',
     transaction_id: participant.value?.payment?.transaction_id || '',
@@ -144,7 +144,7 @@ const formPayment = reactiveComputed(() => ({
     va_number: participant.value?.payment?.va_number || '',
     time: participant.value?.payment?.time || new Date(),
     expiry: participant.value?.payment?.expiry || new Date(),
-
+    qris_png: participant.value?.payment?.qris_png || '',
 }));
 const formConfirmation = reactiveComputed(() => ({
     status: formPayment.status || 'pending',
@@ -158,27 +158,56 @@ const registerAsOptions = ref([
     { label: $ts('non_student'), value: 'non-student' },
     { label: $ts('student_guest'), value: 'student-guest' },
 ]);
-const paymentMethods = ref<{ label: string; value: string; }[]>([
-    { label: $ts('transfer'), value: 'transfer' },
-    { label: $ts('cash'), value: 'cash' },
+const paymentMethods = ref<{ label: string; value: IPaymentMethod; icon: string; }[]>([
+    { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
+    { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
+    { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
 ]);
-const paymentTypes = ref([
-    { label: $ts('bank_transfer'), value: 'bank_transfer' },
-    { label: $ts('credit_card'), value: 'credit_card' },
-    { label: $ts('debit_card'), value: 'debit_card' },
-    { label: $ts('e_wallet'), value: 'e_wallet' },
-    { label: $ts('other'), value: 'other' },
-]);
-const banks = ref([
+const vaBanks = ref([
     { label: 'BCA', value: 'bca' },
     { label: 'BNI', value: 'bni' },
     { label: 'BRI', value: 'bri' },
     { label: 'Mandiri', value: 'mandiri' },
 ]);
+// --- ADMIN FEE CALCULATION ---
+const FEES = {
+    VA: 4000,
+    QRIS: 0.007,
+    Cash: 0
+};
+
+const priceSummary = computed(() => {
+    const basePrice = agenda.value?.configuration.committee.amount || 0;
+    let adminFee = 0;
+
+    if (formPayment.method === 'bank_transfer') {
+        adminFee = FEES.VA;
+    } else if (formPayment.method === 'qris') {
+        adminFee = Math.ceil(basePrice * FEES.QRIS);
+    } else if (formPayment.method === 'cash') {
+        adminFee = FEES.Cash;
+    }
+
+    return {
+        base: basePrice,
+        admin: adminFee,
+        total: basePrice + adminFee
+    };
+});
+
+// --- HELPER FUNCTIONS ---
+function formatCurrency(value: number) {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
 
 /** 
  * method to validate form data
  */
+
+const nextToAnswerQuestion = async () => {
+    refreshParticipant();
+    refreshQuestions();
+}
 
 const register = async (): Promise<boolean | FormError> => {
     try {
@@ -214,7 +243,7 @@ const payment = async (): Promise<boolean | FormError> => {
         const { data, statusCode } = await $fetch<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${registrationId.value}/payment`, {
             method: 'POST',
             body: {
-                payment_type: formPayment.type,
+                payment_method: formPayment.method,
                 bank_transfer: formPayment.bank,
             } as IPaymentBody
         });
@@ -321,11 +350,10 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
 }));
 const validationRulePayment: FieldValidationRules = reactiveComputed(() => ({
     method: (value: string) => value ? null : { message: $ts('payment_method_required'), path: 'method' },
-    type: (value: string) => value ? null : { message: $ts('payment_type_required'), path: 'type' },
     bank: (value: string) => value ? null : { message: $ts('bank_required'), path: 'bank' },
 }));
 const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => ({
-    status: (value: string) => formPayment.method === 'transfer' ? (value ? null : { message: $ts('confirmation_required'), path: 'status' }) : null,
+    status: (value: string) => formPayment.method !== 'cash' ? (value ? null : { message: $ts('confirmation_required'), path: 'status' }) : null,
     // confirmation: (value: string) => value ? null : $ts('confirmation_required'),
 }));
 const onCompleted = async () => {
@@ -473,34 +501,65 @@ watch(participant, (newValue) => {
                     </div>
                 </div>
                 <div v-else-if="step?.id === 'select_payment'">
-                    <div :class="responsiveClasses.container">
-                        <p class="mb-4">{{ $ts('selected_payment_method') }}</p>
-                        <UFormField :label="$ts('payment_method')" v-if="agenda?.configuration.participant.amount"
-                            class="mb-4" :help="$ts('payment_method_desc')">
-                            <USelect v-model="formPayment.method" :items="paymentMethods" />
-                        </UFormField>
-                        <p class="mb-4 text-sm dark:text-gray-400">*{{ $ts('payment_help') }}</p>
-                        <p class="text-sm text-red-500 dark:text-red-400">**{{ $ts('if_guest') }}</p>
-                        <div v-if="formPayment.method === 'transfer'" class="flex flex-wrap gap-4">
-                            <UFormField :label="$ts('payment_type')" class="flex-1 mb-4"
-                                :error="errors.payment_type?.message">
-                                <URadioGroup v-model="formPayment.type" :items="paymentTypes" />
-                            </UFormField>
-                            <UFormField :label="$ts('bank')" class="flex-1 mb-4"
-                                v-if="formPayment.type === 'bank_transfer'" :error="errors.bank?.message">
-                                <USelect v-model="formPayment.bank" :items="banks" />
-                            </UFormField>
+                    <div class="p-3 md:p-4">
+                        <h3 class="text-lg font-semibold mb-4">{{ $ts('select_payment_method') }}</h3>
 
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div v-for="option in paymentMethods" :key="option.value"
+                                    class="border rounded-lg p-4 cursor-pointer transition-all hover:border-primary-500"
+                                    :class="formPayment.method === option.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-2 ring-primary-500' : 'border-gray-200 dark:border-gray-700'"
+                                    @click="formPayment.method = option.value; formPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
+                                    <div class="flex items-center gap-3">
+                                        <UIcon :name="option.icon" class="w-6 h-6 text-primary-500" />
+                                        <span class="font-medium">{{ option.label }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="formPayment.method === 'bank_transfer'" class="animate-fade-in">
+                                <UFormField label="Select Bank" help="Choose your preferred bank for Virtual Account">
+                                    <URadioGroup v-model="formPayment.bank" :items="vaBanks"
+                                        class="grid grid-cols-2 gap-2" :ui="{ fieldset: 'w-full' }" />
+                                </UFormField>
+                            </div>
+
+                            <div v-if="formPayment.method !== 'cash'"
+                                class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-6">
+                                <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-3">Payment Summary</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Ticket Price</span>
+                                        <span>Rp {{ formatCurrency(priceSummary.base) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Admin Fee</span>
+                                        <span>Rp {{ formatCurrency(priceSummary.admin) }}</span>
+                                    </div>
+                                    <Useparator class="my-2" />
+                                    <div class="flex justify-between font-bold text-lg text-primary-600">
+                                        <span>Total</span>
+                                        <span>Rp {{ formatCurrency(priceSummary.total) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-lg">
+                                <div class="flex gap-3">
+                                    <UIcon name="i-heroicons-information-circle" class="w-6 h-6 text-yellow-500" />
+                                    <div class="text-sm text-yellow-700 dark:text-yellow-200">
+                                        Please come to the committee secretariat to make a cash payment.
+                                        Amount: <strong>Rp {{ formatCurrency(agenda?.configuration.committee.amount ||
+                                            0) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div v-else-if="step?.id === 'payment'">
-                    <PaymentDetail v-if="formPayment.method === 'transfer'"
-                        :amount="agenda?.configuration.participant.amount" :payment="formPayment"
+                    <PaymentDetail :amount="agenda?.configuration.participant.amount" :payment="formPayment"
                         @cancel="onCancelPayment" />
-                    <div v-else>
-                        <UAlert color="success" :title="$ts('cash_payment')" :description="$ts('cash_payment_desc')" />
-                    </div>
                 </div>
                 <div v-else-if="step?.id === 'success'">
                     <UAlert color="success" :title="$ts('registration_success')"

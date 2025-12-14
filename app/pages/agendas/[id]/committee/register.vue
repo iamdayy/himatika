@@ -1,56 +1,11 @@
-/**
-* This Vue component is used for registering to an agenda.
-*
-* Script Setup:
-* - Imports necessary types and hooks.
-* - Defines the page metadata with layout and authentication settings.
-* - Retrieves the route parameter `id`.
-* - Determines if the current view is on a mobile device.
-* - Fetches user authentication data.
-* - Fetches agenda data based on the `id` parameter.
-* - Computes breadcrumb links for navigation.
-* - Computes the steps for the registration process.
-* - Initializes reactive form data for registration, payment, and confirmation.
-* - Defines options for the "register as" radio group.
-* - Computes responsive classes and sizes for UI elements.
-* - Checks if the selected program of study (prodi) is related to informatics.
-*
-* Template:
-* - Renders a breadcrumb component for navigation.
-* - Renders a stepper component for the registration process.
-* - Displays different form fields based on the current step and registration type.
-* - Shows a message if the selected program of study is related to informatics.
-*
-* Components:
-* - UBreadcrumb: Displays breadcrumb navigation links.
-* - CoreStepper: Manages the steps of the registration process.
-* - UFormField: Groups form elements with labels.
-* - URadioGroup: Displays radio buttons for selecting registration type.
-* - UInput: Input fields for various form data.
-* - UDivider: Divider element for separating sections.
-* - ULink: Link component for navigation.
-*
-* Computed Properties:
-* - `isMobile`: Determines if the current view is on a mobile device.
-* - `agenda`: Retrieves the agenda data from the fetched response.
-* - `links`: Generates breadcrumb links based on the agenda data.
-* - `steps`: Generates the steps for the registration process.
-* - `responsiveClasses`: Computes responsive classes for UI elements.
-* - `responsiveUISizes`: Computes responsive sizes for UI elements.
-* - `checkIfProdiIsInformatics`: Checks if the selected program of study is related to informatics.
-*
-* Reactive Data:
-* - `activeStep`: Tracks the current active step in the registration process.
-* - `formData`: Stores the form data for registration, payment, and confirmation.
-* - `registerAsOptions`: Options for the "register as" radio group.
-*/
 <script setup lang='ts'>
-import type { IAgenda, IPayment } from '~~/types';
+import type { IAgenda, IPayment, IPaymentMethod } from '~~/types';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
 import type { IPaymentBody } from '~~/types/IRequestPost';
-import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, ICommitteeResponse, IResponse } from '~~/types/IResponse';
-interface IFormData {
+import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, ICommitteeResponse } from '~~/types/IResponse';
 
+// --- TYPE DEFINITIONS ---
+interface IFormData {
     payment: IPayment & {
         bank: string;
     };
@@ -59,71 +14,119 @@ interface IFormData {
 interface IFormRegistration {
     job: string;
 }
+
+// --- PAGE META ---
 definePageMeta({
     layout: 'client',
     middleware: ['sidebase-auth'],
 });
+
+// --- COMPOSABLES & UTILS ---
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const { id } = route.params as { id: string; };
 const { tab } = route.query as { tab: string; };
-
-const { $api } = useNuxtApp()
-
+const { $api } = useNuxtApp();
 const { width } = useWindowSize();
+const { $ts } = useI18n();
+
+// --- STATE ---
 const isMobile = computed(() => width.value < 768);
+const activeStep = ref(0);
 
-
+// --- FETCH DATA ---
 const { data: agendaData } = useLazyAsyncData<IAgendaResponse>(() => $api('/api/agenda', {
     method: 'GET',
     query: { id }
 }));
+
 const { data: committeeData, refresh: refreshCommittee } = useLazyAsyncData<ICommitteeResponse>(() => $api(`/api/agenda/${id}/committee/me`, {
     method: 'GET',
 }));
+
+// --- COMPUTED DATA ---
 const agenda = computed<IAgenda | undefined>(() => agendaData.value?.data?.agenda);
 const committee = computed(() => committeeData.value?.data?.committee);
 const registrationId = computed(() => committee.value?._id);
+
+// --- QUESTIONS ---
 const { data: questions } = useLazyAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
     method: 'GET',
 }), {
-    transform: (data) => {
-        return data.data?.answers;
-    },
+    transform: (data) => data.data?.answers,
     default: () => [],
     watch: [registrationId],
 });
-const { $ts } = useI18n();
+
+// --- BREADCRUMBS ---
 const links = computed(() => [
     { label: $ts('home'), to: '/' },
     { label: $ts('agenda'), to: '/agendas' },
     { label: agenda.value?.title || '', to: `/agendas/${id}` },
     { label: $ts('register') }
 ]);
+
+// --- STEPS CONFIGURATION ---
 const steps = computed<Step[]>(() => {
-    const steps: Step[] = [
-        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: committee.value ? refreshCommittee : register },
-        { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
-        { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method === 'transfer' ? payment : undefined },
-        { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
-        { id: 'success', label: $ts('success'), title: $ts('success'), formData: {} }
+    const stepsList: Step[] = [
+        {
+            id: 'registration',
+            label: $ts('register'),
+            title: $ts('register'),
+            formData: formRegistration,
+            validationRules: validationRuleRegistration,
+            onNext: committee.value ? refreshCommittee : register
+        },
+        {
+            id: 'answer_question',
+            label: $ts('answer_question'),
+            title: $ts('answer_question'),
+            formData: {},
+            validationRules: {},
+            onNext: undefined
+        },
+        {
+            id: 'select_payment',
+            label: $ts('select_payment'),
+            title: $ts('select_payment'),
+            formData: formPayment,
+            validationRules: validationRulePayment,
+            onNext: formPayment.method !== 'cash' ? payment : undefined
+        },
+        {
+            id: 'payment',
+            label: $ts('payment'),
+            title: $ts('payment'),
+            formData: {}, // No form validation needed here, just viewing details
+            validationRules: {}
+        },
+        {
+            id: 'success',
+            label: $ts('success'),
+            title: $ts('success'),
+            formData: {}
+        }
     ];
-    return steps.filter(step => {
+
+    return stepsList.filter(step => {
         if (step.id === 'answer_question') {
             return agenda.value?.configuration?.committee?.questions && agenda.value?.configuration?.committee?.questions.length > 0;
         }
         if (step.id === 'select_payment') {
-            return agenda.value?.configuration?.committee?.pay;
+            // Skip payment selection if already paid or no payment required
+            const isPaid = committee.value?.payment?.status === 'success' || committee.value?.payment?.status === 'pending';
+            return agenda.value?.configuration?.committee?.pay && !isPaid;
         }
         if (step.id === 'payment') {
+            // Show payment detail if payment is required
             return agenda.value?.configuration?.committee?.pay;
         }
         return true;
     });
 });
-const activeStep = ref(0);
 
+// --- FORMS ---
 const jobAvailablesItems = computed(() => {
     return agenda.value?.configuration.committee.jobAvailables?.map((item) => ({
         label: item.label,
@@ -132,13 +135,12 @@ const jobAvailablesItems = computed(() => {
     })) || [];
 });
 
-const formRegistration = reactiveComputed<IFormRegistration>(() => ({
+const formRegistration = reactive({
     job: committee.value?.job || '',
-}));
+});
 
 const formPayment = reactiveComputed(() => ({
-    method: committee.value?.payment?.method || 'transfer',
-    type: committee.value?.payment?.type || 'bank_transfer',
+    method: committee.value?.payment?.method || 'bank_transfer',
     status: committee.value?.payment?.status || 'pending',
     order_id: committee.value?.payment?.order_id || '',
     transaction_id: committee.value?.payment?.transaction_id || '',
@@ -146,40 +148,62 @@ const formPayment = reactiveComputed(() => ({
     va_number: committee.value?.payment?.va_number || '',
     time: committee.value?.payment?.time || new Date(),
     expiry: committee.value?.payment?.expiry || new Date(),
+    qris_png: committee.value?.payment?.qris_png || '',
+}));
 
-}));
-const formConfirmation = reactiveComputed(() => ({
-    status: formPayment.status || 'pending',
-}));
-const paymentMethods = ref<{ label: string; value: string; }[]>([
-    { label: $ts('transfer'), value: 'transfer' },
-    { label: $ts('cash'), value: 'cash' },
+// --- CONSTANTS & OPTIONS ---
+const paymentMethods = ref<{ label: string; value: IPaymentMethod; icon: string; }[]>([
+    { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
+    { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
+    { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
 ]);
-const paymentTypes = ref([
-    { label: $ts('bank_transfer'), value: 'bank_transfer' },
-    { label: $ts('credit_card'), value: 'credit_card' },
-    { label: $ts('debit_card'), value: 'debit_card' },
-    { label: $ts('e_wallet'), value: 'e_wallet' },
-    { label: $ts('other'), value: 'other' },
-]);
-const banks = ref([
+const vaBanks = [
     { label: 'BCA', value: 'bca' },
     { label: 'BNI', value: 'bni' },
     { label: 'BRI', value: 'bri' },
     { label: 'Mandiri', value: 'mandiri' },
-]);
+    { label: 'Permata', value: 'permata' },
+];
 
-/** 
- * method to validate form data
- */
+
+// --- ADMIN FEE CALCULATION ---
+const FEES = {
+    VA: 4000,
+    QRIS: 0.007,
+    Cash: 0
+};
+
+const priceSummary = computed(() => {
+    const basePrice = agenda.value?.configuration.committee.amount || 0;
+    let adminFee = 0;
+
+    if (formPayment.method === 'bank_transfer') {
+        adminFee = FEES.VA;
+    } else if (formPayment.method === 'qris') {
+        adminFee = Math.ceil(basePrice * FEES.QRIS);
+    } else if (formPayment.method === 'cash') {
+        adminFee = FEES.Cash;
+    }
+
+    return {
+        base: basePrice,
+        admin: adminFee,
+        total: basePrice + adminFee
+    };
+});
+
+// --- HELPER FUNCTIONS ---
+function formatCurrency(value: number) {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// --- ACTIONS ---
 
 const register = async (): Promise<boolean | FormError> => {
     try {
         const { data, statusCode } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/committee/register`, {
             method: 'POST',
-            body: {
-                job: formRegistration.job,
-            }
+            body: { job: formRegistration.job }
         });
         if (statusCode === 200 && data) {
             refreshCommittee();
@@ -191,12 +215,14 @@ const register = async (): Promise<boolean | FormError> => {
         return false;
     }
 }
+
 const payment = async (): Promise<boolean | FormError> => {
+
     try {
         const { data, statusCode } = await $fetch<IAgendaRegisterResponse>(`/api/agenda/${id}/committee/register/${registrationId.value}/payment`, {
             method: 'POST',
             body: {
-                payment_type: formPayment.type,
+                payment_method: formPayment.method,
                 bank_transfer: formPayment.bank,
             } as IPaymentBody
         });
@@ -207,103 +233,69 @@ const payment = async (): Promise<boolean | FormError> => {
         return false;
     } catch (error) {
         console.error(error);
+        toast.add({ title: $ts('error'), description: 'Failed to create payment', color: 'error' });
         return false;
     }
 }
+
 const onCancelPayment = async () => {
     refreshCommittee();
-    activeStep.value = 1;
+    activeStep.value = steps.value.findIndex(s => s.id === 'select_payment');
 }
 
-async function handleAnswer() {
-    try {
-        const formData = new FormData();
-        const answersPayload = questions.value?.map((q) => {
-            // For file inputs, we will append them separately and put a placeholder here.
-            if (q.question.type === 'file' && (q.answer as any) instanceof File) {
-                formData.append(q.question._id as string, q.answer);
-                return { questionId: q.question._id, answer: '[[FILE]]' };
-            }
-            return { questionId: q.question._id, answer: q.answer };
-        });
-
-        formData.append('answers', JSON.stringify(answersPayload));
-        const response = await $api<IResponse & { data: string }>(`api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
-            method: 'POST',
-            body: formData,
-        });
-        if (response.statusCode !== 200) {
-            toast.add({ title: $ts('failed'), description: $ts('failed_to_answer_question'), color: 'error' });
-            return false;
-        }
-        toast.add({ title: $ts('success'), description: $ts('success_to_answer_question'), color: 'success' });
-        return true;
-    } catch (error) {
-        toast.add({ title: $ts('success'), description: $ts('failed_to_answer_question'), color: 'error' });
-        return false;
-    }
-}
-
-/**
- * Responsive classes for UI elements
- */
-const responsiveClasses = computed(() => ({
-    label: isMobile.value ? 'text-xs' : 'text-base',
-    input: isMobile.value ? 'text-xs' : 'text-base',
-    gridCols: isMobile.value ? 'grid-cols-1' : 'grid-cols-6',
-    container: isMobile.value ? 'p-2' : 'p-3',
-}));
-
-const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
-    button: isMobile.value ? 'xs' : 'md',
-    input: isMobile.value ? 'xs' : 'md',
-}));
-
+// --- VALIDATION RULES ---
 const validationRuleRegistration: FieldValidationRules<IFormRegistration> = reactiveComputed(() => ({
     job: (value: string) => value ? null : { message: $ts('job_required'), path: 'job' },
 }));
+
 const validationRulePayment: FieldValidationRules = reactiveComputed(() => ({
     method: (value: string) => value ? null : { message: $ts('payment_method_required'), path: 'method' },
-    type: (value: string) => value ? null : { message: $ts('payment_type_required'), path: 'type' },
-    bank: (value: string) => value ? null : { message: $ts('bank_required'), path: 'bank' },
+    // Custom validation logic if needed
 }));
-const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => ({
-    status: (value: string) => value === 'success' ? null : { message: $ts('status_required'), path: 'status' },
-}));
+
 const onCompleted = async () => {
     router.push(`/agendas/${id}/committee`);
 }
 
+// --- LIFECYCLE ---
 onMounted(() => {
-    setTimeout(() => {
-        if (tab === 'register') {
-            activeStep.value = 0;
-        } else if (tab === 'select_payment') {
-            activeStep.value = 1;
-        } else if (tab === 'payment') {
-            activeStep.value = 2;
-        } else if (tab === 'success') {
-            activeStep.value = 3;
-        } else {
-            activeStep.value = 0;
-        }
-    }, 1000);
+    watchEffect(() => {
+        if (committee.value?.job) formRegistration.job = committee.value.job;
+    });
 
-})
+    setTimeout(() => {
+        const stepMap: Record<string, number> = {
+            'register': 0,
+            'select_payment': steps.value.findIndex(s => s.id === 'select_payment'),
+            'payment': steps.value.findIndex(s => s.id === 'payment'),
+            'success': steps.value.findIndex(s => s.id === 'success'),
+        };
+
+        // Auto jump if payment exists and is pending
+        if (committee.value?.payment?.status === 'pending' && activeStep.value === 0) {
+            activeStep.value = steps.value.findIndex(s => s.id === 'payment');
+        } else if (tab && stepMap[tab] !== undefined) {
+            activeStep.value = stepMap[tab];
+        }
+    }, 500);
+});
 </script>
+
 <template>
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :links="links" />
         <CoreStepper :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
             :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
+
             <template #default="{ step, errors }">
+
                 <div v-if="step?.id === 'registration'">
                     <UAlert v-if="committee" color="success" :title="$ts('already_committee')"
                         :description="$ts('already_committee_desc')" class="mb-4"></UAlert>
-                    <UDivider class="my-4" />
+                    <Useparator class="my-4" />
                     <div class="text-start">
                         <div class="space-y-4">
-                            <div :class="['grid gap-2 px-4', responsiveClasses.gridCols]">
+                            <div :class="['grid gap-2 px-4', isMobile ? 'grid-cols-1' : 'grid-cols-6']">
                                 <UFormField class="col-span-full" :label="$ts('job')" :error="errors.job?.message">
                                     <URadioGroup v-model="formRegistration.job" :items="jobAvailablesItems" />
                                 </UFormField>
@@ -311,49 +303,113 @@ onMounted(() => {
                         </div>
                     </div>
                 </div>
+
                 <div v-else-if="step?.id === 'answer_question'">
                     <div class="space-y-4">
                         <CoreQuestion v-for="(question, index) in questions" :key="index" :question="question.question"
                             v-model="question.answer" />
                     </div>
                 </div>
-                <div v-else-if="step?.id === 'select_payment'">
-                    <div :class="responsiveClasses.container">
-                        <p class="mb-4">{{ $ts('selected_payment_method') }}</p>
-                        <UFormField :label="$ts('payment_method')" v-if="agenda?.configuration.committee.amount"
-                            class="mb-4" :help="$ts('payment_method_desc')">
-                            <USelect v-model="formPayment.method" :items="paymentMethods" />
-                        </UFormField>
-                        <p class="mb-4 text-sm dark:text-gray-400">*{{ $ts('payment_help') }}</p>
-                        <p class="text-sm text-red-500 dark:text-red-400">**{{ $ts('if_guest') }}</p>
-                        <div v-if="formPayment.method === 'transfer'" class="flex flex-wrap gap-4">
-                            <UFormField :label="$ts('payment_type')" class="flex-1 mb-4"
-                                :error="errors.payment_type?.message">
-                                <URadioGroup v-model="formPayment.type" :items="paymentTypes" />
-                            </UFormField>
-                            <UFormField :label="$ts('bank')" class="flex-1 mb-4"
-                                v-if="formPayment.type === 'bank_transfer'" :error="errors.bank?.message">
-                                <USelect v-model="formPayment.bank" :items="banks" />
-                            </UFormField>
 
+                <div v-else-if="step?.id === 'select_payment'">
+                    <div class="p-3 md:p-4">
+                        <h3 class="text-lg font-semibold mb-4">{{ $ts('select_payment_method') }}</h3>
+
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div v-for="option in paymentMethods" :key="option.value"
+                                    class="border rounded-lg p-4 cursor-pointer transition-all hover:border-primary-500"
+                                    :class="formPayment.method === option.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-2 ring-primary-500' : 'border-gray-200 dark:border-gray-700'"
+                                    @click="formPayment.method = option.value; formPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
+                                    <div class="flex items-center gap-3">
+                                        <UIcon :name="option.icon" class="w-6 h-6 text-primary-500" />
+                                        <span class="font-medium">{{ option.label }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="formPayment.method === 'bank_transfer'" class="animate-fade-in">
+                                <UFormField label="Select Bank" help="Choose your preferred bank for Virtual Account">
+                                    <URadioGroup v-model="formPayment.bank" :items="vaBanks"
+                                        class="grid grid-cols-2 gap-2" :ui="{ fieldset: 'w-full' }" />
+                                </UFormField>
+                            </div>
+
+                            <div v-if="formPayment.method !== 'cash'"
+                                class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-6">
+                                <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-3">Payment Summary</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Ticket Price</span>
+                                        <span>Rp {{ formatCurrency(priceSummary.base) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Admin Fee</span>
+                                        <span>Rp {{ formatCurrency(priceSummary.admin) }}</span>
+                                    </div>
+                                    <Useparator class="my-2" />
+                                    <div class="flex justify-between font-bold text-lg text-primary-600">
+                                        <span>Total</span>
+                                        <span>Rp {{ formatCurrency(priceSummary.total) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-lg">
+                                <div class="flex gap-3">
+                                    <UIcon name="i-heroicons-information-circle" class="w-6 h-6 text-yellow-500" />
+                                    <div class="text-sm text-yellow-700 dark:text-yellow-200">
+                                        Please come to the committee secretariat to make a cash payment.
+                                        Amount: <strong>Rp {{ formatCurrency(agenda?.configuration.committee.amount ||
+                                            0) }}</strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
                 <div v-else-if="step?.id === 'payment'">
-                    <PaymentDetail v-if="formPayment.method === 'transfer'"
-                        :amount="agenda?.configuration.committee.amount" :payment="formPayment"
-                        @cancel="onCancelPayment" />
-                    <div v-else>
-                        <UAlert color="success" :title="$ts('cash_payment')" :description="$ts('cash_payment_desc')" />
+                    <div v-if="formPayment">
+                        <PaymentDetail v-if="formPayment.method !== 'cash'"
+                            :amount="agenda?.configuration.committee.amount" :payment="formPayment"
+                            @cancel="onCancelPayment" @success="refreshCommittee" />
+                        <div v-else>
+                            <UAlert color="success" :title="$ts('cash_payment')"
+                                :description="$ts('cash_payment_desc')" />
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-8">
+                        <UIcon name="i-heroicons-arrow-path" class="animate-spin w-8 h-8 mx-auto text-gray-400" />
+                        <p class="mt-2 text-gray-500">Loading payment details...</p>
                     </div>
                 </div>
+
                 <div v-else-if="step?.id === 'success'">
                     <UAlert color="success" :title="$ts('registration_success')"
                         :description="$ts('registration_success_desc')" />
                     <CoreContent class="my-4" :content="agenda?.configuration.messageAfterRegister || ''" />
                 </div>
+
             </template>
         </CoreStepper>
     </div>
 </template>
-<style scoped></style>
+
+<style scoped>
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>

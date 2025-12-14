@@ -18,7 +18,7 @@ export interface IChargeResponse {
     name: string;
     method: string;
     url: string;
-  };
+  }[];
   qr_string: string;
   acquirer: string;
   expiry_time: string;

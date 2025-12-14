@@ -43,8 +43,6 @@ export default defineEventHandler(
       agenda.markModified("participants");
       agenda.markModified("committees");
       await agenda.save();
-      console.log("Payment status updated:", registered.payment.status);
-      console.log("Payment status updated:", response);
       return {
         statusCode: 200,
         statusMessage: "Transaction found",

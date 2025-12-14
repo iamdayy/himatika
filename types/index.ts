@@ -223,13 +223,7 @@ export interface IContributor {
   member: IMember | Types.ObjectId | number | string;
   job: string;
 }
-
-export type TPaymentType =
-  | "bank_transfer"
-  | "credit_card"
-  | "debit_card"
-  | "qris"
-  | "other";
+export type IPaymentMethod = "cash" | "bank_transfer" | "e_wallet" | "qris";
 export type TPaymentStatus =
   | "pending"
   | "success"
@@ -237,13 +231,13 @@ export type TPaymentStatus =
   | "canceled"
   | "expired";
 export interface IPayment {
-  method: "cash" | "transfer";
-  type: TPaymentType;
+  method: IPaymentMethod;
   status?: TPaymentStatus;
   order_id?: string;
   transaction_id?: string;
   bank?: string;
   va_number?: string;
+  qris_png?: string;
   time?: Date;
   expiry?: Date;
 }
