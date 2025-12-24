@@ -332,80 +332,75 @@ onMounted(() => {
 </script>
 <template>
     <div>
-        <ClientOnly>
-            <nav
-                class="absolute z-10 w-full border-gray-200 bg-white/15 md:bg-transparent backdrop-blur-md md:border-none">
-                <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
-                    <NuxtLink to="/" class="items-center hidden space-x-3 md:flex rtl:space-x-reverse">
-                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" loading="lazy" />
-                    </NuxtLink>
+        <nav class="absolute z-10 w-full border-gray-200 bg-white/15 md:bg-transparent backdrop-blur-md md:border-none">
+            <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
+                <NuxtLink to="/" class="items-center hidden space-x-3 md:flex rtl:space-x-reverse">
+                    <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" loading="lazy" />
+                </NuxtLink>
 
-                    <USlideover v-if="isMobile" v-model:open="openSlideOver" :overlay="false" :title="'HIMAPP'"
-                        side="left">
-                        <UButton variant="link" color="neutral" :padded="false" icon="i-heroicons-bars-3-center-left"
-                            class="md:hidden" />
-                        <template #content>
-                            <div class="flex-1 p-4">
-                                <div class="flex flex-row items-center justify-between">
-                                    <NuxtLink to="/" class="items-center space-x-3 md:flex rtl:space-x-reverse">
-                                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo"
-                                            loading="lazy" />
-                                    </NuxtLink>
-                                    <UButton color="neutral" variant="ghost" size="sm"
-                                        icon="i-heroicons-x-mark-20-solid" square padded
-                                        @click="openSlideOver = false" />
-                                </div>
-                                <div class="mt-8">
-                                    <NuxtLink to="/profile">
-                                        <div class="flex items-center w-full gap-2">
-                                            <NuxtImg provider="localProvider"
-                                                :src="user?.member.avatar || '/img/profile-blank.png'"
-                                                class="object-cover rounded-full max-w-12 max-h-12 aspect-square"
-                                                loading="lazy" :alt="user?.member.fullName || 'Profile Image'" />
-                                            <div class="overflow-ellipsis">
-                                                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
-                                                    user?.username
-                                                }}
-                                                </h2>
-                                                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
-                                                    user?.member.NIM }}
-                                                </h2>
-                                            </div>
-                                        </div>
-                                    </NuxtLink>
-                                    <UNavigationMenu :items="links" orientation="vertical" highlight />
-                                </div>
-                            </div>
-                        </template>
-                    </USlideover>
-                    <div class="flex items-center gap-2 md:order-2 md:space-x-0 rtl:space-x-reverse">
-                        <!-- Language Dropdown -->
-                        <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
-                            <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
-                        </UDropdownMenu>
-                        <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
-                            :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
-                            @click="isDarkMode = !isDarkMode" />
-                        <UDropdownMenu :items="items" :popper="{ placement: 'bottom-start' }">
-                            <NuxtImg provider="localProvider" v-if="isLoggedIn"
-                                :src="user?.member.avatar || '/img/profile-blank.png'"
-                                class="object-cover rounded-full max-w-8 aspect-square" loading="lazy"
-                                :alt="user?.member.fullName || 'Profile Image'" />
-                            <UAvatar v-else icon="i-heroicons-arrow-right-end-on-rectangle" />
-
-                            <template #item="{ item }">
-                                <NuxtLink :to="item.to" class="">
-                                    <UIcon :name="item.icon" v-if="item.icon"
-                                        class="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
-                                    <span class="truncate">{{ item.label }}</span>
+                <USlideover v-if="isMobile" v-model:open="openSlideOver" :overlay="false" :title="'HIMAPP'" side="left">
+                    <UButton variant="link" color="neutral" :padded="false" icon="i-heroicons-bars-3-center-left"
+                        class="md:hidden" />
+                    <template #content>
+                        <div class="flex-1 p-4">
+                            <div class="flex flex-row items-center justify-between">
+                                <NuxtLink to="/" class="items-center space-x-3 md:flex rtl:space-x-reverse">
+                                    <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo"
+                                        loading="lazy" />
                                 </NuxtLink>
-                            </template>
+                                <UButton color="neutral" variant="ghost" size="sm" icon="i-heroicons-x-mark-20-solid"
+                                    square padded @click="openSlideOver = false" />
+                            </div>
+                            <div class="mt-8">
+                                <NuxtLink to="/profile">
+                                    <div class="flex items-center w-full gap-2">
+                                        <NuxtImg provider="localProvider"
+                                            :src="user?.member.avatar || '/img/profile-blank.png'"
+                                            class="object-cover rounded-full max-w-12 max-h-12 aspect-square"
+                                            loading="lazy" :alt="user?.member.fullName || 'Profile Image'" />
+                                        <div class="overflow-ellipsis">
+                                            <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
+                                                user?.username
+                                                }}
+                                            </h2>
+                                            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
+                                                user?.member.NIM }}
+                                            </h2>
+                                        </div>
+                                    </div>
+                                </NuxtLink>
+                                <UNavigationMenu :items="links" orientation="vertical" highlight />
+                            </div>
+                        </div>
+                    </template>
+                </USlideover>
+                <div class="flex items-center gap-2 md:order-2 md:space-x-0 rtl:space-x-reverse">
+                    <!-- Language Dropdown -->
+                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
+                        <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
+                    </UDropdownMenu>
+                    <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
+                        :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
+                        @click="isDarkMode = !isDarkMode" />
+                    <UDropdownMenu :items="items" :popper="{ placement: 'bottom-start' }">
+                        <NuxtImg provider="localProvider" v-if="isLoggedIn"
+                            :src="user?.member.avatar || '/img/profile-blank.png'"
+                            class="object-cover rounded-full max-w-8 aspect-square" loading="lazy"
+                            :alt="user?.member.fullName || 'Profile Image'" />
+                        <UAvatar v-else icon="i-heroicons-arrow-right-end-on-rectangle" />
 
-                        </UDropdownMenu>
-                    </div>
+                        <template #item="{ item }">
+                            <NuxtLink :to="item.to" class="">
+                                <UIcon :name="item.icon" v-if="item.icon"
+                                    class="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
+                                <span class="truncate">{{ item.label }}</span>
+                            </NuxtLink>
+                        </template>
+
+                    </UDropdownMenu>
                 </div>
-            </nav>
-        </ClientOnly>
+            </div>
+        </nav>
         <main class="px-8 py-6 pt-12 mx-auto md:px-12 lg:px-28">
             <UContainer class="py-16">
                 <UBreadcrumb :items="[{ label: 'Dashboard', icon: 'i-heroicons-home' }]" class="ms-4" />
@@ -448,7 +443,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-calendar" class="text-6xl" />
                                 </div>
                                 <UProgress
@@ -462,7 +457,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         projectsMe.length
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <UProgress :model-value="projectsMe.length || 0" :color="color"
@@ -475,7 +470,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         aspirations.length
-                                        }}</h2>
+                                    }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"

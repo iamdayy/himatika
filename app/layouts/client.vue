@@ -118,8 +118,8 @@ useHead({
 });
 </script>
 <template>
-    <SpeedInsights />
     <div class="min-h-full">
+        <SpeedInsights />
         <nav
             class="fixed z-30 w-full border-gray-200 md:border-none bg-secondary-light/60 dark:bg-secondary-dark/20 backdrop-blur-sm">
             <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
