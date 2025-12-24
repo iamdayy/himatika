@@ -355,7 +355,7 @@ export interface IAgenda {
  * Represents a project with details, contributors, and registration information.
  */
 export interface IProject {
-  _id?: string; // Optional, MongoDB will auto-generate _id if not provided
+  _id?: string | Types.ObjectId | unknown; // Optional, MongoDB will auto-generate _id if not provided
   title: string;
   image: string | File;
   description: string;
@@ -374,7 +374,7 @@ export interface IProject {
  * Represents a blog news with content, author, and publishing information.
  */
 export interface INews {
-  _id?: string | Types.ObjectId;
+  _id?: string | Types.ObjectId | unknown;
   title: string;
   mainImage: string | File; // URL of the main image
   body: string;
@@ -396,7 +396,7 @@ export interface INews {
 }
 
 export interface IPhoto {
-  _id?: string;
+  _id?: string | Types.ObjectId | unknown;
   image: string | File;
   tags?: string[];
   uploader?: Types.ObjectId | IMember | number;

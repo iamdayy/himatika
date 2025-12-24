@@ -1,9 +1,6 @@
 import { put } from "@vercel/blob";
-import { PDFDocument } from "pdf-lib";
-import { PDFParse } from "pdf-parse";
 import { toDataURL } from "qrcode";
 import { IOverlayLocation } from "~~/types";
-
 
 /**
  * Analyzes a PDF buffer to extract its text content.
@@ -13,7 +10,8 @@ import { IOverlayLocation } from "~~/types";
  */
 export async function getPdfText(pdfBuffer: Buffer): Promise<string> {
   try {
-    const parser = new PDFParse({ data: pdfBuffer});
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse({ data: pdfBuffer });
     const data = await parser.getText();
     return data.text;
   } catch (error) {
@@ -38,6 +36,7 @@ export async function overlayQRAndSavePdf(
   locations: IOverlayLocation[]
 ): Promise<string> {
   try {
+    const { PDFDocument } = await import("pdf-lib");
     const pdfFetch = await fetch(pdf);
     const pdfBuffer = await pdfFetch.arrayBuffer();
     // Load the PDF document from the buffer

@@ -12,7 +12,7 @@ definePageMeta({
 const router = useRouter();
 const overlay = useOverlay();
 const toast = useToast();
-const { $api, $formApi } = useNuxtApp();
+const { $api } = useNuxtApp();
 const { $ts } = useI18n();
 const config = useRuntimeConfig();
 
