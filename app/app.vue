@@ -5,7 +5,7 @@ const { x, y } = useMouse();
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 const isActive = ref(false);
-const appConfig = useAppConfig();
+const isLoading = ref(true);
 const position = computed(() => {
   if (isActive.value && !isMobile.value) {
     return {
@@ -20,6 +20,13 @@ const position = computed(() => {
     opacity: 1,
   };
 });
+
+onMounted(() => {
+  // Berikan sedikit delay agar logo sempat terlihat (estetika)
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 3000);
+});
 </script>
 <template>
   <Analytics />
@@ -28,6 +35,7 @@ const position = computed(() => {
       <!-- Light effect -->
       <div class="light-effect"
         :style="`--left-position:${position.left};--top-position:${position.top};--opacity:${position.opacity}`"></div>
+      <CoreSplashScreen :loading="isLoading" />
       <div class="content">
         <NuxtLayout>
           <NuxtPage />

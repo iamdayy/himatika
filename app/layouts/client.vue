@@ -71,10 +71,8 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
     }],
     [{
         label: $ts('logout'),
-        // class: 'hover:bg-red-50 hover:dark:bg-red-500',
         color: 'error',
         onSelect: () => signOut({ callbackUrl: '/login' }),
-        // slot: 'SignOut',
         icon: 'i-heroicons-arrow-right-start-on-rectangle'
     }]
 ] satisfies DropdownMenuItem[][])
@@ -120,81 +118,80 @@ useHead({
 });
 </script>
 <template>
-    <SpeedInsights />
     <div class="min-h-full">
-        <ClientOnly>
-            <nav
-                class="fixed z-30 w-full border-gray-200 md:border-none bg-secondary-light/60 dark:bg-secondary-dark/20 backdrop-blur-sm">
-                <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
-                    <!-- Logo or back button -->
-                    <NuxtLink to="/" class="items-center hidden space-x-3 md:flex rtl:space-x-reverse">
-                        <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" loading="lazy" />
-                    </NuxtLink>
+        <SpeedInsights />
+        <nav
+            class="fixed z-30 w-full border-gray-200 md:border-none bg-secondary-light/60 dark:bg-secondary-dark/20 backdrop-blur-sm">
+            <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
+                <!-- Logo or back button -->
+                <NuxtLink to="/" class="items-center hidden space-x-3 md:flex rtl:space-x-reverse">
+                    <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" format="webp"
+                        preload />
+                </NuxtLink>
 
 
-                    <!-- Mobile slideover menu -->
-                    <USlideover v-model="isOpen" side="left" close-icon="i-heroicons-chevron-left">
-                        <!-- Mobile menu button -->
-                        <UButton @click="isOpen = !isOpen" icon="i-heroicons-bars-3-center-left" class="block md:hidden"
-                            variant="link" color="neutral" />
-                        <template #title>
-                            <NuxtLink to="/" class="items-center space-x-3 md:flex rtl:space-x-reverse">
-                                <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo"
-                                    loading="lazy" />
+                <!-- Mobile slideover menu -->
+                <USlideover v-model="isOpen" side="left" close-icon="i-heroicons-chevron-left">
+                    <!-- Mobile menu button -->
+                    <UButton @click="isOpen = !isOpen" icon="i-heroicons-bars-3-center-left" class="block md:hidden"
+                        variant="link" color="neutral" />
+                    <template #title>
+                        <NuxtLink to="/" class="items-center space-x-3 md:flex rtl:space-x-reverse">
+                            <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" format="webp"
+                                preload />
+                        </NuxtLink>
+                    </template>
+                    <template #body>
+                        <UNavigationMenu orientation="vertical" :items="navigation"
+                            class="data-[orientation=vertical]:w-48" />
+                    </template>
+                </USlideover>
+
+                <!-- User menu and theme toggle -->
+                <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
+                    <!-- Language Dropdown -->
+                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
+                        <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
+                    </UDropdownMenu>
+                    <!-- Theme toggle -->
+                    <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
+                        :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
+                        @click="isDarkMode = !isDarkMode" />
+                    <UDropdownMenu :items="items" :content="{ side: 'bottom' }">
+                        <NuxtImg v-if="isLoggedIn" provider="localProvider"
+                            :src="user?.member.avatar || '/img/profile-blank.png'"
+                            class="object-cover rounded-full max-w-8 aspect-square" format="webp" preload
+                            alt="Profile" />
+                        <UButton v-else icon="i-heroicons-arrow-right-end-on-rectangle" variant="ghost"
+                            class="rounded-full" color="neutral" />
+
+                        <template #account="{ item }">
+                            <div class="text-left">
+                                <p>
+                                    {{ $ts('signed_as') }}
+                                </p>
+                                <p class="font-medium text-gray-900 truncate dark:text-white">
+                                    {{ item.label }}
+                                </p>
+                            </div>
+                        </template>
+
+                        <template #item="{ item }">
+                            <NuxtLink :to="item.to">
+                                <UIcon :name="item.icon" v-if="item.icon"
+                                    class="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
+                                <span class="truncate">{{ item.label }}</span>
                             </NuxtLink>
                         </template>
-                        <template #body>
-                            <UNavigationMenu orientation="vertical" :items="navigation"
-                                class="data-[orientation=vertical]:w-48" />
-                        </template>
-                    </USlideover>
-
-                    <!-- User menu and theme toggle -->
-                    <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
-                        <!-- Language Dropdown -->
-                        <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
-                            <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
-                        </UDropdownMenu>
-                        <!-- Theme toggle -->
-                        <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
-                            :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
-                            @click="isDarkMode = !isDarkMode" />
-                        <UDropdownMenu :items="items" :content="{ side: 'bottom' }">
-                            <NuxtImg v-if="isLoggedIn" provider="localProvider"
-                                :src="user?.member.avatar || '/img/profile-blank.png'"
-                                class="object-cover rounded-full max-w-8 aspect-square" loading="lazy" alt="Profile" />
-                            <UButton v-else icon="i-heroicons-arrow-right-end-on-rectangle" variant="ghost"
-                                class="rounded-full" color="neutral" />
-
-                            <template #account="{ item }">
-                                <div class="text-left">
-                                    <p>
-                                        {{ $ts('signed_as') }}
-                                    </p>
-                                    <p class="font-medium text-gray-900 truncate dark:text-white">
-                                        {{ item.label }}
-                                    </p>
-                                </div>
-                            </template>
-
-                            <template #item="{ item }">
-                                <NuxtLink :to="item.to">
-                                    <UIcon :name="item.icon" v-if="item.icon"
-                                        class="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
-                                    <span class="truncate">{{ item.label }}</span>
-                                </NuxtLink>
-                            </template>
-                        </UDropdownMenu>
-                    </div>
-
-                    <!-- Desktop navigation menu -->
-                    <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
-                        id="navbar-user">
-                        <UNavigationMenu :items="navigation" highlight />
-                    </div>
+                    </UDropdownMenu>
                 </div>
-            </nav>
-        </ClientOnly>
+
+                <!-- Desktop navigation menu -->
+                <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-user">
+                    <UNavigationMenu :items="navigation" highlight />
+                </div>
+            </div>
+        </nav>
         <main>
             <div class="px-2 py-6 pt-24 mx-auto md:px-8">
                 <UContainer class="py-16">

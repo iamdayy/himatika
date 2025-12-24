@@ -3,7 +3,7 @@ import OrganizerModel from "~~/server/models/OrganizerModel";
 import { IOrganizer } from "~~/types";
 import type { IOrganizerResponse } from "~~/types/IResponse";
 
-export default defineEventHandler(
+export default defineCachedEventHandler(
   async (event): Promise<IOrganizerResponse> => {
     try {
       const query = getQuery<{ NIM?: number; period: string }>(event);
@@ -65,6 +65,11 @@ export default defineEventHandler(
         statusMessage: error.message || "Internal server error.",
       };
     }
+  },
+  {
+    maxAge: 60 * 60 * 24, // Cache selama 1 Hari
+    name: "organizer-cache",
+    swr: true,
   }
 );
 

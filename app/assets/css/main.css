@@ -60,3 +60,36 @@ body {
   --vc-accent-800: #ff3f00;
   --vc-accent-900: #ff2f00;
 }
+
+/* app/assets/css/main.css */
+
+/* --- Page Transitions --- */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Saat masuk: Mulai dari opacity 0, agak ke bawah, dan blur */
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px); /* Geser sedikit dari bawah */
+  filter: blur(4px);
+}
+
+/* Saat keluar: Menuju opacity 0, agak ke atas, dan blur */
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px); /* Geser sedikit ke atas */
+  filter: blur(4px);
+}
+
+/* --- Layout Transitions (Misal dari Login ke Dashboard) --- */
+.layout-enter-active,
+.layout-leave-active {
+  transition: all 0.3s ease;
+}
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+  filter: blur(8px); /* Blur lebih kuat untuk pergantian layout */
+}

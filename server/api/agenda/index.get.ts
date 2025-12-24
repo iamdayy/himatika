@@ -12,7 +12,7 @@ import { IAgendaResponse, IError } from "~~/types/IResponse";
  * @returns {Promise<Event | Event[]>} The event data or an array of agendas.
  * @throws {H3Error} If an error occurs during the process.
  */
-export default defineEventHandler(
+export default defineCachedEventHandler(
   async (event): Promise<IAgendaResponse | IError> => {
     try {
       const {
@@ -182,5 +182,10 @@ export default defineEventHandler(
           "An unexpected error occurred while fetching agenda data",
       };
     }
+  },
+  {
+    maxAge: 60 * 5, // Cache selama 5 Menit
+    name: "agenda-cache",
+    swr: true,
   }
 );

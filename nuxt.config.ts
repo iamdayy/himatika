@@ -40,6 +40,10 @@ export default defineNuxtConfig({
       version: process.env.VERSION,
     },
   },
+  app: {
+    pageTransition: { name: "page", mode: "out-in" },
+    layoutTransition: { name: "layout", mode: "out-in" },
+  },
   modules: [
     "@nuxt/image",
     "@nuxt/ui",
