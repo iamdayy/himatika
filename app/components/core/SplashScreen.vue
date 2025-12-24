@@ -17,9 +17,13 @@ const props = defineProps<{
                     Selamat Datang di Website resmi
                 </p>
                 <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200">
-                    HIMPUNAN MAHASISWA INFORMATIKA </br>
-                    FAKULTAS SAINS DAN TEKNOLOGI </br>
-                    ITSNU PEKALONGAN
+                    HIMPUNAN MAHASISWA INFORMATIKA
+                </h1>
+                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200">
+                    FAKULTAS SAINS DAN TEKNOLOGI
+                </h1>
+                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200">
+                    INSTITUT TEKNOLOGI DAN SAINS NAHDLATUL ULAMA PEKALONGAN
                 </h1>
                 <p class="mt-4 text-sm font-medium text-gray-500 animate-pulse">
                     Memuat Aplikasi...
