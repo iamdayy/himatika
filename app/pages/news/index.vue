@@ -218,7 +218,7 @@ const tags = computed(() => {
     return (dataTags.value?.data?.tags)
 })
 
-const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $fetch<ICategoriesResponse>('/api/category'), {
+const { data: categoryOptions, refresh: refreshCategory } = useAsyncData('categories', () => $fetch<ICategoriesResponse>('/api/category'), {
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
@@ -241,7 +241,7 @@ const sortOptions = [
 const page = ref(1);
 const perPage = ref(10);
 
-const { data, refresh, pending } = useLazyAsyncData('news', () => $fetch<INewsResponse>('/api/news', {
+const { data, refresh, pending } = useAsyncData('news', () => $fetch<INewsResponse>('/api/news', {
     query: {
         category: JSON.stringify(selectedCategory.value),
         tags: JSON.stringify(selectedTags.value),

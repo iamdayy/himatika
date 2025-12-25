@@ -37,6 +37,7 @@ onMounted(() => {
         :style="`--left-position:${position.left};--top-position:${position.top};--opacity:${position.opacity}`"></div>
       <CoreSplashScreen :loading="isLoading" />
       <div class="content">
+        <NuxtLoadingIndicator color="#ff6600" />
         <NuxtLayout>
           <NuxtPage />
         </NuxtLayout>

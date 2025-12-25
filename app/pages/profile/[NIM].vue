@@ -165,7 +165,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
                                         $ts('generation')
-                                    }}</label>
+                                        }}</label>
                                     <p class="text-sm">{{ member.enteredYear || 'Not specified' }}</p>
                                 </div>
                             </div>
@@ -214,7 +214,7 @@
                                                     {{ member.point[index]!.semester
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{ member.point[index]!.point
-                                                    }} pts</UBadge>
+                                                }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -230,7 +230,7 @@
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{ member.point[index]!.activities.projects
-                                                        }}</div>
+                                                    }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project') }}
                                                     </div>
                                                 </div>
@@ -238,7 +238,7 @@
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.aspirations }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('aspiration')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -323,14 +323,14 @@
                                                     <div class="space-y-4">
                                                         <div
                                                             v-if="getProjectsByRange(member.point[index]!.range) && getProjectsByRange(member.point[index]!.range).length > 0">
-                                                            <div v-for="project in getProjectsByRange(member.point[index]!.range)"
-                                                                :key="project._id"
+                                                            <div v-for="project, i in getProjectsByRange(member.point[index]!.range)"
+                                                                :key="i"
                                                                 class="flex items-center justify-between p-3 bg-purple-50/20 rounded-lg">
                                                                 <div class="flex-1">
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                        }}</p>
+                                                                    }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">

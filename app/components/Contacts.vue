@@ -1,16 +1,20 @@
 <script setup lang='ts'>
-import type { IMessage } from '~/types';
-import type { IConfigResponse, IResponse, ITagsResponse } from '~/types/IResponse';
+import type { IMessage } from '~~/types';
+import type { IConfigResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
 
 const { width } = useWindowSize(); // Get the window width
 const isMobile = computed(() => width.value < 768); // Define mobile breakpoint as 768px
-const { data } = useFetch<IConfigResponse>('/api/config');
+const { data: dataConfig } = useFetch<IConfigResponse>('/api/config', {
+    key: 'config-state',
+    lazy: false,
+    server: true,
+});
 const toast = useToast();
 const { $ts } = useI18n();
 
-const config = computed(() => data.value?.data);
+const config = computed(() => dataConfig.value?.data);
 
-const { data: tagsData } = useLazyAsyncData(() => $fetch<ITagsResponse>('/api/message/tags'));
+const { data: tagsData } = useAsyncData('tags', () => $fetch<ITagsResponse>('/api/message/tags'));
 
 const form = reactive<IMessage>({
     name: {

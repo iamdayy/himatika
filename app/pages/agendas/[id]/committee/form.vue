@@ -69,7 +69,6 @@ definePageMeta({
 })
 </script>
 <template>
-
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :items="links" />
         <UCard class="p-2 mt-2 md:p-4">

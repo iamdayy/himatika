@@ -2,7 +2,7 @@
 import { useWindowSize } from '@vueuse/core';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
-import type { IMember } from '~/types';
+import type { IMember } from '~~/types';
 
 /**
  * MemberCard component

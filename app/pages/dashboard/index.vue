@@ -361,7 +361,7 @@ onMounted(() => {
                                         <div class="overflow-ellipsis">
                                             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                 user?.username
-                                                }}
+                                            }}
                                             </h2>
                                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                 user?.member.NIM }}
@@ -443,7 +443,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                    }}</h2>
+                                        }}</h2>
                                     <UIcon name="i-heroicons-calendar" class="text-6xl" />
                                 </div>
                                 <UProgress
@@ -457,7 +457,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         projectsMe.length
-                                    }}</h2>
+                                        }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <UProgress :model-value="projectsMe.length || 0" :color="color"
@@ -470,7 +470,7 @@ onMounted(() => {
                                 <div class="flex items-center justify-between w-full mb-2">
                                     <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                         aspirations.length
-                                    }}</h2>
+                                        }}</h2>
                                     <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                                 </div>
                                 <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
@@ -578,7 +578,7 @@ onMounted(() => {
                         </div>
                     </template>
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <UCard v-for="project in projectsMe.slice(0, 4)" :key="project._id" class="">
+                        <UCard v-for="project, i in projectsMe.slice(0, 4)" :key="i" class="">
                             <template #header>
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center gap-2">

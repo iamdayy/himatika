@@ -45,7 +45,7 @@ const sort = computed(() => {
 });
 const order = ref<string>("");
 const { data: user } = useAuth();
-const { data: projects, refresh: refreshProjects } = useLazyAsyncData(
+const { data: projects, refresh: refreshProjects } = useAsyncData(
     "projects",
     () =>
         $api<IProjectsResponse>("/api/project", {
@@ -192,7 +192,7 @@ const links = computed(() => [{
                 </div>
             </template>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <UCard v-for="project in projects.data" :key="project._id" class="">
+                <UCard v-for="project, i in projects.data" :key="i">
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">

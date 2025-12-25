@@ -9,7 +9,7 @@ const perPage = ref(6);
 const sortBy = ref('Published');
 const order = ref('desc');
 const { $api } = useNuxtApp();
-const { data: projects, refresh: refreshProjects } = await useLazyAsyncData('projects', async () => $api<IProjectsResponse>('/api/project', {
+const { data: projects } = await useAsyncData('projects', async () => $api<IProjectsResponse>('/api/project', {
     method: 'get',
     query: {
         page: page.value,
@@ -62,7 +62,7 @@ const AddModal = () => {
         <!-- Card header with responsive title -->
         <template #header>
             <h2 class="text-2xl font-extrabold text-center md:text-4xl dark:text-white md:text-start">{{ $ts('showcase')
-                }}</h2>
+            }}</h2>
         </template>
         <UAlert v-if="!closeAlert && status == 'authenticated'" variant="outline" class="mb-4">
             <template #title>
@@ -92,7 +92,7 @@ const AddModal = () => {
             </template>
         </UAlert>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <UCard v-for="project in projects" :key="project._id"
+            <UCard v-for="project, i in projects" :key="i"
                 :ui="{ header: 'overflow-hidden p-0 sm:p-0', root: 'overflow-hidden' }">
                 <template #header>
                     <div class="relative h-full lg:max-w-2xl w-full shrink-0">

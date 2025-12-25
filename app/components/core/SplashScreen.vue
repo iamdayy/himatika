@@ -9,8 +9,8 @@ const props = defineProps<{
         <div v-if="loading"
             class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white dark:bg-gray-900">
             <div class="relative flex flex-col items-center">
-                <NuxtImg src="/img/logo.png" alt="Logo Himatika" class="w-24 h-24 mb-4 animate-pulse" width="96"
-                    height="96" />
+                <NuxtImg src="/img/logo.png" provider="localProvider" alt="Logo Himatika"
+                    class="w-24 h-24 mb-4 animate-pulse" width="96" height="96" />
                 <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 animate-spin text-primary-500" />
 
                 <p class="mt-4 text-md font-medium text-gray-500 animate-pulse">

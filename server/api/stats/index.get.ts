@@ -6,9 +6,11 @@ import { IStatsResponse } from "~~/types/IResponse";
 export default defineCachedEventHandler(
   async (event): Promise<IStatsResponse> => {
     try {
-      const projects = await ProjectModel.countDocuments();
-      const members = await MemberModel.countDocuments();
-      const agenda = await AgendaModel.countDocuments();
+      const [projects, members, agenda] = await Promise.all([
+        ProjectModel.countDocuments(),
+        MemberModel.countDocuments(),
+        AgendaModel.countDocuments(),
+      ]);
       return {
         statusCode: 200,
         statusMessage: "Stats fetched successfully",
