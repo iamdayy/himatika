@@ -2,6 +2,7 @@ import otpGenerator from "otp-generator";
 import { ConfigModel } from "~~/server/models/ConfigModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { OTPModel } from "~~/server/models/OTPModel";
+import { generateQRCode } from "~~/server/utils/qrcode";
 import Email, { EmailTemplate } from "~~/server/utils/mailTemplate";
 import { IReqGenerateOTP } from "~~/types/IRequestPost";
 import { IGenerateOTPResponse } from "~~/types/IResponse";

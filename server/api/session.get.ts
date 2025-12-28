@@ -16,8 +16,11 @@ export default defineEventHandler(async (event) => {
 
     // If successful, return the user object
     return user;
-  } catch (error) {
-    // If authentication fails, return the error
-    return error;
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage:
+        error.message || "An error occurred while retrieving the session.",
+    });
   }
 });

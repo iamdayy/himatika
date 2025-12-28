@@ -65,7 +65,6 @@ const { data: agendas, refresh: refreshAgendas } = useLazyAsyncData("agendas", (
  * Computed property to determine if dark mode is active
  */
 const isDarkMode = useDark();
-const router = useRouter();
 
 /**
  * Ref to store the current event
@@ -380,7 +379,7 @@ const selectDate = (date: Date) => {
                             <div class="space-y-2">
                                 <UBadge class="ms-2" :label="(agenda.category as ICategory).title" />
                                 <p>
-                                    <NuxtLink :to="`/agendas/${agenda._id}`"
+                                    <NuxtLink :to="`/administrator/agendas/${agenda._id}`"
                                         :class="['mb-4 font-medium text-gray-700 dark:text-gray-300 text-wrap', responsiveClasses.eventTitle]">
                                         {{ agenda?.title }}
                                     </NuxtLink>

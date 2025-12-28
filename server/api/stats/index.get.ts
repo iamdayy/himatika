@@ -21,10 +21,11 @@ export default defineCachedEventHandler(
         },
       };
     } catch (error: any) {
-      return {
-        statusCode: 500,
-        statusMessage: error.message,
-      };
+      throw createError({
+        statusCode: error.statusCode || 500,
+        statusMessage:
+          error.message || "An error occurred while fetching stats.",
+      });
     }
   },
   {

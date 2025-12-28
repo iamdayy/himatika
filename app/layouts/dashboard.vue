@@ -5,7 +5,7 @@ import type { DropdownMenuItem } from '#ui/types';
  * Authentication management
  */
 const { status, data: user, signOut } = useAuth();
-
+const route = useRoute();
 
 const config = useRuntimeConfig();
 
@@ -21,7 +21,8 @@ const isDarkMode = useDark({
 });
 const { links } = useDashboardNavigation();
 const { $ts, $switchLocale, $getLocale } = useI18n();
-
+const { width } = useWindowSize();
+const isMobile = computed(() => width.value < 768);
 /**
  * Generate dropdown items for logged-in users
  * @param user - The logged-in user
@@ -119,7 +120,8 @@ const openSlideOver = ref<boolean>(false);
         <nav class="absolute z-10 w-full border-gray-200 md:border-none">
             <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
 
-                <USlideover v-model:open="openSlideOver" :overlay="false" :title="'HIMAPP'" side="left">
+                <USlideover v-model:open="openSlideOver" :overlay="false" :title="'HIMAPP'" side="left"
+                    v-if="route.fullPath !== '/dashboard' || isMobile">
                     <UButton variant="link" color="neutral" :padded="false" icon="i-heroicons-bars-3-center-left" />
                     <template #content>
                         <div class="flex-1 p-4">
@@ -141,7 +143,7 @@ const openSlideOver = ref<boolean>(false);
                                         <div class="overflow-ellipsis">
                                             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                 user?.username
-                                                }}
+                                            }}
                                             </h2>
                                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                 user?.member.NIM }}
@@ -154,6 +156,9 @@ const openSlideOver = ref<boolean>(false);
                         </div>
                     </template>
                 </USlideover>
+                <NuxtLink to="/" class="items-center hidden space-x-3 md:flex rtl:space-x-reverse" v-else>
+                    <NuxtImg provider="localProvider" src="/img/logo.png" class="h-8" alt="Logo" loading="lazy" />
+                </NuxtLink>
                 <!-- Mobile menu button -->
                 <!-- User actions -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">

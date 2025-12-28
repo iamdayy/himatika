@@ -62,9 +62,9 @@ const addNewQuestion = async () => {
 
 const links = computed(() => [
     { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
-    { label: $ts('agenda'), to: '/dashboard/agendas', icon: 'i-heroicons-clipboard-document-list' },
-    { label: agenda.value?.title || '', to: `/agendas/${id}`, icon: 'i-heroicons-document' },
-    { label: $ts('participant'), to: `/agendas/${id}/participant`, icon: 'i-heroicons-users' },
+    { label: $ts('agenda'), to: '/administrator/agendas', icon: 'i-heroicons-clipboard-document-list' },
+    { label: agenda.value?.title || '', to: `/administrator/agendas/${id}`, icon: 'i-heroicons-document' },
+    { label: $ts('participant'), to: `/administrator/agendas/${id}/participant`, icon: 'i-heroicons-users' },
     { label: $ts('questions'), icon: 'i-heroicons-document' },
 ]);
 definePageMeta({

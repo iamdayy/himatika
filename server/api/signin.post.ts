@@ -21,71 +21,79 @@ const getSecretKey = () => {
  * @throws {H3Error} If authentication fails or user's member is not active.
  */
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event);
-  const t = await useTranslationServerMiddleware(event);
-  let memberId: Types.ObjectId | undefined;
-  const NIM = parseInt(body.username);
-  // Check if the username is a number
-  if (!isNaN(NIM)) {
-    const member = await findMemberByNim(NIM);
-    if (!member) {
+  try {
+    const body = await readBody(event);
+    const t = await useTranslationServerMiddleware(event);
+    let memberId: Types.ObjectId | undefined;
+    const NIM = parseInt(body.username);
+    // Check if the username is a number
+    if (!isNaN(NIM)) {
+      const member = await findMemberByNim(NIM);
+      if (!member) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: t("login_page.user_not_found"),
+          data: { message: t("login_page.check_username"), name: "username" },
+        });
+      }
+      memberId = member;
+    }
+
+    // Find user by username
+    const user = await UserModel.findOne({
+      $or: [{ username: body.username }, { member: memberId }],
+    });
+    if (!user) {
       throw createError({
         statusCode: 401,
         statusMessage: t("login_page.user_not_found"),
         data: { message: t("login_page.check_username"), name: "username" },
       });
     }
-    memberId = member;
-  }
+    if (!user?.verified) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: t("login_page.email_not_verified"),
+        data: { message: t("login_page.verify_email"), name: "email" },
+      });
+    }
 
-  // Find user by username
-  const user = await UserModel.findOne({
-    $or: [{ username: body.username }, { member: memberId }],
-  });
-  if (!user) {
+    // Verify password
+    const passMatch = await user.verifyPassword(body.password, user.password);
+    if (!passMatch) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: t("login_page.wrong_password"),
+        data: { message: t("login_page.check_password"), name: "password" },
+      });
+    }
+
+    // Generate JWT tokens
+    // Disarankan: Access Token pendek (1 hari), Refresh Token panjang (90 hari)
+    const token = jwt.sign({ user: user._id }, getSecretKey(), {
+      expiresIn: "1d", // Sebelumnya 1w (terlalu lama untuk access token)
+    });
+    const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
+      expiresIn: "90d",
+    });
+
+    // Set up session
+    await setSession({
+      token,
+      refreshToken,
+      user: user._id as Types.ObjectId,
+    });
+
+    // Return tokens
+    return {
+      token,
+      refreshToken,
+    };
+  } catch (error: any) {
     throw createError({
-      statusCode: 401,
-      statusMessage: t("login_page.user_not_found"),
-      data: { message: t("login_page.check_username"), name: "username" },
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || "An error occurred during sign-in.",
+      data: error.data || null,
     });
   }
-  if (!user?.verified) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: t("login_page.email_not_verified"),
-      data: { message: t("login_page.verify_email"), name: "email" },
-    });
-  }
-
-  // Verify password
-  const passMatch = await user.verifyPassword(body.password, user.password);
-  if (!passMatch) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: t("login_page.wrong_password"),
-      data: { message: t("login_page.check_password"), name: "password" },
-    });
-  }
-
-  // Generate JWT tokens
-  // Disarankan: Access Token pendek (1 hari), Refresh Token panjang (90 hari)
-  const token = jwt.sign({ user: user._id }, getSecretKey(), {
-    expiresIn: "1d", // Sebelumnya 1w (terlalu lama untuk access token)
-  });
-  const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
-    expiresIn: "90d",
-  });
-
-  // Set up session
-  await setSession({
-    token,
-    refreshToken,
-    user: user._id as Types.ObjectId,
-  });
-
-  // Return tokens
-  return {
-    token,
-    refreshToken,
-  };
 });

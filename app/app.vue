@@ -25,7 +25,7 @@ onMounted(() => {
   // Berikan sedikit delay agar logo sempat terlihat (estetika)
   setTimeout(() => {
     isLoading.value = false;
-  }, 3000);
+  }, 1500);
 });
 </script>
 <template>
@@ -33,20 +33,21 @@ onMounted(() => {
   <UApp>
     <div class="light-container" @mousemove="isActive = true" @mouseleave="isActive = false">
       <!-- Light effect -->
-      <div class="light-effect"
-        :style="`--left-position:${position.left};--top-position:${position.top};--opacity:${position.opacity}`"></div>
+      <ClientOnly>
+        <div class="light-effect"
+          :style="`--left-position:${position.left};--top-position:${position.top};--opacity:${position.opacity}`">
+        </div>
+      </ClientOnly>
+      <!-- Logo -->
       <CoreSplashScreen :loading="isLoading" />
+      <NuxtLoadingIndicator color="#ff6600" />
       <div class="content">
-        <NuxtLoadingIndicator color="#ff6600" />
         <NuxtLayout>
           <NuxtPage />
         </NuxtLayout>
       </div>
-
-      <!-- UI components for modals and notifications -->
     </div>
   </UApp>
-  <!-- Main content area -->
 </template>
 <style>
 .light-container {

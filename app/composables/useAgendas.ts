@@ -19,7 +19,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
         return false;
       }
     }
-    if (isRegistered()) {
+    if (isRegistered.value) {
       return false;
     }
     switch (canRegister) {
@@ -93,7 +93,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
         return false;
       }
     }
-    if (isRegistered()) {
+    if (isRegistered.value) {
       return false;
     }
     switch (canRegister) {
@@ -161,7 +161,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
     if (!user.value) {
       return false;
     }
-    const registerAs = isRegistered();
+    const registerAs = isRegistered.value;
     if (registerAs === "Committee") {
       return agenda.value.committees?.some(
         (reg) =>
@@ -183,7 +183,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
     if (!agenda.value) {
       return false;
     }
-    const registerAs = isRegistered();
+    const registerAs = isRegistered.value;
     if (registerAs === "Committee") {
       const committee = agenda.value.committees?.find(
         (reg) => (reg.member as IMember)?.NIM == user.value?.member.NIM
@@ -230,7 +230,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
     }
     return payStatus;
   };
-  const isRegistered = () => {
+  const isRegistered = computed<false | "Committee" | "Participant">(() => {
     let as: "Committee" | "Participant" | false = false;
     if (!agenda.value) {
       return false;
@@ -254,7 +254,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
       as = false;
     }
     return as;
-  };
+  });
   const isCommittee = computed(() => {
     if (status.value !== "authenticated") {
       return false;

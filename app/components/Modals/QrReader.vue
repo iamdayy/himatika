@@ -5,11 +5,13 @@ import { QrcodeStream } from 'vue-qrcode-reader';
 const { width } = useWindowSize();
 const overlay = useOverlay();
 
-const ConfirmationModal = overlay.create(ModalsConfirmation)
+const ConfirmationModal = overlay.create(ModalsConfirmation);
+const toast = useToast();
 
 const ready = ref(false);
 const data = ref('');
 const name = ref<string | undefined>('');
+const isLoading = ref(false);
 
 const isMobile = computed(() => width.value < 640)
 
@@ -31,11 +33,22 @@ const cameraOn = () => {
 
 const onDetect = async (value: string) => {
     data.value = value;
-    const fullName = await props.getDataMethod(value);
-    name.value = fullName;
+    isLoading.value = true;
+    try {
+        const fullName = await props.getDataMethod(value);
+        name.value = fullName;
+    } catch (error) {
+        toast.add({
+            title: 'Error',
+            description: 'Failed to get data from QR Code, please try again.',
+            color: 'error',
+        });
+    } finally {
+        isLoading.value = false;
+    }
     ConfirmationModal.open({
         title: 'Qr code confirmation',
-        body: `get (${name.value}) from QR Code, sure to visit this agenda?.`,
+        body: `Terbaca atas nama (${name.value}) dari QR Code, pengguna mengunjungi agenda?`,
         onConfirm: () => {
             emit('confirm', data.value);
             ConfirmationModal.close();
@@ -71,7 +84,11 @@ function paintOutline(detectedCodes: any[], ctx: CanvasRenderingContext2D) {
                     </div>
                     <div
                         class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] bg-gray-500 flex items-center justify-center">
-                        <div class="absolute top-0 left-0 right-0 h-0.5 bg-cyan-400 animate-scan"></div>
+                        <div class="absolute top-0 left-0 right-0 h-0.5 bg-cyan-400 animate-scan" v-if="!isLoading">
+                        </div>
+                        <div v-else class="absolute inset-0 flex items-center justify-center bg-black/50">
+                            <UProgress animation="swing" />
+                        </div>
                         <div class="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-white"></div>
                         <div class="absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-white"></div>
                         <div class="absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 border-white"></div>
