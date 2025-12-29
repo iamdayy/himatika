@@ -8,10 +8,11 @@ import type {
   IMember,
   IMessage,
   INews,
+  IOverlayLocation,
+  IPaymentMethod,
   IPhoto,
   IVideo,
   TAction,
-  TPaymentType,
 } from ".";
 
 /**
@@ -161,7 +162,7 @@ export interface IReqCommitteeBatch {
   field: "payment" | "visiting";
 }
 export interface IPaymentBody {
-  payment_type: TPaymentType;
+  payment_method: IPaymentMethod;
   bank_transfer?: string;
   credit_card?: {
     token_id: string;
@@ -172,7 +173,7 @@ export interface IReqPaymentQuery {
 }
 
 export interface IPayReq {
-  paymentMethod: "transfer" | "cash";
+  paymentMethod: IPaymentMethod;
 }
 export interface IReqAgendaPhoto {
   photo: IPhoto;
@@ -382,8 +383,8 @@ export interface IReqEncryption {
 }
 
 export interface IReqSignDocument {
-    encryption: string;
-    docId: string;
-    data: string;
-    coordinates: IOverlayLocation[]
-  };
+  encryption: string;
+  docId: string;
+  data: string;
+  coordinates: IOverlayLocation[];
+}

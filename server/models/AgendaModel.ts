@@ -57,10 +57,9 @@ const IGuestSchema = new Schema<IGuestSchema>({
 const paymentSchema = new Schema<IPaymentSchema>({
   method: {
     type: String,
+    enum: ["cash", "bank_transfer", "qris"],
+    required: true,
     default: "cash",
-  },
-  type: {
-    type: String,
   },
   status: {
     type: String,
@@ -84,6 +83,9 @@ const paymentSchema = new Schema<IPaymentSchema>({
     type: String,
   },
   va_number: {
+    type: String,
+  },
+  qris_png: {
     type: String,
   },
 });

@@ -1,7 +1,6 @@
 <template>
     <UCard v-if="payment.status === 'pending'">
         <template #header>
-            <!-- Header -->
             <div class="p-4 text-white bg-opacity-75 bg-primary">
                 <h1 class="text-xl font-semibold">Payment Details</h1>
                 <p class="text-sm opacity-80">
@@ -9,7 +8,6 @@
                 </p>
             </div>
 
-            <!-- Payment Status -->
             <div class="p-4 border-b bg-amber-50 border-amber-100 bg-opacity-85">
                 <div class="flex items-center">
                     <UIcon name="i-lucide-clock" class="mr-2 text-amber-500" />
@@ -22,39 +20,22 @@
             </div>
         </template>
         <div class="w-full mx-auto overflow-hidden shadow-md rounded-xl">
-            <!-- Payment Amount -->
             <div class="p-4 border-b">
                 <div class="text-sm">Total Payment</div>
                 <div class="text-2xl font-bold">Rp {{ formatCurrency(amount || 0) }}</div>
             </div>
 
-            <!-- Payment Method Tabs -->
             <div class="p-4 border-b">
-                <div class="flex mb-4 border-b">
-                    <button class="px-4 py-2 mr-2 text-sm font-medium" :class="paymentMethod === 'va'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-gray-500 dark:text-gray-300'
-                        " @click="paymentMethod = 'va'">
-                        Virtual Account
-                    </button>
-                    <button class="px-4 py-2 text-sm font-medium" :class="paymentMethod === 'qr'
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-gray-500 dark:text-gray-300'
-                        " @click="paymentMethod = 'qr'">
-                        QR Code
-                    </button>
-                </div>
 
-                <!-- Virtual Account Details -->
-                <div v-if="paymentMethod === 'va'">
+                <div v-if="payment.method === 'bank_transfer'">
                     <div class="flex items-center justify-between mb-2">
                         <div class="text-sm">Virtual Account Number</div>
-                        <UBadge color="secondary" variant="subtle" size="lg">{{
-                            payment.bank?.toLocaleUpperCase()
-                            }}</UBadge>
+                        <UBadge color="primary" variant="subtle" size="lg">
+                            {{ payment.bank?.toUpperCase() || 'BANK' }}
+                        </UBadge>
                     </div>
 
-                    <div class="flex items-center justify-between p-3 rounded-lg">
+                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                         <div class="font-mono text-lg font-semibold">{{ payment.va_number }}</div>
                         <UButton color="primary" variant="ghost" icon="i-lucide-copy" size="sm" @click="copyVaNumber" />
                     </div>
@@ -64,45 +45,65 @@
                     </UAlert>
                 </div>
 
-                <!-- QR Code Details -->
-                <div v-else class="flex flex-col items-center">
-                    <div class="mb-2 text-sm text-gray-500">Scan this QR code to pay</div>
+                <div v-else-if="payment.method === 'qris'" class="flex flex-col items-center text-center">
+                    <div class="mb-2 text-sm text-gray-500">Scan this QRIS to pay</div>
+                    <div class="p-2 bg-white rounded-lg shadow-sm qr-code">
+                        <img :src="payment.qris_png" />
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <UButton color="primary" variant="outline" size="sm" @click="downloadQRCode">
+                            <UIcon name="i-lucide-download" class="mr-1" />
+                            Download QR
+                        </UButton>
+                    </div>
+                </div>
 
-                    <Qrcode :value="qrValue" class="max-w-md" />
+                <!-- <div v-else-if="payment.method === 'e_wallet'" class="flex flex-col items-center text-center">
+                    <div class="mb-2 text-sm text-gray-500">Payment via {{ payment.bank || 'E-Wallet' }}</div>
+                    <div v-if="payment.va_number" class="p-2 bg-white rounded-lg shadow-sm qr-code">
+                        <NuxtImg :src="payment.qris_png" />
+                    </div>
+                </div> -->
 
-                    <UButton class="mt-3" color="primary" variant="outline" size="sm" @click="downloadQRCode">
-                        <UIcon name="i-lucide-download" class="mr-1" />
-                        Download QR Code
-                    </UButton>
+                <div v-else-if="payment.method === 'cash'" class="flex flex-col items-center py-4 text-center">
+                    <div class="p-3 mb-3 rounded-full bg-green-50">
+                        <UIcon name="i-heroicons-banknotes" class="w-8 h-8 text-green-600" />
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Cash Payment</h3>
+                    <p class="text-sm text-gray-500">
+                        Please make the payment at the Secretariat / Committee.
+                    </p>
+                </div>
+
+                <div v-else class="text-center text-gray-500">
+                    Unknown payment method
                 </div>
             </div>
 
-            <!-- Payment Instructions -->
-            <div class="p-4">
+            <div class="p-4" v-if="payment.method !== 'cash'">
                 <h3 class="mb-3 font-medium text-gray-900">Payment Instructions</h3>
                 <UAccordion :items="paymentInstructions" color="gray" icon="i-lucide-chevron-down">
                     <template #content="{ item }">
-                        <div v-html="item.content"></div>
+                        <div v-html="item.content" class="text-sm text-gray-600 dark:text-gray-300 pl-4"></div>
                     </template>
                 </UAccordion>
             </div>
         </div>
         <template #footer>
-            <!-- Action Buttons -->
             <div class="flex justify-between gap-3 p-4">
-                <UButton block class="flex-1" @click="cancel" color="error">
+                <UButton block class="flex-1" @click="cancel" color="error" variant="soft">
                     Cancel
                 </UButton>
-                <UButton block color="primary" class="flex-1" @click="checkStatus">
+                <UButton block color="primary" class="flex-1" @click="checkStatus" :loading="checking">
                     Check Status
                     <UIcon name="i-lucide-refresh-cw" class="ml-1" />
                 </UButton>
             </div>
         </template>
     </UCard>
+
     <UCard v-else-if="payment.status === 'success'">
         <template #header>
-            <!-- Header -->
             <div class="p-4 text-white bg-green-500 bg-opacity-75">
                 <h1 class="text-xl font-semibold">Payment Success</h1>
                 <p class="text-sm opacity-80">
@@ -111,45 +112,48 @@
             </div>
         </template>
         <div class="w-full mx-auto overflow-hidden shadow-md rounded-xl">
-            <!-- Payment Amount -->
             <div class="p-4 border-b">
                 <div class="text-sm">Total Payment</div>
                 <div class="text-2xl font-bold">Rp {{ formatCurrency(amount || 0) }}</div>
             </div>
-
-            <!-- Payment Status -->
-            <div class="p-4 border-b">
-                <div class="flex items-center">
-                    <UIcon name="i-lucide-check-circle" class="mr-2 text-green-500" />
-                    <span class="font-medium text-green-700">Payment Success</span>
+            <div class="p-4 border-b bg-green-50">
+                <div class="flex items-center justify-center py-4">
+                    <UIcon name="i-lucide-check-circle" class="w-16 h-16 text-green-500" />
+                </div>
+                <div class="text-center text-green-700 font-medium">Transaction Successful</div>
+            </div>
+            <div class="p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">Transaction ID</div>
+                    <div class="font-mono text-sm font-semibold">{{ payment.transaction_id || '-' }}</div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">Payment Date</div>
+                    <div class="font-mono text-sm font-semibold">
+                        {{ payment.time ? new Date(payment.time).toLocaleString("id-ID") : '-' }}
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">Method</div>
+                    <div class="font-mono text-sm font-semibold uppercase">{{ payment.method?.replace('_', ' ') }}</div>
                 </div>
             </div>
+        </div>
+    </UCard>
 
-            <!-- Payment Details -->
-            <div class="p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="text-sm">Transaction ID</div>
-                    <div class="font-mono text-lg font-semibold">{{ payment.transaction_id }}</div>
-                </div>
-                <div class="flex items-center justify-between mb-2">
-                    <div class="text-sm">Payment Date</div>
-                    <div class="font-mono text-lg font-semibold">{{ new Date(payment.time as
-                        Date).toLocaleString("id-ID", { dateStyle: "full", timeStyle: "short" }) }}</div>
-                </div>
-                <div class="flex items-center justify-between mb-2">
-                    <div class="text-sm">Payment Method</div>
-                    <div class="font-mono text-lg font-semibold">{{ payment.method }}</div>
-                </div>
-            </div>
+    <UCard v-else>
+        <div class="p-8 text-center">
+            <UIcon name="i-lucide-x-circle" class="w-16 h-16 mx-auto text-red-500 mb-4" />
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Payment {{ payment.status }}</h2>
+            <p class="text-gray-500 mt-2">This transaction has been {{ payment.status }}.</p>
         </div>
     </UCard>
 </template>
 
 <script setup lang="ts">
-import type { IPayment } from '~/types';
-import type { IPaymentResponse } from '~/types/IResponse';
+import type { IPayment } from '~~/types';
+import type { IPaymentResponse } from '~~/types/IResponse';
 
-// Props with default values
 const props = defineProps({
     payment: {
         type: Object as PropType<IPayment>,
@@ -160,58 +164,76 @@ const props = defineProps({
     },
 });
 
-// Reactive state
-const remainingTime = ref(calculateRemainingTime());
-let timer: string | number | NodeJS.Timeout | undefined = undefined;
-const copied = ref(false);
-const payment = ref(props.payment);
-const paymentMethod = ref("va"); // 'va' or 'qr'
-const emits = defineEmits(['cancel'])
-// Payment instructions accordion items
-const paymentInstructions = computed(() => [
-    {
-        label: "Mobile Banking",
-        icon: "i-lucide-smartphone",
-        defaultOpen: true,
-        content: `<ol class="pl-5 space-y-2 text-sm list-decimal"><li>Login to your ${props.payment.bank} Mobile Banking app</li><li>Select "Transfer" menu</li><li>Select "Virtual Account"</li><li>Enter the VA Number: ${props.payment.va_number}</li><li>Confirm the payment details and complete the transaction</li></ol>`,
-    },
-    {
-        label: "Internet Banking",
-        icon: "i-lucide-globe",
-        content: `
-            <ol class="pl-5 space-y-2 text-sm list-decimal">
-              <li>Login to your ${props.payment.bank} Internet Banking</li>
-              <li>Select "Transfer" menu</li>
-              <li>Select "Transfer to Virtual Account"</li>
-              <li>Enter the VA Number: ${props.payment.va_number}</li>
-              <li>Confirm the payment details and complete the transaction</li>
-            </ol>
-          `,
-    },
-    {
-        label: "ATM",
-        icon: "i-lucide-credit-card",
-        content: `
-            <ol class="pl-5 space-y-2 text-sm list-decimal">
-              <li>Insert your ${props.payment.bank} ATM card and enter your PIN</li>
-              <li>Select "Other Transactions"</li>
-              <li>Select "Transfer"</li>
-              <li>Select "To Virtual Account"</li>
-              <li>Enter the VA Number: ${props.payment.va_number}</li>
-              <li>Confirm the payment details and complete the transaction</li>
-            </ol>
-          `,
-    },
-]);
+const emits = defineEmits(['cancel', 'success']);
 
-// QR code value
-const qrValue = computed(() => {
-    // This would typically be a formatted string according to the payment provider's specifications
-    // For example: BCA uses a specific format for their QR codes
-    return `${props.payment.bank}:${props.payment.va_number}:${props.amount}:${props.payment.order_id}`;
+// Reactive state
+const payment = ref(props.payment);
+const remainingTime = ref(calculateRemainingTime());
+const copied = ref(false);
+const checking = ref(false);
+let timer: string | number | NodeJS.Timeout | undefined = undefined;
+
+
+// Dynamic Instructions based on Payment Method
+const paymentInstructions = computed(() => {
+    if (payment.value.method === 'bank_transfer') {
+        const bankName = payment.value.bank?.toUpperCase() || 'Bank';
+        return [
+            {
+                label: `Mobile Banking ${bankName}`,
+                icon: "i-lucide-smartphone",
+                defaultOpen: true,
+                content: `<ol class="pl-5 space-y-1 list-decimal">
+                    <li>Login to <b>${bankName} Mobile</b></li>
+                    <li>Select <b>m-Transfer</b> > <b>Virtual Account</b></li>
+                    <li>Enter VA Number: <b>${payment.value.va_number}</b></li>
+                    <li>Check details and confirm PIN</li>
+                </ol>`,
+            },
+            {
+                label: `ATM ${bankName}`,
+                icon: "i-lucide-credit-card",
+                content: `<ol class="pl-5 space-y-1 list-decimal">
+                    <li>Insert Card & PIN</li>
+                    <li>Select <b>Other Trans</b> > <b>Transfer</b> > <b>Virtual Account</b></li>
+                    <li>Enter VA Number: <b>${payment.value.va_number}</b></li>
+                    <li>Confirm payment</li>
+                </ol>`,
+            }
+        ];
+    }
+
+    if (payment.value.method === 'qris') {
+        return [
+            {
+                label: "How to Pay with QRIS",
+                icon: "i-heroicons-qr-code",
+                defaultOpen: true,
+                content: `<ol class="pl-5 space-y-1 list-decimal">
+                    <li>Open any payment app (GoPay, OVO, ShopeePay, Mobile Banking)</li>
+                    <li>Select <b>Scan QR</b> menu</li>
+                    <li>Scan the QR code above</li>
+                    <li>Check the merchant name and amount</li>
+                    <li>Confirm payment</li>
+                </ol>`
+            }
+        ];
+    }
+
+    if (payment.value.method === 'e_wallet') {
+        return [
+            {
+                label: `Pay with ${payment.value.bank || 'E-Wallet'}`,
+                icon: "i-lucide-wallet",
+                defaultOpen: true,
+                content: `Please follow the instructions in your ${payment.value.bank} application.`
+            }
+        ]
+    }
+
+    return [];
 });
 
-// Methods
 function calculateRemainingTime() {
     const now = Date.now();
     if (!props.payment.expiry) return 0;
@@ -220,11 +242,9 @@ function calculateRemainingTime() {
 
 function formatTime(ms: number) {
     if (ms <= 0) return "00:00:00";
-
     const seconds = Math.floor((ms / 1000) % 60);
     const minutes = Math.floor((ms / (1000 * 60)) % 60);
     const hours = Math.floor(ms / (1000 * 60 * 60));
-
     return [
         hours.toString().padStart(2, "0"),
         minutes.toString().padStart(2, "0"),
@@ -232,94 +252,88 @@ function formatTime(ms: number) {
     ].join(":");
 }
 
-function formatCurrency(value: { toString: () => string }) {
+function formatCurrency(value: { toString: () => string } | number) {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 function copyVaNumber() {
-    if (!navigator.clipboard) {
-        console.error("Clipboard API not available");
-        return;
-    }
-    if (!props.payment.va_number) return;
-    navigator.clipboard
-        .writeText(props.payment.va_number)
+    if (!navigator.clipboard || !payment.value.va_number) return;
+    navigator.clipboard.writeText(payment.value.va_number)
         .then(() => {
             copied.value = true;
-            setTimeout(() => {
-                copied.value = false;
-            }, 3000);
+            setTimeout(() => copied.value = false, 3000);
         })
-        .catch((err) => {
-            console.error("Failed to copy: ", err);
-        });
+        .catch(console.error);
 }
 
 async function checkStatus() {
+    if (!payment.value.transaction_id) return;
+    checking.value = true;
     try {
         const response = await $fetch<IPaymentResponse>('/api/payment', {
             method: "GET",
-            query: { transaction_id: props.payment.transaction_id },
+            query: { transaction_id: payment.value.transaction_id },
         });
-        payment.value.status = response.data.payment.status;
-    }
-    catch (error) {
-        console.error("Failed to check payment status: ", error);
+
+        if (response.data?.payment) {
+            payment.value.status = response.data.payment.status;
+            if (payment.value.status === 'success') {
+                emits('success');
+                if (timer) clearInterval(timer);
+            }
+        }
+    } catch (error) {
+        console.error("Status check failed", error);
+    } finally {
+        checking.value = false;
     }
 }
+
 async function cancel() {
+    if (!confirm('Are you sure you want to cancel this payment?')) return;
     try {
         const response = await $fetch<IPaymentResponse>('/api/payment', {
             method: "DELETE",
-            query: { transaction_id: props.payment.transaction_id },
+            query: { transaction_id: payment.value.transaction_id },
         });
         if (response.statusCode === 200) {
             payment.value.status = 'canceled';
             emits("cancel");
         }
-    }
-    catch (error) {
-        console.error("Failed to check payment status: ", error);
+    } catch (error) {
+        console.error("Cancellation failed", error);
     }
 }
 
 function downloadQRCode() {
-    const canvas = document.querySelector(".qr-code canvas");
-    if (canvas) {
-        const link = document.createElement("a");
-        link.download = `payment-qr-${props.payment.order_id}.png`;
-        link.href = (canvas as HTMLCanvasElement).toDataURL("image/png");
-        link.click();
-    }
+
 }
 
-// Lifecycle hooks
+// Lifecycle
 onMounted(() => {
-    // Update the countdown every second
     timer = setInterval(() => {
         remainingTime.value = calculateRemainingTime();
-        if (remainingTime.value <= 0) {
-            clearInterval(timer);
-        }
+        if (remainingTime.value <= 0) clearInterval(timer);
     }, 1000);
 });
 
 onBeforeUnmount(() => {
-    if (timer) {
-        clearInterval(timer);
-    }
+    if (timer) clearInterval(timer);
 });
-useIntervalFn(() => {
-    checkStatus();
-}, 10000)
+
+// Auto polling every 10s if pending
+const { pause, resume } = useIntervalFn(() => {
+    if (payment.value.status === 'pending') {
+        checkStatus();
+    } else {
+        pause();
+    }
+}, 10000);
+
 </script>
 
 <style scoped>
 .bg-primary {
     background-color: #0f766e;
-}
-
-.text-primary {
-    color: #0f766e;
 }
 </style>
