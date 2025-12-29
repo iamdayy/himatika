@@ -15,7 +15,6 @@ export default defineNuxtConfig({
 
     // 2. Homepage & Berita: Update cache setiap 1 jam (SWR)
     // Server membuat HTML sekali, lalu disimpan di CDN Vercel
-    "/": { swr: 3600 },
     "/news/**": { swr: 3600 },
     "/agendas/**": { swr: 3600 },
 
