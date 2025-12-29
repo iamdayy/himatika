@@ -11,7 +11,11 @@ definePageMeta({
 
 const { $api, $ts } = useNuxtApp();
 const router = useRouter();
-
+/**
+ * Detect large screen using windowSize
+ */
+const { width } = useWindowSize();
+const isMobile = computed(() => width.value < 768);
 // 1. Fetch Data Agenda
 const { data: agendas, pending } = await useAsyncData('user-agendas-calendar',
     () => $api<IAgendaMeResponse>('/api/me/agenda', {
@@ -186,10 +190,9 @@ const links = computed(() => [{
                         </template>
 
                         <ClientOnly>
-                            <VCalendar expanded transparent borderless :attributes="calendarAttributes"
+                            <VCalendar :expanded="isMobile" transparent borderless :attributes="calendarAttributes"
                                 class="dark:bg-gray-900 dark:text-gray-100" title-position="left" :is-dark="isDarkMode"
                                 @dayclick="(day: any) => {
-                                    console.log(day);
                                     if (day.attributes && day.attributes.length > 0) {
                                         const agenda = day.attributes[0].customData;
                                         if (agenda && agenda._id) {

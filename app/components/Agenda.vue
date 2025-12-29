@@ -30,7 +30,7 @@ const {
     data: agendas,
     refresh: refreshAgendas,
     pending: pendingAgendas,
-} = useLazyAsyncData(
+} = useAsyncData(
     "agendas",
     () =>
         $api<IAgendaResponse>("/api/agenda", {
@@ -51,15 +51,9 @@ const {
             order,
         ],
         transform: (data) => {
-            if (data.statusCode !== 200) {
-                return {
-                    data: [],
-                    count: 0,
-                };
-            }
             return {
                 data: data.data?.agendas || [],
-                count: data.data?.length,
+                count: data.data?.length || 0,
             };
         },
         default: () => ({

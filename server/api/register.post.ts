@@ -118,9 +118,14 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
       statusMessage: t("register_page.registration_success"),
       data: registered,
     };
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
-    return Promise.reject(error);
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage:
+        error.statusMessage || "An error occurred during registration.",
+      data: error.data || null,
+    });
   } finally {
     await session.endSession();
   }

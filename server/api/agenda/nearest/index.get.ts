@@ -37,12 +37,12 @@ export default defineCachedEventHandler(
         },
       };
     } catch (error: any) {
-      return {
+      throw createError({
         statusCode: error.statusCode || 500,
         statusMessage:
           error.message ||
           "An unexpected error occurred while fetching nearest agenda",
-      };
+      });
     }
   },
   {

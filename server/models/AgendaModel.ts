@@ -20,6 +20,7 @@ interface IAgendaMethods {
   canMeRegisterAsParticipant(member?: IMember): boolean;
   canMeRegisterAsCommittee(member?: IMember): boolean;
   isRegisterd(member?: IMember): ICommittee | IParticipant | false;
+  isRegisterdById(registeredId: string): ICommittee | IParticipant | false;
 }
 type IAgendaModel = mongoose.Model<IAgendaSchema, {}, IAgendaMethods>;
 
@@ -547,6 +548,19 @@ agendaSchema.methods.isRegisterd = function (
   if (committee) return committee;
   const participant = this.participants?.find(
     (item) => (item.member as IMember | undefined)?.NIM == member.NIM
+  );
+  if (participant) return participant;
+  return false;
+};
+agendaSchema.methods.isRegisterdById = function (
+  registeredId: string
+): ICommittee | IParticipant | false {
+  const committee = this.committees?.find(
+    (item) => item._id?.toString() == registeredId
+  );
+  if (committee) return committee;
+  const participant = this.participants?.find(
+    (item) => item._id?.toString() == registeredId
   );
   if (participant) return participant;
   return false;

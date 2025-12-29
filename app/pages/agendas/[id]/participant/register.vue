@@ -123,7 +123,7 @@ const steps = computed<Step[]>(() => {
 });
 const activeStep = ref(0);
 
-const registerAs = ref('student');
+const registerAs = ref(participant.value?.guest ? participant.value?.guest?.instance ? 'non-student' : 'student-guest' : 'student');
 const formRegistration = reactiveComputed(() => ({
     registerAs: 'student',
     fullName: user.value?.member.fullName || participant.value?.guest?.fullName || '',
@@ -319,17 +319,17 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         if (user.value) return null;
         if (participant.value) return null;
         if (registerAs.value === 'student' || registerAs.value === 'student-guest') {
-            return value ? null : { message: $ts('NIM_required'), path: 'NIM' };
+            return value ? null : { message: $ts('class_required'), path: 'class' };
         }
-        return value ? null : { message: $ts('class_required'), path: 'class' };
+        return null;
     },
     semester: (value: number) => {
         if (user.value) return null;
         if (participant.value) return null;
         if (registerAs.value === 'student' || registerAs.value === 'student-guest') {
-            return value > 0 ? null : { message: $ts('NIM_required'), path: 'NIM' };
+            return value > 0 ? null : { message: $ts('semester_required'), path: 'semester' };
         }
-        return value > 0 ? null : { message: $ts('semester_required'), path: 'semester' };
+        return null;
     },
     prodi: (value: string) => {
         if (user.value) return null;

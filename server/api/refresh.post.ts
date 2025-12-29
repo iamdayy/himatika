@@ -13,8 +13,11 @@ export default defineEventHandler(async (event) => {
     // Attempt to refresh the authentication token
     const data = await refreshAuth(event);
     return data;
-  } catch (error) {
-    // If an error occurs during refresh, return the error
-    return error;
+  } catch (error: any) {
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage:
+        error.message || "An error occurred while refreshing the token.",
+    });
   }
 });

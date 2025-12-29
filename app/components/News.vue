@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import type { ICategory, IMember, INews } from '~/types';
-import type { INewsResponse, IResponse } from '~/types/IResponse';
+import type { ICategory, IMember, INews } from '~~/types';
+import type { INewsResponse, IResponse } from '~~/types/IResponse';
 
 const { $tc, $ts } = useI18n();
 const { data, refresh } = useFetch<INewsResponse>('/api/news', {
     query: {
         perPage: 5,
         page: 1,
-    }
+    },
+    key: 'news',
+    lazy: false,
+    server: true,
 });
 const ip = await $fetch('/api/ip');
 const latestNews = computed(() => data.value?.data?.news as INews[]);
@@ -145,7 +148,7 @@ const submitLike = async (id: string) => {
                         <div class="flex items-center gap-2 px-2 md:px-4">
                             <span class="text-xs text-gray-700 dark:text-gray-300">By</span>
                             <UAvatarGroup size="3xs" :max="3">
-                                <UAvatar v-for="member in featuredNews.authors" :key="(member as IMember).NIM"
+                                <UAvatar v-for="member in featuredNews?.authors" :key="(member as IMember).NIM"
                                     :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
                             </UAvatarGroup>
                         </div>

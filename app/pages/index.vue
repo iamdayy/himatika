@@ -14,7 +14,11 @@ definePageMeta({
  *  Data fetching and reactive properties
  */
 const { data: statsData } = useFetch<IStatsResponse>('/api/stats');
-const { data: dataConfig } = useFetch<IConfigResponse>('/api/config');
+const { data: dataConfig } = useFetch<IConfigResponse>('/api/config', {
+    key: 'config-state',
+    lazy: false,
+    server: true,
+});
 const config = computed(() => dataConfig.value?.data);
 
 /**
@@ -97,7 +101,7 @@ useSeoMeta({
                             <h3 class="text-xl font-semibold">{{ new Date(item.date).toLocaleDateString('id-ID', {
                                 dateStyle:
                                     'long'
-                                }) }}
+                            }) }}
                             </h3>
                         </div>
                         <p class="text-sm line-clamp-3">{{ item.description }}</p>
@@ -136,7 +140,6 @@ useSeoMeta({
             <UIcon name="i-heroicons-envelope" class="w-8 h-8 text-white" />
         </UButton>
     </div>
-
 </template>
 
 

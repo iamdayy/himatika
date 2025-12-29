@@ -51,8 +51,7 @@ const { data, refresh, pending } = useLazyAsyncData(() => $api<IAgendaCommitteeR
 });
 const toast = useToast();
 const agenda = computed<IAgenda | undefined>(() => data.value?.data?.agenda);
-const { isCommittee, isRegistered, payStatus, registeredId, canMeUnregister } = useAgendas(agenda);
-const { canMeRegister } = useCanMeRegister();
+const { isCommittee } = useAgendas(agenda);
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
 
@@ -382,25 +381,6 @@ const deleteCommittee = async (committeeId: string) => {
     });
 }
 
-const cancelRegister = async () => {
-    ConfirmationModal.open({
-        title: $ts('cancel_register'),
-        body: $ts('cancel_register_desc'),
-        onConfirm: async () => {
-            if (!agenda.value) return;
-            const response = await $api<IResponse>(`/api/agenda/${agenda.value._id}/committee/register/${registeredId()}`, {
-                method: "DELETE"
-            });
-            if (response.statusCode === 200) {
-                toast.add({ title: response.statusMessage });
-                refresh();
-            } else {
-                toast.add({ title: "Failed to cancel register" });
-            }
-        }
-    });
-}
-
 const setPaid = async (registeredId: string) => {
     ConfirmationModal.open({
         title: $ts('set_payment_status'),
@@ -495,23 +475,6 @@ const setApproved = async (registeredId: string) => {
     });
 }
 
-const openQrReader = () => {
-    QRCodeModalComp.open({
-        async getDataMethod(data: string) {
-            try {
-                const response = await $api<IResponse & { data: string }>(`/api/agenda/${id}/committee/register/${data}/registered`);
-                return response.data;
-            } catch (error: any) {
-                toast.add({ title: "Failed to get data" });
-            }
-        },
-        async onConfirm(data?: string) {
-            if (!data) return;
-            setVisited(data);
-        }
-    })
-};
-
 const setBatch = async (field: 'payment' | 'visiting') => {
     if (selectedCommittee.value.length === 0) {
         return toast.add({ title: $ts('no_committee_selected'), color: 'warning' });
@@ -559,22 +522,22 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
     pagination: isMobile.value ? 'xs' : 'md',
 }));
 const links = computed(() => [{
-    label: $ts('home'),
+    label: $ts('dashboard'),
     icon: 'i-heroicons-home',
-    to: '/'
+    to: '/dashboard'
 }, {
     label: $ts('agenda'),
     icon: 'i-heroicons-calendar',
-    to: '/agendas'
+    to: '/administrator/agendas'
 },
 {
     label: agenda?.value?.title || 'Agenda',
     icon: 'i-heroicons-calendar',
-    to: `/agendas/${id}`
+    to: `/administrator/agendas/${id}`
 },
 {
     label: $ts('committee'),
-    to: `/agendas/${id}/committee`,
+    to: `/administrator/agendas/${id}/committee`,
     icon: 'i-heroicons-link'
 }]);
 
@@ -597,8 +560,9 @@ useHead({
                 <div class="flex items-center justify-between w-full">
                     <h2 class="text-xl font-semibold dark:text-neutral-200">{{ $ts('committee') }}</h2>
                     <div class="flex items-center gap-2">
-                        <UButton :to="`/agendas/${id}/committee/add`" :label="$ts('add')" icon="i-heroicons-plus-circle"
-                            :size="responsiveUISizes.button" variant="outline" v-if="isCommittee" />
+                        <UButton :to="`/administrator/agendas/${id}/committee/add`" :label="$ts('add')"
+                            icon="i-heroicons-plus-circle" :size="responsiveUISizes.button" variant="outline"
+                            v-if="isCommittee" />
                     </div>
                 </div>
             </template>
@@ -648,25 +612,6 @@ useHead({
                         :total="pageTotal" :sibling-count="isMobile ? 1 : 2" show-edges />
                 </div>
             </div>
-            <template #footer>
-                <UButton :label="$ts('register')" block :to="`/agendas/${id}/committee/register`"
-                    :size="responsiveUISizes.button" class="my-2"
-                    v-if="isRegistered() === false && canMeRegister(agenda?.configuration.committee.canRegister || 'None', agenda?.configuration.committee.canRegisterUntil.end)" />
-                <div v-else-if="isRegistered() === 'Committee' && payStatus() !== 'success'"
-                    class="flex flex-wrap gap-2 my-4 w-full">
-                    <UButton id="pay" class="flex-1" color="success" block :size="responsiveUISizes.button"
-                        icon="i-heroicons-credit-card" :to="`/agendas/${id}/committee/register?tab=payment`"
-                        target="_blank" v-if="payStatus() !== false && payStatus() !== 'success'">
-                        {{ $ts('pay') }}
-                    </UButton>
-                    <UButton id="cancel" class="flex-1" color="error" block :size="responsiveUISizes.button"
-                        v-if="canMeUnregister" @click="cancelRegister" target="_blank">
-                        {{ $ts('cancel') }} {{ $ts('register') }}
-                    </UButton>
-                </div>
-                <UButton v-if="isCommittee" :label="$ts('qr_reader')" block icon="i-heroicons-qr-code"
-                    :size="responsiveUISizes.button" @click="openQrReader" variant="outline" class="my-2" />
-            </template>
         </UCard>
     </div>
 </template>

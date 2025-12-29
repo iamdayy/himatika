@@ -24,6 +24,7 @@ export interface EmailTemplate {
   unsubscribeLink?: string;
   serviceName?: string;
   currentYear?: number;
+  qrCodeDataUrl?: string;
 }
 const config = useRuntimeConfig();
 class Email {
@@ -52,6 +53,7 @@ class Email {
   private unsubscribeLink?: string;
   private serviceName: string = config.public.appname;
   private currentYear: number = new Date().getFullYear();
+  private qrCodeDataUrl?: string;
 
   constructor({
     recipientName,
@@ -74,6 +76,7 @@ class Email {
     privacyPolicyLink,
     termsAndConditionsLink,
     unsubscribeLink,
+    qrCodeDataUrl,
   }: EmailTemplate) {
     this.recipientName = recipientName;
     this.emailTitle = emailTitle;
@@ -95,6 +98,7 @@ class Email {
     this.privacyPolicyLink = privacyPolicyLink;
     this.termsAndConditionsLink = termsAndConditionsLink;
     this.unsubscribeLink = unsubscribeLink;
+    this.qrCodeDataUrl = qrCodeDataUrl;
   }
 
   public render(): string {
@@ -170,6 +174,11 @@ class Email {
                             : ""
                         }
                         <p>${this.contentParagraph1}</p>
+                        ${
+                          this.qrCodeDataUrl
+                            ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${this.qrCodeDataUrl}" alt="QR Code"></div>`
+                            : ""
+                        }
                         ${
                           this.contentParagraph2
                             ? `<p>${this.contentParagraph2}</p>`

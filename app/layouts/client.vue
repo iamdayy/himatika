@@ -6,7 +6,11 @@ import type { IConfigResponse } from "~~/types/IResponse";
 // Set up authentication
 const { status, data: user, signOut } = useAuth();
 const { $switchLocale, $getLocale, $ts } = useI18n();
-const { data: dataConfig } = useFetch<IConfigResponse>('/api/config');
+const { data: dataConfig } = useFetch<IConfigResponse>('/api/config', {
+    key: 'config-state',
+    lazy: false,
+    server: true,
+});
 const configs = computed(() => dataConfig.value?.data);
 const isLoggedIn = computed(() => status.value === 'authenticated');
 const config = useRuntimeConfig();
@@ -75,7 +79,7 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
         onSelect: () => signOut({ callbackUrl: '/login' }),
         icon: 'i-heroicons-arrow-right-start-on-rectangle'
     }]
-] satisfies DropdownMenuItem[][])
+]) satisfies ComputedRef<DropdownMenuItem[][]>;
 
 // Dropdown items for non-logged-in users
 const itemsNotLogged = computed<DropdownMenuItem[][]>(() => [
@@ -89,7 +93,7 @@ const itemsNotLogged = computed<DropdownMenuItem[][]>(() => [
             to: '/register'
         }
     ]
-] satisfies DropdownMenuItem[][])
+]) satisfies ComputedRef<DropdownMenuItem[][]>;
 
 const languages = computed<DropdownMenuItem[][]>(() => [
     [
@@ -109,7 +113,7 @@ const languages = computed<DropdownMenuItem[][]>(() => [
 ])
 
 // Computed property to determine which items to show based on login status
-const items = computed(() => isLoggedIn.value ? itemsIsLogged.value satisfies DropdownMenuItem[][] : itemsNotLogged.value satisfies DropdownMenuItem[][]);
+const items = computed(() => isLoggedIn.value ? itemsIsLogged.value : itemsNotLogged.value) satisfies ComputedRef<DropdownMenuItem[][]>;
 // Set up the head with a dynamic title template
 useHead({
     titleTemplate(title) {

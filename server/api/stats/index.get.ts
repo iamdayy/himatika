@@ -6,9 +6,11 @@ import { IStatsResponse } from "~~/types/IResponse";
 export default defineCachedEventHandler(
   async (event): Promise<IStatsResponse> => {
     try {
-      const projects = await ProjectModel.countDocuments();
-      const members = await MemberModel.countDocuments();
-      const agenda = await AgendaModel.countDocuments();
+      const [projects, members, agenda] = await Promise.all([
+        ProjectModel.countDocuments(),
+        MemberModel.countDocuments(),
+        AgendaModel.countDocuments(),
+      ]);
       return {
         statusCode: 200,
         statusMessage: "Stats fetched successfully",
@@ -19,10 +21,11 @@ export default defineCachedEventHandler(
         },
       };
     } catch (error: any) {
-      return {
-        statusCode: 500,
-        statusMessage: error.message,
-      };
+      throw createError({
+        statusCode: error.statusCode || 500,
+        statusMessage:
+          error.message || "An error occurred while fetching stats.",
+      });
     }
   },
   {

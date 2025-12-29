@@ -84,22 +84,22 @@ const columns = computed<TableColumn<IMember>[]>(() => [
 ]);
 
 const links = computed(() => [{
-    label: $ts('home'),
+    label: $ts('dashboard'),
     icon: 'i-heroicons-home',
-    to: '/'
+    to: '/dashboard'
 }, {
     label: $ts('agenda'),
     icon: 'i-heroicons-calendar',
-    to: '/agendas'
+    to: '/administrator/agendas'
 },
 {
     label: agenda?.value?.title || 'Agenda',
     icon: 'i-heroicons-calendar',
-    to: `/agendas/${id}`
+    to: `/administrator/agendas/${id}`
 },
 {
     label: $ts('committee'),
-    to: `/agendas/${id}/committee`,
+    to: `/administrator/agendas/${id}/committee`,
     icon: 'i-heroicons-users'
 }, {
     label: $ts('add'),
@@ -188,7 +188,7 @@ definePageMeta({
                 <div class="flex flex-col gap-4">
                     <h3 class="text-lg font-semibold dark:text-neutral-200">{{ $ts('committee-to-register') }} ({{
                         stagedCommittees.length
-                        }})</h3>
+                    }})</h3>
                     <div class="flex flex-col gap-2 overflow-y-auto max-h-96">
                         <UCard v-for="committee in stagedCommittees" :key="committee.member.NIM" class="p-2">
                             <div class="flex items-start justify-between">

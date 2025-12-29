@@ -7,6 +7,25 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
+    // 1. Dashboard & Profile: Render di browser saja (SPA)
+    // Mengurangi beban CPU server drastis karena server hanya kirim JSON API
+    "/dashboard/**": { ssr: false },
+    "/profile/**": { ssr: false },
+    "/administrator/**": { ssr: false },
+
+    // 2. Homepage & Berita: Update cache setiap 1 jam (SWR)
+    // Server membuat HTML sekali, lalu disimpan di CDN Vercel
+    "/": { swr: 3600 },
+    "/news/**": { swr: 3600 },
+    "/agendas/**": { swr: 3600 },
+
+    // 3. Halaman yang tidak pernah berubah (Static)
+    // Dibuat saat 'npm run build', 0ms loading time di server
+    "/login": { prerender: true },
+    "/register": { prerender: true },
+    "/forgot-password": { prerender: true },
+    "/change-password": { prerender: true },
+    "/change-email": { prerender: true },
     "/api/*": {
       cors: true,
       headers: {
@@ -94,6 +113,16 @@ export default defineNuxtConfig({
       },
     },
     dir: "public",
+    format: ["webp"],
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536,
+      "2xl": 1536,
+    },
   },
   fonts: {
     provider: "google",

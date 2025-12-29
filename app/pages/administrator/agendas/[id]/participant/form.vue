@@ -24,16 +24,20 @@ type IQuestionState = {
 
 const questionsState = reactiveComputed<IQuestionState>(() => {
     const questions: IQuestionState = {};
-    if (!agenda.value?.configuration.committee.questions) {
+    if (!agenda.value?.configuration.participant.questions) {
         return questions;
     }
-    for (let i = 0; i < (agenda.value?.configuration.committee.questions).length; i++) {
-        const question: IQuestion = agenda.value?.configuration.committee.questions[i] as IQuestion;
+    for (let i = 0; i < (agenda.value?.configuration.participant.questions).length; i++) {
+        const question: IQuestion = agenda.value?.configuration.participant.questions[i] as IQuestion;
         questions[`${question.question} ${i + 1}`] = {
             question: question.question,
             type: question.type,
             options: question.options,
             required: question.required,
+            min: question.min,
+            max: question.max,
+            maxFileSize: question.maxFileSize,
+            acceptedFileTypes: question.acceptedFileTypes,
             _id: question._id,
         };
 
@@ -42,7 +46,7 @@ const questionsState = reactiveComputed<IQuestionState>(() => {
 });
 const addNewQuestion = async () => {
     try {
-        const response = await $api<IResponse & { data: string }>(`/api/agenda/${id}/committee/question`, {
+        const response = await $api<IResponse & { data: string }>(`/api/agenda/${id}/participant/question`, {
             method: 'POST',
         });
         if (response.statusCode === 200) {
@@ -58,9 +62,9 @@ const addNewQuestion = async () => {
 
 const links = computed(() => [
     { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
-    { label: $ts('agenda'), to: '/dashboard/agendas', icon: 'i-heroicons-clipboard-document-list' },
-    { label: agenda.value?.title || '', to: `/agendas/${id}`, icon: 'i-heroicons-document' },
-    { label: $ts('committee'), to: `/agendas/${id}/committee`, icon: 'i-heroicons-users' },
+    { label: $ts('agenda'), to: '/administrator/agendas', icon: 'i-heroicons-clipboard-document-list' },
+    { label: agenda.value?.title || '', to: `/administrator/agendas/${id}`, icon: 'i-heroicons-document' },
+    { label: $ts('participant'), to: `/administrator/agendas/${id}/participant`, icon: 'i-heroicons-users' },
     { label: $ts('questions'), icon: 'i-heroicons-document' },
 ]);
 definePageMeta({
@@ -86,7 +90,7 @@ definePageMeta({
 
             <div class="p-2 space-y-2">
                 <CoreQuestion v-for="(question, index) in questionsState" :key="index" :question="question"
-                    @update="refresh" is-editing type="committee" />
+                    @update="refresh" is-editing />
                 <UButton icon="i-heroicons-plus" color="neutral" variant="subtle" @click="addNewQuestion()" block
                     class="mb-2" />
             </div>

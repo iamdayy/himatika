@@ -1,90 +1,122 @@
-import { H3Event } from "h3";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
-import { MemberModel } from "~~/server/models/MemberModel";
 import Email from "~~/server/utils/mailTemplate";
-import { IMember } from "~~/types";
-import { IReqAgendaRegister } from "~~/types/IRequestPost";
+import { generateQRCode } from "~~/server/utils/qrcode";
+import { IAgenda, IMember } from "~~/types";
 import { IAgendaRegisterResponse, IError } from "~~/types/IResponse";
-const config = useRuntimeConfig();
+
 /**
- * Handles POST requests for registering a user to an event.
- * @param {H3Event} ev - The H3 event object.
- * @returns {Promise<Object>} The result of the registration operation.
- * @throws {H3Error} If an error occurs during the process.s
+ * Sends a confirmation email to the user after successful registration for an agenda.
+ * The email includes a QR code for the participant to use for check-in or verification.
+ *
+ * @param agenda - The agenda object for which the user has registered.
+ * @param participantId - The unique ID generated for the new participant.
+ * @param name - The name of the recipient.
+ * @param email - The email address of the recipient.
  */
+async function sendConfirmationEmail(
+  agenda: IAgenda,
+  participantId: Types.ObjectId,
+  name: string,
+  email: string
+) {
+  const config = useRuntimeConfig();
+  const sender = {
+    email: `agenda@${config.mailtrap_domain}`,
+    name: "Administrator",
+  };
+
+  const qrCodeDataUrl = await generateQRCode(participantId.toString());
+  const newMail = new Email({
+    recipientName: name,
+    emailTitle: `Pendaftaran Agenda ${agenda.title} Berhasil!`,
+    heroTitle: `Selamat, Anda Terdaftar!`,
+    heroSubtitle: `Anda telah berhasil terdaftar dalam agenda "${agenda.title}". Kami sangat senang Anda bergabung!`,
+    heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}/participant/register/?participantId=${participantId}`,
+    heroButtonText: "Lihat Detail Pendaftaran",
+    contentTitle1: "Detail Pendaftaran Anda",
+    contentParagraph1: `Berikut adalah QR Code unik Anda untuk agenda "${agenda.title}". Mohon simpan dan tunjukkan QR Code ini saat registrasi ulang di lokasi acara.`,
+    contentParagraph2:
+      "Anda juga dapat melihat detail pendaftaran Anda kapan saja dengan mengklik tombol di bawah ini.",
+    contentTitle2: "Butuh Bantuan?",
+    contentListItems: [],
+    ctaTitle: "Ada Pertanyaan?",
+    ctaSubtitle:
+      "Jangan ragu untuk menghubungi kami jika Anda memerlukan bantuan.",
+    ctaButtonLink: `${config.public.public_uri}/#contacts`,
+    ctaButtonText: "Hubungi Kami",
+    qrCodeDataUrl: qrCodeDataUrl,
+  });
+
+  await sendEmail(
+    sender,
+    email,
+    "Agenda Registration Confirmation",
+    newMail.render(),
+    "agenda-registration"
+  );
+}
+
 export default defineEventHandler(
   async (ev): Promise<IAgendaRegisterResponse | IError> => {
-    const { guest } = await readBody<IReqAgendaRegister>(ev);
-    // Get the agenda ID from the query parameters
-    const { id } = ev.context.params as { id: string };
     try {
-      let email = "";
-      let name = "";
-      // Generate a new ID for the registration
-      let participantId = new Types.ObjectId();
-      // Find the agenda by ID
+      const { guest } = await readBody(ev);
+      const { id } = ev.context.params as { id: string };
+      const user = ev.context.user;
+
+      if (!user && !guest) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Authentication or guest data is required.",
+        });
+      }
+
       const agenda = await AgendaModel.findById(id);
       if (!agenda) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Agenda not found",
+          statusMessage: "Agenda not found.",
         });
       }
 
-      const user = ev.context.user;
+      const canRegister = agenda.canMeRegisterAsParticipant(
+        user?.member as IMember | undefined
+      );
+      if (!canRegister) {
+        throw createError({
+          statusCode: 403,
+          statusMessage:
+            "You do not have permission to register for this agenda.",
+        });
+      }
+
+      const nimToCheck = user ? user.member.NIM : guest?.NIM;
+      const isAlreadyParticipant = agenda.participants?.some(
+        (p) =>
+          (p.member as IMember)?.NIM === nimToCheck ||
+          p.guest?.NIM === nimToCheck
+      );
+
+      if (isAlreadyParticipant) {
+        throw createError({
+          statusCode: 409,
+          statusMessage: "You are already a participant in this agenda.",
+        });
+      }
+
+      const participantId = new Types.ObjectId();
+      let email: string, name: string;
+
       if (user) {
-        // Find the user member by NIM
-        const me = await MemberModel.findOne({ NIM: user.member.NIM });
-
-        if (!me) {
-          throw createError({
-            statusCode: 404,
-            statusMessage: "User member not found",
-          });
-        }
-        email = me.email;
-        name = me.fullName;
-        // Check if the user can register for the agenda
-        const canRegister = agenda.canMeRegisterAsParticipant(
-          user.member as IMember
-        );
-        if (!canRegister) {
-          throw createError({
-            statusCode: 403,
-            statusMessage:
-              "You do not have permission to register for this agenda",
-          });
-        }
-
-        // Check if the user is already participant
-        const isParticipant = agenda.participants?.some(
-          (item) => (item.member as IMember)?.NIM == me.NIM
-        );
-        if (isParticipant) {
-          throw createError({
-            statusCode: 400,
-            statusMessage: "You are already participant for this agenda",
-          });
-        }
-
+        name = user.member.fullName;
+        email = user.member.email;
         agenda.participants?.push({
           _id: participantId,
-          member: me._id as Types.ObjectId,
+          member: user.member._id as Types.ObjectId,
         });
-      } else {
-        if (!guest) {
-          throw createError({
-            statusCode: 400,
-            statusMessage: "Guest data is required",
-          });
-        }
-        if (!agenda.canMeRegisterAsParticipant()) {
-          throw createError({
-            statusCode: 403,
-            statusMessage: "Only public event can be participant by guest",
-          });
-        }
+      } else if (guest) {
+        name = guest.fullName;
+        email = guest.email;
         agenda.participants?.push({
           _id: participantId,
           guest: {
@@ -95,51 +127,22 @@ export default defineEventHandler(
             prodi: guest.prodi,
             class: guest.class,
             semester: guest.semester,
+            instance: guest.instance,
           },
         });
-        email = guest.email;
-        name = guest.fullName;
-      }
-
-      // Save the updated agenda
-      const saved = await agenda.save();
-      if (!saved) {
+      } else {
+        // This case should theoretically not be reached due to earlier checks
         throw createError({
           statusCode: 400,
-          statusMessage: "Failed to save agenda registration",
+          statusMessage: "Invalid registration data.",
         });
       }
-      let sender = {
-        email: `agenda@${config.mailtrap_domain}`,
-        name: "Administrator",
-      };
-      const newMail = new Email({
-        recipientName: name,
-        emailTitle: `Agenda ${agenda.title} Registration Confirmation`,
-        heroTitle: `Agenda ${agenda.title} Registration Confirmation`,
-        heroSubtitle: `You have successfully registered for the agenda ${agenda.title}`,
-        heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}/participant/register/?participantId=${participantId}`,
-        heroButtonText: "View Registration Details",
-        contentTitle1: "Agenda Registration Confirmation",
-        contentParagraph1: `You have successfully registered for the agenda ${agenda.title}`,
-        contentParagraph2: `You can view the agenda details by clicking the button below.`,
-        contentTitle2: "Need help?",
-        contentListItems: [],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      });
-      // Send an email confirmation to the user
-      await sendEmail(
-        sender,
-        email,
-        "Agenda Registration Confirmation",
-        newMail.render(),
-        "agenda-registration"
-      );
 
-      // Return success response
+      await agenda.save();
+
+      // Send confirmation email
+      await sendConfirmationEmail(agenda, participantId, name, email);
+
       return {
         statusCode: 200,
         statusMessage: `Successfully registered for agenda: ${agenda.title}`,
@@ -148,12 +151,11 @@ export default defineEventHandler(
         },
       };
     } catch (error: any) {
-      // Handle any errors that occur during the process
       throw createError({
         statusCode: error.statusCode || 500,
         statusMessage:
-          error.message ||
-          "An unexpected error occurred during agenda registration",
+          error.statusMessage ||
+          "An unexpected error occurred during agenda registration.",
       });
     }
   }
