@@ -1,88 +1,24 @@
-<script setup lang='ts'>
-import { NuxtImg, UButton, UIcon } from '#components';
-import type { TableColumn } from '@nuxt/ui';
-import type { IMember } from '~~/types';
-import type { IAgendaResponse, IMemberResponse, IResponse } from '~~/types/IResponse';
+<script setup lang="ts">
+import type { IAgendaResponse } from '~~/types/IResponse';
 
-/**
- * Responsive design setup
- */
-const { width } = useWindowSize();
-const isMobile = computed(() => width.value < 768);
 
-/**
- * Responsive UI sizes for components
- */
-const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
-    button: isMobile.value ? 'xs' : 'md',
-    input: isMobile.value ? 'xs' : 'md',
-}));
 
-const memberSearchTerm = ref('');
-const { id } = useRoute().params as { id: string };
-const { $ts, $api } = useNuxtApp();
+definePageMeta({
+    layout: 'dashboard',
+    middleware: ['sidebase-auth', 'organizer']
+});
+
+const route = useRoute();
+const id = route.params.id as string;
+const { $api, $ts } = useNuxtApp();
 const toast = useToast();
 
-interface IStagedCommittee {
-    member: IMember;
-    job: string;
-}
-
-const stagedCommittees = ref<IStagedCommittee[]>([]);
-
-const { data: agenda, refresh } = useLazyAsyncData('agenda', async () => $api<IAgendaResponse>('/api/agenda', {
-    query: {
-        id
-    }
-}), {
-    transform: (data) => data.data?.agenda,
-    default: undefined
+const { data: agenda } = await useAsyncData('admin-agenda-detail',
+    () => $api<IAgendaResponse>('/api/agenda', { query: { id } }), {
+    transform: (data) => data.data?.agenda
 });
 
-const { data: members, status: memberstatus, refresh: refreshMembers } = useAsyncData('members', () => $api<IMemberResponse>("/api/member", {
-    method: 'GET',
-    params: {
-        search: memberSearchTerm.value,
-        page: 1,
-        perPage: 10
-    }
-}), {
-    transform: (data) => {
-        const members = data.data?.members || [];
-        const committeeNIMs = agenda.value?.committees?.map((c) => (c.member as IMember)?.NIM) || [];
-        const stagedNIMs = stagedCommittees.value.map(sc => sc.member.NIM);
-        return members.filter((member) => !committeeNIMs.includes(member.NIM) && !stagedNIMs.includes(member.NIM));
-    },
-    default: () => [],
-    watch: [memberSearchTerm, agenda],
-});
-
-
-const columns = computed<TableColumn<IMember>[]>(() => [
-    {
-        accessorKey: 'fullName',
-        header: $ts('name'),
-        size: 150,
-        cell: ({ row }) => h('div', { class: 'flex items-center gap-2' }, [
-            h(NuxtImg, { provider: 'localProvider', src: row.original?.avatar as string || '/img/profile-blank.png', class: 'object-cover rounded-full max-w-12 aspect-square', alt: row.original?.fullName, loading: 'lazy' }),
-            h('div', { class: 'flex flex-col items-start gap-1' }, [
-                h('span', { class: 'font-semibold text-gray-600 dark:text-gray-200' }, row.original.fullName),
-                h('span', { class: 'text-sm font-light text-gray-600 dark:text-gray-300' }, `${row.original?.NIM} | ${row.original?.email}`),
-            ]),
-        ])
-    },
-    { accessorKey: 'class', header: $ts('class'), sortable: true },
-    { accessorKey: 'semester', header: $ts('semester'), sortable: true },
-    {
-        id: 'actions',
-        cell: ({ row }) => h('div', { class: 'text-right' },
-            h(UButton, { size: responsiveUISizes.value.button, onClick: () => addToStaging(row.original) },
-                [h(UIcon, { name: 'i-heroicons-plus-circle' }), h('span', {}, $ts('add'))]
-            )
-        )
-    }
-]);
-
+// Navigation Links
 const links = computed(() => [{
     label: $ts('dashboard'),
     icon: 'i-heroicons-home',
@@ -100,132 +36,145 @@ const links = computed(() => [{
 {
     label: $ts('committee'),
     to: `/administrator/agendas/${id}/committee`,
-    icon: 'i-heroicons-users'
-}, {
-    label: $ts('add'),
-    icon: 'i-heroicons-plus-circle'
-}]);
+    icon: 'i-heroicons-link'
+},
+{
+    label: $ts('add-committee'),
+    icon: 'i-heroicons-user-plus',
+}
+]);
 
-const addToStaging = (member: IMember) => {
-    stagedCommittees.value.push({ member, job: '' });
-    refreshMembers();
+const loading = ref(false);
+const jobTitle = ref('Anggota'); // Default jabatan
+
+// List Jabatan Umum (Bisa disesuaikan atau diambil dari config)
+const jobOptions = ['Ketua Pelaksana', 'Sekretaris', 'Bendahara', 'Koordinator Acara', 'Divisi Acara', 'Koordinator Humas', 'Divisi Humas', 'Koordinator Perkap', 'Divisi Perkap', 'Dokumentasi', 'Konsumsi', 'Keamanan', 'Anggota'];
+const createJob = (val: string) => {
+    jobOptions.push(val);
+    jobTitle.value = val;
 };
+// --- MODE MEMBER (SEARCH) ---
+const selectedMember = ref<string | undefined>(undefined);
+const memberSearchTerm = ref('');
+const { data: members, pending } = useAsyncData('members-list', () => $api('/api/member/public', {
+    query: {
+        search: memberSearchTerm.value,
+    }
+}), {
+    lazy: true,
+    default: () => [],
+    transform: (data) => {
+        const obj = data.data?.members?.map((member) => ({
+            ...member,
+            avatar: { src: member.avatar || '/img/profile-blank.png' },
+            label: member.fullName,
+            value: member.id
+        })) || [];
+        return obj || [];
+    },
+    watch: [memberSearchTerm]
+});
 
-const removeFromStaging = (member: IMember) => {
-    stagedCommittees.value = stagedCommittees.value.filter(sc => sc.member.NIM !== member.NIM);
-    refreshMembers();
-};
+const submit = async () => {
+    if (!selectedMember.value) {
+        toast.add({ title: 'Pilih member terlebih dahulu', color: 'warning' });
+        return;
+    };
 
-const registerCommittee = async (committee: IStagedCommittee) => {
+    loading.value = true;
     try {
-        const data = await $api<IResponse>(`/api/agenda/${id}/committee`, {
+        await $api(`/api/agenda/${id}/committee`, {
             method: 'POST',
             body: {
-                member: committee.member.NIM,
-                job: committee.job
+                member: selectedMember.value,
+                job: jobTitle.value,
+                approved: true // Karena admin yang add, auto-approve
             }
         });
-        if (data.statusCode === 200) {
-            toast.add({ title: $ts('success'), description: $ts('add-committee-success'), color: 'success' });
-            return true;
-        } else {
-            toast.add({ title: $ts('error'), description: data.statusMessage || $ts('add-committee-failed'), color: 'error' });
-            return false;
-        }
+
+        toast.add({ title: 'Panitia berhasil ditambahkan', color: 'success' });
+
+        // Reset form
+        selectedMember.value = undefined;
+        jobTitle.value = 'Anggota';
+
     } catch (error: any) {
-        toast.add({ title: $ts('error'), description: error.message || $ts('add-committee-failed'), color: 'error' });
-        return false;
+        toast.add({ title: 'Gagal menambahkan', description: error.message, color: 'error' });
+    } finally {
+        loading.value = false;
     }
 };
-
-const registerAllStaged = async () => {
-    const promises = stagedCommittees.value.map(committee => registerCommittee(committee));
-    const results = await Promise.all(promises);
-
-    const successfulRegistrations = stagedCommittees.value.filter((_, index) => results[index]);
-
-    if (successfulRegistrations.length > 0) {
-        stagedCommittees.value = stagedCommittees.value.filter(committee => !successfulRegistrations.some(s => s.member.NIM === committee.member.NIM));
-        refreshMembers();
-        refresh(); // Refresh agenda data to update committee list
-    }
-
-    if (successfulRegistrations.length === promises.length) {
-        toast.add({ title: $ts('success'), description: $ts('all-committees-added-successfully'), color: 'success' });
-    } else {
-        toast.add({ title: $ts('warning'), description: $ts('some-committees-failed-to-add'), color: 'warning' });
-    }
-};
-
-useHead({
-    title: () => `${$ts('add-manual-committee')} - ${agenda.value?.title}`,
-});
-definePageMeta({
-    layout: 'client',
-    middleware: ['sidebase-auth', 'organizer']
-});
 </script>
+
 <template>
-    <div class="items-center justify-center mb-24">
+    <div class="space-y-6 mb-24">
         <UBreadcrumb :items="links" />
-        <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
+
+
+        <UCard>
             <template #header>
-                <div class="flex items-center justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-neutral-200">{{ $ts('add-manual-committee') }}</h2>
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tambah Panitia</h1>
+                    <UButton variant="subtle" icon="i-heroicons-document-arrow-up"
+                        :to="`/administrator/agendas/${id}/committee/import`">Import Excel</UButton>
                 </div>
             </template>
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-                <!-- Search and Results Section -->
-                <div class="flex flex-col gap-4">
-                    <UInput v-model="memberSearchTerm" :placeholder="$ts('search-member')"
-                        :size="responsiveUISizes.input" icon="i-lucide-search" class="w-full" />
-
-                    <UTable :columns="columns" :data="members" :loading="memberstatus === 'pending'" class="w-full"
-                        :ui="{ base: 'max-w-full w-full' }" />
-                </div>
-
-                <!-- Staged Members Section -->
-                <div class="flex flex-col gap-4">
-                    <h3 class="text-lg font-semibold dark:text-neutral-200">{{ $ts('committee-to-register') }} ({{
-                        stagedCommittees.length
-                    }})</h3>
-                    <div class="flex flex-col gap-2 overflow-y-auto max-h-96">
-                        <UCard v-for="committee in stagedCommittees" :key="committee.member.NIM" class="p-2">
-                            <div class="flex items-start justify-between">
+            <div class="space-y-6">
+                <UFormField label="Cari Mahasiswa" help="Ketik Nama atau NIM (min. 3 karakter)" class="w-full">
+                    <USelectMenu v-model="selectedMember" v-model:search-term="memberSearchTerm"
+                        placeholder="Ketik untuk mencari..." :items="members" value-key="value" label-key="label"
+                        class="w-full">
+                        <template #item="{ item }">
+                            <div class="flex items-center gap-2 w-full">
+                                <div class="flex-col flex">
+                                    <span class="truncate font-medium">{{ item.fullName }}</span>
+                                    <span class="text-xs text-gray-500">{{ item.NIM }} • {{ item.class ||
+                                        'Unknown'
+                                    }}</span>
+                                </div>
+                            </div>
+                        </template>
+                        <template #empty>
+                            <div v-if="pending">
                                 <div class="flex items-center gap-2">
-                                    <NuxtImg :provider="'localProvider'"
-                                        :src="committee.member.avatar || '/img/profile-blank.png'"
-                                        class="object-cover rounded-full w-10 h-10" :alt="committee.member.fullName"
-                                        loading="lazy" />
-                                    <div>
-                                        <p class="font-semibold">{{ committee.member.fullName }}</p>
-                                        <p class="text-sm text-gray-500">{{ committee.member.NIM }}</p>
+                                    <USkeleton class="h-4 w-4 rounded-full" />
+
+                                    <div class="grid gap-2">
+                                        <USkeleton class="h-2 w-[120px]" />
+                                        <USkeleton class="h-2 w-[100px]" />
                                     </div>
                                 </div>
-                                <UButton icon="i-heroicons-x-mark" color="error" variant="ghost"
-                                    @click="removeFromStaging(committee.member)" />
+                                <div class="mt-4 text-center text-gray-500">
+                                    Mencari member...
+                                </div>
                             </div>
-                            <UInput v-model="committee.job" :placeholder="$ts('job')" class="mt-2" />
-                        </UCard>
-                        <div v-if="stagedCommittees.length === 0" class="text-center text-gray-500">
-                            {{ $ts('no-committee-selected') }}
-                        </div>
-                    </div>
-                    <UButton :size="responsiveUISizes.button" @click="registerAllStaged" class="w-full mt-4"
-                        :disabled="stagedCommittees.length === 0" :loading="memberstatus === 'pending'">
-                        {{ $ts('register-all-staged') }} ({{ stagedCommittees.length }})
-                    </UButton>
-                </div>
-            </div>
+                            <div v-else class="text-center text-gray-500">
+                                Tidak ada member ditemukan.
+                            </div>
+                        </template>
+                    </USelectMenu>
+                </UFormField>
 
-            <template #footer>
-                <div class="flex items-center justify-end w-full mt-4">
-                    <UButton :size="responsiveUISizes.button" @click="$router.back()" class="mr-2" variant="subtle">
-                        {{ $ts('back') }}
-                    </UButton>
-                </div>
-            </template>
+                <!-- <div v-if="selectedMember" class="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 transition-all">
+                    <UAvatar :src="selectedMember.avatar || '/img/profile-blank.png'" size="md" />
+                    <div>
+                        <p class="font-semibold text-sm">{{ selectedMember.fullName }}</p>
+                        <p class="text-xs text-gray-500">{{ selectedMember.email }}</p>
+                    </div>
+                    <div class="ml-auto">
+                        <UIcon name="i-heroicons-check-circle" class="text-green-500 w-6 h-6" />
+                    </div>
+                </div> -->
+
+                <UFormField label="Posisi / Jabatan">
+                    <USelectMenu v-model="jobTitle" :items="jobOptions" searchable creatable
+                        placeholder="Pilih atau ketik jabatan baru..." @create="createJob" class="w-full" />
+                </UFormField>
+
+                <UButton block :loading="loading" @click="submit" color="primary" size="lg">
+                    Tambahkan ke Tim Panitia
+                </UButton>
+            </div>
         </UCard>
     </div>
 </template>
-<style scoped></style>

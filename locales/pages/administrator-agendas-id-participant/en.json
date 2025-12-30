@@ -1,1 +1,16 @@
-{}
+{
+    "set_visit_status": "Set Visit Status",
+    "set_visit_status_confirmation": "Are you sure you want to set the visit status of this participant?",
+    "success_to_set_visit_status": "Successfully set the visit status of the participant",
+    "failed_to_set_visit_status": "Failed to set the visit status of the participant",
+    "set_payment_status": "Set Payment Status",
+    "set_payment_status_confirmation": "Are you sure you want to set the payment status of this participant?",
+    "success_to_set_payment_status": "Successfully set the payment status of the participant",
+    "failed_to_set_payment_status": "Failed to set the payment status of the participant",
+    "delete_participant": "Delete Participant",
+    "delete_participant_confirmation": "Are you sure you want to delete this participant?",
+    "success_to_delete_participant": "Successfully deleted the participant",
+    "failed_to_delete_participant": "Failed to delete the participant",
+    "view_answer_registration": "View Registration Answer",
+    "answer": "Answer"
+}

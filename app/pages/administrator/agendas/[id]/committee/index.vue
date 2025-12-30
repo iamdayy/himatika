@@ -1,41 +1,31 @@
 <script setup lang='ts'>
-import { ModalsCommitteeView, ModalsConfirmation, ModalsQrReader, NuxtImg, UCheckbox } from '#components';
+import { ModalsConfirmation, NuxtImg, UCheckbox, UIcon } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, ICommittee, IMember } from '~~/types';
-import type { IAgendaCommitteeResponse, IExportSheetResponse, IResponse } from '~~/types/IResponse';
+import type { IAgendaCommitteeResponse, IExportSheetResponse } from '~~/types/IResponse';
 
 definePageMeta({
     layout: 'client',
     auth: false
 });
 
-
 const UButton = resolveComponent('UButton');
 const UBadge = resolveComponent('UBadge');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 
-/**
- * Current page number for pagination
- */
 const table = useTemplateRef('table')
 const pagination = ref({
     pageIndex: 1,
-    pageSize: 5
+    pageSize: 10 // Default lebih besar agar enak dilihat
 })
-/**
- * Number of items per page
- */
+
 const route = useRoute();
 const { $ts, $tn } = useI18n();
 const { $api } = useNuxtApp()
 const overlay = useOverlay();
 
 const ConfirmationModal = overlay.create(ModalsConfirmation);
-const QRCodeModalComp = overlay.create(ModalsQrReader);
-const CommitteeModal = overlay.create(ModalsCommitteeView);
-
-
 
 const id = route.params.id;
 const search = ref('');
@@ -49,115 +39,216 @@ const { data, refresh, pending } = useLazyAsyncData(() => $api<IAgendaCommitteeR
 }), {
     watch: [() => pagination.value.pageIndex, () => pagination.value.pageSize, search],
 });
+
 const toast = useToast();
 const agenda = computed<IAgenda | undefined>(() => data.value?.data?.agenda);
 const { isCommittee } = useAgendas(agenda);
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
 
-const selectedRows = ref<{
-    [key: number]: boolean
-}>({});
-/**
- * Ref to store selected committee users
- */
+const selectedRows = ref<{ [key: number]: boolean }>({});
+
 const selectedCommittee = computed<ICommittee[]>(() => {
     return data.value?.data?.committees?.filter((_, index) => {
         return selectedRows.value[index] !== undefined && selectedRows.value[index] !== null;
     }) || [] as ICommittee[]
 });
+const members = computed(() => data.value?.data?.committees || []);
 
-
-/**
- * Window size composable for responsive design
- */
 const { width } = useWindowSize()
-
-/**
- * Computed property to determine if the screen is mobile size
- */
 const isMobile = computed(() => width.value < 640)
-/**
- * Computed property for responsive table columns
- */
+const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
+    button: isMobile.value ? 'xs' : 'md',
+    select: isMobile.value ? 'xs' : 'md',
+    pagination: isMobile.value ? 'xs' : 'md',
+}));
+
+// --- FUNGSI CETAK ID CARD PANITIA (MODERN) ---
+const printIdCards = () => {
+    const targets = selectedCommittee.value.length > 0 ? selectedCommittee.value : members.value;
+
+    if (targets.length === 0) {
+        return toast.add({ title: 'Tidak ada data panitia', color: 'warning' });
+    }
+
+    const win = window.open('', '_blank', 'width=800,height=600');
+    if (!win) return;
+
+    const styles = `
+        @page { size: A4; margin: 10mm; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+            background: #f0f0f0; /* Hanya visual di layar, tidak terprint jika default settings */
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+            page-break-after: always;
+        }
+        .card { 
+            border: 2px solid #333; 
+            height: 300px; /* Sedikit lebih tinggi untuk job title */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding: 20px;
+            page-break-inside: avoid; 
+            border-radius: 12px; 
+            position: relative;
+            background: #fff;
+        }
+        .header { 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            margin-bottom: 10px; 
+            color: #666; 
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            width: 80%;
+        }
+        .name { 
+            font-size: 26px; 
+            font-weight: 800; 
+            margin: 10px 0 5px 0; 
+            line-height: 1.2;
+            color: #000;
+        }
+        .job { 
+            font-size: 18px; 
+            color: #d946ef; /* Warna ungu/pink untuk panitia (opsional) */
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .meta { font-size: 14px; color: #555; }
+        .badge-box {
+            margin-top: 15px;
+            border: 2px solid #000;
+            color: #000;
+            padding: 5px 20px;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+        .footer { position: absolute; bottom: 10px; font-size: 10px; color: #888; }
+    `;
+
+    const cardsHtml = targets.map(c => {
+        const member = c.member as IMember | undefined;
+        const name = member?.fullName || 'Panitia';
+        const nim = member?.NIM || '-';
+        const job = c.job || 'Volunteer';
+
+        return `
+            <div class="card">
+                <div class="header">${agenda.value?.title || 'OFFICIAL EVENT'}</div>
+                <h1 class="name">${name}</h1>
+                <div class="job">${job}</div>
+                <p class="meta">${nim}</p>
+                <div class="badge-box">COMMITTEE</div>
+                <div class="footer">ID: ${c._id}</div>
+            </div>
+        `;
+    }).join('');
+
+    win.document.title = `ID Card Panitia - ${agenda.value?.title}`;
+
+    const styleSheet = win.document.createElement("style");
+    styleSheet.innerText = styles;
+    win.document.head.appendChild(styleSheet);
+
+    win.document.body.innerHTML = `<div class="grid">${cardsHtml}</div>`;
+
+    setTimeout(() => {
+        win.print();
+    }, 500);
+};
+
+// --- BULK ACTIONS ---
+const bulkActions = computed<DropdownMenuItem[][]>(() => [
+    [{
+        label: `Terpilih (${selectedCommittee.value.length})`,
+        disabled: true
+    }],
+    [{
+        label: $ts('export_data'),
+        icon: 'i-heroicons-document-arrow-down',
+        onSelect: generateXlsx
+    }, {
+        label: 'Cetak ID Card',
+        icon: 'i-heroicons-identification',
+        onSelect: printIdCards
+    }],
+    [{
+        label: $ts('set_visit_status'),
+        icon: 'i-heroicons-check-circle',
+        disabled: selectedCommittee.value.length === 0,
+        onSelect: () => setBatch('visiting')
+    }, {
+        label: $ts('set_payment_status'),
+        icon: 'i-heroicons-banknotes',
+        disabled: selectedCommittee.value.length === 0,
+        onSelect: () => setBatch('payment')
+    }]
+]);
+
+// --- TABLE COLUMNS ---
 const columns = computed<TableColumn<ICommittee>[]>(() => {
     const baseColumns: TableColumn<ICommittee>[] = [
-
         {
             id: 'select',
             header: ({ table }) =>
                 h(UCheckbox, {
-                    modelValue: table.getIsSomePageRowsSelected()
-                        ? 'indeterminate'
-                        : table.getIsAllPageRowsSelected(),
-                    'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-                        table.toggleAllPageRowsSelected(!!value),
-                    'aria-label': 'Select all'
+                    modelValue: table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
+                    'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
                 }),
             cell: ({ row }) =>
                 h(UCheckbox, {
                     modelValue: row.getIsSelected(),
                     size: responsiveUISizes.value.input,
                     'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-                    'aria-label': 'Select row'
                 })
         },
         {
             accessorKey: 'fullName',
             header: $ts('name'),
-            size: 150,
+            size: 200,
             cell: ({ row }) => {
-                return h('div', {
-                    class: 'flex flex-row items-center gap-2',
-                }, [
+                return h('div', { class: 'flex flex-row items-center gap-3' }, [
                     h(NuxtImg, {
                         provider: 'localProvider',
                         src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
-                        class: 'object-cover rounded-full max-w-12 aspect-square',
-                        alt: (row.original.member as IMember | undefined)?.fullName,
+                        class: 'object-cover rounded-full w-10 h-10 border border-gray-200',
                         loading: 'lazy'
                     }),
-                    h('div', {
-                        class: 'flex flex-col items-start gap-1',
-                    }, [
-                        h('span', {
-                            class: 'font-semibold text-gray-600 dark:text-gray-200'
-                        }, (row.original.member as IMember | undefined)?.fullName),
-                        h('span', {
-                            class: 'text-sm font-light text-gray-600 dark:text-gray-300'
-                        }, `${(row.original.member as IMember | undefined)?.NIM} ${(isCommittee.value || isOrganizer.value) ? '| ' + (row.original.member as IMember | undefined)?.email : ''}`),
+                    h('div', { class: 'flex flex-col items-start' }, [
+                        h('span', { class: 'font-semibold text-gray-900 dark:text-white line-clamp-1' },
+                            (row.original.member as IMember | undefined)?.fullName),
+                        h('span', { class: 'text-xs text-gray-500 dark:text-gray-300 line-clamp-1' },
+                            `${(row.original.member as IMember | undefined)?.NIM} | ${(row.original.member as IMember | undefined)?.class || '-'}`),
                     ]),
                 ]);
             }
         },
         {
-            accessorKey: 'class',
-            header: $ts('class'),
-            cell: ({ row }) => {
-                return (row.original.member as IMember | undefined)?.class
-            }
-        },
-        {
-            accessorKey: 'semester',
-            header: $ts('semester'),
-            cell: ({ row }) => {
-                return (row.original.member as IMember | undefined)?.semester
-            }
-        },
-        {
             accessorKey: 'job',
             header: $ts('job'),
-            cell: ({ row }) => {
-                return row.original.job || '-';
-            }
+            cell: ({ row }) => h(UBadge, { color: 'primary', variant: 'subtle', size: 'xs' }, () => row.original.job || '-')
         },
         {
             accessorKey: 'status',
             header: $ts('status'),
             cell: ({ row }) => {
                 return h(UBadge, {
-                    color: row.original.approved ? 'success' : 'error',
-                    label: row.original.approved ? $ts('approved') : $ts('unapproved')
+                    color: row.original.approved ? 'success' : 'orange',
+                    variant: row.original.approved ? 'soft' : 'outline',
+                    label: row.original.approved ? $ts('approved') : 'Pending'
                 })
             }
         },
@@ -166,214 +257,147 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
     if (isCommittee.value || isOrganizer.value) {
         const committeeColumns: TableColumn<ICommittee>[] = [
             {
-                accessorKey: 'paid',
-                header: $ts('payment_status'),
-
+                accessorKey: 'payment',
+                header: 'Bayar', // Singkat agar muat di mobile
                 cell: ({ row }) => {
-                    if (!row.original.payment) return '-';
+                    if (!agenda.value?.configuration.committee.pay) return h('span', { class: 'text-gray-400 text-xs' }, '-');
+                    const status = row.original.payment?.status;
                     return h(UBadge, {
-                        color: row.original.payment?.status && row.original.payment?.status === 'success' ? 'success' : 'error',
-                        label: row.original.payment?.status ? row.original.payment?.status as string : 'Error'
+                        color: status === 'success' ? 'success' : 'error',
+                        variant: 'subtle',
+                        label: status === 'success' ? 'Lunas' : 'Belum'
                     })
                 }
             },
             {
                 accessorKey: 'visiting',
-                header: $ts('visit_status'),
+                header: 'Hadir',
                 cell: ({ row }) => {
-                    return h(UBadge, {
-                        color: row.original.visiting ? 'success' : 'error',
-                        icon: row.original.visiting ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle',
-                    })
+                    return row.original.visiting
+                        ? h('div', { class: 'text-green-500 flex justify-center' }, h(UIcon, { name: 'i-heroicons-check-circle', class: 'w-5 h-5' }))
+                        : h('div', { class: 'text-gray-300 flex justify-center' }, h(UIcon, { name: 'i-heroicons-minus-circle', class: 'w-5 h-5' }))
                 }
             },
             {
                 id: 'actions',
                 cell: ({ row }) => {
                     return h(
-                        'div',
-                        { class: 'text-right' },
-                        h(
-                            UDropdownMenu,
-                            {
-                                content: {
-                                    align: 'end'
-                                },
-                                items: getRowItems(row)
-                            },
-                            () =>
-                                h(UButton, {
-                                    icon: 'i-lucide-ellipsis-vertical',
-                                    color: 'neutral',
-                                    variant: 'ghost',
-                                    class: 'ml-auto'
-                                })
-                        )
+                        'div', { class: 'text-right' },
+                        h(UDropdownMenu, {
+                            content: { align: 'end' },
+                            items: getRowItems(row)
+                        }, () => h(UButton, {
+                            icon: 'i-lucide-ellipsis-vertical',
+                            color: 'neutral',
+                            variant: 'ghost',
+                            size: 'xs'
+                        }))
                     )
                 }
             }
         ];
         return [...baseColumns, ...committeeColumns];
     }
-
     return baseColumns;
 });
 
 function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
     return [
+        { type: 'label', label: 'Menu Panitia' },
         {
-            type: 'label',
-            label: $ts('action')
+            icon: 'i-heroicons-eye',
+            label: 'Detail Info',
+            to: `profile/${(row.original.member as IMember)?.NIM || '-'}`,
+            disabled: !isOrganizer.value && !isCommittee.value && !row.original.member,
         },
         {
-            icon: 'i-heroicons-eye-20-solid',
-            label: $ts('view'),
-            onSelect: () => openCommitteeModal(row.original)
+            icon: 'i-heroicons-check-badge',
+            label: row.original.approved ? 'Batalkan Approval' : 'Setujui (Approve)',
+            disabled: !isOrganizer.value && !isCommittee.value,
+            onSelect: () => setApproved(row.original._id as string) // Toggle logic bisa ditambahkan di backend atau handler terpisah
         },
+        { type: 'separator' },
         {
             icon: 'i-heroicons-check-circle',
-            label: $ts('set_visit_status'),
-            disabled: row.original.visiting || row.original.payment?.status !== 'success' || !row.original.approved || !isCommittee,
+            label: 'Tandai Hadir',
+            disabled: row.original.visiting,
             onSelect: () => openSetVisitedModal(row.original._id as string)
         },
         {
             icon: 'i-heroicons-banknotes',
-            label: $ts('set_payment_status'),
-            disabled: row.original.payment?.status === 'success' || !isCommittee || agenda.value?.configuration.committee.pay === false,
+            label: 'Tandai Lunas',
+            disabled: row.original.payment?.status === 'success' || agenda.value?.configuration.committee.pay === false,
             onSelect: () => setPaid(row.original._id as string)
         },
-        {
-            icon: 'i-heroicons-check-circle',
-            label: $ts('set_approved'),
-            disabled: row.original.approved || (!isOrganizer.value && !isCommittee) || (agenda.value?.configuration.committee.pay && row.original.payment?.status !== 'success'),
-            onSelect: () => setApproved(row.original._id as string),
-        },
-        {
-            type: 'separator'
-        },
+        { type: 'separator' },
         {
             icon: 'i-heroicons-trash',
-            label: $ts('delete'),
+            label: 'Hapus',
             color: 'error',
-            disabled: !isCommittee || row.original.payment?.status === 'success',
+            disabled: row.original.payment?.status === 'success',
             onSelect: () => deleteCommittee(row.original._id as string)
         }
     ]
 }
 
-/**
- * Flattens a nested object structure
- * @param {Object} obj - The object to flatten
- * @returns {Object} Flattened object
- */
+// --- UTILS & API CALLS ---
 const flattenData = (obj: Object): Object => {
-    return Object.assign(
-        {},
-        Object.fromEntries(
-            Object.values(obj)
-                .filter((x) => typeof x === "object")
-                .map((x) => Object.entries(x))
-                .flat(1)
-        ),
-        Object.fromEntries(
-            Object.entries(obj).filter(([, x]) => typeof x !== "object")
-        )
+    return Object.assign({},
+        Object.fromEntries(Object.values(obj).filter((x) => typeof x === "object").map((x) => Object.entries(x)).flat(1)),
+        Object.fromEntries(Object.entries(obj).filter(([, x]) => typeof x !== "object"))
     );
 }
-const members = computed(() => data.value?.data?.committees || []);
 
-
-/**
- * Generates and downloads an XLSX file of committee users
- */
 const generateXlsx = async () => {
     try {
-        const dataToExport = selectedCommittee.value.length > 0 ? selectedCommittee.value.map((item) => {
-            return flattenData(item);
-        }) : members.value.map((item) => {
-            return flattenData(item);
-        });
-        if (!selectedCommittee.value.length && data.value?.data?.committees?.length === 0) {
-            throw new Error('No data to export');
-        }
+        const dataToExport = selectedCommittee.value.length > 0 ? selectedCommittee.value : members.value;
+        if (!dataToExport.length) throw new Error('No data to export');
+
+        const flatData = dataToExport.map((item) => flattenData(item));
         const headers = [
             { header: "Nama Lengkap", key: "fullName" },
             { header: "NIM", key: "NIM" },
-            { header: "Email", key: "email" },
-            { header: "Kelas", key: "class" },
-            { header: "Semester", key: "semester" },
             { header: "Jabatan", key: "job" },
-            { header: "Status Pembayaran", key: "status" },
-            { header: "Hadir", key: "visisting" }
+            { header: "Status Approval", key: "approved" },
+            { header: "Status Pembayaran", key: "status" }, // dari flatten payment.status
         ];
+
         const response = await $fetch<IExportSheetResponse>('/api/sheet/export', {
             method: "post",
-            headers: {
-                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            },
-            body: {
-                title: "Committee-User",
-                headers,
-                data: dataToExport,
-            }
+            body: { title: "Committee-Data", headers, data: flatData }
         });
-        if (!response.data) {
-            throw new Error('No data returned');
-        }
-        const title = response.data?.title || 'Committee-User';
+
+        if (!response.data) throw new Error('No data returned');
+
         const link = document.createElement('a');
         link.href = response.data?.url || '';
-        link.setAttribute('download',
-            `${title}-${new Date()}.xlsx`);
+        link.setAttribute('download', `Committee-${new Date().toISOString()}.xlsx`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.add({
-            title: 'Success',
-            description: 'Exported successfully',
-            color: 'success',
-        })
+        toast.add({ title: 'Export Berhasil', color: 'success' });
     } catch (error: any) {
-        toast.add({
-            title: 'Error',
-            description: error.message,
-            color: 'error',
-        })
+        toast.add({ title: 'Export Gagal', description: error.message, color: 'error' });
     }
 }
 
-/**
- * Computed properties for pagination
- */
+// Pagination computed
 const pageTotal = computed(() => data.value?.data?.length || 0);
 const pageFrom = computed(() => (pagination.value.pageIndex) * pagination.value.pageSize);
 const pageTo = computed(() => Math.min((pagination.value.pageIndex + 1) * pagination.value.pageSize, pageTotal.value));
-const perPageOptions = computed(() => {
-    const filteredOptions = [5, 10, pageTotal.value, 20, 50, 100];
-    if (isMobile.value && filteredOptions.length > 3) {
-        return filteredOptions.slice(0, 3);
-    }
+const perPageOptions = [5, 10, 20, 50, 100];
 
-    return filteredOptions;
-});
-const openCommitteeModal = (committee: ICommittee) => {
-    CommitteeModal.open({
-        committee,
-    });
-}
 const deleteCommittee = async (committeeId: string) => {
     ConfirmationModal.open({
         title: $ts('delete_committee'),
         body: $ts('delete_committee_confirmation'),
         onConfirm: async () => {
             try {
-                const response = await $api<IResponse & { data: string }>(`/api/agenda/${id}/committee/register/${committeeId}`, {
-                    method: "DELETE",
-                })
+                await $api(`/api/agenda/${id}/committee/register/${committeeId}`, { method: "DELETE" });
                 toast.add({ title: $ts('success'), description: $ts('success_to_delete_committee') });
                 refresh();
-            } catch (error: any) {
-                toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_committee') });
+            } catch (error) {
+                toast.add({ title: $ts('failed'), color: 'error' });
             } finally {
                 ConfirmationModal.close();
             }
@@ -382,61 +406,29 @@ const deleteCommittee = async (committeeId: string) => {
 }
 
 const setPaid = async (registeredId: string) => {
-    ConfirmationModal.open({
-        title: $ts('set_payment_status'),
-        body: $ts('set_payment_status_confirmation'),
-        onConfirm: async () => {
-            try {
-                const response = await $api<IResponse>(`/api/agenda/${id}/committee/register/${registeredId}/pay`, {
-                    method: 'put',
-                });
-                if (response.statusCode != 200) {
-                    return toast.add({ title: $ts('failed'), description: $ts('failed_to_set_payment_status'), color: 'error' });
-                }
-                refresh();
-                return toast.add({
-                    title: $ts('success'),
-                    description: $ts('success_to_set_payment_status'),
-                    color: 'success',
-                })
-            } catch (error: any) {
-                toast.add({
-                    title: $ts('failed'),
-                    description: $ts('failed_to_set_payment_status'),
-                    color: 'error',
-                })
-            } finally {
-                ConfirmationModal.close();
-            }
-        }
-    });
+    try {
+        await $api(`/api/agenda/${id}/committee/register/${registeredId}/pay`, { method: 'put' });
+        toast.add({ title: 'Status Pembayaran Diupdate', color: 'success' });
+        refresh();
+    } catch (error) {
+        toast.add({ title: 'Gagal update pembayaran', color: 'error' });
+    }
 }
 
 const setVisited = async (registeredId: string) => {
     try {
-        const response = await $api<IResponse>(`/api/agenda/${id}/committee/register/${registeredId}/visited`);
-        if (response.statusCode != 200) {
-            return toast.add({ title: $ts('failed'), description: $ts('failed_to_set_visit_status'), color: 'error' });
-        }
+        await $api(`/api/agenda/${id}/committee/register/${registeredId}/visited`);
+        toast.add({ title: 'Status Kehadiran Diupdate', color: 'success' });
         refresh();
-        return toast.add({
-            title: $ts('success'),
-            description: $ts('success_to_set_visit_status'),
-            color: 'success',
-        })
-    } catch (error: any) {
-        toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_set_visit_status'),
-            color: 'error',
-        })
+    } catch (error) {
+        toast.add({ title: 'Gagal update kehadiran', color: 'error' });
     }
 }
 
 const openSetVisitedModal = (registeredId: string) => {
     ConfirmationModal.open({
-        title: $ts('set_visit_status'),
-        body: $ts('set_visit_status_confirmation'),
+        title: 'Konfirmasi Kehadiran',
+        body: 'Apakah panitia ini benar-benar hadir?',
         onConfirm: async () => {
             await setVisited(registeredId);
             ConfirmationModal.close();
@@ -445,67 +437,30 @@ const openSetVisitedModal = (registeredId: string) => {
 }
 
 const setApproved = async (registeredId: string) => {
-    ConfirmationModal.open({
-        title: $ts('set_approved'),
-        body: $ts('set_approved_confirmation'),
-        onConfirm: async () => {
-            try {
-                const response = await $api<IResponse>(`/api/agenda/${id}/committee/register/${registeredId}/approve`, {
-                    method: 'put',
-                });
-                if (response.statusCode != 200) {
-                    return toast.add({ title: $ts('failed'), description: $ts('failed_to_set_approved_status'), color: 'error' });
-                }
-                refresh();
-                return toast.add({
-                    title: $ts('success'),
-                    description: $ts('success_to_set_approved_status'),
-                    color: 'success',
-                })
-            } catch (error: any) {
-                toast.add({
-                    title: $ts('failed'),
-                    description: $ts('failed_to_set_approved_status'),
-                    color: 'error',
-                })
-            } finally {
-                ConfirmationModal.close();
-            }
-        }
-    });
+    try {
+        await $api(`/api/agenda/${id}/committee/register/${registeredId}/approve`, { method: 'put' });
+        toast.add({ title: 'Status Approval Diupdate', color: 'success' });
+        refresh();
+    } catch (error) {
+        toast.add({ title: 'Gagal update approval', color: 'error' });
+    }
 }
 
 const setBatch = async (field: 'payment' | 'visiting') => {
-    if (selectedCommittee.value.length === 0) {
-        return toast.add({ title: $ts('no_committee_selected'), color: 'warning' });
-    }
     ConfirmationModal.open({
-        title: field === 'payment' ? $ts('set_payment_status') : $ts('set_visit_status'),
-        body: field === 'payment' ? $ts('set_payment_status_confirmation') : $ts('set_visit_status_confirmation'),
+        title: 'Konfirmasi Massal',
+        body: `Update ${selectedCommittee.value.length} data sekaligus?`,
         onConfirm: async () => {
             try {
-                const response = await $api<IResponse>(`/api/agenda/${id}/committee/register/batch`, {
+                await $api(`/api/agenda/${id}/committee/register/batch`, {
                     method: 'post',
-                    body: {
-                        committees: selectedCommittee.value.map((p) => p._id),
-                        field
-                    }
+                    body: { committees: selectedCommittee.value.map((p) => p._id), field }
                 });
-                if (response.statusCode != 200) {
-                    return toast.add({ title: $ts('failed'), description: field === 'payment' ? $ts('success_to_set_payment_status') : $ts('success_to_set_visit_status'), color: 'error' });
-                }
+                toast.add({ title: 'Batch Update Berhasil', color: 'success' });
                 refresh();
-                return toast.add({
-                    title: $ts('success'),
-                    description: field === 'payment' ? $ts('success_to_set_payment_status') : $ts('success_to_set_visit_status'),
-                    color: 'success',
-                })
-            } catch (error: any) {
-                toast.add({
-                    title: $ts('failed'),
-                    description: field === 'payment' ? $ts('failed_to_set_payment_status') : $ts('failed_to_set_visit_status'),
-                    color: 'error',
-                })
+                // table.value?.toggleAllPageRowsSelected(false); // Reset selection
+            } catch (error) {
+                toast.add({ title: 'Gagal Batch Update', color: 'error' });
             } finally {
                 ConfirmationModal.close();
             }
@@ -513,106 +468,83 @@ const setBatch = async (field: 'payment' | 'visiting') => {
     });
 }
 
-/**
- * Computed property for responsive UI sizes
- */
-const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
-    button: isMobile.value ? 'xs' : 'md',
-    select: isMobile.value ? 'xs' : 'md',
-    pagination: isMobile.value ? 'xs' : 'md',
-}));
-const links = computed(() => [{
-    label: $ts('dashboard'),
-    icon: 'i-heroicons-home',
-    to: '/dashboard'
-}, {
-    label: $ts('agenda'),
-    icon: 'i-heroicons-calendar',
-    to: '/administrator/agendas'
-},
-{
-    label: agenda?.value?.title || 'Agenda',
-    icon: 'i-heroicons-calendar',
-    to: `/administrator/agendas/${id}`
-},
-{
-    label: $ts('committee'),
-    to: `/administrator/agendas/${id}/committee`,
-    icon: 'i-heroicons-link'
-}]);
-
+const links = computed(() => [
+    { label: $ts('dashboard'), icon: 'i-heroicons-home', to: '/dashboard' },
+    { label: $ts('agenda'), icon: 'i-heroicons-calendar', to: '/administrator/agendas' },
+    { label: agenda.value?.title || 'Agenda', to: `/administrator/agendas/${id}` },
+    { label: $ts('committee'), icon: 'i-heroicons-briefcase' }
+]);
 
 useHead({
     title: () => `${$ts('committee')} - ${agenda.value?.title}`,
-    meta: [
-        {
-            name: 'description',
-            content: '`${agenda.value?.title} committee list`'
-        }
-    ]
 });
 </script>
+
 <template>
-    <div class="items-center justify-center mb-24">
+    <div class="mb-24 space-y-4">
         <UBreadcrumb :items="links" />
-        <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
+
+        <UCard class="px-0 py-0 sm:px-4 overflow-hidden" :ui="{ body: 'px-0 sm:p-6' }">
             <template #header>
-                <div class="flex items-center justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-neutral-200">{{ $ts('committee') }}</h2>
-                    <div class="flex items-center gap-2">
-                        <UButton :to="`/administrator/agendas/${id}/committee/add`" :label="$ts('add')"
-                            icon="i-heroicons-plus-circle" :size="responsiveUISizes.button" variant="outline"
-                            v-if="isCommittee" />
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            {{ $ts('committee') }}
+                            <UBadge color="gray" variant="subtle" size="xs">{{ pageTotal }} Org</UBadge>
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-300 mt-1">Kelola data panitia dan volunteer event
+                        </p>
+                    </div>
+
+                    <div class="flex gap-2" v-if="isCommittee">
+                        <UButton :to="`/administrator/agendas/${id}/committee/add`" label="Tambah Manual"
+                            icon="i-heroicons-plus" size="sm" color="white" />
                     </div>
                 </div>
             </template>
-            <!-- Header and Action buttons -->
-            <div class="flex-row items-center justify-between hidden w-full gap-2 px-2 md:px-4 md:flex">
-                <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" @keyup.enter="refresh()"
-                    :loading="pending" :loading-icon="pending ? 'i-heroicons-arrow-path' : undefined"
-                    :size="responsiveUISizes.input" class="w-full md:w-auto" />
 
-                <div class="flex flex-wrap gap-1.5 items-center justify-center md:justify-end">
-                    <div class="flex items-center gap-1.5" v-if="isCommittee">
-                        <UButton v-if="selectedCommittee.length >= 1" icon="i-heroicons-arrow-down-tray" trailing
-                            color="neutral" :size="responsiveUISizes.button" @click="generateXlsx">
-                            {{ $ts('export_selected') }}
+            <div
+                class="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <UInput v-model="search" icon="i-heroicons-magnifying-glass" placeholder="Cari Nama / NIM / Jabatan..."
+                    class="w-full sm:w-72">
+                    <template #trailing>
+                        <UButton v-show="search !== ''" color="gray" variant="link" icon="i-heroicons-x-mark"
+                            :padded="false" @click="search = ''" />
+                    </template>
+                </UInput>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <UDropdownMenu v-if="isCommittee" :items="bulkActions" :popper="{ placement: 'bottom-end' }">
+                        <UButton color="white" icon="i-heroicons-cog-6-tooth" trailing-icon="i-heroicons-chevron-down">
+                            {{ selectedCommittee.length > 0 ? `${selectedCommittee.length} Terpilih` : 'Kelola Data' }}
                         </UButton>
-                        <UButton v-else icon="i-heroicons-arrow-down-tray" trailing color="neutral"
-                            :size="responsiveUISizes.button" @click="generateXlsx">
-                            {{ $ts('export_all') }}
-                        </UButton>
-                        <UButton v-if="selectedCommittee.length > 0" icon="i-heroicons-check-circle" trailing
-                            :size="responsiveUISizes.button" @click="setBatch('visiting')">
-                            {{ $ts('set_visit_status') }}
-                        </UButton>
-                        <UButton v-if="selectedCommittee.length > 0" icon="i-heroicons-banknotes" trailing
-                            :size="responsiveUISizes.button" @click="setBatch('payment')">
-                            {{ $ts('set_payment_status') }}
-                        </UButton>
-                    </div>
-                    <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"
-                        @click="refresh()" :loading="pending">
-                    </UButton>
+                    </UDropdownMenu>
+
+                    <UButton icon="i-heroicons-arrow-path" variant="ghost" color="gray" @click="refresh()"
+                        :loading="pending" tooltip="Refresh Data" />
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <UTable ref="table" v-model:pagination="pagination" v-model:row-selection="selectedRows"
-                    :columns="columns" :data="members" :loading="pending" :size="responsiveUISizes.table">
-                </UTable>
-                <div class="flex flex-col items-center justify-between w-full gap-4 sm:flex-row">
-                    <USelect :label="$ts('rows_per_page')" :items="perPageOptions" v-model="pagination.pageSize"
-                        :size="responsiveUISizes.select" />
-                    <div>
-                        <span>
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
-                        </span>
+
+            <UTable ref="table" v-model:pagination="pagination" v-model:row-selection="selectedRows" :columns="columns"
+                :data="members" :loading="pending" class="w-full">
+                <template #empty-state>
+                    <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                        <UIcon name="i-heroicons-user-group" class="w-12 h-12 mb-3 opacity-20" />
+                        <span class="text-sm">Belum ada data panitia</span>
                     </div>
-                    <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"
-                        :total="pageTotal" :sibling-count="isMobile ? 1 : 2" show-edges />
+                </template>
+            </UTable>
+
+            <div
+                class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
+                    <span>Rows:</span>
+                    <USelectMenu v-model="pagination.pageSize" :options="perPageOptions" size="xs" class="w-20" />
                 </div>
+
+                <UPagination v-model="pagination.pageIndex" :page-count="pagination.pageSize" :total="pageTotal"
+                    :max="5" size="sm" />
             </div>
         </UCard>
     </div>
 </template>
-<style scoped></style>

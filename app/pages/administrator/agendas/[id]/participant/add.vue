@@ -1,127 +1,23 @@
-<script setup lang='ts'>
-import { NuxtImg, UButton, UIcon } from '#components';
-import type { TableColumn } from '@nuxt/ui';
-import type { IMember } from '~~/types';
-import type { IAgendaResponse, IMemberResponse, IResponse } from '~~/types/IResponse';
+<script setup lang="ts">
+import type { TabsItem } from '@nuxt/ui';
+import type { IAgendaResponse } from '~~/types/IResponse';
 
+definePageMeta({
+    layout: 'dashboard',
+    middleware: ['sidebase-auth', 'organizer']
+});
 
-/**
- * Responsive design setup
- */
-const { width } = useWindowSize();
-const isMobile = computed(() => width.value < 768);
-
-/**
- * Responsive UI sizes for components
- */
-const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
-    button: isMobile.value ? 'xs' : 'md',
-    input: isMobile.value ? 'xs' : 'md',
-}));
-
-const memberSearchTerm = ref('');
-const { id } = useRoute().params as { id: string };
-const { $ts, $api } = useNuxtApp();
+const route = useRoute();
+const id = route.params.id as string;
+const { $api, $ts } = useNuxtApp();
 const toast = useToast();
 
-const stagedMembers = ref<IMember[]>([]);
-
-const { data: agenda, refresh } = useLazyAsyncData('agenda', async () => $api<IAgendaResponse>('/api/agenda', {
-    query: {
-        id
-    }
-}), {
-    transform: (data) => data.data?.agenda,
-    default: undefined
+const { data: agenda } = await useAsyncData('admin-agenda-detail',
+    () => $api<IAgendaResponse>('/api/agenda', { query: { id } }), {
+    transform: (data) => data.data?.agenda
 });
 
-const { data: members, status: memberstatus, refresh: refreshMembers } = useAsyncData('members', () => $api<IMemberResponse>("/api/member", {
-    method: 'GET',
-    params: {
-        search: memberSearchTerm.value,
-        page: 1,
-        perPage: 10
-    }
-}), {
-    transform: (data) => {
-        const members = data.data?.members || [];
-        const memberRegistered = agenda.value?.participants?.map((participant) => (participant.member as IMember | undefined)?.NIM) || [];
-        const stagedNIMs = stagedMembers.value.map(m => m.NIM);
-        return members.filter((member) => !memberRegistered.includes(member.NIM) && !stagedNIMs.includes(member.NIM));
-    },
-    default: () => [],
-    watch: [memberSearchTerm, agenda],
-});
-
-
-const columns = computed<TableColumn<IMember>[]>(() => [
-    {
-        accessorKey: 'fullName',
-        header: $ts('name'),
-        size: 150,
-        cell: ({ row }) => {
-            return h('div', {
-                class: 'flex flex-row items-center gap-2',
-            }, [
-                h(NuxtImg, {
-                    provider: 'localProvider',
-                    src: row.original?.avatar as string || '/img/profile-blank.png',
-                    class: 'object-cover rounded-full max-w-12 aspect-square',
-                    alt: row.original?.fullName,
-                    loading: 'lazy'
-                }),
-                h('div', {
-                    class: 'flex flex-col items-start gap-1',
-                }, [
-                    h('span', {
-                        class: 'font-semibold text-gray-600 dark:text-gray-200'
-                    }, row.original.fullName,
-                    ),
-                    h('span', {
-                        class: 'text-sm font-light text-gray-600 dark:text-gray-300'
-                    }, `${row.original?.NIM} | ${row.original?.email}`),
-                ]),
-            ]);
-        }
-    },
-    {
-        accessorKey: 'class',
-        header: $ts('class'),
-        sortable: true,
-        cell: ({ row }) => {
-            return row.original?.class
-        }
-    },
-    {
-        accessorKey: 'semester',
-        header: $ts('semester'),
-        sortable: true,
-        cell: ({ row }) => {
-            return row.original?.semester
-        }
-    },
-    {
-        id: 'actions',
-        cell: ({ row }) => {
-            return h(
-                'div',
-                { class: 'text-right' },
-                h(
-                    UButton,
-                    {
-                        size: responsiveUISizes.value.button,
-                        onClick: () => addToStaging(row.original),
-                    },
-                    [
-                        h(UIcon, { name: 'i-heroicons-plus-circle' }),
-                        h('span', {}, $ts('add')),
-                    ]
-                )
-            )
-        }
-    }
-])
-
+// Navigation Links
 const links = computed(() => [{
     label: $ts('dashboard'),
     icon: 'i-heroicons-home',
@@ -140,157 +36,186 @@ const links = computed(() => [{
     label: $ts('participant'),
     to: `/administrator/agendas/${id}/participant`,
     icon: 'i-heroicons-link'
-}, {
-    label: $ts('add'),
-    icon: 'i-heroicons-plus-circle'
-}]);
+},
+{
+    label: $ts('add-participant'),
+    icon: 'i-heroicons-user-plus',
+}
+]);
 
-const addToStaging = (member: IMember) => {
-    stagedMembers.value.push(member);
-    refreshMembers();
-};
+// Tabs
+const tabs = computed<TabsItem[]>(() => [
+    { label: $ts('add-member-participant'), icon: 'i-heroicons-user-group', slot: 'member', value: 'member' },
+    { label: $ts('add-guest-participant'), icon: 'i-heroicons-user-group', slot: 'guest', value: 'guest' }
+]);
 
-const removeFromStaging = (member: IMember) => {
-    stagedMembers.value = stagedMembers.value.filter(m => m.NIM !== member.NIM);
-    refreshMembers();
-};
+// State
+const loading = ref(false);
+const mode = ref<'member' | 'guest'>('member'); // Toggle Member vs Guest
 
+// --- MODE MEMBER (SEARCH) ---
+const selectedMember = ref<string | undefined>(undefined);
+const memberSearchTerm = ref('');
+const { data: members, pending } = useAsyncData('members-list', () => $api('/api/member/public', {
+    query: {
+        search: memberSearchTerm.value,
+    }
+}), {
+    lazy: true,
+    default: () => [],
+    transform: (data) => {
+        const obj = data.data?.members?.map((member) => ({
+            ...member,
+            avatar: { src: member.avatar || '/img/profile-blank.png' },
+            label: member.fullName,
+            value: member.id
+        })) || [];
+        return obj || [];
+    },
+    watch: [memberSearchTerm]
+});
 
-const registerParticipant = async (NIM: number) => {
+// --- MODE GUEST (MANUAL) ---
+const guestForm = reactive({
+    fullName: '',
+    email: '',
+    instance: '', // Instansi / Asal Sekolah
+    phone: ''
+});
+
+// --- SUBMIT ---
+const submit = async () => {
+    loading.value = true;
     try {
-        const data = await $api<IResponse>(`/api/agenda/${id}/participant`, {
-            method: 'POST',
-            body: {
-                member: NIM
-            }
-        });
-        if (data.statusCode === 200) {
-            toast.add({
-                title: $ts('success'),
-                description: $ts('add-participant-success'),
-                color: 'success'
-            });
-            return true;
+        let payload = {};
+
+        if (mode.value === 'member') {
+            if (!selectedMember.value) throw new Error('Pilih member terlebih dahulu');
+            // Payload untuk member existing
+            payload = {
+                member: selectedMember.value, // Mengirim ID member
+                // type: 'member' // Opsional, tergantung backend
+            };
         } else {
-            toast.add({
-                title: $ts('error'),
-                description: data.statusMessage || $ts('add-participant-failed'),
-                color: 'error'
-            });
-            return false;
+            // Payload untuk guest
+            if (!guestForm.fullName) throw new Error('Nama lengkap wajib diisi');
+            payload = {
+                guest: { ...guestForm },
+                // type: 'guest'
+            };
         }
+
+        // Kirim ke API Add Participant
+        await $api(`/api/agenda/${id}/participant`, {
+            method: 'POST',
+            body: payload
+        });
+
+        toast.add({ title: 'Berhasil menambahkan peserta', color: 'success' });
+
+        // Reset form agar bisa input lagi dengan cepat
+        selectedMember.value = undefined;
+        guestForm.fullName = '';
+        guestForm.email = '';
+
+        // Opsional: Kembali ke list atau tetap disini
+        // navigateTo(`/administrator/agendas/${id}/participant`);
+
     } catch (error: any) {
         toast.add({
-            title: $ts('error'),
-            description: error.message || $ts('add-participant-failed'),
+            title: 'Gagal menambahkan',
+            description: error.data?.message || error.message,
             color: 'error'
         });
-        return false;
+    } finally {
+        loading.value = false;
     }
 };
-
-const registerAllStaged = async () => {
-    const promises = stagedMembers.value.map(member => registerParticipant(member.NIM));
-    const results = await Promise.all(promises);
-
-    const successfulRegistrations = stagedMembers.value.filter((_, index) => results[index]);
-
-    if (successfulRegistrations.length > 0) {
-        stagedMembers.value = stagedMembers.value.filter(member => !successfulRegistrations.some(s => s.NIM === member.NIM));
-        refreshMembers();
-        refresh(); // Refresh agenda data to update participant list
-    }
-
-    if (successfulRegistrations.length === promises.length) {
-        toast.add({
-            title: $ts('success'),
-            description: $ts('all-participants-added-successfully'),
-            color: 'success'
-        });
-    } else {
-        toast.add({
-            title: $ts('warning'),
-            description: $ts('some-participants-failed-to-add'),
-            color: 'warning'
-        });
-    }
-};
-
-
-useHead({
-    title: () => `${$ts('add-manual-participant')} - ${agenda.value?.title}`,
-    meta: [
-        {
-            name: 'description',
-            content: 'Participant users for the agenda'
-        }
-    ]
-});
-definePageMeta({
-    layout: 'client',
-    middleware: ['sidebase-auth', 'organizer']
-});
 </script>
+
 <template>
-    <div class="items-center justify-center mb-24">
+    <div class="space-y-6 mb-24">
         <UBreadcrumb :items="links" />
-        <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
+
+
+        <UCard>
             <template #header>
-                <div class="flex items-center justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-neutral-200">{{ $ts('add-manual-participant') }}</h2>
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tambah Peserta Manual</h1>
+                    <UButton variant="subtle" icon="i-heroicons-document-arrow-up"
+                        :to="`/administrator/agendas/${id}/participant/import`">Import</UButton>
                 </div>
             </template>
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-                <!-- Search and Results Section -->
-                <div class="flex flex-col gap-4">
-                    <UInput v-model="memberSearchTerm" :placeholder="$ts('search-member')"
-                        :size="responsiveUISizes.input" icon="i-lucide-search" class="w-full" />
-
-                    <UTable :columns="columns" :data="members" :loading="memberstatus === 'pending'" class="w-full"
-                        :ui="{ base: 'max-w-full w-full' }" />
-                </div>
-
-                <!-- Staged Members Section -->
-                <div class="flex flex-col gap-4">
-                    <h3 class="text-lg font-semibold dark:text-neutral-200">{{ $ts('member-to-register') }} ({{
-                        stagedMembers.length
-                        }})</h3>
-                    <div class="flex flex-col gap-2 overflow-y-auto max-h-96">
-                        <UCard v-for="member in stagedMembers" :key="member.NIM" class="p-2">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <NuxtImg :provider="'localProvider'"
-                                        :src="member.avatar || '/img/profile-blank.png'"
-                                        class="object-cover rounded-full w-10 h-10" :alt="member.fullName"
-                                        loading="lazy" />
-                                    <div>
-                                        <p class="font-semibold">{{ member.fullName }}</p>
-                                        <p class="text-sm text-gray-500">{{ member.NIM }}</p>
+            <UTabs :items="tabs" v-model="mode" class="mb-6">
+                <template #member>
+                    <div class="space-y-6">
+                        <UFormField label="Cari Mahasiswa" help="Ketik Nama atau NIM (min. 3 karakter)" class="w-full">
+                            <USelectMenu v-model="selectedMember" v-model:search-term="memberSearchTerm"
+                                placeholder="Ketik untuk mencari..." :items="members" value-key="value"
+                                label-key="label">
+                                <template #item="{ item }">
+                                    <div class="flex items-center gap-2 w-full">
+                                        <div class="flex-col flex">
+                                            <span class="truncate font-medium">{{ item.fullName }}</span>
+                                            <span class="text-xs text-gray-500">{{ item.NIM }} • {{ item.class ||
+                                                'Unknown'
+                                            }}</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <UButton icon="i-heroicons-x-mark" color="error" variant="ghost"
-                                    @click="removeFromStaging(member)" />
-                            </div>
-                        </UCard>
-                        <div v-if="stagedMembers.length === 0" class="text-center text-gray-500">
-                            {{ $ts('no-member-selected') }}
-                        </div>
+                                </template>
+                                <template #empty>
+                                    <div v-if="pending">
+                                        <div class="flex items-center gap-2">
+                                            <USkeleton class="h-4 w-4 rounded-full" />
+
+                                            <div class="grid gap-2">
+                                                <USkeleton class="h-2 w-[120px]" />
+                                                <USkeleton class="h-2 w-[100px]" />
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 text-center text-gray-500">
+                                            Mencari member...
+                                        </div>
+                                    </div>
+                                    <div v-else class="text-center text-gray-500">
+                                        Tidak ada member ditemukan.
+                                    </div>
+                                </template>
+                            </USelectMenu>
+                        </UFormField>
                     </div>
-                    <UButton :size="responsiveUISizes.button" @click="registerAllStaged" class="w-full mt-4"
-                        :disabled="stagedMembers.length === 0" :loading="memberstatus === 'pending'" block>
-                        {{ $ts('register-all-staged') }} ({{ stagedMembers.length }})
-                    </UButton>
-                </div>
-            </div>
+                </template>
+                <template #guest>
+                    <div class="space-y-4">
+                        <UFormField label="Nama Lengkap" required>
+                            <UInput v-model="guestForm.fullName" icon="i-heroicons-user"
+                                placeholder="Nama peserta..." />
+                        </UFormField>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <UFormField label="Email">
+                                <UInput v-model="guestForm.email" icon="i-heroicons-envelope"
+                                    placeholder="email@contoh.com" />
+                            </UFormField>
+                            <UFormField label="No. WhatsApp">
+                                <UInput v-model="guestForm.phone" icon="i-heroicons-phone" placeholder="08..." />
+                            </UFormField>
+                        </div>
+                        <UFormField label="Instansi / Asal">
+                            <UInput v-model="guestForm.instance" icon="i-heroicons-building-office"
+                                placeholder="Umum / Nama Kampus..." />
+                        </UFormField>
+                    </div>
+                </template>
+            </UTabs>
 
             <template #footer>
-                <div class="flex items-center justify-end w-full mt-4">
-                    <UButton :size="responsiveUISizes.button" @click="$router.back()" class="mr-2" variant="subtle">
-                        {{ $ts('back') }}
+                <div class="flex justify-between items-center gap-3">
+                    <UButton variant="ghost" to="../participant">Batal</UButton>
+                    <UButton :loading="loading" @click="submit" color="primary">
+                        {{ mode === 'member' ? 'Tambahkan Member' : 'Simpan Data Tamu' }}
                     </UButton>
                 </div>
             </template>
         </UCard>
     </div>
 </template>
-<style scoped></style>

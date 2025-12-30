@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, ModalsParticipantView, NuxtImg, UCheckbox } from '#components';
+import { ModalsConfirmation, NuxtImg, UCheckbox } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, IGuest, IMember, IParticipant, IQuestion } from '~~/types';
@@ -33,7 +33,6 @@ const { data: user } = useAuth();
 const overlay = useOverlay();
 
 const ConfirmationModal = overlay.create(ModalsConfirmation);
-const ParticipantViewModal = overlay.create(ModalsParticipantView);
 
 
 
@@ -175,14 +174,14 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
             accessorKey: 'prodi',
             header: $ts('study_program'),
             cell: ({ row }) => {
-                return (row.original.guest as IGuest | undefined)?.prodi || '-'
+                return row.original.guest ? (row.original.guest as IGuest | undefined)?.prodi || '-' : 'Informatika'
             }
         },
         {
             accessorKey: 'instution',
             header: $ts('instance'),
             cell: ({ row }) => {
-                return (row.original.guest as IGuest | undefined)?.instance || '-'
+                return row.original.guest ? (row.original.guest as IGuest | undefined)?.instance || '-' : 'ITSNU Pekalongan'
             }
         }
     ];
@@ -250,7 +249,8 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
         {
             icon: 'i-heroicons-eye-20-solid',
             label: $ts('view'),
-            onSelect: () => openParticipantModal(row.original)
+            to: `profile/${(row.original.member as IMember)?.NIM || '-'}`,
+            disabled: !isCommittee.value && !isOrganizer.value && !row.original.member,
         },
         {
             icon: 'i-heroicons-check-circle',
@@ -279,6 +279,157 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
 
 const members = computed(() => data.value?.data?.participants || []);
 
+const printNametags = () => {
+    // 1. Tentukan target data (Selected atau Semua)
+    const targets = selectedParticipant.value.length > 0 ? selectedParticipant.value : members.value;
+
+    if (targets.length === 0) {
+        return toast.add({ title: 'Tidak ada data untuk dicetak', color: 'warning' });
+    }
+
+    // 2. Buka Jendela Baru
+    const win = window.open('', '_blank', 'width=800,height=600');
+    if (!win) return;
+
+    // 3. Definisi Style CSS (A4 Layout)
+    const styles = `
+        @page { size: A4; margin: 10mm; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+            margin: 0;
+            padding: 0;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+            page-break-after: always;
+        }
+        .card { 
+            border: 2px solid #000; 
+            height: 250px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding: 20px;
+            page-break-inside: avoid; 
+            border-radius: 12px; 
+            position: relative;
+            background: #fff;
+        }
+        .header { 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            margin-bottom: 20px; 
+            color: #555; 
+            font-weight: 600;
+        }
+        .name { 
+            font-size: 28px; 
+            font-weight: 800; 
+            margin: 0; 
+            line-height: 1.2;
+            color: #000;
+        }
+        .meta { 
+            font-size: 16px; 
+            margin-top: 8px; 
+            color: #333; 
+            font-weight: 500;
+        }
+        .badge { 
+            background: #000; 
+            color: #fff; 
+            padding: 6px 20px; 
+            border-radius: 50px; 
+            font-weight: bold; 
+            margin-top: 20px; 
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .footer { 
+            position: absolute; 
+            bottom: 12px; 
+            font-size: 10px; 
+            color: #888; 
+        }
+    `;
+
+    // 4. Generate HTML Content (Looping Data)
+    const cardsHtml = targets.map(p => {
+        // Handle data aman (null safety)
+        const member = p.member as IMember | undefined;
+        const guest = p.guest as IGuest | undefined;
+
+        const name = member?.fullName || guest?.fullName || 'Peserta';
+        const subInfo = member?.NIM || guest?.instance || '-';
+        const type = member ? 'MEMBER' : 'GUEST';
+
+        return `
+            <div class="card">
+                <div class="header">${agenda.value?.title || 'EVENT CARD'}</div>
+                <h1 class="name">${name}</h1>
+                <p class="meta">${subInfo}</p>
+                <div class="badge">${type}</div>
+                <div class="footer">ID: ${p._id}</div>
+            </div>
+        `;
+    }).join('');
+
+    // 5. Manipulasi DOM Jendela Baru
+    win.document.title = `Cetak Nametag - ${agenda.value?.title}`;
+
+    // Inject Style ke <head>
+    const styleSheet = win.document.createElement("style");
+    styleSheet.innerText = styles;
+    win.document.head.appendChild(styleSheet);
+
+    // Inject Content ke <body>
+    win.document.body.innerHTML = `
+        <div class="grid">
+            ${cardsHtml}
+        </div>
+    `;
+
+    // 6. Print dengan sedikit delay (untuk memastikan render CSS selesai)
+    setTimeout(() => {
+        win.print();
+        // win.close(); // Opsional
+    }, 500);
+};
+
+// --- REFACTOR BULK ACTIONS ---
+const bulkActions = computed<DropdownMenuItem[][]>(() => [
+    [{
+        label: `Terpilih (${selectedParticipant.value.length})`,
+        disabled: true
+    }],
+    [{
+        label: $ts('export_data'),
+        icon: 'i-heroicons-document-arrow-down',
+        onSelect: generateXlsx
+    }, {
+        label: 'Cetak Nametag',
+        icon: 'i-heroicons-identification',
+        onSelect: printNametags
+    }],
+    [{
+        label: $ts('set_visit_status'),
+        icon: 'i-heroicons-check-circle',
+        disabled: selectedParticipant.value.length === 0,
+        onSelect: () => setBatch('visiting')
+    }, {
+        label: $ts('set_payment_status'),
+        icon: 'i-heroicons-banknotes',
+        disabled: selectedParticipant.value.length === 0,
+        onSelect: () => setBatch('payment')
+    }]
+]);
 
 /**
  * Generates and downloads an XLSX file of participant users
@@ -482,11 +633,6 @@ const setBatch = async (field: 'payment' | 'visiting') => {
         }
     });
 }
-const openParticipantModal = (participant: IParticipant) => {
-    ParticipantViewModal.open({
-        participant,
-    });
-}
 const openSetVisitedModal = (registeredId: string) => {
     ConfirmationModal.open({
         title: $ts('set_visit_status'),
@@ -549,61 +695,29 @@ useHead({
                         v-if="isCommittee" />
                 </div>
             </template>
-            <!-- Header and Action buttons -->
-            <div class="flex-row items-center justify-between hidden w-full gap-2 px-2 md:px-4 md:flex">
-                <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" @keyup.enter="refresh()"
-                    :loading="pending" :loading-icon="pending ? 'i-heroicons-arrow-path' : undefined"
-                    :size="responsiveUISizes.input" class="w-full md:w-auto" />
 
-                <div class="flex flex-wrap gap-1.5 items-center justify-center md:justify-end">
-                    <div class="flex items-center gap-1.5" v-if="isCommittee">
-                        <UButton v-if="selectedParticipant.length >= 1" icon="i-heroicons-arrow-down-tray" trailing
-                            color="neutral" :size="responsiveUISizes.button" @click="generateXlsx">
-                            {{ $ts('export_selected') }}
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full mb-4">
+                <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" @keyup.enter="refresh()"
+                    :loading="pending" :placeholder="$ts('search_placeholder') || 'Cari nama / NIM...'"
+                    :size="responsiveUISizes.input" class="w-full md:w-64" />
+
+                <div class="flex items-center gap-2 self-end">
+                    <UDropdownMenu v-if="isCommittee" :items="bulkActions" :popper="{ placement: 'bottom-end' }">
+                        <UButton color="white" icon="i-heroicons-cog-6-tooth" trailing-icon="i-heroicons-chevron-down">
+                            {{ selectedParticipant.length > 0 ? `${selectedParticipant.length} Selected` : 'Aksi Massal'
+                            }}
                         </UButton>
-                        <UButton v-else icon="i-heroicons-arrow-down-tray" trailing color="neutral"
-                            :size="responsiveUISizes.button" @click="generateXlsx">
-                            {{ $ts('export_all') }}
-                        </UButton>
-                        <UButton v-if="selectedParticipant.length > 0" icon="i-heroicons-check-circle" trailing
-                            :size="responsiveUISizes.button" @click="setBatch('visiting')">
-                            {{ $ts('set_visit_status') }}
-                        </UButton>
-                        <UButton v-if="selectedParticipant.length > 0" icon="i-heroicons-banknotes" trailing
-                            :size="responsiveUISizes.button" @click="setBatch('payment')">
-                            {{ $ts('set_payment_status') }}
-                        </UButton>
-                    </div>
-                    <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"
-                        @click="refresh()" :loading="pending">
-                    </UButton>
+                    </UDropdownMenu>
+
+                    <UButton icon="i-heroicons-arrow-path" variant="ghost" color="gray" @click="refresh()"
+                        :loading="pending" tooltip="Refresh Data" />
                 </div>
             </div>
             <div class="overflow-x-auto">
                 <UTable ref="table" v-model:pagination="pagination" v-model:row-selection="selectedRows"
-                    :columns="columns" :data="members">
-                    <template #expanded="{ row }">
-                        <div class="p-2 text-sm text-gray-600 dark:text-gray-200">
-                            <h3 class="text-lg font-semibold">{{ $ts('answer') }}</h3>
-                            <div class="flex flex-col gap-2 mt-2">
-                                <CoreQuestion v-for="(answer, index) in row.original.answers" :key="index"
-                                    :question="(answer.question as IQuestion)" :is-editing="false" :type="'participant'"
-                                    disabled v-model="answer.value" />
-                            </div>
-                        </div>
-                    </template>
+                    :columns="columns" :data="members" :loading="pending">
                 </UTable>
-                <div class="flex flex-col items-center justify-between w-full gap-4 sm:flex-row">
-                    <USelect :label="$ts('rows_per_page')" :items="perPageOptions" v-model="pagination.pageSize"
-                        :size="responsiveUISizes.select" />
-                    <div>
-                        <span>
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
-                        </span>
-                    </div>
-                    <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"
-                        :total="pageTotal" :sibling-count="1" show-edges />
-                </div>
+
             </div>
         </UCard>
     </div>

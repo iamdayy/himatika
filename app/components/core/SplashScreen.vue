@@ -13,19 +13,19 @@ const props = defineProps<{
                     class="w-24 h-24 mb-4 animate-pulse" width="96" height="96" />
                 <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 animate-spin text-primary-500" />
 
-                <p class="mt-4 text-md font-medium text-gray-500 animate-pulse">
+                <p class="mt-4 text-md font-medium text-gray-500 animate-pulse text-center">
                     Selamat Datang di Website resmi
                 </p>
-                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200 text-center">
                     HIMPUNAN MAHASISWA INFORMATIKA
                 </h1>
-                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200 text-center">
                     FAKULTAS SAINS DAN TEKNOLOGI
                 </h1>
-                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 animate-pulse dark:text-gray-200 text-center">
                     INSTITUT TEKNOLOGI DAN SAINS NAHDLATUL ULAMA PEKALONGAN
                 </h1>
-                <p class="mt-4 text-sm font-medium text-gray-500 animate-pulse">
+                <p class="mt-4 text-sm font-medium text-gray-500 animate-pulse text-center">
                     Memuat Aplikasi...
                 </p>
             </div>
