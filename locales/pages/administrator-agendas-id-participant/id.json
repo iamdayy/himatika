@@ -1,1 +1,16 @@
-{}
+{
+    "set_visit_status": "Atur Status Kunjungan",
+    "set_visit_status_confirmation": "Apakah Anda yakin ingin mengatur status kunjungan peserta ini?",
+    "success_to_set_visit_status": "Berhasil mengatur status kunjungan peserta",
+    "failed_to_set_visit_status": "Gagal mengatur status kunjungan peserta",
+    "set_payment_status": "Atur Status Pembayaran",
+    "set_payment_status_confirmation": "Apakah Anda yakin ingin mengatur status pembayaran peserta ini?",
+    "success_to_set_payment_status": "Berhasil mengatur status pembayaran peserta",
+    "failed_to_set_payment_status": "Gagal mengatur status pembayaran peserta",
+    "delete_participant": "Hapus Peserta",
+    "delete_participant_confirmation": "Apakah Anda yakin ingin menghapus peserta ini?",
+    "success_to_delete_participant": "Berhasil menghapus peserta",
+    "failed_to_delete_participant": "Gagal menghapus peserta",
+    "view_answer_registration": "Lihat Jawaban Pendaftaran",
+    "answer": "Jawaban"
+}

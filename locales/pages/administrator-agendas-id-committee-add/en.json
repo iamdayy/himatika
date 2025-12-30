@@ -1,1 +1,23 @@
-{}
+{
+    "add-manual-committee": "Add Manual Committee",
+    "search-member": "Search for a member...",
+    "committee-to-register": "Committee to Register",
+    "no-committee-selected": "No committee members selected yet.",
+    "register-all-staged": "Register All",
+    "all-committees-added-successfully": "All committee members were added successfully.",
+    "some-committees-failed-to-add": "Some committee members could not be added.",
+    "back": "Back",
+    "add-committee-success": "Committee member added successfully",
+    "add-committee-failed": "Failed to add committee member",
+    "job-description": "Job Description",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "add": "Add",
+    "name": "Name",
+    "class": "Class",
+    "semester": "Semester",
+    "home": "Home",
+    "agenda": "Agenda",
+    "committee": "Committee"
+}

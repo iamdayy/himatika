@@ -1,5 +1,6 @@
 import { MemberModel } from "~~/server/models/MemberModel";
 import { IMember } from "~~/types";
+import { IReqMemberQuery } from "~~/types/IRequestPost";
 import { IMemberResponse } from "~~/types/IResponse";
 
 export default defineCachedEventHandler(
@@ -12,10 +13,22 @@ export default defineCachedEventHandler(
           statusMessage: "You must be logged in to access this",
         });
       }
+      const { search } = getQuery<IReqMemberQuery>(event);
+      let query: any = {
+        status: "active",
+      };
+      if (search) {
+        query = {
+          ...query,
+          $or: [
+            { fullName: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+            { class: { $regex: search, $options: "i" } },
+          ],
+        };
+      }
       const members = await MemberModel.find(
-        {
-          status: "active",
-        },
+        query,
         {},
         { autopopulate: false }
       );
