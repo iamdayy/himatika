@@ -27,6 +27,7 @@ import type {
   IParticipant,
   IPayment,
   IPhoto,
+  IPointLog,
   IProject,
   IQuestion,
   IReqruitment,
@@ -232,4 +233,9 @@ export interface IEncryptionSchema extends Document, Omit<IEncryption, "_id"> {
 export interface ISignSchema extends Document, Omit<ISign, "_id"> {
   updatedAt: Date;
   createdAt: Date;
+}
+
+export interface IPointLogSchema extends Document, Omit<IPointLog, "_id"> {
+  createdAt: Date;
+  updatedAt: Date;
 }

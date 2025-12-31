@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { ICategory, IMember } from "~~/types";
 
-import { ModalsActions, ModalsQrReader, NuxtImg, NuxtLink, UAvatar } from '#components';
+import { ModalsAchievementClaim, ModalsActions, NuxtImg, NuxtLink, UAvatar } from '#components';
 import type { TableColumn } from "#ui/types";
 import type { DriveStep } from "driver.js";
 import { useStatsStore } from "~/stores/useStatsStore";
@@ -104,7 +104,7 @@ const { status, data: user } = useAuth();
 const isMobile = computed(() => width.value < 768);
 
 
-const QrReaderModal = overlay.create(ModalsQrReader);
+const ClaimAchievementModal = overlay.create(ModalsAchievementClaim);
 const ActionsModal = overlay.create(ModalsActions);
 
 /**
@@ -115,17 +115,24 @@ const openModelActions = () => {
         title: 'Add Point',
         body: 'Add your point here',
         actions: [
-            // {
-            //     label: 'Scan Agenda Code',
-            //     color: 'success',
-            //     onClick: ,
-            //     variant: 'solid'
-            // },
             {
                 label: 'Register Agenda',
                 color: 'success',
                 to: '/agendas',
                 variant: 'solid'
+            },
+            {
+                label: 'Claim Achievement',
+                color: 'primary',
+                variant: 'solid',
+                onClick: () => {
+                    ClaimAchievementModal.open({
+                        onSuccess: () => {
+                            // Refresh stats after successful claim
+                            statsStore.init();
+                        }
+                    });
+                }
             }
         ]
     });
@@ -248,7 +255,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
                         <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
@@ -261,7 +268,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 projectsMe.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="projectsMe.length || 0" :color="color" :max="data?.count || 100"
@@ -274,7 +281,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 aspirations.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
