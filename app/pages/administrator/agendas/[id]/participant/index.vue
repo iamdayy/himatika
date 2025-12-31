@@ -271,7 +271,7 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
             icon: 'i-heroicons-trash',
             label: $ts('delete'),
             color: 'error',
-            disabled: !isCommittee.value || row.original.payment?.status === 'success' || row.original.visiting,
+            disabled: !isCommittee.value,
             onSelect: () => deleteParticipant(row.original._id as string)
         }
     ]
