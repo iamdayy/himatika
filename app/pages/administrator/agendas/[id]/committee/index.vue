@@ -334,7 +334,7 @@ function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
             icon: 'i-heroicons-trash',
             label: 'Hapus',
             color: 'error',
-            disabled: row.original.payment?.status === 'success',
+            disabled: !isCommittee.value,
             onSelect: () => deleteCommittee(row.original._id as string)
         }
     ]
