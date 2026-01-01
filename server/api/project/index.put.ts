@@ -1,4 +1,4 @@
-import { del, put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { ProjectModel } from "~~/server/models/ProjectModel";
 import { IMember, IProject } from "~~/types";
@@ -41,23 +41,25 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
         statusMessage: "The project is not found",
       });
     }
-    const image = body.image as File;
+    const file = body.image;
     let imageUrl = "";
-    if (image) {
+    if (file && typeof file !== "string") {
       const BASE_PHOTO_FOLDER = "/uploads/img/projects/";
-      const fileName = `${BASE_PHOTO_FOLDER}/${image.name}.${
-        image.type.split("/")[1]
+      const fileName = `${BASE_PHOTO_FOLDER}/${file.name}.${
+        file.type?.split("/")[1]
       }`;
-      if (project.image) {
-        await del(project.image as string);
-      }
 
       // Handle main image upload
-      if (image.type?.startsWith("image/")) {
-        const { url } = await put(fileName, image, {
-          access: "public",
-        });
-        imageUrl = url;
+      if (file.type?.startsWith("image/")) {
+        await r2Client.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileName,
+            Body: file.data,
+            ContentType: file.type,
+          })
+        );
+        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       } else {
         throw createError({
           statusMessage: "Please upload nothing but images.",
@@ -66,18 +68,18 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
     }
     // TODO DEFINE
     // Update project fields
-    project.title = body.title;
-    project.category = body.category;
-    project.image = imageUrl;
-    project.date = body.date;
-    project.description = body.description;
-    project.tags = body.tags;
-    project.progress = body.progress;
-    project.published = body.published;
-    project.url = body.url;
-    project.publishedAt = body.publishedAt;
+    project.title = body.title as any;
+    project.category = body.category as any;
+    project.image = imageUrl as any;
+    project.date = body.date as any;
+    project.description = body.description as any;
+    project.tags = body.tags as any;
+    project.progress = body.progress as any;
+    project.published = body.published as any;
+    project.url = body.url as any;
+    project.publishedAt = body.publishedAt as any;
     project.members = (await Promise.all(
-      (JSON.parse(body.members) as number[])?.map(
+      (JSON.parse(body.members as any) as number[])?.map(
         async (member) => await getIdByNim(member as number)
       )!
     )) as IMember[];

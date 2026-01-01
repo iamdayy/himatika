@@ -25,6 +25,11 @@ export const useDashboardNavigation = () => {
           to: "/dashboard/projects",
         },
         {
+          label: $ts("achievement"),
+          icon: "i-heroicons-trophy",
+          to: "/dashboard/achievements",
+        },
+        {
           label: $ts("aspiration"),
           icon: "i-heroicons-clipboard-document-list",
           to: "/dashboard/aspirations",
@@ -47,6 +52,11 @@ export const useDashboardNavigation = () => {
           label: $ts("agenda-management"),
           icon: "i-heroicons-calendar",
           to: "/administrator/agendas",
+        },
+        {
+          label: $ts("achievement-management"),
+          icon: "i-heroicons-trophy",
+          to: "/administrator/achievements",
         },
         {
           label: $ts("news"),

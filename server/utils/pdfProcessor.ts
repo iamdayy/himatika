@@ -1,7 +1,6 @@
-import { put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { toDataURL } from "qrcode";
 import { IOverlayLocation } from "~~/types";
-
 /**
  * Analyzes a PDF buffer to extract its text content.
  * This is useful for validation or indexing but not for finding coordinates.
@@ -78,13 +77,17 @@ export async function overlayQRAndSavePdf(
     }
 
     const buffer = Buffer.from(pdfBytes);
-    // Upload the resulting PDF buffer to Vercel Blob
-    const { url } = await put(outputBlobPath, buffer, {
-      access: "public",
-      contentType: "application/pdf",
-    });
+    // Upload the resulting PDF buffer to R2 Cloudflare
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: outputBlobPath,
+        Body: buffer,
+        ContentType: "application/pdf",
+      })
+    );
 
-    return url;
+    return `${R2_PUBLIC_DOMAIN}/${outputBlobPath}`;
   } catch (error) {
     console.error("Error overlaying QR code and saving PDF:", error);
     throw new Error("A problem occurred during the PDF modification process.");

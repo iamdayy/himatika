@@ -212,8 +212,29 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
   const aspirationsPoint =
     aspirations.reduce((acc: number, asp) => acc + 50, 0) || 0;
 
+  // Ambil dari virtual 'manualPoints'
+  const manualPointsLog = (this.manualPoints || []).filter((p: any) => {
+    // 1. Cek Tanggal (Semester)
+    if (!p.date) return false;
+    const pDate = new Date(p.date);
+    const isDateValid = pDate >= rangeDate.start && pDate <= rangeDate.end;
+
+    // 2. Cek Status (WAJIB APPROVED)
+    const isApproved = p.status === "approved";
+
+    return isDateValid && isApproved;
+  });
+
+  const manualTotal =
+    manualPointsLog.reduce((acc: number, p: any) => acc + (p.amount || 0), 0) ||
+    0;
+
   const total =
-    committeesAgenda + membersAgenda + projectsPoint + aspirationsPoint;
+    committeesAgenda +
+    membersAgenda +
+    projectsPoint +
+    aspirationsPoint +
+    manualTotal;
   // Check if total is NaN and return 0 if it is
   // if (isNaN(total)) {
   //   return 0;
@@ -237,6 +258,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
       },
       projects: projects?.length || 0,
       aspirations: aspirations?.length || 0,
+      manualPoints: manualPointsLog.length,
     },
   };
 };
@@ -279,6 +301,11 @@ memberSchema.virtual("agendas").get(function () {
     committees: this.agendasCommittee,
     members: this.agendasMember,
   };
+});
+memberSchema.virtual("manualPoints", {
+  ref: "PointLog", // Harus sama dengan nama model di mongoose.model('PointLog', ...)
+  localField: "_id",
+  foreignField: "member",
 });
 
 memberSchema.virtual("point").get(function () {

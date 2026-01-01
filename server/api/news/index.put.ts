@@ -1,5 +1,4 @@
-import { del, put } from "@vercel/blob";
-import { MultiPartData } from "h3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
@@ -44,20 +43,24 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     const body = await customReadMultipartFormData<IReqNews>(event);
-    const mainImage = body.mainImage as MultiPartData;
+    const file = body.mainImage;
     // Handle main image upload
-    if (mainImage) {
-      if (mainImage.type?.startsWith("image/")) {
+    if (file && typeof file !== "string") {
+      if (file.type?.startsWith("image/")) {
         // Remove old image if it exists
-        if (news.mainImage) {
-          await del(news.mainImage as string);
-        }
-        const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(
-          mainImage.name!
-        )}.${mainImage.type.split("/")[1] || 'png'}`;
+        const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(file.name!)}.${
+          file.type.split("/")[1] || "png"
+        }`;
         // Save new
-        const { url } = await put(fileName, mainImage.data, { access: "public" });
-        imageUrl = url;
+        await r2Client.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileName,
+            Body: file.data,
+            ContentType: file.type,
+          })
+        );
+        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       } else {
         imageUrl = news.mainImage as string;
       }

@@ -79,6 +79,7 @@ export interface IPoint {
     };
     projects: number;
     aspirations: number;
+    manualPoints: number;
   };
 }
 
@@ -113,6 +114,7 @@ export interface IMember {
   agendasCommittee?: IAgenda[];
   projects?: IProject[];
   aspirations?: IAspiration[];
+  manualPoints?: IPointLog[];
   documents?: IDoc[];
   docsRequestSign?: IDoc[];
   organizer?: {
@@ -597,4 +599,16 @@ export interface IOverlayLocation {
   y: number; // Koordinat Y (dari bawah halaman)
   width: number;
   height: number;
+}
+
+export interface IPointLog {
+  member: Types.ObjectId | IMember | number;
+  admin?: Types.ObjectId | IUser | number;
+  amount: number;
+  reason: string;
+  description?: string;
+  type?: "achievement" | "activity";
+  proof?: string;
+  status?: "pending" | "approved" | "rejected";
+  date?: Date;
 }

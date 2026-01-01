@@ -1,4 +1,4 @@
-import { del, put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { AnswerModel } from "~~/server/models/AnswerModel";
 import { IQuestion } from "~~/types";
@@ -88,13 +88,16 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Invalid file type for question ${question.question}.`,
           });
         }
-        if (q.answer) {
-          await del(q.answer);
-        }
-        const { url } = await put(fileName, file.data, {
-          access: "public",
-        });
-        q.answer = url;
+        await r2Client.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileName,
+            Body: file.data,
+            ContentType: file.type,
+          })
+        );
+
+        q.answer = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       }
 
       const answer = await AnswerModel.findOne({

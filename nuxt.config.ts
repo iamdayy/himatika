@@ -51,6 +51,10 @@ export default defineNuxtConfig({
     midtrans_url: process.env.MIDTRANS_URL,
     midtrans_client_key: process.env.MIDTRANS_CLIENT_KEY,
     midtrans_server_key: process.env.MIDTRANS_SERVER_KEY,
+    r2_access_key_id: process.env.R2_ACCESS_KEY_ID,
+    r2_secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
+    r2_bucket_name: process.env.R2_BUCKET_NAME,
+    r2_public_domain: process.env.R2_PUBLIC_DOMAIN,
     public: {
       appname: process.env.APPNAME,
       api_uri: process.env.PUBLIC_URI_API,
@@ -121,6 +125,10 @@ export default defineNuxtConfig({
       xl: 1280,
       xxl: 1536,
       "2xl": 1536,
+    },
+    provider: "cloudflare",
+    cloudflare: {
+      baseURL: process.env.PUBLIC_URI,
     },
   },
   fonts: {
