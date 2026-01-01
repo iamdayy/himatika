@@ -51,6 +51,7 @@ export default defineNuxtConfig({
     midtrans_url: process.env.MIDTRANS_URL,
     midtrans_client_key: process.env.MIDTRANS_CLIENT_KEY,
     midtrans_server_key: process.env.MIDTRANS_SERVER_KEY,
+r2_account_id: process.env.R2_ACCOUNT_ID,
     r2_access_key_id: process.env.R2_ACCESS_KEY_ID,
     r2_secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
     r2_bucket_name: process.env.R2_BUCKET_NAME,

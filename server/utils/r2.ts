@@ -4,7 +4,7 @@ const config = useRuntimeConfig();
 
 export const r2Client = new S3Client({
   region: "auto",
-  endpoint: `https://${config.r2_bucket_name}.r2.cloudflarestorage.com`,
+  endpoint: `https://${config.r2_account_id}.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId: config.r2_access_key_id || "",
     secretAccessKey: config.r2_secret_access_key || "",
