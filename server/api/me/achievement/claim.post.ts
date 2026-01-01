@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { PointModel } from "~~/server/models/PointModel";
 import { IPointLog } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
@@ -16,16 +16,33 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const BASE_PROOFS_FOLDER = `/uploads/achievements/${user.member._id}/proofs`;
     let proofUrl = "";
 
-    const file = body.file as any;
+    const file = body.file;
+    if (!file) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "No file uploaded",
+      });
+    }
+    if (typeof file === "string") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid file data",
+      });
+    }
     if (file) {
-      const fileName = `${BASE_PROOFS_FOLDER}/${Date.now().toString()}.${
+      const fileName = `${BASE_PROOFS_FOLDER}/${file.name}.${
         file.type?.split("/")[1] || "png"
       }`;
 
-      const { url } = await put(fileName, file.data, {
-        access: "public",
-      });
-      proofUrl = url;
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: fileName,
+          Body: file.data,
+          ContentType: file.type,
+        })
+      );
+      proofUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     }
 
     await PointModel.create({

@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
@@ -32,14 +32,33 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_PHOTO_FOLDER = `/uploads/img/aspiration/${aspiration._id}/photos`;
     let imageUrl = "";
-    const image = photo.image as File;
-    const fileName = `${BASE_PHOTO_FOLDER}/${hashText(image.name)}.${
-      image.type.split("/")[1]
+    const file = photo.image;
+    if (!file) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "No file uploaded",
+      });
+    }
+    if (typeof file === "string") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid file data",
+      });
+    }
+    const fileName = `${BASE_PHOTO_FOLDER}/${file.name}.${
+      file.type?.split("/")[1]
     }`;
     // Handle main image upload
-    if (image.type?.startsWith("image/")) {
-      const { url } = await put(fileName, image, { access: "public" });
-      imageUrl = url;
+    if (file.type?.startsWith("image/")) {
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: fileName,
+          Body: file.data,
+          ContentType: file.type,
+        })
+      );
+      imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but images.",

@@ -436,6 +436,7 @@ const links = computed(() => [{
                     <UInput name="minPoint" v-model="Config.minPoint" :size="responsiveUISizes.input"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />
                 </UFormField>
+                <!-- TODO: fixing carousel upload -->
                 <UFormField :label="$ts('carousel')">
                     <div class="flex flex-col gap-2 px-2 md:gap-4 md:px-8">
                         <DropFile @change="onChangeImage" accept="image/*" :disabled="notEditMode && !isSaving">

@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
 import { IMember, IOrganizer } from "~~/types";
@@ -85,10 +85,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         const fileName = `${BASE_AVATAR_FOLDER}/${filePart.filename}.${
           filePart.type.split("/")[1]
         }`;
-        const { url } = await put(fileName, filePart.data, {
-          access: "public",
-        });
-        imageUrl = url;
+        await r2Client.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileName,
+            Body: filePart.data,
+            ContentType: filePart.type,
+          })
+        );
+        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       }
       return {
         position: council.position,
@@ -103,10 +108,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       const fileName = `${BASE_AVATAR_FOLDER}/${advisorFilePart.filename}.${
         advisorFilePart.type.split("/")[1]
       }`;
-      const { url } = await put(fileName, advisorFilePart.data, {
-        access: "public",
-      });
-      imageUrlAdvisor = url;
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: fileName,
+          Body: advisorFilePart.data,
+          ContentType: advisorFilePart.type,
+        })
+      );
+      imageUrlAdvisor = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     }
     const advisor = {
       position: body.advisor.position,

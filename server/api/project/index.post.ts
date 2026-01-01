@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { ProjectModel } from "~~/server/models/ProjectModel";
 import { IProject } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
@@ -21,21 +21,25 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Read the request body containing the project data
     const body = await customReadMultipartFormData<IProject>(event);
-    const image = body.image as File;
+    const file = body.image;
     let imageUrl = "";
-    if (image) {
+    if (file && typeof file !== "string") {
       const BASE_PHOTO_FOLDER = "/uploads/img/projects/";
-      const image = body.image as File;
-      const fileName = `${BASE_PHOTO_FOLDER}/${image.name}.${
-        image.type.split("/")[1]
+      const fileName = `${BASE_PHOTO_FOLDER}/${file.name}.${
+        file.type?.split("/")[1]
       }`;
 
       // Handle main image upload
-      if (image.type?.startsWith("image/")) {
-        const { url } = await put(fileName, image, {
-          access: "public",
-        });
-        imageUrl = url;
+      if (file.type?.startsWith("image/")) {
+        await r2Client.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileName,
+            Body: file.data,
+            ContentType: file.type,
+          })
+        );
+        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       } else {
         throw createError({
           statusMessage: "Please upload nothing but images.",
@@ -48,7 +52,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       ...body,
       image: imageUrl,
       members: await Promise.all(
-        (JSON.parse(body.members) as number[])?.map(
+        (JSON.parse(body.members as any) as number[])?.map(
           async (member) => await findMemberByNim(member as number)
         )!
       ),

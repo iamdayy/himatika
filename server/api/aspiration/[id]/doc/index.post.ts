@@ -1,5 +1,4 @@
-import { put } from "@vercel/blob";
-import { MultiPartData } from 'h3';
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { DocModel } from "~~/server/models/DocModel";
@@ -9,8 +8,12 @@ import { IReqAspirationDoc } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const { doc, label, tags, no } =
-      await customReadMultipartFormData<IReqAspirationDoc>(event);
+    const {
+      doc: file,
+      label,
+      tags,
+      no,
+    } = await customReadMultipartFormData<IReqAspirationDoc>(event);
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -34,13 +37,31 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_DOC_FOLDER = `/uploads/img/aspiration/${aspiration._id}/docs`;
     let docUrl = "";
-    const d = doc as MultiPartData;
-    const fileName = `${BASE_DOC_FOLDER}/${hashText(d.name!)}.${
-      d.type?.split("/")[1]
+    if (!file) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "No file uploaded",
+      });
+    }
+    if (typeof file === "string") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid file data",
+      });
+    }
+    const fileName = `${BASE_DOC_FOLDER}/${hashText(file.name!)}.${
+      file.type?.split("/")[1]
     }`;
     // Handle main doc upload
-    const { url } = await put(fileName, d.data, { access: "public" });
-    docUrl = url;
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: fileName,
+        Body: file.data,
+        ContentType: file.type,
+      })
+    );
+    docUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     const saved = await DocModel.create({
       label,
       on: aspiration._id,
