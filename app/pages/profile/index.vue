@@ -681,7 +681,7 @@ const breadcumbs = computed(() => [
                 <UCard class="px-4 pt-8 md:px-8 md:pt-12" id="profile" :ui="{ root: 'overflow-visible' }">
                     <!-- User avatar and member summary -->
                     <div id="avatar" class="relative w-56 h-56 mx-auto -mt-32 overflow-hidden rounded-full group">
-                        <NuxtImg provider="localProvider" :src="user?.member.avatar || '/img/profile-blank.png'"
+                        <NuxtImg provider="cloudflare" :src="user?.member.avatar || '/img/profile-blank.png'"
                             class="object-cover w-full aspect-square" loading="lazy" />
                         <div
                             class="absolute top-0 left-0 flex items-center justify-center w-full h-0 gap-2 duration-500 rounded-full opacity-0 bg-accent-2/60 bg-opacity-95 group-hover:h-full group-hover:opacity-100">

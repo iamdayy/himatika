@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
@@ -13,7 +13,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
-    const organizer = event.context.organizer;
     if (!user) {
       throw createError({
         statusMessage: "Unauthorized",
@@ -26,6 +25,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Agenda not found",
       };
     }
+    if (!doc) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "No file uploaded",
+      });
+    }
     if (
       !agenda.committees
         ?.map((committee) => (committee.member as IMember).NIM)
@@ -37,15 +42,25 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_DOC_FOLDER = `/uploads/img/agenda/${agenda._id}/docs`;
     let docUrl = "";
-    const d = doc as File;
-    const fileName = `${BASE_DOC_FOLDER}/${hashText(`${agenda._id}`)}.${
-      d.type?.split("/")[1] || "pdf"
+    if (typeof doc === "string") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid file data",
+      });
+    }
+    const fileName = `${BASE_DOC_FOLDER}/${doc.name}.${
+      doc.type?.split("/")[1] || "pdf"
     }`;
     // Handle main doc upload
-    const { url } = await put(fileName, d, {
-      access: "public",
-    });
-    docUrl = url;
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: fileName,
+        Body: doc.data,
+        ContentType: doc.type,
+      })
+    );
+    docUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     const saved = await DocModel.create({
       label,
       on: agenda._id,
@@ -54,18 +69,19 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       tags: tags ? tags : [],
       doc: docUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
-      signs: signs
-        ? await Promise.all(
-            (JSON.parse(signs) as IRequestSign[]).map(async (request) => ({
-              user: request.user
-                ? ((await findMemberByNim(
-                    request.user as number
-                  )) as Types.ObjectId)
-                : request.user,
-              as: request.as,
-            }))
-          )
-        : [],
+      signs:
+        signs && typeof signs === "string"
+          ? await Promise.all(
+              (JSON.parse(signs) as IRequestSign[]).map(async (request) => ({
+                user: request.user
+                  ? ((await findMemberByNim(
+                      request.user as number
+                    )) as Types.ObjectId)
+                  : request.user,
+                as: request.as,
+              }))
+            )
+          : [],
       trails: [
         {
           user: (await findMemberByNim(user.member.NIM)) as Types.ObjectId,

@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { MemberModel } from "~~/server/models/MemberModel";
@@ -36,17 +36,34 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const BASE_VIDEO_FOLDER = `/uploads/img/agenda/${agenda._id}/videos`;
     let videoUrl = "";
-    const vid = video.video;
+    const file = video.video;
+    if (!file) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "No file uploaded",
+      });
+    }
+    if (typeof file === "string") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid file data",
+      });
+    }
     const fileName = `${BASE_VIDEO_FOLDER}/${hashText(`${agenda._id}`)}.${
-      vid.type?.split("/")[1] || "mp4"
+      file.type?.split("/")[1] || "mp4"
     }`;
 
     // Handle main video upload
-    if (vid.type?.startsWith("video/")) {
-      const { url } = await put(fileName, vid.data, {
-        access: "public",
-      });
-      videoUrl = url;
+    if (file.type?.startsWith("video/")) {
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: fileName,
+          Body: file.data,
+          ContentType: file.type,
+        })
+      );
+      videoUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     } else {
       throw createError({
         statusMessage: "Please upload nothing but videos.",

@@ -1,12 +1,11 @@
 import { model, Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
-import { IDoc, IMember } from "~~/types";
+import { IDoc } from "~~/types";
 import type {
   IDocSchema,
   IRequestSignSchema,
   ITrailSchema,
 } from "~~/types/ISchemas";
-import Email from "../utils/mailTemplate";
 import SignModel from "./SignModel";
 
 const requestsSignSchema = new Schema<IRequestSignSchema>({
@@ -120,76 +119,76 @@ const docSchema = new Schema<IDocSchema>(
 docSchema.plugin(mongooseAutoPopulate);
 docSchema.post("save", async function (doc) {
   if (!doc) return;
-  if (doc.signs) {
-    const config = useRuntimeConfig();
-    await Promise.all(
-      doc.signs.map(async (sign) => {
-        const user = sign.user as IMember;
-        const mailText = new Email({
-          recipientName: user.fullName,
-          emailTitle: "New Document for Signature",
-          heroTitle: "New Document for Signature",
-          heroSubtitle: "You have a new document that requires your signature.",
-          heroButtonLink: `${config.public.public_uri}/signatures/${doc._id}`,
-          heroButtonText: "Sign Document",
-          contentTitle1: "Document Details",
-          contentParagraph1: `Document Label: ${doc.label}`,
-          contentParagraph2: `Document Number: '${doc.no}'`,
-          ctaTitle: "Need help?",
-          ctaSubtitle: "Contact us at",
-          ctaButtonLink: `${config.public.public_uri}/#contacts`,
-          ctaButtonText: "Contact Us",
-        });
-        await sendEmail(
-          {
-            name: config.public.appname,
-            email: `signature@${config.mailtrap_domain}`,
-          },
-          user.email,
-          `New document ${doc.label} needs your signature`,
-          mailText.render(),
-          "New Document for Signature"
-        );
-      })
-    );
-  }
+  // if (doc.signs) {
+  //   const config = useRuntimeConfig();
+  //   await Promise.all(
+  //     doc.signs.map(async (sign) => {
+  //       const user = sign.user as IMember;
+  //       const mailText = new Email({
+  //         recipientName: user.fullName,
+  //         emailTitle: "New Document for Signature",
+  //         heroTitle: "New Document for Signature",
+  //         heroSubtitle: "You have a new document that requires your signature.",
+  //         heroButtonLink: `${config.public.public_uri}/signatures/${doc._id}`,
+  //         heroButtonText: "Sign Document",
+  //         contentTitle1: "Document Details",
+  //         contentParagraph1: `Document Label: ${doc.label}`,
+  //         contentParagraph2: `Document Number: '${doc.no}'`,
+  //         ctaTitle: "Need help?",
+  //         ctaSubtitle: "Contact us at",
+  //         ctaButtonLink: `${config.public.public_uri}/#contacts`,
+  //         ctaButtonText: "Contact Us",
+  //       });
+  //       await sendEmail(
+  //         {
+  //           name: config.public.appname,
+  //           email: `signature@${config.mailtrap_domain}`,
+  //         },
+  //         user.email,
+  //         `New document ${doc.label} needs your signature`,
+  //         mailText.render(),
+  //         "New Document for Signature"
+  //       );
+  //     })
+  //   );
+  // }
 });
 docSchema.post("findOneAndUpdate", async function (doc: IDoc) {
   const config = useRuntimeConfig();
   if (!doc) return;
   if (!doc.signs) return;
-  if (doc.signs.filter((sign) => sign.signed).length == doc.signs.length) {
-    await sendEmail(
-      {
-        name: config.public.appname,
-        email: `signature@${config.mailtrap_domain}`,
-      },
-      (doc.uploader as IMember).email,
-      `Dokumen ${doc.label} telah ditandatangani`,
-      new Email({
-        recipientName: (doc.uploader as IMember).fullName,
-        emailTitle: `Dokumen ${doc.label} telah ditandatangani`,
-        heroTitle: `Dokumen ${doc.label} telah ditandatangani`,
-        heroSubtitle: `Dokumen ${doc.label} telah ditandatangani oleh semua pihak yang terlibat. Silakan unduh dokumen tersebut di bawah ini.`,
-        heroButtonText: "Unduh Dokumen",
-        heroButtonLink: `${config.public.public_uri}${doc.doc}`,
-        contentTitle1: "Detail Dokumen",
-        contentParagraph1: `Label Dokumen: ${doc.label}`,
-        contentParagraph2: `No: '${doc.no}'`,
-        contentTitle2: "Di tandatangani oleh: ",
-        contentListItems: [
-          ...doc.signs.map((sign) => {
-            return `${(sign.user as IMember).fullName} (${sign.as})`;
-          }),
-        ],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      }).render(),
-      "Document Signed"
-    );
-  }
+  // if (doc.signs.filter((sign) => sign.signed).length == doc.signs.length) {
+  //   await sendEmail(
+  //     {
+  //       name: config.public.appname,
+  //       email: `signature@${config.mailtrap_domain}`,
+  //     },
+  //     (doc.uploader as IMember).email,
+  //     `Dokumen ${doc.label} telah ditandatangani`,
+  //     new Email({
+  //       recipientName: (doc.uploader as IMember).fullName,
+  //       emailTitle: `Dokumen ${doc.label} telah ditandatangani`,
+  //       heroTitle: `Dokumen ${doc.label} telah ditandatangani`,
+  //       heroSubtitle: `Dokumen ${doc.label} telah ditandatangani oleh semua pihak yang terlibat. Silakan unduh dokumen tersebut di bawah ini.`,
+  //       heroButtonText: "Unduh Dokumen",
+  //       heroButtonLink: `${config.public.public_uri}${doc.doc}`,
+  //       contentTitle1: "Detail Dokumen",
+  //       contentParagraph1: `Label Dokumen: ${doc.label}`,
+  //       contentParagraph2: `No: '${doc.no}'`,
+  //       contentTitle2: "Di tandatangani oleh: ",
+  //       contentListItems: [
+  //         ...doc.signs.map((sign) => {
+  //           return `${(sign.user as IMember).fullName} (${sign.as})`;
+  //         }),
+  //       ],
+  //       ctaTitle: "Need help?",
+  //       ctaSubtitle: "Contact us at",
+  //       ctaButtonLink: `${config.public.public_uri}/#contacts`,
+  //       ctaButtonText: "Contact Us",
+  //     }).render(),
+  //     "Document Signed"
+  //   );
+  // }
 });
 
 export const DocModel = model<IDocSchema>("Doc", docSchema);

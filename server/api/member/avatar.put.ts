@@ -1,14 +1,10 @@
-import { del, put } from "@vercel/blob";
+import { PutObjectCommand } from "@aws-sdk/client-s3"; // Ganti import Vercel
 import { MemberModel } from "~~/server/models/MemberModel";
 import { IResponse } from "~~/types/IResponse";
-const config = useRuntimeConfig();
 
-/**
- * Handles PUT requests for updating a user's avatar.
- * @param {H3Event} event - The H3 event object.
- * @returns {Promise<Object>} An object containing the status code, message, and updated avatar URL.
- * @throws {H3Error} If the user is not authorized, the member is not found, or if a system error occurs.
- */
+// Gunakan util R2 Client yang sudah dibuat sebelumnya
+import { R2_BUCKET_NAME, R2_PUBLIC_DOMAIN, r2Client } from "~~/server/utils/r2";
+
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const { NIM } = getQuery(event);
@@ -21,8 +17,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     const avatarFile = body[0]!;
-    const BASE_AVATAR_FOLDER = "/uploads/img/avatars";
-    let imageUrl = "";
+    // Hapus slash di depan agar sesuai standar S3 Key
+    const BASE_AVATAR_FOLDER = "uploads/img/avatars";
 
     // Ensure the user is authenticated and authorized
     const user = event.context.user;
@@ -49,33 +45,36 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    // Remove old avatar if it exists
-    if (member.avatar) {
-      const oldAvatarurl = member.avatar;
-      await del(oldAvatarurl);
-    }
-
     // Process and save the new avatar
-    // const buffer = Buffer.from(avatarFile.content, "base64");
-    const fileName = `${BASE_AVATAR_FOLDER}/${hashText(`${member.NIM}`)}.${
+    // Generate nama file (Key)
+    const fileName = `${BASE_AVATAR_FOLDER}/${member.NIM}.${
       avatarFile.type?.split("/")[1] || "png"
     }`;
 
     if (avatarFile.type?.startsWith("image/")) {
-      const { url } = await put(fileName, avatarFile.data, {
-        access: "public",
-      });
-      imageUrl = url;
+      // --- UPLOAD KE R2 ---
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: fileName,
+          Body: avatarFile.data,
+          ContentType: avatarFile.type,
+        })
+      );
+
+      // Susun URL Publik R2
+      const imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+
+      // Update member dengan URL baru
+      member.avatar = imageUrl;
+      await member.save();
+      // --------------------
     } else {
       throw createError({
         statusCode: 400,
         statusMessage: "Invalid file type: Please upload an image file",
       });
     }
-
-    // Update the member with the new avatar URL
-    member.avatar = imageUrl;
-    await member.save();
 
     return {
       statusCode: 200,
