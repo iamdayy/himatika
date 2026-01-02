@@ -126,11 +126,8 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
             header: $ts('name'),
             size: 150,
             cell: ({ row }) => {
-                return h('div', {
-                    class: 'flex flex-row items-center gap-2',
-                }, [
+                return h('div', { class: 'flex flex-row items-center gap-2', }, [
                     h(NuxtImg, {
-                        provider: 'localProvider',
                         src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
                         class: 'object-cover rounded-full max-w-12 aspect-square',
                         alt: (row.original.member as IMember | undefined)?.fullName,
@@ -141,7 +138,7 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
                     }, [
                         h('span', {
                             class: 'font-semibold text-gray-600 dark:text-gray-200'
-                        }, row.original.member ? (row.original.member as IMember | undefined)?.fullName : (row.original.guest as IGuest).fullName),
+                        }, row.original.member ? (row.original.member as IMember | undefined)?.fullName : (row.original.guest as IGuest)?.fullName),
                         h('span', {
                             class: 'text-sm font-light text-gray-600 dark:text-gray-300'
                         }, `${(row.original.member as IMember | undefined)?.NIM || (row.original.guest as IGuest | undefined)?.NIM || '-'} ${(isCommittee.value || isOrganizer.value) ? '| ' + ((row.original.member as IMember | undefined)?.email || (row.original.guest as IGuest | undefined)?.email || '-') : ''}`),
@@ -714,10 +711,25 @@ useHead({
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <UTable ref="table" v-model:pagination="pagination" v-model:row-selection="selectedRows"
-                    :columns="columns" :data="members" :loading="pending">
+                <UTable ref="table" v-model:row-selection="selectedRows" :columns="columns" :data="members"
+                    :loading="pending">
+                    <template #empty-state>
+                        <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                            <UIcon name="i-heroicons-user-group" class="w-12 h-12 mb-3 opacity-20" />
+                            <span class="text-sm">Belum ada data panitia</span>
+                        </div>
+                    </template>
                 </UTable>
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100 dark:border-gray-800">
+                    <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
+                        <span>Rows:</span>
+                        <USelectMenu v-model="pagination.pageSize" :options="perPageOptions" size="xs" class="w-20" />
+                    </div>
 
+                    <UPagination v-model="pagination.pageIndex" :page-count="pagination.pageSize" :total="pageTotal"
+                        :max="5" size="sm" />
+                </div>
             </div>
         </UCard>
     </div>

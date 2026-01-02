@@ -73,7 +73,6 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
         });
       }
     }
-    // TODO DEFINE
     // Update project fields
     project.title = body.title as any;
     project.category = body.category as any;

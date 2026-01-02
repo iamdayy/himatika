@@ -37,12 +37,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (committee.member) {
       fullName = (committee.member as IMember).fullName;
     }
-    if (committee.payment?.status === "success") {
-      return {
-        statusCode: 400,
-        statusMessage: "Cannot delete committee with paid status",
-      };
-    }
     if (committee.member && user.member) {
       meIsCommittee = (committee.member as IMember).NIM === user.member.NIM;
     }

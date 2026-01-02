@@ -222,7 +222,6 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
             cell: ({ row }) => {
                 return h('div', { class: 'flex flex-row items-center gap-3' }, [
                     h(NuxtImg, {
-                        provider: 'localProvider',
                         src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
                         class: 'object-cover rounded-full w-10 h-10 border border-gray-200',
                         loading: 'lazy'
@@ -525,8 +524,8 @@ useHead({
                 </div>
             </div>
 
-            <UTable ref="table" v-model:pagination="pagination" v-model:row-selection="selectedRows" :columns="columns"
-                :data="members" :loading="pending" class="w-full">
+            <UTable ref="table" v-model:row-selection="selectedRows" :columns="columns" :data="members"
+                :loading="pending" class="w-full">
                 <template #empty-state>
                     <div class="flex flex-col items-center justify-center py-12 text-gray-400">
                         <UIcon name="i-heroicons-user-group" class="w-12 h-12 mb-3 opacity-20" />

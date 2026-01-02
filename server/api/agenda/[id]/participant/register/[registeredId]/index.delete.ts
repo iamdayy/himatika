@@ -39,12 +39,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     } else if (participant.member) {
       fullName = (participant.member as IMember).fullName;
     }
-    if (participant.payment?.status === "success") {
-      return {
-        statusCode: 400,
-        statusMessage: "Cannot delete participant with paid status",
-      };
-    }
     if (participant.member && user.member) {
       meIsParticipant = (participant.member as IMember).NIM === user.member.NIM;
     }
