@@ -10,7 +10,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
 
     const body = await customReadMultipartFormData<IPointLog & { file: File }>(
-      event
+      event,
+      {
+        allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+        compress: {
+          quality: 75, // Turunkan kualitas ke 75% (cukup bagus untuk web)
+          maxWidth: 1000, // Resize lebar maksimal jadi 1000px
+        },
+      }
     );
 
     const BASE_PROOFS_FOLDER = `uploads/achievements/${user.member._id}/proofs`;
@@ -47,9 +54,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     await PointModel.create({
       member: user.member._id,
-      reason: body.reason, // Contoh: Juara 2 Fotografi
-      description: body.description,
-      type: body.type, // achievement / activity
+      reason: body.reason as string, // Contoh: Juara 2 Fotografi
+      description: body.description as string,
+      type: body.type as string, // achievement / activity
       proof: proofUrl, // Link gambar/PDF yang sudah diupload
       amount: 0, // Poin 0 dulu, nanti Admin yang tentukan bobotnya
       status: "pending", // Default pending

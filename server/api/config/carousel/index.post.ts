@@ -8,7 +8,14 @@ import { IResponse } from "~~/types/IResponse";
 export default defineEventHandler(
   async (event): Promise<IResponse & { data?: IPhoto }> => {
     try {
-      const photo = await customReadMultipartFormData<IPhoto>(event);
+      const photo = await customReadMultipartFormData<IPhoto>(event, {
+        allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+        compress: {
+          quality: 75, // Turunkan kualitas ke 75% (cukup bagus untuk web)
+          maxWidth: 1000, // Resize lebar maksimal jadi 1000px
+        },
+        maxFileSize: 2 * 1024 * 1024, // 2MB
+      });
 
       const user = event.context.user;
       const organizer = event.context.organizer;

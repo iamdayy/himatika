@@ -1,11 +1,14 @@
-import { EventHandlerRequest, H3Event } from "h3";
-// readMultipartFormData adalah utilitas global di Nuxt 3
-// Jika Anda tidak menggunakan Nuxt, Anda mungkin perlu mengimpornya:
-// import { readMultipartFormData } from "h3";
+import {
+  EventHandlerRequest,
+  H3Event,
+  createError,
+  getRequestHeader,
+  readMultipartFormData,
+} from "h3";
+import sharp from "sharp";
 
 /**
  * Mendefinisikan struktur objek file yang akan kita buat.
- * Ini berbeda dari 'MultiPartData' dari h3.
  */
 export interface ParsedFile {
   name?: string;
@@ -13,54 +16,146 @@ export interface ParsedFile {
   type?: string;
 }
 
+interface CompressionOptions {
+  quality?: number; // Kualitas output (1-100), default: 80
+  maxWidth?: number; // Lebar maksimum (resize proporsional)
+  maxHeight?: number; // Tinggi maksimum (resize proporsional)
+}
+
+interface UploadOptions {
+  // --- LIMITS ---
+  maxTotalSize?: number; // Batas total ukuran request (bytes)
+  maxFileSize?: number; // Batas ukuran per file (bytes)
+  allowedTypes?: string[]; // Array mime types yang diizinkan
+
+  // --- COMPRESSION ---
+  /**
+   * Opsi kompresi. Jika diisi, sistem akan mencoba mengompres gambar.
+   * Hanya berlaku untuk file tipe image (jpeg, png, webp, avif, tiff).
+   */
+  compress?: CompressionOptions;
+}
+
 /**
- * Membaca multipart form data dan mem-parsingnya ke objek
- * dengan kunci yang sesuai dengan tipe generik T.
- * * @param event Event H3
- * @returns Promise yang resolve ke objek parsial dari T,
- * di mana nilainya adalah string atau ParsedFile.
+ * Membaca multipart form data dengan validasi ukuran dan kompresi gambar otomatis.
+ * * Default Limits:
+ * - Total Request: 10 MB
+ * - Per File: 5 MB
  */
 export async function customReadMultipartFormData<T>(
-  event: H3Event<EventHandlerRequest>
+  event: H3Event<EventHandlerRequest>,
+  options: UploadOptions = {}
 ): Promise<Partial<Record<keyof T, string | ParsedFile>>> {
-  
-  const multiPartsData = await readMultipartFormData(event);
+  // 1. SETUP DEFAULT LIMITS
+  const MAX_TOTAL_SIZE = options.maxTotalSize || 10 * 1024 * 1024; // Default 10MB
+  const MAX_FILE_SIZE = options.maxFileSize || 2 * 1024 * 1024; // Default 2MB
 
-  // Gunakan Partial<Record<keyof T, ...>>
-  // Ini berarti "objek yang mungkin berisi beberapa kunci dari T"
+  // 2. CHECK CONTENT-LENGTH HEADER (Pertahanan Lapis Pertama)
+  const contentLengthHeader = getRequestHeader(event, "content-length");
+  if (contentLengthHeader) {
+    const contentLength = parseInt(contentLengthHeader);
+    if (!isNaN(contentLength) && contentLength > MAX_TOTAL_SIZE) {
+      throw createError({
+        statusCode: 413,
+        statusMessage: "Payload Too Large",
+        message: `Total upload size exceeds the limit.`,
+      });
+    }
+  }
+
+  // 3. READ DATA
+  const multiPartsData = await readMultipartFormData(event);
   const parsedData: Partial<Record<keyof T, string | ParsedFile>> = {};
 
   if (multiPartsData) {
     for (const data of multiPartsData) {
       if (data.name) {
-        // --- INI PERBAIKAN UTAMANYA ---
-        // Kita memberi tahu TypeScript bahwa 'data.name' adalah salah satu kunci (key) dari T.
         const key = data.name as keyof T;
 
-        // Gunakan 'data.filename' untuk mendeteksi file, ini lebih andal daripada 'data.type'
         if (data.filename) {
-          // Ini adalah file
+          // --- VALIDASI DAN PROSES FILE ---
+
+          let fileData = data.data;
+          let fileType = data.type;
+
+          // A. Validasi Ukuran Per File (Sebelum Kompresi)
+          // Kita cek data mentah dulu untuk mencegah DoS memory
+          if (fileData.length > MAX_FILE_SIZE) {
+            throw createError({
+              statusCode: 413,
+              statusMessage: "File Too Large",
+              message: `File '${data.filename}' exceeds the limit.`,
+            });
+          }
+
+          // B. Validasi Tipe File
+          if (options.allowedTypes && fileType) {
+            if (!options.allowedTypes.includes(fileType)) {
+              throw createError({
+                statusCode: 415,
+                statusMessage: "Unsupported Media Type",
+                message: `File type '${fileType}' is not allowed.`,
+              });
+            }
+          }
+
+          // C. Kompresi Gambar (Jika options.compress ada & file adalah gambar)
+          if (options.compress && fileType && fileType.startsWith("image/")) {
+            try {
+              // Inisialisasi Sharp
+              let pipeline = sharp(fileData);
+
+              // 1. Resize (Jika diminta)
+              if (options.compress.maxWidth || options.compress.maxHeight) {
+                pipeline = pipeline.resize({
+                  width: options.compress.maxWidth,
+                  height: options.compress.maxHeight,
+                  fit: "inside", // Mempertahankan aspek rasio
+                  withoutEnlargement: true, // Jangan perbesar gambar kecil
+                });
+              }
+
+              // 2. Kompresi berdasarkan tipe file asli
+              const quality = options.compress.quality || 80;
+
+              if (fileType === "image/jpeg" || fileType === "image/jpg") {
+                pipeline = pipeline.jpeg({ quality, mozjpeg: true });
+              } else if (fileType === "image/png") {
+                pipeline = pipeline.png({ quality, compressionLevel: 8 });
+              } else if (fileType === "image/webp") {
+                pipeline = pipeline.webp({ quality });
+              }
+              // Format lain (gif, svg) biasanya dibiarkan atau perlu penanganan khusus
+
+              // Simpan hasil kompresi ke buffer baru
+              const compressedBuffer = await pipeline.toBuffer();
+
+              // Ganti data asli dengan data terkompresi
+              fileData = compressedBuffer;
+
+              // Opsional: Cek ukuran lagi setelah kompresi (biasanya tidak perlu karena pasti lebih kecil/mirip)
+            } catch (error) {
+              console.warn(
+                `[Compression Warning] Failed to compress ${data.filename}:`,
+                error
+              );
+              // Jika gagal kompresi, kita biarkan file asli (fallback)
+            }
+          }
+
           parsedData[key] = {
             name: data.filename,
-            data: data.data,
-            type: data.type,
+            data: fileData, // Buffer (bisa asli atau terkompresi)
+            type: fileType,
           };
         } else {
-          // Ini adalah field teks biasa
+          // Field teks biasa
           const value = data.data.toString("utf8");
           parsedData[key] = value;
-
-          // Jika Anda ingin mencoba mem-parsing JSON seperti di kode Anda yang dikomentari:
-          // try {
-          //   // Coba parse, jika gagal, biarkan sebagai string
-          //   parsedData[key] = JSON.parse(value);
-          // } catch (e) {
-          //   parsedData[key] = value;
-          // }
         }
       }
     }
   }
-  
+
   return parsedData;
 }

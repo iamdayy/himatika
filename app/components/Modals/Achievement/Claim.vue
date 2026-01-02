@@ -17,16 +17,6 @@ const form = reactive({
     file: null as File | null
 });
 
-// Fungsi Upload File ke Server (Gunakan endpoint upload yang sudah ada di sistem Anda)
-const uploadProof = async () => {
-    if (!form.file) return null;
-    const formData = new FormData();
-    formData.append('file', form.file);
-    // Asumsi endpoint upload Anda mengembalikan { url: '...' }
-    const res = await $api<any>('/api/photo', { method: 'POST', body: formData });
-    return res.data?.url || res.url;
-};
-
 const submit = async () => {
     if (!form.title || !form.file) {
         toast.add({ title: 'Isi semua field yang diperlukan', color: 'warning' });

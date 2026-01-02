@@ -6,7 +6,10 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 export default defineEventHandler(async (event) => {
   try {
-    const data = await customReadMultipartFormData<IDoc>(event);
+    const data = await customReadMultipartFormData<IDoc>(event, {
+      allowedTypes: ["application/pdf"],
+      maxFileSize: 3 * 1024 * 1024, // 3MB
+    });
 
     // Ubah base folder (S3/R2 biasanya tidak menyarankan diawali garis miring '/')
     const BASE_DOC_FOLDER = `uploads/doc`;
@@ -46,7 +49,8 @@ export default defineEventHandler(async (event) => {
     // ----------------------------------------------
 
     const saved = await DocModel.create({
-      ...data,
+      label: data.label as string,
+      doc: url,
       signs: await Promise.all(
         await JSON.parse(data.signs as string).map(async (sign: ISign) => {
           const memberId = await findMemberByNim(sign.user as number);
@@ -68,7 +72,7 @@ export default defineEventHandler(async (event) => {
           action: "CREATE",
         },
       ],
-      tags: JSON.parse(data.tags as string),
+      tags: data.tags ? JSON.parse(data.tags as string) : [],
       uploader: user.member._id,
     });
     if (!saved) {

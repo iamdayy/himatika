@@ -13,7 +13,10 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       label,
       tags,
       no,
-    } = await customReadMultipartFormData<IReqAspirationDoc>(event);
+    } = await customReadMultipartFormData<IReqAspirationDoc>(event, {
+      allowedTypes: ["application/pdf"],
+      maxFileSize: 3 * 1024 * 1024, // 2MB
+    });
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -63,11 +66,11 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     );
     docUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     const saved = await DocModel.create({
-      label,
+      label: label as string,
       on: aspiration._id,
       onModel: "Aspiration",
-      no,
-      tags: tags,
+      no: no as string,
+      tags: tags ? JSON.parse(tags as string) : [],
       doc: docUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

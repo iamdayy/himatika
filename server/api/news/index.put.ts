@@ -34,7 +34,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     // Find the news by slug
-    const news = await NewsModel.findOne({ slug });
+    const news = await NewsModel.findOne({ slug: slug as string });
     if (!news) {
       throw createError({
         statusCode: 404,
@@ -42,7 +42,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const body = await customReadMultipartFormData<IReqNews>(event);
+    const body = await customReadMultipartFormData<IReqNews>(event, {
+      allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+      compress: {
+        quality: 75, // Turunkan kualitas ke 75% (cukup bagus untuk web)
+        maxWidth: 1000, // Resize lebar maksimal jadi 1000px
+      },
+      maxFileSize: 2 * 1024 * 1024, // 2MB
+    });
     const file = body.mainImage;
     // Handle main image upload
     if (file && typeof file !== "string") {
