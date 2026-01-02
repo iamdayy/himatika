@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, NuxtImg, UCheckbox } from '#components';
+import { ModalsConfirmation, UCheckbox } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, IGuest, IMember, IParticipant, IQuestion } from '~~/types';
@@ -14,7 +14,7 @@ definePageMeta({
 const UButton = resolveComponent('UButton');
 const UBadge = resolveComponent('UBadge');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
-
+const NuxtImg = resolveComponent('NuxtImg');
 /**
  * Current page number for pagination
  */
@@ -128,10 +128,10 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
             cell: ({ row }) => {
                 return h('div', { class: 'flex flex-row items-center gap-2', }, [
                     h(NuxtImg, {
+                        provider: 'localProvider',
                         src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
                         class: 'object-cover rounded-full max-w-12 aspect-square',
                         alt: (row.original.member as IMember | undefined)?.fullName,
-                        loading: 'lazy'
                     }),
                     h('div', {
                         class: 'flex flex-col items-start gap-1',
@@ -695,7 +695,8 @@ useHead({
 
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full mb-4">
                 <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" @keyup.enter="refresh()"
-                    :loading="pending" :placeholder="$ts('search_placeholder') || 'Cari nama / NIM...'"
+                    :loading="pending"
+                    :placeholder="$ts('search_placeholder', { key: $ts('participant') }) || 'Cari nama / NIM...'"
                     :size="responsiveUISizes.input" class="w-full md:w-64" />
 
                 <div class="flex items-center gap-2 self-end">
@@ -724,11 +725,11 @@ useHead({
                     class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100 dark:border-gray-800">
                     <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
                         <span>Rows:</span>
-                        <USelectMenu v-model="pagination.pageSize" :options="perPageOptions" size="xs" class="w-20" />
+                        <USelectMenu v-model="pagination.pageSize" :items="perPageOptions" size="xs" class="w-20" />
                     </div>
 
-                    <UPagination v-model="pagination.pageIndex" :page-count="pagination.pageSize" :total="pageTotal"
-                        :max="5" size="sm" />
+                    <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"
+                        :total="pageTotal" :sibling-count="1" size="sm" />
                 </div>
             </div>
         </UCard>
