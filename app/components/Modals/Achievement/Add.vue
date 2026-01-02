@@ -72,7 +72,7 @@ const submit = async () => {
 <template>
     <UModal prevent-close>
         <template #header>
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center w-full">
                 <h3 class="font-semibold text-lg">Input Reward / Poin Manual</h3>
                 <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" @click="$emit('close')" />
             </div>
@@ -81,7 +81,8 @@ const submit = async () => {
             <div class="space-y-4">
                 <UFormField label="Cari Mahasiswa" required>
                     <USelectMenu v-model="selectedMember" v-model:search-term="memberSearchTerm"
-                        placeholder="Ketik untuk mencari..." :items="members" value-key="value" label-key="label">
+                        placeholder="Ketik untuk mencari..." :items="members" value-key="value" label-key="label"
+                        class="w-full">
                         <template #item="{ item }">
                             <div class="flex items-center gap-2 w-full">
                                 <div class="flex-col flex">

@@ -13,7 +13,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       event
     );
 
-    const BASE_PROOFS_FOLDER = `/uploads/achievements/${user.member._id}/proofs`;
+    const BASE_PROOFS_FOLDER = `uploads/achievements/${user.member._id}/proofs`;
     let proofUrl = "";
 
     const file = body.file;
@@ -61,6 +61,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusMessage: "Klaim prestasi berhasil dikirim. Tunggu validasi admin.",
     };
   } catch (e: any) {
+    console.error(e);
     throw createError({ statusCode: 500, statusMessage: e.message });
   }
 });

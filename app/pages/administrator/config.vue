@@ -131,23 +131,21 @@ const onCropped = async (f: File) => {
  * Handle image change
  * @param {File} f - Selected image file
  */
-const onChangeImage = async (files: FileList) => {
-    if (files.length === 0) return;
-    const f = files[0]!;
+const onChangeImage = async () => {
+    if (!file.value) return;
     const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
         alwaysKeepResolution: true
     }
-    const compressedFile = await imageCompression(f, options);
-    const blob = URL.createObjectURL(compressedFile);
-    fileToCropped.value.name = f.name;
-    fileToCropped.value.blob = blob;
+    const compressedFile = await imageCompression(file.value, options);
+    file.value = compressedFile;
+    const blob = await convert(compressedFile);
     CropImageModal.open({
         onCropped,
         img: blob,
-        title: fileToCropped.value.name,
+        title: file.value.name,
         stencil: {
             movable: true,
             resizable: true,
@@ -161,7 +159,7 @@ const addPhoto = async () => {
         onSaveCarousel: async (carousel: ICarousel) => {
             try {
                 const body = new CustomFormData<IPhoto>();
-                body.append('image', carousel.image?.image as File);
+                body.append('image', file.value!);
                 const response = await $api<IResponse & { data?: IPhoto }>('/api/config/carousel', {
                     method: "POST",
                     body: body.getFormData()
@@ -436,13 +434,11 @@ const links = computed(() => [{
                     <UInput name="minPoint" v-model="Config.minPoint" :size="responsiveUISizes.input"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />
                 </UFormField>
-                <!-- TODO: fixing carousel upload -->
                 <UFormField :label="$ts('carousel')">
                     <div class="flex flex-col gap-2 px-2 md:gap-4 md:px-8">
-                        <DropFile @change="onChangeImage" accept="image/*" :disabled="notEditMode && !isSaving">
-                            <NuxtImg :src="fileToCropped.blob" v-if="file" :alt="fileToCropped.name" class="mx-auto"
-                                loading="lazy" />
-                        </DropFile>
+                        <UFileUpload v-model="file" accept="image/*" :disabled="notEditMode && !isSaving"
+                            @change="onChangeImage">
+                        </UFileUpload>
                         <UButton block @click="addPhoto" :disabled="notEditMode && !isSaving"
                             :size="responsiveUISizes.button">
                             {{ $ts('upload') }}</UButton>
@@ -451,9 +447,10 @@ const links = computed(() => [{
                         <div class="relative inline-block max-w-[240px]" v-for="img, i in Config.carousels" :key="i">
                             <NuxtImg provider="localProvider" :src="((img as ICarousel).image?.image as string)"
                                 class="object-cover rounded-lg shadow-md" alt="Carousel Image" loading="lazy" />
-                            <UButton icon="i-heroicons-x-mark" color="neutral" variant="soft" size="xs"
+                            <UButton icon="i-heroicons-x-mark" color="error" variant="soft" size="xs"
                                 class="absolute top-2 right-2 !bg-white/80 hover:!bg-white/100"
-                                @click="deletePhoto(i, img.image?._id!)" :disabled="notEditMode && !isSaving" />
+                                @click="deletePhoto(i, img.image?._id as string)"
+                                :disabled="notEditMode && !isSaving" />
                         </div>
                     </div>
                     <!-- Image upload -->

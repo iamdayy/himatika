@@ -81,8 +81,7 @@ const submit = async () => {
                             </UButton>
                             <template #content>
                                 <div class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                    <DatePicker v-model="form.date" mode="datetime" color="orange-hima"
-                                        :min="new Date()" />
+                                    <DatePicker v-model="form.date" mode="datetime" color="orange-hima" />
                                 </div>
                             </template>
                         </UPopover>
@@ -90,7 +89,7 @@ const submit = async () => {
                 </div>
 
                 <UFormField label="Bukti (Sertifikat/Foto)" required>
-                    <UFileUpload v-model="form.file" :accept="'image/*,application/pdf'" />
+                    <UFileUpload v-model="form.file" accept="image/*" />
                 </UFormField>
 
                 <UFormField label="Deskripsi Tambahan">

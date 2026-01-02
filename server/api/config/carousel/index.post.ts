@@ -14,17 +14,20 @@ export default defineEventHandler(
       const organizer = event.context.organizer;
       if (!user) {
         throw createError({
+          statusCode: 401,
           statusMessage: "Unauthorized",
         });
       }
       if (!organizer) {
         throw createError({
+          statusCode: 401,
           statusMessage: "Unauthorized",
         });
       }
       const BASE_PHOTO_FOLDER = "/uploads/img/carousel/photos";
       let imageUrl = "";
       const file = photo.image;
+
       if (!file) {
         throw createError({
           statusCode: 400,
@@ -55,6 +58,7 @@ export default defineEventHandler(
         imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       } else {
         throw createError({
+          statusCode: 400,
           statusMessage: "Please upload nothing but images.",
         });
       }
@@ -73,11 +77,12 @@ export default defineEventHandler(
         statusMessage: "Photo added successfully",
         data: saved as IPhoto,
       };
-    } catch (error) {
-      return {
-        statusCode: 500,
-        statusMessage: "Internal Server Error",
-      };
+    } catch (error: any) {
+      console.log(error);
+      throw createError({
+        statusCode: error.statusCode || 500,
+        statusMessage: error.message || "Failed to add photo",
+      });
     }
   }
 );
