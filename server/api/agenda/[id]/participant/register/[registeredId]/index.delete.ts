@@ -37,13 +37,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (participant.guest) {
       fullName = participant.guest.fullName;
     } else if (participant.member) {
-      fullName = (participant.member as IMember).fullName;
+      fullName = (participant.member as IMember)?.fullName;
     }
     if (participant.member && user.member) {
-      meIsParticipant = (participant.member as IMember).NIM === user.member.NIM;
+      meIsParticipant =
+        (participant.member as IMember)?.NIM === user.member?.NIM;
     }
     const isCommittee = agenda.committees?.find(
-      (c) => (c.member as IMember).NIM === user.member.NIM
+      (c) => (c.member as IMember)?.NIM === user.member?.NIM
     );
     if (!isCommittee && !meIsParticipant && !user.member.organizer) {
       return {
@@ -61,9 +62,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusMessage: "Success deleted " + fullName + " from participant",
     };
   } catch (error: any) {
-    return {
-      statusCode: 500,
+    throw createError({
+      statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || error.message,
-    };
+    });
   }
 });

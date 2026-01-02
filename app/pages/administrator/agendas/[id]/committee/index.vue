@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, NuxtImg, UCheckbox, UIcon } from '#components';
+import { ModalsConfirmation, UCheckbox, UIcon } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, ICommittee, IMember } from '~~/types';
@@ -13,6 +13,7 @@ definePageMeta({
 const UButton = resolveComponent('UButton');
 const UBadge = resolveComponent('UBadge');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
+const NuxtImg = resolveComponent('NuxtImg');
 
 const table = useTemplateRef('table')
 const pagination = ref({
@@ -538,11 +539,11 @@ useHead({
                 class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100 dark:border-gray-800">
                 <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
                     <span>Rows:</span>
-                    <USelectMenu v-model="pagination.pageSize" :options="perPageOptions" size="xs" class="w-20" />
+                    <USelectMenu v-model="pagination.pageSize" :items="perPageOptions" size="xs" class="w-20" />
                 </div>
 
-                <UPagination v-model="pagination.pageIndex" :page-count="pagination.pageSize" :total="pageTotal"
-                    :max="5" size="sm" />
+                <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"
+                    :total="pageTotal" :sibling-count="1" size="sm" />
             </div>
         </UCard>
     </div>
