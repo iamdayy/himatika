@@ -8,7 +8,10 @@ import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const video = await customReadMultipartFormData<IVideo>(event);
+    const video = await customReadMultipartFormData<IVideo>(event, {
+      allowedTypes: ["video/mp4", "video/webm"],
+      maxFileSize: 20 * 1024 * 1024, // 20MB
+    });
 
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
@@ -72,7 +75,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await VideoModel.create({
       on: agenda._id,
       onModel: "Agenda",
-      tags: video.tags ? video.tags : [],
+      tags: video.tags ? JSON.parse(video.tags as string) : [],
       video: videoUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

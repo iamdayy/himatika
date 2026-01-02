@@ -17,16 +17,6 @@ const form = reactive({
     file: null as File | null
 });
 
-// Fungsi Upload File ke Server (Gunakan endpoint upload yang sudah ada di sistem Anda)
-const uploadProof = async () => {
-    if (!form.file) return null;
-    const formData = new FormData();
-    formData.append('file', form.file);
-    // Asumsi endpoint upload Anda mengembalikan { url: '...' }
-    const res = await $api<any>('/api/photo', { method: 'POST', body: formData });
-    return res.data?.url || res.url;
-};
-
 const submit = async () => {
     if (!form.title || !form.file) {
         toast.add({ title: 'Isi semua field yang diperlukan', color: 'warning' });
@@ -81,8 +71,7 @@ const submit = async () => {
                             </UButton>
                             <template #content>
                                 <div class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                    <DatePicker v-model="form.date" mode="datetime" color="orange-hima"
-                                        :min="new Date()" />
+                                    <DatePicker v-model="form.date" mode="datetime" color="orange-hima" />
                                 </div>
                             </template>
                         </UPopover>
@@ -90,7 +79,7 @@ const submit = async () => {
                 </div>
 
                 <UFormField label="Bukti (Sertifikat/Foto)" required>
-                    <UFileUpload v-model="form.file" :accept="'image/*,application/pdf'" />
+                    <UFileUpload v-model="form.file" accept="image/*" />
                 </UFormField>
 
                 <UFormField label="Deskripsi Tambahan">

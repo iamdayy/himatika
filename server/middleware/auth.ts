@@ -13,7 +13,10 @@ export default defineEventHandler(async (event) => {
   ];
 
   // Jangan biarkan logic auth berjalan sama sekali.
-  if (publicRoutes.some((route) => event.path === route)) {
+  if (
+    publicRoutes.some((route) => event.path === route) &&
+    event.method === "GET"
+  ) {
     return;
   }
   const isAuthenticated = checkAuth(event);

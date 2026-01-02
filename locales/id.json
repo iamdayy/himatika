@@ -299,6 +299,8 @@
     "success_edit_category": "Kategori berhasil diedit",
     "failed_edit_category": "Kategori gagal diedit",
     "free": "Gratis",
+    "achievement": "Pencapaian",
+    "achievement-management": "Manajemen Pencapaian",
     "login_page": {
       "login_failed": "Gagal masuk",
       "user_not_found": "Pengguna tidak ditemukan",

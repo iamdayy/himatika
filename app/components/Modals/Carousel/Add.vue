@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { ICarousel } from '~/types';
+import type { ICarousel } from '~~/types';
 
 
 // Define emits for parent component communication
@@ -50,17 +50,21 @@ const inputSize = computed(() => {
         <template #body>
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
-                    <UFormGroup :label="$ts('title')">
+                    <UFormField :label="$ts('title')">
                         <UInput v-model="carousel.title" :size="inputSize" placeholder="Title" class="w-full" />
-                    </UFormGroup>
-                    <UFormGroup :label="$ts('date')">
+                    </UFormField>
+                    <UFormField :label="$ts('date')">
                         <div class="flex items-center w-full gap-2">
-                            <VDatePicker id="date" v-model="carousel.date" mode="dateTime">
-                                <template #default="{ togglePopover }">
-                                    <UButton icon="i-heroicons-calendar" @click="togglePopover" :size="buttonSize"
-                                        variant="outline" color="neutral" />
+                            <UPopover>
+                                <UButton color="neutral" variant="subtle" icon="i-lucide-calendar">
+                                    {{ carousel.date ? carousel.date.toLocaleDateString('id-ID') : 'Select a date'
+                                    }}
+                                </UButton>
+
+                                <template #content>
+                                    <DatePicker v-model="carousel.date" class="p-2" />
                                 </template>
-                            </VDatePicker>
+                            </UPopover>
                             <span class="text-gray-900 dark:text-gray-300">
                                 {{ new Date(carousel.date).toLocaleString('id-ID',
                                     {
@@ -73,12 +77,12 @@ const inputSize = computed(() => {
                                     }) }}
                             </span>
                         </div>
-                    </UFormGroup>
-                    <UFormGroup :label="$ts('description')">
+                    </UFormField>
+                    <UFormField :label="$ts('description')">
                         <UTextarea v-model="carousel.description" :size="inputSize" placeholder="Description"
                             class="w-full">
                         </UTextarea>
-                    </UFormGroup>
+                    </UFormField>
                 </div>
             </div>
         </template>

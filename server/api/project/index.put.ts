@@ -31,7 +31,14 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
     const { id } = getQuery(ev);
 
     // Read the request body containing the updated project data
-    const body = await customReadMultipartFormData<IProject>(ev);
+    const body = await customReadMultipartFormData<IProject>(ev, {
+      allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+      compress: {
+        quality: 75, // Turunkan kualitas ke 75
+        maxWidth: 1000, // Resize lebar maksimal jadi 1000px
+      },
+      maxFileSize: 2 * 1024 * 1024, // 2MB
+    });
 
     // Find the project by ID
     const project = await ProjectModel.findById(id);

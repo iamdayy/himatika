@@ -316,9 +316,9 @@ useSeoMeta({
 </script>
 <template>
     <div class="items-center justify-center mb-24">
+        <UBreadcrumb :links="links" />
         <UCard class="p-2 mt-2 md:p-4">
             <template #header>
-                <UBreadcrumb :links="links" />
                 <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">{{
                         $ts('news') }}
@@ -371,7 +371,7 @@ useSeoMeta({
                         <NuxtLink :to="`/news/${news.slug}`">
                             <h2 class="text-sm font-semibold sm:text-lg md:text-xl lg:text-2xl line-clamp-2">{{
                                 news.title
-                            }}</h2>
+                                }}</h2>
                         </NuxtLink>
                         <div class="line-clamp-3">
                             <CoreContent :content="news.body" size="sm" />

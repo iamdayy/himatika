@@ -34,7 +34,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const BASE_MAINIMAGE_FOLDER = "/uploads/img/newss";
     let imageUrl = "";
 
-    const body = await customReadMultipartFormData<IReqNews>(event);
+    const body = await customReadMultipartFormData<IReqNews>(event, {
+      allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+      compress: {
+        quality: 75, // Turunkan kualitas ke 75% (cukup bagus untuk web)
+        maxWidth: 1000, // Resize lebar maksimal jadi 1000px
+      },
+      maxFileSize: 2 * 1024 * 1024, // 2MB
+    });
 
     const file = body.mainImage as MultiPartData;
     if (!file) {

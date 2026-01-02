@@ -20,7 +20,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     // Read the request body containing the project data
-    const body = await customReadMultipartFormData<IProject>(event);
+    const body = await customReadMultipartFormData<IProject>(event, {
+      allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+      compress: {
+        quality: 75, // Turunkan kualitas ke 75
+        maxWidth: 1000, // Resize lebar maksimal jadi 1000px
+      },
+      maxFileSize: 2 * 1024 * 1024, // 2MB
+    });
     const file = body.image;
     let imageUrl = "";
     if (file && typeof file !== "string") {

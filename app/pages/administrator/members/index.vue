@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, ModalsMemberAdd, ModalsMemberAddPoint, ModalsMemberEdit, NuxtImg, UBadge, UButton, UCheckbox } from '#components';
+import { ModalsConfirmation, ModalsMemberAdd, ModalsMemberEdit, NuxtImg, UBadge, UButton, UCheckbox } from '#components';
 import type { TableColumn } from '@nuxt/ui';
 import type { Column } from '@tanstack/vue-table';
 import type { IMember } from '~~/types';
@@ -35,7 +35,6 @@ const overlay = useOverlay();
 const toast = useToast();
 const { $ts } = useI18n();
 
-const PointModal = overlay.create(ModalsMemberAddPoint);
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 const AddMemberModal = overlay.create(ModalsMemberAdd);
 const EditMemberModal = overlay.create(ModalsMemberEdit);
@@ -353,13 +352,6 @@ const perPageOptions = computed(() => {
     return filteredOptions;
 });
 
-
-const openRewardModal = () => {
-    PointModal.open({
-        onSuccess: () => refresh() // Refresh tabel agar poin terupdate
-    });
-};
-
 /**
  * Delete a member
  * @param {number} NIM - The NIM of the member to delete
@@ -561,8 +553,6 @@ const links = computed(() => [{
                             class="mx-auto my-3" @click="addModal" />
                         <UButton :label="$ts('import')" :size="responsiveUISizes.button" class="mx-auto my-3"
                             v-if="isOrganizer" to="/administrator/members/import" />
-                        <UButton icon="i-heroicons-star" label="Reward Prestasi" color="warning" variant="soft"
-                            @click="openRewardModal" />
                     </div>
                 </div>
                 <!-- Filters -->

@@ -17,7 +17,13 @@ export default defineEventHandler(async (event) => {
   try {
     // Read the uploaded file
     const { file } = await customReadMultipartFormData<{ file: ParsedFile }>(
-      event
+      event,
+      {
+        allowedTypes: [
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ],
+        maxFileSize: 10 * 1024 * 1024, // 10MB
+      }
     );
 
     if (!file) {
