@@ -51,6 +51,7 @@ export default defineEventHandler(async (event) => {
     const saved = await DocModel.create({
       label: data.label as string,
       doc: url,
+      no: data.no as string,
       signs: await Promise.all(
         await JSON.parse(data.signs as string).map(async (sign: ISign) => {
           const memberId = await findMemberByNim(sign.user as number);
