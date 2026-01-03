@@ -24,11 +24,7 @@ export default defineEventHandler(async (event) => {
     const d = data.doc as MultiPartData;
 
     // Buat nama file (Key) untuk R2
-    const fileKey = `${BASE_DOC_FOLDER}/${user.member.NIM}/${hashText(
-      d.name!
-    )}.${d.type?.split("/")[1]}`;
-
-    // --- MIGRASI DARI VERCEL BLOB KE R2 DI SINI ---
+    const fileKey = `${BASE_DOC_FOLDER}/${user.member.NIM}/${d.name!}`;
 
     // Upload ke R2
     await r2Client.send(
