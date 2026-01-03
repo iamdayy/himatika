@@ -6,7 +6,7 @@ const config = useRuntimeConfig();
 let cachedConnection: any = null;
 
 export default defineNitroPlugin(async () => {
-  if (cachedConnection) {
+  if (cachedConnection && mongoose.connection.readyState === 1) {
     return; // Gunakan koneksi yang sudah ada
   }
 
