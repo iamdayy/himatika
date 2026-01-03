@@ -33,7 +33,7 @@ export const checkSession = async (payload: string) => {
 
     // 3. Ambil user dengan populate member (asumsi member adalah relasi/field)
     // Menggunakan lean() untuk performa lebih cepat (return POJO, bukan Mongoose Document)
-    const user: any = await UserModel.findById(session.user);
+    const user = await UserModel.findById(session.user);
 
     if (!user) {
       throw createError({

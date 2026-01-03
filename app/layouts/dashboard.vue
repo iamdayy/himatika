@@ -143,7 +143,7 @@ const openSlideOver = ref<boolean>(false);
                                         <div class="overflow-ellipsis">
                                             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                 user?.username
-                                            }}
+                                                }}
                                             </h2>
                                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                 user?.member.NIM }}
@@ -194,7 +194,7 @@ const openSlideOver = ref<boolean>(false);
                                     {{ $ts('signed_as') }}
                                 </p>
                                 <p class="font-medium text-gray-900 truncate dark:text-white">
-                                    {{ item.label }}
+                                    {{ user?.username || '' }}
                                 </p>
                             </div>
                         </template>

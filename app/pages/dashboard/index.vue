@@ -1,19 +1,14 @@
 <script setup lang='ts'>
-import type { ICategory, IMember } from "~~/types";
+import type { ICategory, ILeaderboard, IMember } from "~~/types";
 
-import { ModalsAchievementClaim, ModalsActions, NuxtImg, NuxtLink, UAvatar } from '#components';
+import { ModalsAchievementClaim, ModalsActions, NuxtLink, UAvatar } from '#components';
 import type { TableColumn } from "#ui/types";
 import type { DriveStep } from "driver.js";
 import { useStatsStore } from "~/stores/useStatsStore";
 import type { IProjectsResponse } from "~~/types/IResponse";
-interface IPoint {
-    avatar?: string;
-    fullName: string;
-    NIM: number;
-    semester?: number;
-    point?: { point: number }[]; // Ensure point is an array of objects with a 'point' property
-    no: number;
-}
+
+const NuxtImg = resolveComponent('NuxtImg');
+
 const { $ts, $switchLocale, $getLocale } = useI18n();
 const router = useRouter();
 /**
@@ -33,7 +28,7 @@ useHead({
 
 const { $pageGuide, $api } = useNuxtApp();
 
-const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
+const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
     {
         accessorKey: 'rank',
         header: $ts('rank'),
@@ -62,14 +57,14 @@ const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
         accessorKey: 'point',
         header: $ts('point'),
         cell: ({ row }) => {
-            if (!row.original.point || row.original.point.length === 0) {
+            if (!row.original.point) {
                 return h('span', {
                     class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
                 }, '0');
             }
             return h('span', {
                 class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
-            }, row.original.point?.[0]?.point || '0');
+            }, row.original.point || '0');
         }
     }
 ]
@@ -82,7 +77,7 @@ await useAsyncData('dashboard-stats', async () => {
     await statsStore.init();
     return true; // Return sesuatu agar useAsyncData tahu proses selesai
 });
-const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations } = storeToRefs(statsStore);
+const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations, lastPoint } = storeToRefs(statsStore);
 const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
     transform: (data) => ({
         data: data.data?.projects || [],
@@ -254,11 +249,11 @@ onMounted(() => {
                         </template>
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                                (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                }}</h2>
+                                (agendasMe?.committee?.length! + agendasMe?.participant?.length!)
+                            }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
-                        <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
+                        <UProgress :model-value="(agendasMe?.committee?.length! + agendasMe?.participant?.length!) || 0"
                             :max="agendasCanMeRegistered?.length || 100" indicator />
                     </UCard>
                     <UCard class="w-full lg:w-1/3" id="card-projects">
@@ -268,7 +263,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 projectsMe.length
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="projectsMe.length || 0" :color="color" :max="data?.count || 100"
@@ -281,7 +276,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 aspirations.length
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
@@ -300,12 +295,12 @@ onMounted(() => {
                     </template>
                     <div class="flex items-center justify-between w-full mb-2">
                         <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                            user?.member.point[0]!.point || 0 }}
+                            lastPoint?.point || 0 }}
                         </h2>
                         <UIcon name="i-heroicons-arrow-trending-up" class="text-6xl" />
                     </div>
-                    <UProgress :model-value="(user?.member.point[0]!.point || 0)"
-                        :max="configData?.data.minPoint || 100" indicator />
+                    <UProgress :model-value="(lastPoint?.point || 0)" :max="configData?.data.minPoint || 100"
+                        indicator />
                     <template #footer>
                         <div class="flex items-center justify-between w-full">
                             <UTable :columns="pointLeaderBoardColumn" :data="points" class="w-full" responsive>
@@ -326,7 +321,7 @@ onMounted(() => {
             </template>
             <div>
                 <UCarousel ref="carouselRef"
-                    :items="[(agendasMe?.committees || []), (agendasMe?.members || [])].flat().slice(0, 3)"
+                    :items="[(agendasMe?.committee || []), (agendasMe?.participant || [])].flat().slice(0, 3)"
                     v-slot="{ item }" arrows dots loop :autoplay="{ delay: 30000 }" next-icon="i-lucide-chevron-right"
                     prev-icon="i-lucide-chevron-left" :next="{
                         variant: 'ghost',

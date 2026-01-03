@@ -83,6 +83,15 @@ export interface IPoint {
   };
 }
 
+export interface ILeaderboard {
+  avatar?: string;
+  fullName: string;
+  NIM: number;
+  semester?: number;
+  point?: number;
+  no: number;
+  class: string;
+}
 /**
  * Represents a user member with personal and academic information.
  */

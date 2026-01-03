@@ -358,7 +358,6 @@ memberSchema.virtual("point").get(function () {
       return point;
     });
   }
-  return 0; // Default case, no points
 });
 
 memberSchema.virtual("documents", {
@@ -441,10 +440,8 @@ memberSchema.pre("save", function (next) {
     if (this.semester > 14) {
       this.status = "inactive";
       this.save();
-      return next();
     }
   }
-  next();
 });
 
 /**
@@ -479,7 +476,7 @@ memberSchema.post("save", async function (next) {
         },
       }
     );
-    await UserModel.findOneAndDelete({ member: memberId });
+    await UserModel.findOneAndDelete({ "member.NIM": member.NIM });
   }
 });
 

@@ -1,30 +1,38 @@
 import { defineStore } from "pinia";
-import type { IAgenda, IAspiration, IProject } from "~~/types";
 import type {
+  IAgenda,
+  IAspiration,
+  ILeaderboard,
+  IPoint,
+  IProject,
+} from "~~/types";
+import type {
+  IAgendaMeResponse,
   IAgendaResponse,
   IAspirationMeResponse,
+  ILastPointResponse,
+  ILeaderboardsResponse,
+  IProjectMeResponse,
 } from "~~/types/IResponse";
-
-interface IPoint {
-  avatar?: string;
-  fullName: string;
-  NIM: number;
-  semester?: number;
-  point?: { point: number }[];
-  no: number;
-}
 
 export const useStatsStore = defineStore("stats", () => {
   // --- Dependencies ---
   const { $api } = useNuxtApp();
-  const { data: user } = useAuth(); // Mengambil user dari auth module
   const { canMeRegister } = useCanMeRegister();
 
   // --- State (Data Mentah) ---
   const rawAgendas = ref<IAgenda[]>([]);
   const rawAgendasCount = ref(0);
   const aspirations = ref<IAspiration[]>([]);
-  const points = ref<IPoint[]>([]);
+  const points = ref<ILeaderboard[]>([]);
+  const lastPoint = ref<IPoint>();
+  const rawAgendasMe = ref<{ committee?: IAgenda[]; participant?: IAgenda[] }>({
+    committee: [],
+    participant: [],
+  });
+  const rawAgendasMeCount = ref(0);
+  const rawProjectsMe = ref<IProject[]>([]);
+  const rawProjectsMeCount = ref(0);
 
   // Loading States (Opsional, tapi bagus untuk UX)
   const loading = ref(false);
@@ -43,6 +51,28 @@ export const useStatsStore = defineStore("stats", () => {
       loading.value = false;
     }
   }
+  async function fetchAgendasMe() {
+    try {
+      const response = await $api<IAgendaMeResponse>("/api/me/agenda");
+      rawAgendasMe.value = response.data?.agendas || {
+        committee: [],
+        participant: [],
+      };
+      rawAgendasMeCount.value = response.data?.length || 0;
+    } catch (error) {
+      console.error("Failed to fetch agendas", error);
+    }
+  }
+
+  async function fetchProjectsMe() {
+    try {
+      const response = await $api<IProjectMeResponse>("/api/me/project");
+      rawProjectsMe.value = response.data?.projects || [];
+      rawProjectsMeCount.value = response.data?.length || 0;
+    } catch (error) {
+      console.error("Failed to fetch projects", error);
+    }
+  }
 
   async function fetchAspirations() {
     try {
@@ -55,24 +85,42 @@ export const useStatsStore = defineStore("stats", () => {
 
   async function fetchPoints() {
     try {
-      const response = await $api<any>("/api/point");
+      const response = await $api<ILeaderboardsResponse>(
+        "/api/point/leaderboards"
+      );
       points.value = response.data?.points || [];
     } catch (error) {
       console.error("Failed to fetch points", error);
     }
   }
 
+  async function fetchLastPoint() {
+    try {
+      const response = await $api<ILastPointResponse>("/api/me/point/last");
+      lastPoint.value = response.data?.point;
+    } catch (error) {
+      console.error("Failed to fetch last point", error);
+    }
+  }
+
   // Fungsi wrapper untuk memanggil semua (mirip init di composable)
   async function init() {
-    await Promise.all([fetchAgendas(), fetchAspirations(), fetchPoints()]);
+    await Promise.all([
+      fetchAgendas(),
+      fetchAspirations(),
+      fetchPoints(),
+      fetchAgendasMe(),
+      fetchProjectsMe(),
+      fetchLastPoint(),
+    ]);
   }
 
   // --- Getters (Computed) ---
   // Logika ini disalin langsung dari useStats.ts Anda
   const agendasMe = computed<
-    { committees?: IAgenda[]; members?: IAgenda[] } | undefined
+    { committee?: IAgenda[]; participant?: IAgenda[] } | undefined
   >(() => {
-    return user.value?.member.agendas;
+    return rawAgendasMe.value;
   });
 
   const agendasCanMeRegistered = computed<IAgenda[] | undefined>(() => {
@@ -85,13 +133,13 @@ export const useStatsStore = defineStore("stats", () => {
   });
 
   const projectsMe = computed<IProject[]>(() => {
-    return user.value?.member.projects || [];
+    return rawProjectsMe.value.filter((project) => project.published) || [];
   });
 
   const all = computed<number>(() => {
     return (
-      (agendasMe.value?.committees?.length || 0) +
-      (agendasMe.value?.members?.length || 0) +
+      (agendasMe.value?.committee?.length || 0) +
+      (agendasMe.value?.participant?.length || 0) +
       (projectsMe.value.length || 0)
     );
   });
@@ -118,5 +166,6 @@ export const useStatsStore = defineStore("stats", () => {
     agendasCanMeRegistered,
     all,
     allCanMeRegister,
+    lastPoint,
   };
 });

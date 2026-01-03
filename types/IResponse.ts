@@ -7,6 +7,7 @@ import type {
   IDoc,
   IDocGrouped,
   IEncryption,
+  ILeaderboard,
   IMember,
   IMessage,
   INews,
@@ -15,6 +16,7 @@ import type {
   IPayment,
   IPhoto,
   IPhotoGrouped,
+  IPoint,
   IProject,
   IQuestion,
   IUser,
@@ -127,15 +129,13 @@ export interface IStatsResponse extends IResponse {
 
 export interface IPointResponse extends IResponse {
   data?: {
-    points: {
-      avatar?: string;
-      fullName: string;
-      NIM: number;
-      semester?: number;
-      point?: { point: number }[];
-      no: number;
-      class: string;
-    }[];
+    points: IPoint[];
+  };
+}
+
+export interface ILeaderboardsResponse extends IResponse {
+  data?: {
+    points: ILeaderboard[];
   };
 }
 
@@ -314,5 +314,11 @@ export interface IEncryptionsResponse extends IResponse {
     encryptions?: Omit<IEncryption, "private_key">[];
     count?: number;
     encryption?: Omit<IEncryption, "_id">;
+  };
+}
+
+export interface ILastPointResponse extends IResponse {
+  data?: {
+    point: IPoint;
   };
 }
