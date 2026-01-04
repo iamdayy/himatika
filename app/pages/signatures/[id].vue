@@ -10,7 +10,7 @@ import type { IConfig, IDoc, IMember, IOverlayLocation } from '~~/types';
 import type { IReqSignDocument } from '~~/types/IRequestPost';
 import type { IConfigResponse, IDocResponse } from '~~/types/IResponse';
 
-pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs";
+pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.530/pdf.worker.min.mjs";
 
 
 const { $api } = useNuxtApp();
