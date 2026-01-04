@@ -5,7 +5,7 @@ import type { IOTPSchema } from "~~/types/ISchemas";
 const otpSchema: Schema<IOTPSchema> = new Schema<IOTPSchema>({
   email: { type: String, required: true, unique: true },
   code: { type: String, required: true },
-  NIM: { type: String, required: true },
+  NIM: { type: Number, required: true },
   type: {
     type: String,
     required: true,
@@ -19,6 +19,7 @@ const otpSchema: Schema<IOTPSchema> = new Schema<IOTPSchema>({
       "Verify Phone",
     ],
   },
+  createdAt: { type: Date, default: Date.now, expires: "10m" },
   expiresAt: { type: Date, required: true },
 });
 

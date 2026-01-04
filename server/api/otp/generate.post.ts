@@ -2,7 +2,6 @@ import otpGenerator from "otp-generator";
 import { ConfigModel } from "~~/server/models/ConfigModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { OTPModel } from "~~/server/models/OTPModel";
-import { generateQRCode } from "~~/server/utils/qrcode";
 import Email, { EmailTemplate } from "~~/server/utils/mailTemplate";
 import { IReqGenerateOTP } from "~~/types/IRequestPost";
 import { IGenerateOTPResponse } from "~~/types/IResponse";
@@ -75,9 +74,9 @@ export default defineEventHandler(
         });
         const mailed = await sendEmail(
           sender,
-          newOTP.email,
-          `Your ${configUse.name} App verivication code : ${newOTP.code}`,
-          emailText(newOTP.type, linkTo, code, {
+          email,
+          `Your ${configUse.name} App ${type} code : ${code}`,
+          emailText(type, linkTo, code, {
             fullName: member?.fullName || "",
             email: member?.email || "",
           }),

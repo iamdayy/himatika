@@ -553,7 +553,7 @@ export interface IMessage {
 
 export interface IOTP {
   email: string;
-  NIM: string;
+  NIM: number;
   code: string;
   type:
     | "Verify Account"

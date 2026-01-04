@@ -37,6 +37,7 @@ export async function sendBulkEmail(
     token: config.mailtrap_token,
   });
   try {
+    // TODO: FIX THIS
     await client.batchSend({
       from: sender,
       to: recipients,
