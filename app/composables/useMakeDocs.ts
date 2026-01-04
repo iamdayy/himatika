@@ -60,10 +60,6 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   const { data: configdata } = useAsyncData<IConfigResponse>(() =>
     $api("/api/config")
   );
-
-  // const organizer = computed(() =>
-  //   organizers.value ? organizers.value[0] : undefined
-  // );
   const chairman = computed<IMember>(
     () =>
       organizer.value?.dailyManagement.find(
@@ -94,6 +90,18 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   }
 
   const makeActivinessLetter = async (data: IPoint) => {
+    const periodStartYear = new Date(data.range.start).getFullYear();
+    const periodEndYear = new Date(data.range.end).getFullYear();
+    const Raworganizer = await $api<IOrganizerResponse>("/api/organizer", {
+      method: "get",
+      query: {
+        period: `${periodStartYear}-${periodEndYear}`,
+      },
+    });
+    if (Raworganizer.statusCode !== 200) {
+      throw new Error("organizer not found");
+    }
+    const organizer = computed(() => Raworganizer.data?.organizer);
     if (organizer.value === undefined || configdata.value === undefined) {
       throw new Error("organizer not found");
     }
@@ -319,8 +327,6 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       drawKeyValue("Semester", data.semester, currentY);
       currentY -= 30; // Margin from original
 
-      const periodStartYear = new Date(data.range.start).getFullYear();
-      const periodEndYear = new Date(data.range.end).getFullYear();
       const activeStatement = `Adalah mahasiswa yang benar - benar aktif dalam Himpunan Mahasiswa Informatika (HIMATIKA) ITSNU Pekalongan periode ${periodStartYear}/${periodEndYear}.`;
       page.drawText(activeStatement, {
         x: margin + 20,
