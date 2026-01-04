@@ -44,15 +44,6 @@ function monthToRomanFromDate(): string {
 export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   const config = useRuntimeConfig();
   const { $api } = useNuxtApp();
-  const { data: organizer } = useAsyncData(
-    "organizer",
-    () => $api<IOrganizerResponse>("/api/organizer/now"),
-    {
-      transform: (data) => {
-        return data.data?.organizer;
-      },
-    }
-  );
   const { data: user } = useAuth();
   const { data: lastDocNumber } = useAsyncData<IResponse & { data?: number }>(
     () => $api("/api/doc/numbering/last")
@@ -60,22 +51,6 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   const { data: configdata } = useAsyncData<IConfigResponse>(() =>
     $api("/api/config")
   );
-  const chairman = computed<IMember>(
-    () =>
-      organizer.value?.dailyManagement.find(
-        (dm) =>
-          dm.position.includes("Ketua") || dm.position.includes("Chairman")
-      )?.member as IMember
-  );
-  const secretary = computed<IMember>(
-    () =>
-      organizer.value?.dailyManagement.find(
-        (dm) =>
-          dm.position.includes("Sekretaris") ||
-          dm.position.includes("Secretary")
-      )?.member as IMember
-  );
-  const member = computed(() => user?.value?.member as unknown as IMember);
 
   async function generateQRCode(data: string): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
@@ -105,6 +80,25 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
     if (organizer.value === undefined || configdata.value === undefined) {
       throw new Error("organizer not found");
     }
+
+    const chairman = computed<IMember>(
+      () =>
+        organizer.value?.dailyManagement.find(
+          (dm) =>
+            dm.position.includes("Ketua") || dm.position.includes("Chairman")
+        )?.member as IMember
+    );
+
+    const secretary = computed<IMember>(
+      () =>
+        organizer.value?.dailyManagement.find(
+          (dm) =>
+            dm.position.includes("Sekretaris") ||
+            dm.position.includes("Secretary")
+        )?.member as IMember
+    );
+
+    const member = computed(() => user?.value?.member as unknown as IMember);
 
     // Generate the last document number in the desired format
     const formatDocNumber = (number: number): string => {
@@ -760,264 +754,264 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       throw error;
     }
   };
-  const makeAgendaPrecenceWithQRCode = async () => {
-    if (!agenda) {
-      return {
-        statusCode: 500,
-        statusMessage: "Agenda not found",
-      };
-    }
+  // const makeAgendaPrecenceWithQRCode = async () => {
+  //   if (!agenda) {
+  //     return {
+  //       statusCode: 500,
+  //       statusMessage: "Agenda not found",
+  //     };
+  //   }
 
-    let response: IDocResponse = {
-      statusCode: 500,
-      statusMessage: "Failed to generate Agenda Presence Letter",
-    };
+  //   let response: IDocResponse = {
+  //     statusCode: 500,
+  //     statusMessage: "Failed to generate Agenda Presence Letter",
+  //   };
 
-    try {
-      const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([595.28, 841.89]); // A4 size in points
-      const { width, height } = page.getSize();
-      const margin = 40;
+  //   try {
+  //     const pdfDoc = await PDFDocument.create();
+  //     const page = pdfDoc.addPage([595.28, 841.89]); // A4 size in points
+  //     const { width, height } = page.getSize();
+  //     const margin = 40;
 
-      // Embed fonts
-      const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-      const timesRomanBoldFont = await pdfDoc.embedFont(
-        StandardFonts.TimesRomanBold
-      );
-      const timesRomanItalicFont = await pdfDoc.embedFont(
-        StandardFonts.TimesRomanItalic
-      );
+  //     // Embed fonts
+  //     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  //     const timesRomanBoldFont = await pdfDoc.embedFont(
+  //       StandardFonts.TimesRomanBold
+  //     );
+  //     const timesRomanItalicFont = await pdfDoc.embedFont(
+  //       StandardFonts.TimesRomanItalic
+  //     );
 
-      // Embed images
-      const himaLogoBytes = await fetch(
-        config.public.public_uri + "/img/logo.png"
-      ).then((res) => res.arrayBuffer());
-      const itsnuLogoBytes = await fetch(
-        config.public.public_uri + "/img/itsnu-logo.png"
-      ).then((res) => res.arrayBuffer());
-      const himaLogo = await pdfDoc.embedPng(himaLogoBytes);
-      const itsnuLogo = await pdfDoc.embedPng(itsnuLogoBytes);
+  //     // Embed images
+  //     const himaLogoBytes = await fetch(
+  //       config.public.public_uri + "/img/logo.png"
+  //     ).then((res) => res.arrayBuffer());
+  //     const itsnuLogoBytes = await fetch(
+  //       config.public.public_uri + "/img/itsnu-logo.png"
+  //     ).then((res) => res.arrayBuffer());
+  //     const himaLogo = await pdfDoc.embedPng(himaLogoBytes);
+  //     const itsnuLogo = await pdfDoc.embedPng(itsnuLogoBytes);
 
-      // Draw header
-      const logoWidth = 60;
-      const logoHeight = 60;
-      page.drawImage(himaLogo, {
-        x: margin,
-        y: height - margin - logoHeight,
-        width: logoWidth,
-        height: logoHeight,
-      });
-      page.drawImage(itsnuLogo, {
-        x: width - margin - logoWidth,
-        y: height - margin - logoHeight,
-        width: logoWidth,
-        height: logoHeight,
-      });
+  //     // Draw header
+  //     const logoWidth = 60;
+  //     const logoHeight = 60;
+  //     page.drawImage(himaLogo, {
+  //       x: margin,
+  //       y: height - margin - logoHeight,
+  //       width: logoWidth,
+  //       height: logoHeight,
+  //     });
+  //     page.drawImage(itsnuLogo, {
+  //       x: width - margin - logoWidth,
+  //       y: height - margin - logoHeight,
+  //       width: logoWidth,
+  //       height: logoHeight,
+  //     });
 
-      const headerText = [
-        {
-          text: "HIMPUNAN MAHASISWA INFORMATIKA",
-          font: timesRomanBoldFont,
-          size: 14,
-          color: rgb(0, 0.5, 0),
-        },
-        {
-          text: "INSTITUT TEKNOLOGI DAN SAINS NAHDLATUL ULAMA PEKALONGAN",
-          font: timesRomanBoldFont,
-          size: 12,
-          color: rgb(0, 0.5, 0),
-        },
-        {
-          text: "Sekretariat : Gedung ITS NU Jl. Karangdowo No. 9 Kedungwuni Pekalongan 51173",
-          font: timesRomanItalicFont,
-          size: 11,
-        },
-        {
-          text: "email : him.tekom123@gmail.com",
-          font: timesRomanItalicFont,
-          size: 11,
-        },
-      ];
+  //     const headerText = [
+  //       {
+  //         text: "HIMPUNAN MAHASISWA INFORMATIKA",
+  //         font: timesRomanBoldFont,
+  //         size: 14,
+  //         color: rgb(0, 0.5, 0),
+  //       },
+  //       {
+  //         text: "INSTITUT TEKNOLOGI DAN SAINS NAHDLATUL ULAMA PEKALONGAN",
+  //         font: timesRomanBoldFont,
+  //         size: 12,
+  //         color: rgb(0, 0.5, 0),
+  //       },
+  //       {
+  //         text: "Sekretariat : Gedung ITS NU Jl. Karangdowo No. 9 Kedungwuni Pekalongan 51173",
+  //         font: timesRomanItalicFont,
+  //         size: 11,
+  //       },
+  //       {
+  //         text: "email : him.tekom123@gmail.com",
+  //         font: timesRomanItalicFont,
+  //         size: 11,
+  //       },
+  //     ];
 
-      let currentY = height - margin - logoHeight - 20;
-      headerText.forEach(({ text, font, size, color }) => {
-        const textWidth = font.widthOfTextAtSize(text, size);
-        page.drawText(text, {
-          x: (width - textWidth) / 2,
-          y: currentY,
-          font,
-          size,
-          color: color || rgb(0, 0, 0),
-        });
-        currentY -= size + 5;
-      });
+  //     let currentY = height - margin - logoHeight - 20;
+  //     headerText.forEach(({ text, font, size, color }) => {
+  //       const textWidth = font.widthOfTextAtSize(text, size);
+  //       page.drawText(text, {
+  //         x: (width - textWidth) / 2,
+  //         y: currentY,
+  //         font,
+  //         size,
+  //         color: color || rgb(0, 0, 0),
+  //       });
+  //       currentY -= size + 5;
+  //     });
 
-      // Draw lines
-      page.drawLine({
-        start: { x: margin, y: currentY },
-        end: { x: width - margin, y: currentY },
-        thickness: 1,
-      });
-      currentY -= 5;
-      page.drawLine({
-        start: { x: margin, y: currentY },
-        end: { x: width - margin, y: currentY },
-        thickness: 2,
-      });
-      currentY -= 20;
+  //     // Draw lines
+  //     page.drawLine({
+  //       start: { x: margin, y: currentY },
+  //       end: { x: width - margin, y: currentY },
+  //       thickness: 1,
+  //     });
+  //     currentY -= 5;
+  //     page.drawLine({
+  //       start: { x: margin, y: currentY },
+  //       end: { x: width - margin, y: currentY },
+  //       thickness: 2,
+  //     });
+  //     currentY -= 20;
 
-      // Draw content
-      const content = [
-        { key: "Nama", value: agenda.title },
-        {
-          key: "Tanggal",
-          value:
-            new Date(agenda.date.start as string).toLocaleDateString("id-ID", {
-              dateStyle: "full",
-            }) !==
-            new Date(agenda.date.end as string).toLocaleDateString("id-ID", {
-              dateStyle: "full",
-            })
-              ? `${new Date(agenda.date.start as string).toLocaleDateString(
-                  "id-ID",
-                  {
-                    dateStyle: "full",
-                  }
-                )} - ${new Date(agenda.date.end as string).toLocaleDateString(
-                  "id-ID",
-                  { dateStyle: "full" }
-                )}`
-              : new Date(agenda.date.start as string).toLocaleDateString(
-                  "id-ID",
-                  { dateStyle: "full" }
-                ),
-        },
-        {
-          key: "Waktu",
-          value: `${new Date(agenda.date.start as string).toLocaleTimeString(
-            "id-ID",
-            { timeStyle: "short" }
-          )} - ${new Date(agenda.date.end as string).toLocaleTimeString(
-            "id-ID",
-            { timeStyle: "short" }
-          )}`,
-        },
-        { key: "Tempat", value: agenda.at },
-      ];
+  //     // Draw content
+  //     const content = [
+  //       { key: "Nama", value: agenda.title },
+  //       {
+  //         key: "Tanggal",
+  //         value:
+  //           new Date(agenda.date.start as string).toLocaleDateString("id-ID", {
+  //             dateStyle: "full",
+  //           }) !==
+  //           new Date(agenda.date.end as string).toLocaleDateString("id-ID", {
+  //             dateStyle: "full",
+  //           })
+  //             ? `${new Date(agenda.date.start as string).toLocaleDateString(
+  //                 "id-ID",
+  //                 {
+  //                   dateStyle: "full",
+  //                 }
+  //               )} - ${new Date(agenda.date.end as string).toLocaleDateString(
+  //                 "id-ID",
+  //                 { dateStyle: "full" }
+  //               )}`
+  //             : new Date(agenda.date.start as string).toLocaleDateString(
+  //                 "id-ID",
+  //                 { dateStyle: "full" }
+  //               ),
+  //       },
+  //       {
+  //         key: "Waktu",
+  //         value: `${new Date(agenda.date.start as string).toLocaleTimeString(
+  //           "id-ID",
+  //           { timeStyle: "short" }
+  //         )} - ${new Date(agenda.date.end as string).toLocaleTimeString(
+  //           "id-ID",
+  //           { timeStyle: "short" }
+  //         )}`,
+  //       },
+  //       { key: "Tempat", value: agenda.at },
+  //     ];
 
-      page.drawText("Dengan ini kami mengagendakan acara :", {
-        x: margin,
-        y: currentY,
-        font: timesRomanFont,
-        size: 12,
-      });
-      currentY -= 20;
+  //     page.drawText("Dengan ini kami mengagendakan acara :", {
+  //       x: margin,
+  //       y: currentY,
+  //       font: timesRomanFont,
+  //       size: 12,
+  //     });
+  //     currentY -= 20;
 
-      content.forEach(({ key, value }) => {
-        page.drawText(`${key} : ${value}`, {
-          x: margin,
-          y: currentY,
-          font: timesRomanFont,
-          size: 12,
-        });
-        currentY -= 15;
-      });
+  //     content.forEach(({ key, value }) => {
+  //       page.drawText(`${key} : ${value}`, {
+  //         x: margin,
+  //         y: currentY,
+  //         font: timesRomanFont,
+  //         size: 12,
+  //       });
+  //       currentY -= 15;
+  //     });
 
-      currentY -= 20;
-      page.drawText(
-        "Untuk itu, untuk memudahkan kehadiran peserta, kami mohon untuk melakukan scan QR Code berikut :",
-        {
-          x: margin,
-          y: currentY,
-          font: timesRomanFont,
-          size: 12,
-        }
-      );
-      currentY -= 100;
+  //     currentY -= 20;
+  //     page.drawText(
+  //       "Untuk itu, untuk memudahkan kehadiran peserta, kami mohon untuk melakukan scan QR Code berikut :",
+  //       {
+  //         x: margin,
+  //         y: currentY,
+  //         font: timesRomanFont,
+  //         size: 12,
+  //       }
+  //     );
+  //     currentY -= 100;
 
-      // Draw QR Code
-      const qrCode = await pdfDoc.embedPng(
-        await generateQRCode(agenda._id as string)
-      ); // Replace with your QR code generation logic
-      const qrSize = 100;
-      page.drawImage(qrCode, {
-        x: (width - qrSize) / 2,
-        y: currentY - qrSize,
-        width: qrSize,
-        height: qrSize,
-      });
+  //     // Draw QR Code
+  //     const qrCode = await pdfDoc.embedPng(
+  //       await generateQRCode(agenda._id as string)
+  //     ); // Replace with your QR code generation logic
+  //     const qrSize = 100;
+  //     page.drawImage(qrCode, {
+  //       x: (width - qrSize) / 2,
+  //       y: currentY - qrSize,
+  //       width: qrSize,
+  //       height: qrSize,
+  //     });
 
-      currentY -= qrSize + 20;
-      page.drawText(
-        `Pekalongan, ${new Date().toLocaleDateString("id-ID", {
-          dateStyle: "long",
-        })}`,
-        {
-          x: width - margin - 200,
-          y: currentY,
-          font: timesRomanFont,
-          size: 12,
-        }
-      );
+  //     currentY -= qrSize + 20;
+  //     page.drawText(
+  //       `Pekalongan, ${new Date().toLocaleDateString("id-ID", {
+  //         dateStyle: "long",
+  //       })}`,
+  //       {
+  //         x: width - margin - 200,
+  //         y: currentY,
+  //         font: timesRomanFont,
+  //         size: 12,
+  //       }
+  //     );
 
-      // Serialize the PDFDocument to bytes (a Uint8Array)
-      const pdfBytes = await pdfDoc.save();
+  //     // Serialize the PDFDocument to bytes (a Uint8Array)
+  //     const pdfBytes = await pdfDoc.save();
 
-      const docFile = new File(
-        [pdfBytes as Uint8Array<ArrayBuffer>],
-        `Agenda ${agenda.title} QR Code.pdf`,
-        {
-          type: "application/pdf",
-        }
-      );
-      // Prepare document data
-      const docData: IDoc = {
-        label: `Agenda ${agenda.title} QR Code`,
-        no: `019/II.3.AI/BO1.01/02.A-1/S.Ket/IV/${new Date().getFullYear()}`,
-        doc: docFile,
-        tags: ["Agenda", "QR Code", "HIMATIKA"],
-        archived: false,
-        signs: [
-          {
-            user: (
-              organizer.value?.dailyManagement.find(
-                (dm) =>
-                  dm.position.includes("Ketua") ||
-                  dm.position.includes("Chairman")
-              )?.member as IMember
-            ).NIM,
-            signed: false,
-            as: "Ketua Umum",
-          },
-        ],
-      };
+  //     const docFile = new File(
+  //       [pdfBytes as Uint8Array<ArrayBuffer>],
+  //       `Agenda ${agenda.title} QR Code.pdf`,
+  //       {
+  //         type: "application/pdf",
+  //       }
+  //     );
+  //     // Prepare document data
+  //     const docData: IDoc = {
+  //       label: `Agenda ${agenda.title} QR Code`,
+  //       no: `019/II.3.AI/BO1.01/02.A-1/S.Ket/IV/${new Date().getFullYear()}`,
+  //       doc: docFile,
+  //       tags: ["Agenda", "QR Code", "HIMATIKA"],
+  //       archived: false,
+  //       signs: [
+  //         {
+  //           user: (
+  //             organizer.value?.dailyManagement.find(
+  //               (dm) =>
+  //                 dm.position.includes("Ketua") ||
+  //                 dm.position.includes("Chairman")
+  //             )?.member as IMember
+  //           ).NIM,
+  //           signed: false,
+  //           as: "Ketua Umum",
+  //         },
+  //       ],
+  //     };
 
-      const formData = new CustomFormData<IDoc>();
-      formData.append("label", docData.label);
-      formData.append("no", docData.no);
-      formData.append("doc", docData.doc);
-      formData.append("tags", JSON.stringify(docData.tags));
-      formData.append("archived", JSON.stringify(docData.archived));
-      formData.append("signs", JSON.stringify(docData.signs));
+  //     const formData = new CustomFormData<IDoc>();
+  //     formData.append("label", docData.label);
+  //     formData.append("no", docData.no);
+  //     formData.append("doc", docData.doc);
+  //     formData.append("tags", JSON.stringify(docData.tags));
+  //     formData.append("archived", JSON.stringify(docData.archived));
+  //     formData.append("signs", JSON.stringify(docData.signs));
 
-      // Send document data to API
-      const ress = await $api<IDocResponse>(`/api/agenda/${agenda._id}/doc`, {
-        method: "post",
-        body: formData.getFormData(),
-      });
+  //     // Send document data to API
+  //     const ress = await $api<IDocResponse>(`/api/agenda/${agenda._id}/doc`, {
+  //       method: "post",
+  //       body: formData.getFormData(),
+  //     });
 
-      if (ress.statusCode === 200) {
-        response = ress;
-      }
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+  //     if (ress.statusCode === 200) {
+  //       response = ress;
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     throw error;
+  //   }
 
-    return response;
-  };
+  //   return response;
+  // };
   return {
     makeActivinessLetter,
-    makeAgendaPrecenceWithQRCode,
+    // makeAgendaPrecenceWithQRCode,
   };
 };
