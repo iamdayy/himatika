@@ -44,12 +44,12 @@ function monthToRomanFromDate(): string {
 export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   const config = useRuntimeConfig();
   const { $api } = useNuxtApp();
-  const { data: organizers } = useAsyncData(
-    "organizers",
-    () => $api<IOrganizerResponse>("/api/organizer"),
+  const { data: organizer } = useAsyncData(
+    "organizer",
+    () => $api<IOrganizerResponse>("/api/organizer/now"),
     {
       transform: (data) => {
-        return data.data?.organizers || [];
+        return data.data?.organizer;
       },
     }
   );
@@ -61,9 +61,9 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
     $api("/api/config")
   );
 
-  const organizer = computed(() =>
-    organizers.value ? organizers.value[0] : undefined
-  );
+  // const organizer = computed(() =>
+  //   organizers.value ? organizers.value[0] : undefined
+  // );
   const chairman = computed<IMember>(
     () =>
       organizer.value?.dailyManagement.find(

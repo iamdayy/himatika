@@ -183,7 +183,7 @@ export interface IDepartment {
 }
 
 export interface IOrganizer {
-  _id?: string;
+  _id?: string | Types.ObjectId;
   council: {
     name: string;
     image: string | IFile;

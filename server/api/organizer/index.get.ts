@@ -47,7 +47,7 @@ export default defineCachedEventHandler(
           statusCode: 200,
           statusMessage: "Organizer fetched successfully.",
           data: {
-            organizer: organizer as IOrganizer,
+            organizer: organizer,
           },
         };
       }
@@ -56,7 +56,7 @@ export default defineCachedEventHandler(
         statusCode: 200,
         statusMessage: "Organizer fetched successfully.",
         data: {
-          organizers: organizers as IOrganizer[],
+          organizers: organizers,
         },
       };
     } catch (error: any) {
