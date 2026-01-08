@@ -137,7 +137,8 @@ export default defineEventHandler(
           emails,
           emailBody.render(),
           "Agenda Baru!",
-          "Pemberitahuan Agenda Baru"
+          "Pemberitahuan Agenda Baru",
+          newAgenda.id
         );
       }
 
