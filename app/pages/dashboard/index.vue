@@ -1,11 +1,11 @@
 <script setup lang='ts'>
 import type { ICategory, IMember } from "~~/types";
 
-import { ModalsAchievementClaim, ModalsActions, NuxtImg, NuxtLink, UAvatar } from '#components';
+import { ModalsAchievementClaim, ModalsActions, NuxtLink, UAvatar } from '#components';
 import type { TableColumn } from "#ui/types";
 import type { DriveStep } from "driver.js";
 import { useStatsStore } from "~/stores/useStatsStore";
-import type { IProjectsResponse } from "~~/types/IResponse";
+import type { IPointMeResponse, IProjectsResponse } from "~~/types/IResponse";
 interface IPoint {
     avatar?: string;
     fullName: string;
@@ -14,8 +14,8 @@ interface IPoint {
     point?: { point: number }[]; // Ensure point is an array of objects with a 'point' property
     no: number;
 }
-const { $ts, $switchLocale, $getLocale } = useI18n();
-const router = useRouter();
+const NuxtImg = resolveComponent('NuxtImg');
+const { $ts } = useI18n();
 /**
  * Set page metadata
  */
@@ -88,12 +88,16 @@ const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/pr
         data: data.data?.projects || [],
         count: data.data?.length || 0
     })
-})
-const toast = useToast();
+});
 const overlay = useOverlay();
 const { width } = useWindowSize();
 const { links } = useDashboardNavigation();
 const { data: configData } = useAsyncData(() => $api('/api/config'));
+const { data: pointMe, pending: pendingPointMe } = useAsyncData(() => $api<IPointMeResponse>('/api/me/point'), {
+    transform: (data) => {
+        return data.data?.point || 0;
+    }
+});
 
 
 
@@ -254,11 +258,11 @@ onMounted(() => {
                         </template>
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                                (agendasMe?.committees?.length! + agendasMe?.members?.length!)
+                                (agendasMe?.committee?.length! + agendasMe?.participant?.length!)
                                 }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
-                        <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
+                        <UProgress :model-value="(agendasMe?.committee?.length! + agendasMe?.participant?.length!) || 0"
                             :max="agendasCanMeRegistered?.length || 100" indicator />
                     </UCard>
                     <UCard class="w-full lg:w-1/3" id="card-projects">
@@ -300,12 +304,11 @@ onMounted(() => {
                     </template>
                     <div class="flex items-center justify-between w-full mb-2">
                         <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                            user?.member.point[0]!.point || 0 }}
+                            pointMe || 0 }}
                         </h2>
                         <UIcon name="i-heroicons-arrow-trending-up" class="text-6xl" />
                     </div>
-                    <UProgress :model-value="(user?.member.point[0]!.point || 0)"
-                        :max="configData?.data.minPoint || 100" indicator />
+                    <UProgress :model-value="(pointMe || 0)" :max="configData?.data.minPoint || 100" indicator />
                     <template #footer>
                         <div class="flex items-center justify-between w-full">
                             <UTable :columns="pointLeaderBoardColumn" :data="points" class="w-full" responsive>
@@ -324,9 +327,9 @@ onMounted(() => {
                     </NuxtLink>
                 </div>
             </template>
-            <div>
+            <div v-if="(agendasMe?.committee?.length || 0) > 0 || (agendasMe?.participant?.length || 0) > 0">
                 <UCarousel ref="carouselRef"
-                    :items="[(agendasMe?.committees || []), (agendasMe?.members || [])].flat().slice(0, 3)"
+                    :items="[(agendasMe?.committee || []), (agendasMe?.participant || [])].flat().slice(0, 3)"
                     v-slot="{ item }" arrows dots loop :autoplay="{ delay: 30000 }" next-icon="i-lucide-chevron-right"
                     prev-icon="i-lucide-chevron-left" :next="{
                         variant: 'ghost',
@@ -344,7 +347,8 @@ onMounted(() => {
                         dot: 'w-6 h-1'
                     }">
                     <div class="px-12">
-                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Title</span>
+                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">{{ $ts('title')
+                            }}</span>
                         <h3
                             class="self-center font-semibold text-gray-500 ms-2 text-md whitespace-nowrap dark:text-white/60">
                             {{
@@ -352,14 +356,16 @@ onMounted(() => {
                             }}
                         </h3>
 
-                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Date</span>
+                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">{{ $ts('date')
+                        }}</span>
                         <h3
                             class="self-center font-semibold text-gray-500 ms-2 text-md whitespace-nowrap dark:text-white/60">
                             {{
                                 new Date(item.date.start as Date).toLocaleDateString() }}
                         </h3>
 
-                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">At</span>
+                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">{{ $ts('at')
+                        }}</span>
                         <h3
                             class="self-center font-semibold text-gray-500 ms-2 text-md whitespace-nowrap dark:text-white/60">
                             {{
@@ -367,15 +373,20 @@ onMounted(() => {
                             }}
                         </h3>
 
-                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Accessbility</span>
+                        <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">{{
+                            $ts('can_register')
+                        }}</span>
                         <h3
                             class="self-center font-semibold text-gray-500 ms-2 text-md whitespace-nowrap dark:text-white/60">
                             {{
-                                item.configuration.canSee
+                                item.configuration.participant.canRegister
                             }}
                         </h3>
                     </div>
                 </UCarousel>
+            </div>
+            <div v-else class="flex w-full items-center justify-center">
+                <p>{{ $ts('no_data') }}</p>
             </div>
         </UCard>
         <UCard class="w-full mt-8" id="card-projects">
@@ -387,7 +398,7 @@ onMounted(() => {
                     </NuxtLink>
                 </div>
             </template>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4" v-if="projectsMe.length > 0">
                 <UCard v-for="project, i in projectsMe.slice(0, 4)" :key="i" class="">
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
@@ -450,6 +461,9 @@ onMounted(() => {
                         </div>
                     </template>
                 </UCard>
+            </div>
+            <div v-else class="flex w-full items-center justify-center">
+                <p>{{ $ts('no_data') }}</p>
             </div>
         </UCard>
         <div class="fixed z-90 bottom-6 left-4">

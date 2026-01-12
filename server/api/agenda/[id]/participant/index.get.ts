@@ -13,16 +13,21 @@ export default defineEventHandler(
       const { id } = event.context.params as {
         id: string;
       };
-      const agenda = await AgendaModel.findById(id)
-        .populate({
-          path: "participants",
-          populate: {
+      const agenda = await AgendaModel.findById(id).populate({
+        path: "participants",
+        populate: [
+          {
             path: "answers",
             model: AnswerModel,
             select: "question value",
           },
-        })
-        .exec();
+          {
+            path: "member",
+            model: "Member",
+            select: "fullName email NIM semester",
+          },
+        ],
+      });
       if (!agenda) {
         return {
           statusCode: 404,

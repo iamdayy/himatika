@@ -20,11 +20,18 @@ export default defineEventHandler(
       }
       const agenda = await AgendaModel.findById(id).populate({
         path: "committees",
-        populate: {
-          path: "answers",
-          model: AnswerModel,
-          select: "question value",
-        },
+        populate: [
+          {
+            path: "answers",
+            model: AnswerModel,
+            select: "question value",
+          },
+          {
+            path: "member",
+            model: "Member",
+            select: "fullName email NIM semester",
+          },
+        ],
       });
       if (!agenda) {
         return {

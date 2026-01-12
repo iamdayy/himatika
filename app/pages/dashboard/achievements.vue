@@ -12,11 +12,24 @@ definePageMeta({
 const { $api } = useNuxtApp();
 const overlay = useOverlay();
 
+const { width } = useWindowSize();
+const isMobile = computed(() => width.value <= 768);
+
+const page = ref<number>(1);
+const perPage = ref<number>(10);
+
+
+
 const ClaimModalComponent = overlay.create(ModalsAchievementClaim);
 
 // Fetch data achievement dari API yang baru kita buat
 const { data: achievements, refresh, status } = await useAsyncData('achievement-me', () => $api<IPointLog[]>('/api/me/achievement'));
 
+const pageTotal = computed(() => achievements.value?.length);
+const pageFrom = computed(() => (page.value - 1) * perPage.value + 1);
+const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.value || 0));
+
+const perPageOptions = computed(() => [10, 20, 50, 100, 200, pageTotal.value]);
 
 const columns = computed<TableColumn<IPointLog>[]>(() => [
     {
@@ -137,6 +150,27 @@ function openClaimModal() {
                     </div>
                 </template>
             </UTable>
+            <template #footer>
+                <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
+                    <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
+                        <span class="text-xs leading-none md:text-sm md:leading-5">Rows per page:</span>
+                        <USelect v-model="perPage" :options="perPageOptions" class="w-20 me-2" size="xs" />
+                    </div>
+                    <div class="mb-2 sm:mb-0">
+                        <span class="text-xs leading-none md:text-sm md:leading-5">
+                            Showing
+                            <span class="font-medium">{{ pageFrom }}</span>
+                            to
+                            <span class="font-medium">{{ pageTo }}</span>
+                            of
+                            <span class="font-medium">{{ pageTotal }}</span>
+                            results
+                        </span>
+                    </div>
+                    <UPagination v-model:page="page" :items-per-page="perPage" :total="pageTotal"
+                        :sibling-count="isMobile ? 2 : 6" />
+                </div>
+            </template>
         </UCard>
     </div>
 </template>
