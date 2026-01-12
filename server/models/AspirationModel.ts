@@ -1,6 +1,6 @@
-import { IAspirationSchema } from "@/types/ISchemas";
 import { Schema, model } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
+import { IAspirationSchema } from "~~/types/ISchemas";
 
 const AspirationSchema = new Schema<IAspirationSchema>(
   {

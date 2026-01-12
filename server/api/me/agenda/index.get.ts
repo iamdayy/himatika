@@ -39,12 +39,6 @@ export default defineEventHandler(async (event): Promise<IAgendaMeResponse> => {
         $or: [{ title: { $regex: search, $options: "i" } }],
       };
     }
-    if (!showMissed || showMissed === "false") {
-      query = {
-        ...query,
-        "date.start": { $gte: new Date() },
-      };
-    }
 
     if (sort && order) {
       sortOpt = {

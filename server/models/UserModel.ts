@@ -1,13 +1,8 @@
 import bcrypt from "bcryptjs";
 import mongoose, { Model, Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
-import { IAgenda, IMember, IOrganizer, IUser } from "~~/types";
+import { IUser } from "~~/types";
 import { IUserSchema } from "~~/types/ISchemas";
-import { AgendaModel } from "./AgendaModel";
-import { AspirationModel } from "./AspirationModel";
-import { DocModel } from "./DocModel";
-import OrganizerModel from "./OrganizerModel";
-import { ProjectModel } from "./ProjectModel";
 
 /**
  * Interface for user methods
@@ -55,103 +50,103 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
       type: Types.ObjectId,
       ref: "Member",
       unique: true,
-      autopopulate: {
-        match: {
-          status: "active",
-        },
-        populate: [
-          {
-            path: "projects",
-            model: ProjectModel,
-          },
-          {
-            path: "agendasMember",
-            model: AgendaModel,
-            select: "title date at description configuration -_id",
-            transform: (doc: IAgenda) => ({
-              title: doc.title,
-              date: doc.date,
-              at: doc.at,
-              description: doc.description,
-              configuration: doc.configuration,
-            }),
-          },
-          {
-            path: "agendasCommittee",
-            model: AgendaModel,
-            select: "title date at description configuration -_id",
-            transform: (doc: IAgenda) => ({
-              title: doc.title,
-              date: doc.date,
-              at: doc.at,
-              description: doc.description,
-              configuration: doc.configuration,
-            }),
-          },
-          {
-            path: "aspirations",
-            model: AspirationModel,
-          },
-          {
-            path: "documents",
-            model: DocModel,
-          },
-          {
-            path: "organizersConsiderationBoard",
-            model: OrganizerModel,
-            transform: (doc: IOrganizer, id: any) => {
-              if (doc) {
-                return {
-                  role: "Consideration Board",
-                  period: doc.period,
-                };
-              }
-            },
-          },
-          {
-            path: "organizersDepartmentCoordinator",
-            model: OrganizerModel,
-            transform: (doc: IOrganizer, id: any) => {
-              if (doc) {
-                return {
-                  role: "Coordinator Department",
-                  period: doc.period,
-                };
-              }
-            },
-          },
-          {
-            path: "docsRequestSign",
-            model: DocModel,
-          },
-          {
-            path: "organizersDailyManagement",
-            model: OrganizerModel,
-            transform: (doc: IOrganizer, id: any) => {
-              if (doc) {
-                return {
-                  role: doc.dailyManagement.find(
-                    (daily) => (daily.member as IMember | null)?.id == id
-                  )?.position,
-                  period: doc.period,
-                };
-              }
-            },
-          },
-          {
-            path: "organizersDepartmentMembers",
-            model: OrganizerModel,
-            transform: (doc: IOrganizer, id: any) => {
-              if (doc) {
-                return {
-                  role: "Member Department",
-                  period: doc.period,
-                };
-              }
-            },
-          },
-        ],
-      },
+      // autopopulate: {
+      //   match: {
+      //     status: "active",
+      //   },
+      //   populate: [
+      //     {
+      //       path: "projects",
+      //       model: ProjectModel,
+      //     },
+      //     {
+      //       path: "agendasMember",
+      //       model: AgendaModel,
+      //       select: "title date at description configuration -_id",
+      //       transform: (doc: IAgenda) => ({
+      //         title: doc.title,
+      //         date: doc.date,
+      //         at: doc.at,
+      //         description: doc.description,
+      //         configuration: doc.configuration,
+      //       }),
+      //     },
+      //     {
+      //       path: "agendasCommittee",
+      //       model: AgendaModel,
+      //       select: "title date at description configuration -_id",
+      //       transform: (doc: IAgenda) => ({
+      //         title: doc.title,
+      //         date: doc.date,
+      //         at: doc.at,
+      //         description: doc.description,
+      //         configuration: doc.configuration,
+      //       }),
+      //     },
+      //     {
+      //       path: "aspirations",
+      //       model: AspirationModel,
+      //     },
+      //     {
+      //       path: "documents",
+      //       model: DocModel,
+      //     },
+      //     {
+      //       path: "organizersConsiderationBoard",
+      //       model: OrganizerModel,
+      //       transform: (doc: IOrganizer, id: any) => {
+      //         if (doc) {
+      //           return {
+      //             role: "Consideration Board",
+      //             period: doc.period,
+      //           };
+      //         }
+      //       },
+      //     },
+      //     {
+      //       path: "organizersDepartmentCoordinator",
+      //       model: OrganizerModel,
+      //       transform: (doc: IOrganizer, id: any) => {
+      //         if (doc) {
+      //           return {
+      //             role: "Coordinator Department",
+      //             period: doc.period,
+      //           };
+      //         }
+      //       },
+      //     },
+      //     {
+      //       path: "docsRequestSign",
+      //       model: DocModel,
+      //     },
+      //     {
+      //       path: "organizersDailyManagement",
+      //       model: OrganizerModel,
+      //       transform: (doc: IOrganizer, id: any) => {
+      //         if (doc) {
+      //           return {
+      //             role: doc.dailyManagement.find(
+      //               (daily) => (daily.member as IMember | null)?.id == id
+      //             )?.position,
+      //             period: doc.period,
+      //           };
+      //         }
+      //       },
+      //     },
+      //     {
+      //       path: "organizersDepartmentMembers",
+      //       model: OrganizerModel,
+      //       transform: (doc: IOrganizer, id: any) => {
+      //         if (doc) {
+      //           return {
+      //             role: "Member Department",
+      //             period: doc.period,
+      //           };
+      //         }
+      //       },
+      //     },
+      //   ],
+      // },
     },
   },
   {
@@ -163,13 +158,13 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
  * Pre-save middleware to hash the user's password before saving
  */
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) return;
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    return next();
+    return;
   } catch (error: any) {
-    return next(error);
+    return error;
   }
 });
 
