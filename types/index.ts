@@ -250,7 +250,7 @@ export interface IPayment {
  */
 export interface IParticipant {
   _id?: string | Types.ObjectId;
-  member?: Types.ObjectId | IMember | number;
+  member?: Types.ObjectId | IMember | number | string;
   guest?: IGuest;
   visiting?: boolean;
   visitAt?: string;

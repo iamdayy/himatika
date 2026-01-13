@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IAgenda, IMember, IPoint } from "~~/types";
+import { IAgenda, IPoint } from "~~/types";
 import { IAddressSchema, IMemberSchema } from "~~/types/ISchemas";
 import { AgendaModel } from "./AgendaModel";
 import { ProjectModel } from "./ProjectModel";
@@ -142,9 +142,8 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     })
     .filter(
       (agenda: IAgenda) =>
-        agenda.committees?.find(
-          (c) => (c.member as IMember).NIM === this.NIM && c.visiting
-        ) === undefined
+        agenda.committees?.find((c) => c.member === this.id && c.visiting) ===
+        undefined
     );
   const agendasMember = (this.agendasMember || [])
     .filter((agenda: IAgenda) => {
@@ -164,9 +163,8 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     })
     .filter(
       (agenda: IAgenda) =>
-        agenda.participants?.find(
-          (r) => (r.member as IMember).NIM === this.NIM && r.visiting
-        ) === undefined
+        agenda.participants?.find((r) => r.member === this.id && r.visiting) ===
+        undefined
     );
   const committeesAgenda =
     agendasCommittee?.reduce(
