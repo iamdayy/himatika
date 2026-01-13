@@ -225,7 +225,9 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
                     h(NuxtImg, {
                         src: (row.original.member as IMember | undefined)?.avatar as string || '/img/profile-blank.png',
                         class: 'object-cover rounded-full w-10 h-10 border border-gray-200',
-                        loading: 'lazy'
+                        loading: 'lazy',
+                        provider: 'localProvider',
+                        alt: (row.original.member as IMember | undefined)?.fullName || '-'
                     }),
                     h('div', { class: 'flex flex-col items-start' }, [
                         h('span', { class: 'font-semibold text-gray-900 dark:text-white line-clamp-1' },

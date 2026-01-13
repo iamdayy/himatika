@@ -31,19 +31,24 @@ export async function sendBulkEmail(
   recipients: { email: string }[],
   subject: string,
   html: string,
-  category: string
+  category: string,
+  template_uuid: string
 ) {
   const client = new MailtrapClient({
     token: config.mailtrap_token,
   });
   try {
-    // TODO: FIX THIS
     await client.batchSend({
-      from: sender,
-      to: recipients,
-      subject,
-      html,
-      category,
+      requests: recipients.map((recipient) => ({
+        to: [{ email: recipient.email }],
+        subject,
+        html,
+        category,
+      })),
+      base: {
+        from: sender,
+        template_uuid,
+      },
     });
   } catch (error) {
     throw error;

@@ -1,8 +1,10 @@
 import { defineStore } from "pinia";
 import type { IAgenda, IAspiration, IProject } from "~~/types";
 import type {
+  IAgendaMeResponse,
   IAgendaResponse,
   IAspirationMeResponse,
+  IProjectMeResponse,
 } from "~~/types/IResponse";
 
 interface IPoint {
@@ -23,6 +25,13 @@ export const useStatsStore = defineStore("stats", () => {
   // --- State (Data Mentah) ---
   const rawAgendas = ref<IAgenda[]>([]);
   const rawAgendasCount = ref(0);
+  const rawAgendasMe = ref<{ committee?: IAgenda[]; participant?: IAgenda[] }>({
+    participant: undefined,
+    committee: undefined,
+  });
+  const rawAgendasMeCount = ref(0);
+  const rawProjectsMe = ref<IProject[]>([]);
+  const rawProjectsMeCount = ref(0);
   const aspirations = ref<IAspiration[]>([]);
   const points = ref<IPoint[]>([]);
 
@@ -62,17 +71,45 @@ export const useStatsStore = defineStore("stats", () => {
     }
   }
 
+  async function fetchMeAgendas() {
+    try {
+      const response = await $api<IAgendaMeResponse>("/api/me/agenda");
+      rawAgendasMe.value = response.data?.agendas || {
+        committee: undefined,
+        participant: undefined,
+      };
+      rawAgendasMeCount.value = response.data?.length || 0;
+    } catch (error) {
+      console.error("Failed to fetch agendas", error);
+    }
+  }
+  async function fetchMeProjects() {
+    try {
+      const response = await $api<IProjectMeResponse>("/api/me/project");
+      rawProjectsMe.value = response.data?.projects || [];
+      rawProjectsMeCount.value = response.data?.length || 0;
+    } catch (error) {
+      console.error("Failed to fetch projects", error);
+    }
+  }
+
   // Fungsi wrapper untuk memanggil semua (mirip init di composable)
   async function init() {
-    await Promise.all([fetchAgendas(), fetchAspirations(), fetchPoints()]);
+    await Promise.all([
+      fetchAgendas(),
+      fetchAspirations(),
+      fetchPoints(),
+      fetchMeAgendas(),
+      fetchMeProjects(),
+    ]);
   }
 
   // --- Getters (Computed) ---
   // Logika ini disalin langsung dari useStats.ts Anda
   const agendasMe = computed<
-    { committees?: IAgenda[]; members?: IAgenda[] } | undefined
+    { committee?: IAgenda[]; participant?: IAgenda[] } | undefined
   >(() => {
-    return user.value?.member.agendas;
+    return rawAgendasMe.value;
   });
 
   const agendasCanMeRegistered = computed<IAgenda[] | undefined>(() => {
@@ -85,13 +122,13 @@ export const useStatsStore = defineStore("stats", () => {
   });
 
   const projectsMe = computed<IProject[]>(() => {
-    return user.value?.member.projects || [];
+    return rawProjectsMe.value || [];
   });
 
   const all = computed<number>(() => {
     return (
-      (agendasMe.value?.committees?.length || 0) +
-      (agendasMe.value?.members?.length || 0) +
+      (agendasMe.value?.committee?.length || 0) +
+      (agendasMe.value?.participant?.length || 0) +
       (projectsMe.value.length || 0)
     );
   });

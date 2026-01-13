@@ -1,10 +1,18 @@
 import { MemberModel } from "~~/server/models/MemberModel";
 import { IAgenda, IProject } from "~~/types";
-import { IPointResponse } from "~~/types/IResponse";
+import { IPointMeResponse } from "~~/types/IResponse";
 
-export default defineEventHandler(async (event): Promise<IPointResponse> => {
+export default defineEventHandler(async (event): Promise<IPointMeResponse> => {
   try {
-    const members = await MemberModel.find({ status: { $ne: "deleted" } })
+    const user = event.context.user;
+    const { all } = getQuery(event);
+    if (!user) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
+    }
+    const member = await MemberModel.findOne({ NIM: user.member.NIM })
       .populate({
         path: "agendasCommittee",
         select: "title date at description configuration -_id",
@@ -45,52 +53,35 @@ export default defineEventHandler(async (event): Promise<IPointResponse> => {
       .select(
         "NIM avatar fullName email class semester point enteredYear createdAt status"
       );
-    const points = members
-      .filter((member) => member.point)
-      .map((member, index) => {
-        const point = member.point?.find(
-          (val) => val.semester == member.semester
-        );
-        return {
-          fullName: member.fullName,
-          NIM: member.NIM,
-          semester: member.semester,
-          class: member.class,
-          point: point?.point || 0,
-          avatar: member.avatar,
-          no: index + 1,
-        };
-      })
-      .sort((a, b) => {
-        if (a.point === b.point) {
-          return a.no - b.no;
-        }
-        return (b.point ?? 0) - (a.point ?? 0);
-      });
-    const me = points.find(
-      (point) => point.NIM === event.context.user.member.NIM
-    );
-    if (!me) {
-      return {
+    if (!member) {
+      throw createError({
         statusCode: 404,
-        statusMessage: "Not Found",
+        statusMessage: "Member not found",
+      });
+    }
+    if (all) {
+      const points = member.point || [];
+      return {
+        statusCode: 200,
+        statusMessage: "Success",
+        data: {
+          points,
+        },
       };
     }
-    if (me.no > 5) {
-      points.push(me);
-    }
+    const pointNow =
+      member.point?.find((val) => val.semester == member.semester)?.point || 0;
     return {
       statusCode: 200,
       statusMessage: "Success",
       data: {
-        points: points.slice(0, 5),
+        point: pointNow,
       },
     };
   } catch (error: any) {
-    console.error(error);
-    return {
-      statusCode: 500,
-      statusMessage: error.message,
-    };
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || "Internal Server Error",
+    });
   }
 });

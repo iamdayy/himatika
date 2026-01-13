@@ -313,7 +313,7 @@ memberSchema.virtual("point").get(function () {
   const enteredYear = this.enteredYear;
   const range = new Date().getFullYear() - enteredYear + 1; // Calculate the number of semesters since enteredYear
   if (range <= 0) {
-    return 0; // No points if the entered year is in the future
+    return null; // No points if the entered year is in the future
   }
   // Generate an array of date ranges for each semester
   // Each semester is assumed to be 6 months long
@@ -359,6 +359,17 @@ memberSchema.virtual("point").get(function () {
     });
   }
   return 0; // Default case, no points
+});
+memberSchema.virtual("pointThisSemester").get(function () {
+  if (!this.point) {
+    return 0;
+  }
+  this.point.forEach((point: IPoint) => {
+    if (point.semester === this.semester) {
+      return point.point;
+    }
+  });
+  return 0;
 });
 
 memberSchema.virtual("documents", {
@@ -423,12 +434,34 @@ memberSchema.virtual("aspirations", {
 
 // Combine all organizers
 memberSchema.virtual("organizer").get(function () {
-  return (
-    this.organizersDailyManagement ||
-    this.organizersConsiderationBoard ||
-    this.organizersDepartmentCoordinator ||
-    this.organizersDepartmentMembers
-  );
+  if (this.organizersConsiderationBoard) {
+    return {
+      role: "Consideration Board",
+      period: this.organizersConsiderationBoard.period,
+    };
+  }
+  if (this.organizersDepartmentCoordinator) {
+    return {
+      role: "Coordinator Department",
+      period: this.organizersDepartmentCoordinator.period,
+    };
+  }
+  if (this.organizersDailyManagement) {
+    return {
+      role:
+        this.organizersDailyManagement.dailyManagement?.find(
+          (daily) => daily.member == this.id
+        )?.position || "Daily Management",
+      period: this.organizersDailyManagement.period,
+    };
+  }
+  if (this.organizersDepartmentMembers) {
+    return {
+      role: "Member Department",
+      period: this.organizersDepartmentMembers.period,
+    };
+  }
+  return null;
 });
 
 // Create a text index for searching members
@@ -441,10 +474,10 @@ memberSchema.pre("save", function (next) {
     if (this.semester > 14) {
       this.status = "inactive";
       this.save();
-      return next();
+      return;
     }
   }
-  next();
+  return;
 });
 
 /**
@@ -479,7 +512,7 @@ memberSchema.post("save", async function (next) {
         },
       }
     );
-    await UserModel.findOneAndDelete({ member: memberId });
+    await UserModel.findOneAndDelete({ member: member });
   }
 });
 

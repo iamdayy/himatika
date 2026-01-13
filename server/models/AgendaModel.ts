@@ -1,5 +1,4 @@
 import mongoose, { model, Schema, Types } from "mongoose";
-import mongooseAutoPopulate from "mongoose-autopopulate";
 import { ICommittee, IMember, IParticipant } from "~~/types";
 import {
   IAgendaConfigurationSchema,
@@ -156,10 +155,6 @@ const committeeConfigurationSchema = new Schema<ICommitteeConfigurationSchema>({
   questions: {
     type: [Types.ObjectId],
     ref: QuestionModel,
-    autopopulate: {
-      select:
-        "question type options required max min acceptedFileTypes maxFileSize",
-    },
   },
 });
 /**
@@ -201,10 +196,6 @@ const participantConfigurationSchema =
     questions: {
       type: [Types.ObjectId],
       ref: QuestionModel,
-      autopopulate: {
-        select:
-          "question type options required max min acceptedFileTypes maxFileSize",
-      },
     },
   });
 /**
@@ -251,9 +242,6 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
     ref: "Member",
     unique: true,
     sparse: true,
-    autopopulate: {
-      select: "NIM avatar fullName email class semester createdAt",
-    },
   },
   approved: {
     type: Boolean,
@@ -300,9 +288,6 @@ const participantSchema = new Schema<IParticipantSchema>({
     ref: "Member",
     unique: true,
     sparse: true,
-    autopopulate: {
-      select: "NIM avatar fullName email class semester createdAt",
-    },
   },
   guest: {
     type: IGuestSchema,
@@ -358,7 +343,6 @@ const agendaSchema = new Schema<IAgendaSchema, IAgendaModel, IAgendaMethods>(
       type: Types.ObjectId,
       required: true,
       ref: CategoryModel,
-      autopopulate: { select: "title description" },
     },
     tags: {
       type: [String],
@@ -388,9 +372,6 @@ const agendaSchema = new Schema<IAgendaSchema, IAgendaModel, IAgendaMethods>(
     participants: {
       type: [participantSchema],
       default: [],
-      autopopulate: {
-        path: "answers",
-      },
     },
   },
   {
@@ -405,8 +386,6 @@ const agendaSchema = new Schema<IAgendaSchema, IAgendaModel, IAgendaMethods>(
   }
 );
 
-// Enable auto-population for referenced documents
-agendaSchema.plugin(mongooseAutoPopulate);
 agendaSchema.virtual("photos", {
   ref: "Photo",
   localField: "_id",

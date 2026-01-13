@@ -187,7 +187,7 @@ const items = (project: IProject): DropdownMenuItem[][] => [[
     {
         label: 'Delete',
         icon: 'i-heroicons-trash',
-        onSelect: () => DeleteModal(project._id!),
+        onSelect: () => DeleteModal(project._id as string),
         disabled: !isOrganizer.value
     },
     {
@@ -199,7 +199,7 @@ const items = (project: IProject): DropdownMenuItem[][] => [[
     {
         label: 'Publish',
         icon: 'i-ion-arrow-up-right-box-outline',
-        onSelect: () => PublishModal(project._id!),
+        onSelect: () => PublishModal(project._id as string),
         disabled: !isOrganizer.value
     }
 ]]
