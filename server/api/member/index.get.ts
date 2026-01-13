@@ -2,6 +2,7 @@ import { SortOrder } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
+import { PointModel } from "~~/server/models/PointModel";
 import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
 import { IReqMemberQuery } from "~~/types/IRequestPost";
 import { IMemberResponse } from "~~/types/IResponse";
@@ -207,6 +208,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       })
       .populate({
         path: "manualPoints",
+        model: PointModel,
       })
       .sort(sortOpt)
       .skip((Number(page) - 1) * Number(perPage))
