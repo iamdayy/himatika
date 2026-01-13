@@ -1,10 +1,11 @@
 <script setup lang='ts'>
-import { ModalsConfirmation, ModalsMemberAdd, ModalsMemberEdit, NuxtImg, UBadge, UButton, UCheckbox } from '#components';
+import { ModalsConfirmation, ModalsMemberAdd, ModalsMemberEdit, UBadge, UButton, UCheckbox } from '#components';
 import type { TableColumn } from '@nuxt/ui';
 import type { Column } from '@tanstack/vue-table';
 import type { IMember } from '~~/types';
 import type { IExportSheetResponse, IMemberResponse } from '~~/types/IResponse';
 const UDropdownMenu = resolveComponent('UDropdownMenu');
+const NuxtImg = resolveComponent('NuxtImg');
 /**
  * Page metadata configuration
  */
