@@ -328,6 +328,7 @@ const breadcumbs = computed(() => [
                                             v-model="member.birth.place" required
                                             :class="isMobile ? 'mb-2 w-full' : 'flex-1 mb-0 mr-2'" />
                                         <div class="flex flex-row items-center gap-2">
+                                            <!-- TODO: FIX DATE PICKER -->
                                             <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
                                                 <UButton icon="i-heroicons-calendar-days-20-solid" color="neutral"
                                                     variant="outline" class="w-full">
@@ -336,7 +337,7 @@ const breadcumbs = computed(() => [
                                                 <template #content>
                                                     <div
                                                         class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                        <DatePicker v-model="member.birth.date" mode="date"
+                                                        <DatePicker v-model="member.birth.date" mode="datetime"
                                                             color="orange-hima" />
                                                     </div>
                                                 </template>
@@ -375,7 +376,7 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('citizenship')
-                                    }}</dt>
+                                        }}</dt>
                                     <UInput v-model="member.citizen" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ user?.member.citizen }}</dd>
                                 </div>
@@ -511,7 +512,7 @@ const breadcumbs = computed(() => [
                                                         user.member.point[index]!.activities.agendas.participants }}
                                                     </div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
-                                                        }}
+                                                    }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -521,7 +522,7 @@ const breadcumbs = computed(() => [
                                                         0
                                                     }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project')
-                                                        }}
+                                                    }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -531,7 +532,7 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('aspiration')
-                                                        }}</div>
+                                                    }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -628,7 +629,7 @@ const breadcumbs = computed(() => [
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                    }}</p>
+                                                                        }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -654,7 +655,7 @@ const breadcumbs = computed(() => [
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
                                                             <h3 class="text-lg font-semibold">{{ $ts('aspiration')
-                                                                }}
+                                                            }}
                                                             </h3>
                                                             <UBadge variant="subtle">{{
                                                                 getAspirationsByRange(user.member.point[index]!.range)?.length

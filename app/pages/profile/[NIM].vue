@@ -33,11 +33,11 @@
 
                                 <!-- Action Buttons -->
                                 <div class="flex gap-2 mt-4 sm:mt-0">
-                                    <UButton color="neutral" variant="outline" size="sm" v-if="isOrganizer"
-                                        @click="editModal">
+                                    <!-- TODO: Implement edit functionality -->
+                                    <!-- <UButton color="neutral" variant="outline" size="sm" v-if="isOrganizer">
                                         <UIcon name="i-heroicons-pencil-square" class="w-4 h-4 mr-2" />
                                         {{ $ts('edit') }}
-                                    </UButton>
+                                    </UButton> -->
                                 </div>
                             </div>
                         </div>
@@ -414,15 +414,10 @@
 </template>
 
 <script setup lang="ts">
-import { ModalsMemberEdit } from '#components';
 import type { AccordionItem, TabsItem } from '@nuxt/ui';
 import type { IMember } from '~~/types';
 import type { IMemberResponse } from '~~/types/IResponse';
-
 const { $api, $ts } = useNuxtApp();
-const overlay = useOverlay();
-const toast = useToast();
-const EditMemberModal = overlay.create(ModalsMemberEdit);
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
 const { data: memberData } = await useAsyncData<IMemberResponse>('member', async () => {
@@ -499,14 +494,6 @@ const getAspirationsByRange = (range: { start: Date; end: Date }) => {
         return aspirationDate >= start && aspirationDate <= end && !aspiration.anonymous;
     }) || [];
     return aspirations;
-};
-
-/**
- * Open edit modal
- * @param {number} NIM - The NIM of the member to edit
- */
-const editModal = () => {
-    EditMemberModal.open({ NIM: member.value?.NIM });
 };
 
 definePageMeta({
