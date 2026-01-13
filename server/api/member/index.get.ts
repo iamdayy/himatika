@@ -1,5 +1,4 @@
 import { SortOrder } from "mongoose";
-import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
 import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
@@ -203,7 +202,6 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       })
       .populate({
         path: "aspirations",
-        model: AspirationModel,
       })
       .populate({
         path: "manualPoints",
