@@ -175,22 +175,37 @@ export default defineNuxtConfig({
       session: {
         dataType: {
           username: "string",
+          key: "string",
+          token: "string",
           member: {
             NIM: "number",
             fullName: "string",
-            email: "string",
             avatar: "string",
-            status: "'active' | 'inactive' | 'free' | 'deleted'",
             class: "string",
             semester: "number",
-            sex: "'female' | 'male'",
-            organizer: {
-              role: "string",
-              period: {
-                start: "Date",
-                end: "Date",
-              },
+            birth: {
+              place: "string",
+              date: "Date",
             },
+            sex: "'female' | 'male'",
+            religion: "string",
+            citizen: "string",
+            phone: "string",
+            email: "string",
+            address: "IAddress",
+            isRegistered: "boolean",
+            enteredYear: "number",
+            point:
+              "{ semester: number, range: { start: Date, end: Date }, point: number, activities: any }[]",
+            agendas: {
+              committees: "IAgenda[]",
+              members: "IAgenda[]",
+            },
+            projects: "IProject[]",
+            organizer: "IOrganizer",
+            aspirations: "IAspiration[]",
+            documents: "IDoc[]",
+            docsRequestSign: "IDoc[]",
           },
         },
       },

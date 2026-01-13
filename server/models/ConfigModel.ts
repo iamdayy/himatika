@@ -60,7 +60,7 @@ configSchema.pre("save", async function (next) {
     }
   }
 
-  return;
+  next();
 });
 
 export const ConfigModel = mongoose.model<IConfigSchema>(

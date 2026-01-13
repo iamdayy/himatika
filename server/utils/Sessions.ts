@@ -28,46 +28,13 @@ export const checkSession = async (payload: string) => {
     }
 
     // 2. Verifikasi Signature JWT
+    // jwt.verify akan throw error otomatis jika expired/invalid
     jwt.verify(session.token, getSecretKey());
 
-    // 3. Ambil user dengan POPULATE MANUAL (Explicit Loading)
-    const user: any = await UserModel.findById(session.user)
-      .select("username member") // Hanya ambil field ini dari User
-      .populate({
-        path: "member",
-        // Pilih field ringan saja. HINDARI field berat (projects, agendas, points)
-        populate: [
-          {
-            path: "organizersDailyManagement",
-            select: "period position",
-          },
-          {
-            path: "organizersDepartmentCoordinator",
-            select: "period",
-          },
-          {
-            path: "organizersDepartmentMembers",
-            select: "period",
-          },
-          {
-            path: "organizersConsiderationBoard",
-            select: "period",
-          },
-        ],
-        select: "fullName NIM email avatar status class semester sex organizer",
-      });
+    // 3. Ambil user dengan populate member (asumsi member adalah relasi/field)
+    // Menggunakan lean() untuk performa lebih cepat (return POJO, bukan Mongoose Document)
+    const user: any = await UserModel.findById(session.user);
 
-    const userObj = user.toObject();
-    if (userObj.member) {
-      delete userObj.member.organizersDailyManagement;
-      delete userObj.member.organizersConsiderationBoard;
-      delete userObj.member.organizersDepartmentCoordinator;
-      delete userObj.member.organizersDepartmentMembers;
-      delete userObj.member.point;
-
-      // Virtual 'organizer' (hasil gabungan) SUDAH TERSIMPAN di userObj.member.organizer
-      // karena kita menggunakan toObject() yang mengaktifkan virtuals.
-    }
     if (!user) {
       throw createError({
         statusMessage: "User context not found",
@@ -76,9 +43,12 @@ export const checkSession = async (payload: string) => {
     }
 
     // 4. Return data yang bersih
-    return userObj;
+    return {
+      username: user.username,
+      // Menggunakan spread operator agar tidak perlu update manual jika field member bertambah
+      member: user.member ? user.member : null,
+    };
   } catch (error: any) {
-    console.log(error);
     // Jika error dari JWT (expired), kita lempar 401
     if (
       error.name === "TokenExpiredError" ||
@@ -98,18 +68,25 @@ export const checkSession = async (payload: string) => {
  */
 export const refreshSession = async (payload: string) => {
   try {
-    // 1. Validasi signature token
+    // 1. Validasi signature token (meskipun expired/lama, signature harus asli)
+    // Kita gunakan decode dulu atau verify dengan ignoreExpiration jika perlu,
+    // tapi biasanya refresh token belum expired secara waktu, hanya status DB nya.
     const decoded = jwt.verify(payload, getSecretKey()) as jwt.JwtPayload;
     if (!decoded || !decoded.user) {
       throw createError({ statusMessage: "Invalid Token", statusCode: 401 });
     }
 
-    // 2. Cari session berdasarkan Refresh Token
+    // 2. Cari session berdasarkan Refresh Token SAAT INI atau SEBELUMNYA
     const session = await SessionModel.findOne({
-      $or: [{ refreshToken: payload }, { previousRefreshToken: payload }],
+      $or: [
+        { refreshToken: payload },
+        { previousRefreshToken: payload }, // Cek juga kolom history
+      ],
     });
 
     if (!session) {
+      // Token valid secara kriptografi tapi tidak ada di DB (Reuse Detection)
+      // Ini berarti token sudah sangat lama atau dipalsukan.
       throw createError({
         statusMessage: "Session not found",
         statusCode: 401,
@@ -117,18 +94,22 @@ export const refreshSession = async (payload: string) => {
     }
 
     // SKENARIO A: RACE CONDITION / GRACE PERIOD
+    // Jika token yang dikirim adalah token SEBELUMNYA (yang baru saja diganti)
     if (session.previousRefreshToken === payload) {
+      // Hitung selisih waktu sejak update terakhir
       const timeDiff =
         new Date().getTime() - new Date(session.updatedAt as Date).getTime();
 
+      // Jika kurang dari 20 detik (Window Tolerance), anggap ini request parallel yang sah
       if (timeDiff < 20000) {
-        // 20 Detik Window
+        // Kembalikan token yang SUDAH ADA (yang valid saat ini), JANGAN generate baru lagi
         return {
           token: session.token,
           refreshToken: session.refreshToken,
         };
       } else {
-        await session.deleteOne();
+        // Jika sudah lebih dari 20 detik, ini mencurigakan (Replay Attack)
+        await session.deleteOne(); // Hapus session demi keamanan
         throw createError({
           statusMessage: "Token Reuse Detected",
           statusCode: 401,
@@ -137,13 +118,14 @@ export const refreshSession = async (payload: string) => {
     }
 
     // SKENARIO B: ROTASI NORMAL
+    // Jika token yang dikirim adalah token SAAT INI
     if (session.refreshToken === payload) {
       const newToken = jwt.sign({ user: session.user }, getSecretKey(), {
         expiresIn: "1d",
       });
-
       // Update token baru
       session.token = newToken;
+
       await session.save();
 
       return {
@@ -152,6 +134,7 @@ export const refreshSession = async (payload: string) => {
       };
     }
 
+    // Fallback jika tidak match keduanya
     throw createError({
       statusMessage: "Invalid Session State",
       statusCode: 401,
@@ -171,6 +154,9 @@ export const setSession = async (
   payload: ISetSessionParams
 ): Promise<true | H3Error> => {
   try {
+    // Opsional: Hapus session lama user ini jika ingin "Single Device Login"
+    // await SessionModel.deleteMany({ user: payload.user });
+
     const createdSession = await SessionModel.create(payload);
     if (!createdSession) {
       throw createError({
@@ -186,6 +172,7 @@ export const setSession = async (
 
 export const exitSession = async (payload: string) => {
   try {
+    // Decode tanpa verify dulu untuk mengambil ID user, atau cari langsung by token
     const result = await SessionModel.deleteOne({ token: payload });
     return result;
   } catch (error: any) {

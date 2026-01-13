@@ -126,11 +126,10 @@ export default defineEventHandler(
           length,
         },
       };
-    } catch (error: any) {
-      console.log(error);
+    } catch (error) {
       throw createError({
-        statusCode: error.statusCode || 500,
-        statusMessage: error.statusMessage || "Internal Server Error",
+        statusCode: 500,
+        statusMessage: "Internal Server Error",
       });
     }
   }

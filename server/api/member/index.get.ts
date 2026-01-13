@@ -69,7 +69,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
           transform: (doc: IOrganizer, id: any) => {
             if (doc) {
               return {
-                role: doc.dailyManagement?.find(
+                role: doc.dailyManagement.find(
                   (daily) => (daily.member as IMember)?.id == id
                 )?.position,
                 period: doc.period,
@@ -172,40 +172,84 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
     }
     // Fetch members with populated fields
     const members = await MemberModel.find(query)
-      .select(
-        "NIM avatar fullName email class semester point enteredYear createdAt status"
-      )
-      .populate({
-        path: "organizersDailyManagement",
-        select: "period dailyManagement.position",
-      })
-      .populate({
-        path: "organizersDepartmentCoordinator",
-        select: "period",
-      })
-      .populate({
-        path: "organizersDepartmentMembers",
-        select: "period",
-      })
-      .populate({
-        path: "organizersConsiderationBoard",
-        select: "period",
-      })
-      .populate({ path: "projects", select: "title date description -_id" })
       .populate({
         path: "agendasCommittee",
         select: "title date at description configuration -_id",
+        transform: (doc: IAgenda) => ({
+          title: doc.title,
+          date: doc.date,
+          at: doc.at,
+          description: doc.description,
+          configuration: doc.configuration,
+        }),
       })
       .populate({
         path: "agendasMember",
         select: "title date at description configuration -_id",
+        transform: (doc: IAgenda) => ({
+          title: doc.title,
+          date: doc.date,
+          at: doc.at,
+          description: doc.description,
+          configuration: doc.configuration,
+        }),
+      })
+      .populate({
+        path: "projects",
+        select: "title deadline description -_id",
+        transform: (doc: IProject) => ({
+          title: doc.title,
+          date: doc.date,
+          description: doc.description,
+        }),
+      })
+      .populate({
+        path: "organizersDailyManagement",
+        model: OrganizerModel,
+        transform: (doc: IOrganizer, id: any) => {
+          if (doc) {
+            return {
+              role: doc.dailyManagement.find(
+                (daily) => (daily.member as IMember)?.id == id
+              )?.position,
+              period: doc.period,
+            };
+          }
+          return null;
+        },
+      })
+      .populate({
+        path: "organizersDepartmentCoordinator",
+        model: OrganizerModel,
+        transform: (doc: IOrganizer, id: any) => {
+          if (doc) {
+            return {
+              role: "Coordinator Departement",
+              period: doc.period,
+            };
+          }
+          return null;
+        },
+      })
+      .populate({
+        path: "organizersDepartmentMembers",
+        model: OrganizerModel,
+        transform: (doc: IOrganizer, id: any) => {
+          if (doc) {
+            return {
+              role: "Member Departement",
+              period: doc.period,
+            };
+          }
+          return null;
+        },
       })
       .populate({
         path: "aspirations",
       })
-      .populate({
-        path: "manualPoints",
-      })
+      .select(
+        "NIM avatar fullName email class semester point enteredYear createdAt status"
+      )
       .sort(sortOpt)
       .skip((Number(page) - 1) * Number(perPage))
       .limit(Number(perPage));
@@ -227,11 +271,9 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
             createdAt: member.createdAt,
             status: member.status,
             point: member.point,
-            pointThisSemester: member.pointThisSemester,
             agendas: member.agendas,
             projects: member.projects,
             organizer: member.organizer,
-            organizersDailyManagement: member.organizersDailyManagement,
           };
         }),
         length,

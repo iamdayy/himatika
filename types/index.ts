@@ -105,7 +105,6 @@ export interface IMember {
   address?: IAddress;
   status?: "active" | "inactive" | "free" | "deleted";
   point?: IPoint[];
-  pointThisSemester?: number;
   enteredYear: number;
   agendas?: {
     committees?: IAgenda[];
@@ -122,10 +121,10 @@ export interface IMember {
     role: string;
     period: IPeriod;
   };
-  organizersConsiderationBoard?: IOrganizer;
-  organizersDailyManagement?: IOrganizer;
-  organizersDepartmentCoordinator?: IOrganizer;
-  organizersDepartmentMembers?: IOrganizer;
+  organizersConsiderationBoard?: IOrganizer[];
+  organizersDailyManagement?: IOrganizer[];
+  organizersDepartmentCoordinator?: IOrganizer[];
+  organizersDepartmentMembers?: IOrganizer[];
 }
 
 export interface IGuest {
@@ -174,7 +173,7 @@ export interface IPeriod {
 
 export interface IDailyManagement {
   position: string;
-  member: Types.ObjectId | IMember | number | string;
+  member: Types.ObjectId | IMember | number;
 }
 
 export interface IDepartment {

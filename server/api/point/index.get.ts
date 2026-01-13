@@ -1,5 +1,6 @@
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IAgenda, IProject } from "~~/types";
+import OrganizerModel from "~~/server/models/OrganizerModel";
+import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
 import { IPointResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IPointResponse> => {
@@ -37,26 +38,60 @@ export default defineEventHandler(async (event): Promise<IPointResponse> => {
         }),
       })
       .populate({
-        path: "aspirations",
+        path: "organizersDailyManagement",
+        model: OrganizerModel,
+        transform: (doc: IOrganizer, id: any) => {
+          if (doc) {
+            return {
+              role: doc.dailyManagement.find(
+                (daily) => (daily.member as IMember)?.id == id
+              )?.position,
+              period: doc.period,
+            };
+          }
+          return null;
+        },
       })
       .populate({
-        path: "manualPoints",
+        path: "organizersDepartmentCoordinator",
+        model: OrganizerModel,
+        transform: (doc: IOrganizer, id: any) => {
+          if (doc) {
+            return {
+              role: "Coordinator Departement",
+              period: doc.period,
+            };
+          }
+          return null;
+        },
+      })
+      .populate({
+        path: "organizersDepartmentMembers",
+        model: OrganizerModel,
+        transform: (doc: IOrganizer, id: any) => {
+          if (doc) {
+            return {
+              role: "Member Departement",
+              period: doc.period,
+            };
+          }
+          return null;
+        },
+      })
+      .populate({
+        path: "aspirations",
       })
       .select(
         "NIM avatar fullName email class semester point enteredYear createdAt status"
       );
     const points = members
-      .filter((member) => member.point)
       .map((member, index) => {
-        const point = member.point?.find(
-          (val) => val.semester == member.semester
-        );
         return {
           fullName: member.fullName,
           NIM: member.NIM,
           semester: member.semester,
           class: member.class,
-          point: point?.point || 0,
+          point: member.point,
           avatar: member.avatar,
           no: index + 1,
         };
@@ -65,7 +100,7 @@ export default defineEventHandler(async (event): Promise<IPointResponse> => {
         if (a.point === b.point) {
           return a.no - b.no;
         }
-        return (b.point ?? 0) - (a.point ?? 0);
+        return (b.point?.[0]?.point ?? 0) - (a.point?.[0]?.point ?? 0);
       });
     const me = points.find(
       (point) => point.NIM === event.context.user.member.NIM

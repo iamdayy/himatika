@@ -15,7 +15,6 @@ import type {
   IPayment,
   IPhoto,
   IPhotoGrouped,
-  IPoint,
   IProject,
   IQuestion,
   IUser,
@@ -128,22 +127,15 @@ export interface IStatsResponse extends IResponse {
 
 export interface IPointResponse extends IResponse {
   data?: {
-    points?: {
+    points: {
       avatar?: string;
       fullName: string;
       NIM: number;
       semester?: number;
-      point?: number;
+      point?: { point: number }[];
       no: number;
       class: string;
     }[];
-    point?: number;
-  };
-}
-export interface IPointMeResponse extends IResponse {
-  data?: {
-    points?: IPoint[];
-    point?: number;
   };
 }
 
@@ -220,12 +212,6 @@ export interface IMemberResponse extends IResponse {
     members?: IMember[];
     length?: number;
     member?: IMember;
-  };
-}
-
-export interface IMeResponse extends IResponse {
-  data?: {
-    me: IUser;
   };
 }
 

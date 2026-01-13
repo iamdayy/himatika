@@ -195,10 +195,16 @@ const columns = computed<TableColumn<IMember>[]>(() => [
         header: ({ column }) => addSortButton(column, $ts('point')),
         size: 100,
         cell: ({ row }) => {
+            if (!row.original.point || row.original.point.length === 0) {
+                return h('span', {
+                    class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
+                }, '0');
+            }
             return h('span', {
                 class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
-            }, (row.original.pointThisSemester)
-            );
+            }, (row.original.point?.find?.(p => p.semester === row.original.semester)?.point ??
+                row.original.point?.[0]?.point ??
+                '0'));
         }
     },
     {
@@ -295,9 +301,10 @@ const resetFilters = () => {
  * Pagination and sorting state
  */
 const sort = ref<{ column: string; direction: 'asc' | 'desc' }>({ column: 'createdAt', direction: 'asc' as const });
-const page = ref(1);
-const perPage = ref(10);
-
+const pagination = ref({
+    pageIndex: 1,
+    pageSize: 10,
+})
 
 /**
  * Fetch data from API
@@ -305,8 +312,8 @@ const perPage = ref(10);
 const { data, pending, refresh } = await useLazyAsyncData('users', () => $api<IMemberResponse>('/api/member', {
     query: {
         search: search.value,
-        page: page.value,
-        perPage: perPage.value,
+        page: pagination.value.pageIndex,
+        perPage: pagination.value.pageSize,
         sort: sort.value.column,
         order: sort.value.direction,
         filterBy: filterBy.value,
@@ -322,7 +329,7 @@ const { data, pending, refresh } = await useLazyAsyncData('users', () => $api<IM
             length: 0
         }
     }),
-    watch: [page, perPage, () => sort.value.column, () => sort.value.direction, filter, filterBy, deleted, NIM, search],
+    watch: [() => pagination.value.pageIndex, search, () => pagination.value.pageSize, () => sort.value.column, () => sort.value.direction, filter, filterBy, deleted, NIM],
 });
 
 const filters = computed(() => {
@@ -333,8 +340,8 @@ const filters = computed(() => {
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0);
-const pageFrom = computed(() => (page.value - 1) * perPage.value + 1);
-const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.value));
+const pageFrom = computed(() => (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
+const pageTo = computed(() => Math.min(pagination.value.pageIndex * pagination.value.pageSize, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];
     const filteredOptions = baseOptions.filter((option) => option <= pageTotal.value);
@@ -411,6 +418,12 @@ const updateSemester = async () => {
         }
     });
 }
+/**
+ * Watch for changes in search and filter to reset page
+ */
+watch([search, filter], () => {
+    pagination.value.pageIndex = 1;
+});
 
 /**
  * Open add modal
@@ -640,8 +653,9 @@ const links = computed(() => [{
                 <!-- Table -->
                 <div class="overflow-x-auto">
                     <UTable ref="table" v-model:column-visibility="columnVisibility" v-model:sort="sort"
-                        v-model:row-selection="selectedRows" v-model:column-pinning="columnPinning"
-                        :data="data.data?.members" :columns="columns" :loading="pending" class="w-full">
+                        v-model:pagination="pagination" v-model:row-selection="selectedRows"
+                        v-model:column-pinning="columnPinning" :data="data.data?.members" :columns="columns"
+                        :loading="pending" class="w-full">
                     </UTable>
                 </div>
             </div>
@@ -650,15 +664,15 @@ const links = computed(() => [{
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page') }}</span>
-                        <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
+                        <USelect v-model="pagination.pageSize" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">
                             {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
                         </span>
                     </div>
-                    <UPagination v-model:page="page" :items-per-page="perPage" :total="pageTotal"
-                        :sibling-count="isMobile ? 1 : 2" show-edges />
+                    <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"
+                        :total="pageTotal" :sibling-count="isMobile ? 1 : 2" show-edges />
                 </div>
             </template>
         </UCard>

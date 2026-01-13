@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import mongooseAutoPopulate from "mongoose-autopopulate";
 import {
   IDailyManagementSchema,
   IDepartmentSchema,
@@ -14,6 +15,10 @@ const DailyManagementSchema = new Schema<IDailyManagementSchema>({
     type: Schema.Types.ObjectId,
     ref: "Member",
     required: true,
+    autopopulate: {
+      // model: MemberModel,
+      select: "NIM avatar fullName email class semester createdAt",
+    },
   },
 });
 
@@ -26,12 +31,20 @@ const DepartmentSchema = new Schema<IDepartmentSchema>({
     type: Schema.Types.ObjectId,
     ref: "Member",
     required: true,
+    autopopulate: {
+      // model: MemberModel,
+      select: "NIM avatar fullName email class semester createdAt",
+    },
   },
   members: [
     {
       type: Schema.Types.ObjectId,
       ref: "Member",
       required: true,
+      autopopulate: {
+        // model: MemberModel,
+        select: "NIM avatar fullName email class semester createdAt",
+      },
     },
   ],
 });
@@ -72,6 +85,10 @@ const OrganizerSchema = new Schema<IOrganizerSchema>({
       type: Schema.Types.ObjectId,
       ref: "Member",
       required: true,
+      autopopulate: {
+        // model: MemberModel,
+        select: "NIM avatar fullName email class semester createdAt",
+      },
     },
   ],
   dailyManagement: [DailyManagementSchema],
@@ -87,5 +104,7 @@ const OrganizerSchema = new Schema<IOrganizerSchema>({
     },
   },
 });
+
+OrganizerSchema.plugin(mongooseAutoPopulate);
 
 export default mongoose.model<IOrganizerSchema>("Organizer", OrganizerSchema);

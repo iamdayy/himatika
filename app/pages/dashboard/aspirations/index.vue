@@ -108,7 +108,7 @@ const columns = computed<TableColumn<IAspiration>[]>(() => [
         id: 'number',
         header: '#',
         cell: ({ row }) => {
-            return row.index + 1;
+            return (pagination.value.pageIndex - 1) * pagination.value.pageSize + row.index + 1;
         },
         size: 50,
     },
@@ -206,8 +206,10 @@ const resetFilters = () => {
  * Pagination and sorting state
  */
 const sort = ref({ column: 'createdAt', direction: 'asc' as const });
-const page = ref(1);
-const perPage = ref(10);
+const pagination = ref({
+    pageIndex: 1,
+    pageSize: 10,
+})
 
 /**
  * Fetch data from API
@@ -215,8 +217,8 @@ const perPage = ref(10);
 const { data, status, refresh } = await useLazyAsyncData('users', () => $api<IAspirationResponse>('/api/aspiration', {
     query: {
         search: search.value,
-        page: page.value,
-        perPage: perPage.value,
+        page: pagination.value.pageIndex,
+        perPage: pagination.value.pageSize,
         sort: sort.value.column,
         order: sort.value.direction,
         filterBy: filterBy.value?.value,
@@ -231,7 +233,7 @@ const { data, status, refresh } = await useLazyAsyncData('users', () => $api<IAs
             length: 0
         }
     }),
-    watch: [page, perPage, search, sort, filter, filterBy, deleted],
+    watch: [() => pagination.value.pageIndex, () => pagination.value.pageSize, search, sort, filter, filterBy, deleted],
     deep: true,
 });
 
@@ -239,8 +241,8 @@ const { data, status, refresh } = await useLazyAsyncData('users', () => $api<IAs
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0);
-const pageFrom = computed(() => page.value * perPage.value);
-const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.value));
+const pageFrom = computed(() => (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
+const pageTo = computed(() => Math.min(pagination.value.pageIndex * pagination.value.pageSize, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];
     const filteredOptions = baseOptions.filter((option) => option <= pageTotal.value);
@@ -331,6 +333,13 @@ const generateXlsx = async () => {
         console.error('Error generating Excel file:', error);
     }
 };
+
+/**
+ * Watch for changes in search and filter to reset page
+ */
+watch([search, filter], () => {
+    pagination.value.pageIndex = 1;
+});
 
 
 /**
@@ -449,7 +458,7 @@ const links = computed(() => [{
                         <div class="flex flex-col items-center gap-2">
                             <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">{{
                                 $ts('show_deleted')
-                            }}</label>
+                                }}</label>
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </div>
                         <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"
@@ -460,7 +469,7 @@ const links = computed(() => [{
 
                 <!-- Table -->
                 <UTable :data="data.data?.aspirations" :columns="columns" :loading="status === 'pending'" class="w-full"
-                    v-model:row-selection="selectedRows">
+                    v-model:pagination="pagination" v-model:row-selection="selectedRows">
                     <template #expanded="{ row }">
                         <div class="p-4 text-sm text-gray-600 dark:text-gray-300">
                             <h3 class="mb-2 font-semibold">Message</h3>
@@ -498,15 +507,15 @@ const links = computed(() => [{
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page') }}</span>
-                        <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
+                        <USelect v-model="pagination.pageSize" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">
                             {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
                         </span>
                     </div>
-                    <UPagination v-model:page="page" :items-per-page="perPage" :total="pageTotal"
-                        :sibling-count="isMobile ? 2 : 6" />
+                    <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"
+                        :total="pageTotal" :sibling-count="isMobile ? 2 : 6" />
                 </div>
             </template>
         </UCard>

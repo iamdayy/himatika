@@ -11,13 +11,11 @@ export default defineCachedEventHandler(
       if (query.NIM) {
         const id = await getIdByNim(query.NIM as number);
         const organizer = await OrganizerModel.findOne({
-          $expr: {
-            $or: [
-              { "dailyManagement.member": id },
-              { "department.coordinator": id },
-              { "department.members.member": id },
-            ],
-          },
+          $or: [
+            { "dailyManagement.member": id },
+            { "department.coordinator": id },
+            { "department.members.member": id },
+          ],
         });
         return {
           statusCode: 200,
@@ -53,26 +51,7 @@ export default defineCachedEventHandler(
           },
         };
       }
-      const organizers = await OrganizerModel.find()
-        .sort("period.start")
-        .populate([
-          {
-            path: "considerationBoard",
-            select: "fullName NIM email avatar status class sex",
-          },
-          {
-            path: "dailyManagement.member",
-            select: "fullName NIM email avatar status class sex",
-          },
-          {
-            path: "department.coordinator",
-            select: "fullName NIM email avatar status class sex",
-          },
-          {
-            path: "department.members",
-            select: "fullName NIM email avatar status class sex",
-          },
-        ]);
+      const organizers = await OrganizerModel.find().sort("period.start");
       return {
         statusCode: 200,
         statusMessage: "Organizer fetched successfully.",
