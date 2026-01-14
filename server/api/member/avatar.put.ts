@@ -16,7 +16,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const avatarFile = body[0]!;
+    const avatarFile = body.find(
+      (f) => f.name === "avatar" || f.name === "file"
+    );
     // Hapus slash di depan agar sesuai standar S3 Key
     const BASE_AVATAR_FOLDER = "uploads/img/avatars";
 
@@ -37,7 +39,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     // Find the user's member
-    const member = await MemberModel.findOne({ NIM });
+    const member = await MemberModel.findOne({ NIM: Number(NIM) });
     if (!member) {
       throw createError({
         statusCode: 404,
@@ -48,10 +50,10 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     // Process and save the new avatar
     // Generate nama file (Key)
     const fileName = `${BASE_AVATAR_FOLDER}/${member.NIM}.${
-      avatarFile.type?.split("/")[1] || "png"
+      avatarFile?.type?.split("/")[1] || "png"
     }`;
 
-    if (avatarFile.type?.startsWith("image/")) {
+    if (avatarFile?.type?.startsWith("image/")) {
       // --- UPLOAD KE R2 ---
       await r2Client.send(
         new PutObjectCommand({

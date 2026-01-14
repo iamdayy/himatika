@@ -105,31 +105,41 @@ export default defineEventHandler(
       }
 
       const participantId = new Types.ObjectId();
+      let updateQuery = {};
       let email: string, name: string;
 
       if (user) {
         name = user.member.fullName;
         email = user.member.email;
-        agenda.participants?.push({
-          _id: participantId,
-          member: user.member._id as Types.ObjectId,
-        });
+        updateQuery = {
+          $addToSet: {
+            // Atomic operation: hanya tambah jika belum ada
+            participants: {
+              _id: participantId,
+              member: user.member._id,
+            },
+          },
+        };
       } else if (guest) {
         name = guest.fullName;
         email = guest.email;
-        agenda.participants?.push({
-          _id: participantId,
-          guest: {
-            fullName: guest.fullName,
-            email: guest.email,
-            phone: guest.phone,
-            NIM: guest.NIM,
-            prodi: guest.prodi,
-            class: guest.class,
-            semester: guest.semester,
-            instance: guest.instance,
+        updateQuery = {
+          $addToSet: {
+            participants: {
+              _id: participantId,
+              guest: {
+                fullName: guest.fullName,
+                email: guest.email,
+                phone: guest.phone,
+                NIM: guest.NIM,
+                prodi: guest.prodi,
+                class: guest.class,
+                semester: guest.semester,
+                instance: guest.instance,
+              },
+            },
           },
-        });
+        };
       } else {
         // This case should theoretically not be reached due to earlier checks
         throw createError({
@@ -138,8 +148,18 @@ export default defineEventHandler(
         });
       }
 
-      await agenda.save();
+      // Eksekusi update langsung ke DB
+      const result = await AgendaModel.updateOne({ _id: id }, updateQuery);
 
+      // Cek apakah ada dokumen yang dimodifikasi
+      if (result.modifiedCount === 0) {
+        // Jika 0, berarti kemungkinan besar user sudah terdaftar (karena $addToSet menolak duplikat)
+        // atau Agenda tidak ditemukan (sudah dicek di awal sih)
+        throw createError({
+          statusCode: 409,
+          statusMessage: "You are already registered or Agenda not found.",
+        });
+      }
       // Send confirmation email
       await sendConfirmationEmail(agenda, participantId, name, email);
 

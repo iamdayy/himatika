@@ -16,7 +16,7 @@ const router = useRouter();
 
 // Data Fetching
 const { data: agenda, pending, refresh } = await useAsyncData('agenda',
-    () => $api<IAgendaResponse>('/api/agenda', { query: { id } }), {
+    () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda
 });
 
@@ -233,7 +233,7 @@ useSeoMeta({
                                             : 'Peserta' }}</p>
                                     </div>
                                     <UButton
-                                        :to="`/agendas/${id}/${isRegistered === 'Committee' ? 'committee' : 'participant'}`"
+                                        :to="`/administrator/agendas/${id}/${isRegistered === 'Committee' ? 'committee' : 'participant'}`"
                                         variant="link" size="xs">
                                         Lihat Detail Tiket &rarr;
                                     </UButton>

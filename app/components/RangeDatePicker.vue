@@ -10,6 +10,7 @@ interface RangeDatePickerProps {
     max?: Date;
     disabled?: boolean;
 }
+const sizes = useResponsiveUiSizes();
 
 const props = defineProps<RangeDatePickerProps>();
 
@@ -18,8 +19,8 @@ const maxDate = computed(() => props.max ? new CalendarDate(props.max.getFullYea
 
 const model = defineModel<{ start: Date, end: Date }>({ required: true });
 const modelValue = shallowRef({
-    start: new CalendarDate(model.value.start.getFullYear(), model.value.start.getMonth() + 1, model.value.start.getDate()),
-    end: new CalendarDate(model.value.end.getFullYear(), model.value.end.getMonth() + 1, model.value.end.getDate())
+    start: new CalendarDate(new Date(model.value.start).getFullYear(), new Date(model.value.start).getMonth() + 1, new Date(model.value.start).getDate()),
+    end: new CalendarDate(new Date(model.value.end).getFullYear(), new Date(model.value.end).getMonth() + 1, new Date(model.value.end).getDate())
 });
 
 watch(modelValue, () => {
@@ -32,7 +33,7 @@ watch(modelValue, () => {
 
 <template>
     <UPopover>
-        <UButton color="neutral" variant="subtle" icon="i-lucide-calendar">
+        <UButton color="neutral" variant="outline" icon="i-lucide-calendar" :size="sizes.button" class="w-full">
             <template v-if="modelValue.start">
                 <template v-if="modelValue.end">
                     {{ df.format(modelValue.start.toDate(getLocalTimeZone())) }} - {{

@@ -19,11 +19,7 @@ const { $api } = useNuxtApp();
 const { $ts } = useI18n();
 const config = useRuntimeConfig();
 
-const { data: agenda } = useAsyncData('agenda', async () => $api<IAgendaResponse>('/api/agenda', {
-    query: {
-        id
-    }
-}), {
+const { data: agenda } = useAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda,
 });
 
@@ -641,18 +637,7 @@ const links = computed(() => [
                         </UFormField>
                         <UFormField :label="`${$ts('date')} & ${$ts('time')}`" name="date" id="date"
                             :class="[isMobile ? 'col-span-full' : 'col-span-2']" required>
-                            <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
-                                <UButton icon="i-heroicons-calendar-days-20-solid" :size="responsiveUISizes.button"
-                                    color="neutral" variant="outline" class="w-full">
-                                    {{ format(state.date.start as Date, 'd MMM, yyy') }} -
-                                    {{ format(state.date.end as Date, 'd MMM, yyy') }}
-                                </UButton>
-                                <template #content>
-                                    <div class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                        <RangeDatePicker v-model="state.date" :min="new Date()" />
-                                    </div>
-                                </template>
-                            </UPopover>
+                            <RangeDatePicker v-model="state.date" :min="new Date()" />
                         </UFormField>
                         <UFormField :label="$ts('location')" :error="errors.at?.message">
                             <UInput v-model="state.at" :placeholder="$ts('location')" :size="responsiveUISizes.input" />
@@ -715,28 +700,8 @@ const links = computed(() => [
                                 </UFormField>
                                 <UFormField :label="$ts('can_register_period')"
                                     :error="errors.canRegisterUntil?.message">
-                                    <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
-                                        <UButton icon="i-heroicons-calendar-days-20-solid"
-                                            :size="responsiveUISizes.button" color="neutral" variant="outline"
-                                            class="w-full"
-                                            :disabled="configurationState.committee.canRegister === 'None'">
-                                            {{
-                                                format(configurationState.committee.canRegisterUntil.start as Date,
-                                                    'd MMM, yyy')
-                                            }} -
-                                            {{
-                                                format(configurationState.committee.canRegisterUntil.end as Date,
-                                                    'd MMM, yyy')
-                                            }}
-                                        </UButton>
-                                        <template #content>
-                                            <div
-                                                class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                <RangeDatePicker v-model="configurationState.committee.canRegisterUntil"
-                                                    :max="new Date(state.date.start)" />
-                                            </div>
-                                        </template>
-                                    </UPopover>
+                                    <RangeDatePicker v-model="configurationState.committee.canRegisterUntil"
+                                        :max="new Date(state.date.start)" />
                                 </UFormField>
                                 <UFormField :label="$ts('enable_form')">
                                     <USwitch v-model="enableFormCommittee" :placeholder="$ts('enable_form')" />
@@ -816,29 +781,8 @@ const links = computed(() => [
                                 </UFormField>
                                 <UFormField :label="$ts('can_register_period')"
                                     :error="errors.canRegisterUntil?.message">
-                                    <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
-                                        <UButton icon="i-heroicons-calendar-days-20-solid"
-                                            :size="responsiveUISizes.button" color="neutral" variant="outline"
-                                            class="w-full"
-                                            :disabled="configurationState.participant.canRegister === 'None'">
-                                            {{
-                                                format(configurationState.participant.canRegisterUntil.start as Date,
-                                                    'd MMM, yyy')
-                                            }} -
-                                            {{
-                                                format(configurationState.participant.canRegisterUntil.end as Date,
-                                                    'd MMM, yyy')
-                                            }}
-                                        </UButton>
-                                        <template #content>
-                                            <div
-                                                class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                <RangeDatePicker
-                                                    v-model="configurationState.participant.canRegisterUntil"
-                                                    :max="new Date(state.date.start)" />
-                                            </div>
-                                        </template>
-                                    </UPopover>
+                                    <RangeDatePicker v-model="configurationState.participant.canRegisterUntil"
+                                        :max="new Date(state.date.start)" />
                                 </UFormField>
                                 <UFormField :label="$ts('enable_form')">
                                     <USwitch v-model="enableFormParticipant" :placeholder="$ts('enable_form')"

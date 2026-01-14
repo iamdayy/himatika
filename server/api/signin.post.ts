@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { UserModel } from "~~/server/models/UserModel";
+import { MemberModel } from "../models/MemberModel";
 import { setSession } from "../utils/Sessions";
 
 const getSecretKey = () => {
@@ -24,11 +25,15 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const t = await useTranslationServerMiddleware(event);
-    let memberId: Types.ObjectId | undefined;
+    let member;
     const NIM = parseInt(body.username);
     // Check if the username is a number
     if (!isNaN(NIM)) {
-      const member = await findMemberByNim(NIM);
+      const member = await MemberModel.findOne(
+        { NIM },
+        {},
+        { autopulate: false }
+      );
       if (!member) {
         throw createError({
           statusCode: 401,
@@ -36,13 +41,13 @@ export default defineEventHandler(async (event) => {
           data: { message: t("login_page.check_username"), name: "username" },
         });
       }
-      memberId = member;
     }
 
     // Find user by username
-    const user = await UserModel.findOne({
-      $or: [{ username: body.username }, { member: memberId }],
-    });
+    const user = await UserModel.findOne().or([
+      { username: body.username },
+      { member: member },
+    ]);
     if (!user) {
       throw createError({
         statusCode: 401,

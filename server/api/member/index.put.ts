@@ -20,7 +20,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "You must be logged in to use this endpoint",
       });
     }
-
     // Check if the user is updating their own member
     if (user.member.NIM != NIM && !organizer) {
       throw createError({
@@ -30,11 +29,27 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    // Read the request body containing the updated member data
     const body = await readBody<IMember>(event);
 
+    const allowedFields = {
+      fullName: body.fullName,
+      email: body.email, // Pastikan ada validasi email unik di model/tempat lain
+      phone: body.phone,
+      class: body.class,
+      semester: body.semester,
+      religion: body.religion,
+      birth: body.birth,
+      address: body.address,
+    };
+    // Read the request body containing the updated member data
+    const updateData = Object.fromEntries(
+      Object.entries(allowedFields).filter(([_, v]) => v !== undefined)
+    );
     // Find the member by NIM
-    const member = await MemberModel.updateOne({ NIM }, { $set: body });
+    const member = await MemberModel.updateOne(
+      { NIM: Number(NIM) },
+      { $set: updateData }
+    );
 
     if (!member) {
       throw createError({

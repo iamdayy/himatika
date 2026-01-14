@@ -5,6 +5,8 @@ const df = new DateFormatter('id-ID', {
     dateStyle: 'medium'
 });
 
+const sizes = useResponsiveUiSizes();
+
 interface DatePickerProps {
     min?: Date;
     max?: Date;
@@ -17,7 +19,7 @@ const minDate = computed(() => props.min ? new CalendarDate(props.min.getFullYea
 const maxDate = computed(() => props.max ? new CalendarDate(props.max.getFullYear(), props.max.getMonth() + 1, props.max.getDate()) : undefined);
 
 const model = defineModel<Date>({ required: true });
-const modelValue = shallowRef(new CalendarDate(model.value.getFullYear(), model.value.getMonth() + 1, model.value.getDate()))
+const modelValue = shallowRef(new CalendarDate(new Date(model.value).getFullYear(), new Date(model.value).getMonth() + 1, new Date(model.value).getDate()))
 
 watch(modelValue, () => {
     model.value = modelValue.value.toDate(getLocalTimeZone());
@@ -26,7 +28,7 @@ watch(modelValue, () => {
 
 <template>
     <UPopover>
-        <UButton color="neutral" variant="subtle" icon="i-lucide-calendar">
+        <UButton color="neutral" variant="outline" icon="i-lucide-calendar" :size="sizes.button" class="w-full">
             {{ modelValue ? df.format(modelValue.toDate(getLocalTimeZone())) : 'Select a date' }}
         </UButton>
 

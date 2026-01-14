@@ -1,5 +1,6 @@
 export default defineEventHandler(async (event) => {
-  if (event.path === "/api/refresh" || event.path === "/api/signin") {
+  const path = event.path.split("?")[0];
+  if (path === "/api/refresh" || path === "/api/signin") {
     return;
   }
   const publicRoutes = [
@@ -13,10 +14,7 @@ export default defineEventHandler(async (event) => {
   ];
 
   // Jangan biarkan logic auth berjalan sama sekali.
-  if (
-    publicRoutes.some((route) => event.path === route) &&
-    event.method === "GET"
-  ) {
+  if (publicRoutes.some((route) => path === route) && event.method === "GET") {
     return;
   }
   const isAuthenticated = checkAuth(event);

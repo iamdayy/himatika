@@ -1,4 +1,6 @@
-import bcrypt from "bcryptjs";
+import { createHmac } from "crypto";
+
+const getSecret = () => useRuntimeConfig().jwtSecret || "fallback-secret";
 /**
  * Generate a token
  * @param email
@@ -12,10 +14,9 @@ export const generateToken = async (
   otp: string,
   type: string
 ) => {
-  const string = `${email}${otp}${type}`;
-  const salt = await bcrypt.genSalt(10);
-  const token = await bcrypt.hash(string, salt);
-  return token;
+  const data = `${email}${otp}${type}`;
+  // HMAC SHA256 jauh lebih cepat dan tidak memblokir CPU
+  return createHmac("sha256", getSecret()).update(data).digest("hex");
 };
 
 /**
@@ -34,7 +35,10 @@ export const verifyToken = async (
   otp: string,
   type: string
 ) => {
-  const string = `${email}${otp}${type}`;
-  const result = await bcrypt.compare(string, token);
-  return result;
+  const data = `${email}${otp}${type}`;
+  const calculated = createHmac("sha256", getSecret())
+    .update(data)
+    .digest("hex");
+  // Gunakan timingSafeEqual untuk mencegah timing attacks (opsional tapi bagus)
+  return token === calculated;
 };
