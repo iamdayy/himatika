@@ -49,8 +49,8 @@ const bannerImage = computed(() => {
 // 2. Date Formatting (Handling DatePickerRangeObject)
 const formattedDate = computed(() => {
     if (!agenda.value?.date) return 'Tanggal belum ditentukan';
-    const start = new Date(agenda.value.date.start as string);
-    const end = new Date(agenda.value.date.end as string);
+    const start = new Date(agenda.value.date.start);
+    const end = new Date(agenda.value.date.end);
 
     const options: Intl.DateTimeFormatOptions = {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -71,8 +71,8 @@ type EventStatus = {
 const eventStatus = computed<EventStatus | null>(() => {
     if (!agenda.value?.date) return null;
     const now = new Date();
-    const start = new Date(agenda.value.date.start as string);
-    const end = new Date(agenda.value.date.end as string);
+    const start = new Date(agenda.value.date.start);
+    const end = new Date(agenda.value.date.end);
 
     if (now < start) return { label: 'Akan Datang', color: 'secondary', icon: 'i-heroicons-calendar' };
     if (now >= start && now <= end) return { label: 'Sedang Berlangsung', color: 'success', icon: 'i-heroicons-play-circle' };

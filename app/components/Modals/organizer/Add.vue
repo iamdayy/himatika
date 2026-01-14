@@ -225,23 +225,12 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
         <template #body>
             <div class="mb-6 ms-3">
                 <label for="Title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Period</label>
-                <VDatePicker id="deadline" v-model="organizer.period.start" mode="date">
-                    <template #default="{ togglePopover }">
-                        <UButton @click="togglePopover" icon="i-heroicons-calendar" variant="outline">
-                            <template #trailing>
-                                <span class="text-sm font-medium text-gray-900 dark:text-white" for="deadline">
-                                    {{ organizer.period.start.getFullYear() }} -
-                                    {{ organizer.period.end.getFullYear() }}
-                                </span>
-                            </template>
-                        </UButton>
-                    </template>
-                </VDatePicker>
+                <DatePicker id="deadline" v-model="organizer.period.start" />
             </div>
             <div class="my-4">
                 <label for="council" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('council')
-                }}</label>
+                    }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
                     <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
                         <UFormField class="col-span-12" :label="$ts('name')" required>
@@ -263,7 +252,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('advisor')
-                    }}</label>
+                }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="advisor">
                     <UFormField class="col-span-12" :label="$ts('name')" required>
                         <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required

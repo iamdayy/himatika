@@ -117,10 +117,5 @@ export default defineCachedEventHandler(
           error.message || "An unexpected error occurred while fetching news",
       };
     }
-  },
-  {
-    maxAge: 60 * 15, // Cache selama 15 Menit
-    name: "news-cache",
-    swr: true,
   }
 );

@@ -1,5 +1,4 @@
 import { Types } from "mongoose";
-import type { DatePickerRangeObject } from "v-calendar/dist/types/src/use/datePicker.js";
 /**
  * Defines the possible roles for users in the system.
  */
@@ -325,7 +324,7 @@ export interface IAgenda {
   title: string;
   category?: ICategory | Types.ObjectId | string;
   tags?: string[];
-  date: DatePickerRangeObject;
+  date: { start: Date; end: Date };
   at: string;
   atLink: string;
   description: string;
@@ -580,10 +579,10 @@ export interface IQuestion {
   question: string;
   type: string;
   options: IOption[];
-  max?: number;
-  min?: number;
+  max?: number | null;
+  min?: number | null;
   acceptedFileTypes?: string[];
-  maxFileSize?: number;
+  maxFileSize?: number | null;
   required: boolean;
   answer?: any;
 }

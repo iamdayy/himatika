@@ -4,7 +4,10 @@ import type { ICommittee } from "..";
 export interface AddAgendaSchema {
   title: string;
   description: string;
-  date: DatePickerRangeObject;
+  date: {
+    start: Date;
+    end: Date;
+  };
   at: string;
   atLink?: string;
   registerLink?: string;
@@ -21,7 +24,10 @@ export interface AddAgendaSchema {
 export interface EditAgendaSchema {
   title: string;
   description: string;
-  date: DatePickerRangeObject;
+  date: {
+    start: Date;
+    end: Date;
+  };
   at: string;
   atLink?: string;
   registerLink?: string;

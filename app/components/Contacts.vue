@@ -144,7 +144,7 @@ const responsiveUISizes = computed<{ [key: string]: 'lg' | 'md' }>(() => ({
             </UFormField>
             <!-- Tags input -->
             <UFormField label="Tags">
-                <USelectMenu v-model="tags" :options="tagsOptions" multiple searchable creatable by="id"
+                <USelectMenu v-model="tags" :items="tagsOptions" multiple searchable creatable by="id"
                     :size="responsiveUISizes.input" class="mb-2">
                     <template #item-label>
                         <span v-if="form.tags">

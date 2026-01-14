@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import type { IMember } from '~/types';
-import type { IMemberResponse, IResponse } from '~/types/IResponse';
+import type { IMember } from '~~/types';
+import type { IMemberResponse, IResponse } from '~~/types/IResponse';
 
 /**
  * Toast notification composable

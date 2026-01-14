@@ -108,7 +108,7 @@ const links = computed(() => [{
                     <UInput v-model="searchQuery" :size="responsiveUISizes.input" icon="i-heroicons-magnifying-glass"
                         placeholder="Search photos..." class="mb-4 md:mb-0 md:w-64" />
                     <div class="flex flex-row items-center gap-2">
-                        <USelectMenu v-model="selectedTags" :options="tags" :size="responsiveUISizes.select" multiple
+                        <USelectMenu v-model="selectedTags" :items="tags" :size="responsiveUISizes.select" multiple
                             placeholder="Filter by tags" class="w-full sm:w-48" />
                         <UButton :size="responsiveUISizes.button" color="primary" variant="ghost"
                             icon="i-heroicons-arrow-path" @click="refresh()">
@@ -143,7 +143,7 @@ const links = computed(() => [{
                                         :class="getImageClasses(i, group.photos.length)"
                                         :style="getImageStyles(i, group.photos.length)">
                                         <NuxtImg provider="localProvider" :src="(photo.image as string)"
-                                            class="object-cover w-full h-full" :alt="photo.title" loading="lazy" />
+                                            class="object-cover w-full h-full" loading="lazy" />
                                     </div>
                                 </div>
                                 <div class="z-50 p-4">
@@ -182,7 +182,7 @@ const links = computed(() => [{
                 <div class="flex flex-wrap items-center justify-between gap-1.5">
                     <div class="flex items-center gap-1.5">
                         <span class="text-sm leading-5">{{ $ts('rows_per_page') }}</span>
-                        <USelect v-model="perPage" :options="perPageOptions" :size="responsiveUISizes.select"
+                        <USelect v-model="perPage" :items="perPageOptions" :size="responsiveUISizes.select"
                             class="w-20 me-2" />
                     </div>
                     <div>

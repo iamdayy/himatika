@@ -194,7 +194,7 @@ const links = computed(() => [{
                         </div>
                         <div class="flex items-center gap-2">
                             <UBadge v-for="(tag, index) in project.tags" :key="index" color="secondary" size="lg">{{ tag
-                                }}
+                            }}
                             </UBadge>
                         </div>
                     </div>
@@ -266,7 +266,7 @@ const links = computed(() => [{
                 <div class="flex flex-wrap items-center justify-between gap-1.5 my-4">
                     <div class="flex items-center gap-1.5">
                         <span class="text-sm leading-5">Rows per page:</span>
-                        <USelect v-model="perPage" :options="perPageOptions" :size="responsiveUISizes.select"
+                        <USelect v-model="perPage" :items="perPageOptions" :size="responsiveUISizes.select"
                             class="w-20 me-2" />
                     </div>
                     <div>

@@ -2,10 +2,8 @@
 import { ModalsImageCrop, ModalsImageOpen, ModalsProfileActivinessLetter, NuxtImg, UTextarea } from "#components";
 import type { AccordionItem, TabsItem } from "@nuxt/ui";
 import imageCompression from "browser-image-compression";
-import { format } from 'date-fns';
 import type { DriveStep } from "driver.js";
-import { DatePicker } from 'v-calendar';
-import type { IAgenda, IConfig } from "~~/types";
+import type { IAgenda } from "~~/types";
 import { type IConfigResponse } from "~~/types/IResponse";
 // Define page metadata
 definePageMeta({
@@ -37,7 +35,6 @@ const ActivinessLetterModal = overlay.create(ModalsProfileActivinessLetter);
 const editMode = ref(false);
 const file = ref<File | null>(null);
 const { data: configData } = useAsyncData(() => $api<IConfigResponse>("/api/config"));
-const Config = computed<IConfig | undefined>(() => configData.value?.data);
 
 // Use window size to determine if the device is mobile
 const windowSize = useWindowSize();
@@ -308,25 +305,7 @@ const breadcumbs = computed(() => [
                                             v-model="member.birth.place" required
                                             :class="isMobile ? 'mb-2 w-full' : 'flex-1 mb-0 mr-2'" />
                                         <div class="flex flex-row items-center gap-2">
-                                            <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
-                                                <UButton icon="i-heroicons-calendar-days-20-solid" color="neutral"
-                                                    variant="outline" class="w-full">
-                                                    {{ format(member.birth.date as Date, 'd MMM, yyy') }}
-                                                </UButton>
-                                                <template #content>
-                                                    <div
-                                                        class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                        <DatePicker v-model="member.birth.date" mode="date"
-                                                            color="orange-hima" />
-                                                    </div>
-                                                </template>
-                                            </UPopover>
-                                            <label :class="isMobile ? 'w-full' : 'w-auto text-left'"
-                                                class="block my-auto text-sm font-medium text-gray-900 dark:text-white">
-                                                {{ new Date(member.birth.date).toLocaleDateString('id-ID', {
-                                                    year: 'numeric', month: 'long', day: 'numeric'
-                                                }) }}
-                                            </label>
+                                            <DatePicker v-model="member.birth.date" />
                                         </div>
                                     </div>
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{ `${member.birth.place},
@@ -341,7 +320,7 @@ const breadcumbs = computed(() => [
                                         $ts('gender') }}
                                     </dt>
                                     <USelect v-model="member.sex" v-if="editMode"
-                                        :options="[{ value: 'male', label: $ts('male') }, { value: 'female', label: $ts('female') }]">
+                                        :items="[{ value: 'male', label: $ts('male') }, { value: 'female', label: $ts('female') }]">
                                     </USelect>
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{
                                         $ts(user?.member.sex === 'male' ? 'male' : 'female') }}</dd>

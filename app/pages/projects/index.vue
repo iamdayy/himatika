@@ -256,7 +256,7 @@ const links = computed(() => [{
                 <div class="flex flex-wrap justify-between">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                         <span class="text-sm leading-5">Rows per page:</span>
-                        <USelect v-model="perPage" :options="perPageOptions" class="w-20 me-2" size="xs" />
+                        <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">
                         <span class="text-sm leading-5">

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import type { IDoc, IDocGrouped, IMember } from '~/types';
-import type { IDocResponse, ITagsResponse } from '~/types/IResponse';
+import type { IDoc, IDocGrouped, IMember } from '~~/types';
+import type { IDocResponse, ITagsResponse } from '~~/types/IResponse';
 
 const { width } = useWindowSize();
 
@@ -129,7 +129,7 @@ const editOptions = (doc: IDoc) => [
             <div class="flex flex-wrap items-center justify-between gap-1.5">
                 <div class="flex items-center gap-1.5">
                     <span class="text-sm leading-5">Rows per page:</span>
-                    <USelect v-model="perPage" :options="perPageOptions" :size="responsiveUISizes.select"
+                    <USelect v-model="perPage" :items="perPageOptions" :size="responsiveUISizes.select"
                         class="w-20 me-2" />
                 </div>
                 <div>

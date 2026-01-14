@@ -54,29 +54,7 @@ const inputSize = computed(() => {
                         <UInput v-model="carousel.title" :size="inputSize" placeholder="Title" class="w-full" />
                     </UFormField>
                     <UFormField :label="$ts('date')">
-                        <div class="flex items-center w-full gap-2">
-                            <UPopover>
-                                <UButton color="neutral" variant="subtle" icon="i-lucide-calendar">
-                                    {{ carousel.date ? carousel.date.toLocaleDateString('id-ID') : 'Select a date'
-                                    }}
-                                </UButton>
-
-                                <template #content>
-                                    <DatePicker v-model="carousel.date" class="p-2" />
-                                </template>
-                            </UPopover>
-                            <span class="text-gray-900 dark:text-gray-300">
-                                {{ new Date(carousel.date).toLocaleString('id-ID',
-                                    {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric',
-                                        hour: 'numeric',
-                                        minute: 'numeric',
-                                        timeZoneName: 'short',
-                                    }) }}
-                            </span>
-                        </div>
+                        <DatePicker v-model="carousel.date" />
                     </UFormField>
                     <UFormField :label="$ts('description')">
                         <UTextarea v-model="carousel.description" :size="inputSize" placeholder="Description"

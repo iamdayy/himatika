@@ -41,7 +41,7 @@ const tags = computed(() => tagsData.value?.data?.tags || []);
 /**
  * Pagination and sorting state
  */
-const sort = ref({ column: 'createdAt', direction: 'asc' as const });
+const sort = ref({ column: 'createdAt', direction: 'desc' as const });
 const pagination = ref({ pageIndex: 1, pageSize: 10 });
 const searchQuery = ref('');
 const selectedTags = ref([]);
@@ -51,11 +51,12 @@ const archived = ref(true);
 /**
  * Fetch newss data
  */
-const { data, refresh, pending } = useLazyAsyncData('news', () => $api<INewsResponse>('/api/news', {
+const { data, refresh, pending } = useLazyAsyncData('news', () => $api<INewsResponse>('/api/admin/news', {
     query: {
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,
-        sort: sort.value,
+        sort: sort.value.column,
+        order: sort.value.direction,
         search: searchQuery.value,
         tags: JSON.stringify(selectedTags.value),
         category: JSON.stringify(selectedCategory.value),
@@ -371,7 +372,7 @@ useSeoMeta({
                         <NuxtLink :to="`/news/${news.slug}`">
                             <h2 class="text-sm font-semibold sm:text-lg md:text-xl lg:text-2xl line-clamp-2">{{
                                 news.title
-                                }}</h2>
+                            }}</h2>
                         </NuxtLink>
                         <div class="line-clamp-3">
                             <CoreContent :content="news.body" size="sm" />

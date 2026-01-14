@@ -425,9 +425,9 @@ const links = computed(() => [{
                     <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" placeholder="Search..."
                         :size="responsiveUISizes.input" class="w-full md:w-auto" />
                     <div class="flex flex-col w-full gap-3 md:flex-row md:w-auto">
-                        <!-- <USelectMenu v-model="filterBy" :options="filterable" placeholder="Filter By"
+                        <!-- <USelectMenu v-model="filterBy" :items="filterable" placeholder="Filter By"
                             :size="responsiveUISizes.select" class="w-full md:w-40" />
-                        <USelectMenu v-model="filter" :options="data.data.filters" multiple
+                        <USelectMenu v-model="filter" :items="data.data.filters" multiple
                             :placeholder="filterBy?.label || 'none'" :disabled="!filterBy"
                             :size="responsiveUISizes.select" class="w-full md:w-40" /> -->
                     </div>
@@ -445,7 +445,7 @@ const links = computed(() => [{
                     </UButton>
                     <div class="flex flex-wrap gap-1.5 md:items-center justify-start md:justify-end">
 
-                        <!-- <USelectMenu v-model="selectedColumns" :options="columns" multiple v-if="!isMobile">
+                        <!-- <USelectMenu v-model="selectedColumns" :items="columns" multiple v-if="!isMobile">
                             <UButton icon="i-heroicons-view-columns" color="neutral" :size="responsiveUISizes.button">
                                 Columns
                             </UButton>
@@ -458,7 +458,7 @@ const links = computed(() => [{
                         <div class="flex flex-col items-center gap-2">
                             <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">{{
                                 $ts('show_deleted')
-                                }}</label>
+                            }}</label>
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </div>
                         <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"

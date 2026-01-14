@@ -210,16 +210,7 @@ const inputSize = computed(() => {
                         </UFormField>
                         <UFormField class="col-span-full lg:col-span-3" :label="$ts('date')">
                             <div class="flex gap-3 border border-gray-300 rounded-lg shadow-sm dark:border-gray-700">
-                                <VDatePicker id="date" v-model="stateProject.date" mode="date">
-                                    <template #default="{ togglePopover }">
-                                        <UButton @click="togglePopover" icon="i-heroicons-calendar" :size="buttonSize"
-                                            variant="link" />
-                                    </template>
-                                </VDatePicker>
-                                <label class="block my-auto text-sm font-medium text-gray-900 dark:text-white"
-                                    for="date">
-                                    {{ stateProject.date.toLocaleDateString() }}
-                                </label>
+                                <DatePicker v-model="stateProject.date" />
                             </div>
                         </UFormField>
                         <UFormField class="col-span-full lg:col-span-3" :label="$ts('url')">
@@ -258,7 +249,7 @@ const inputSize = computed(() => {
                         <UFormField class="space-y-4 col-span-full" :label="$ts('progress')">
                             <USlider v-model="stateProject.progress" :min="0" :max="100" :step="5" />
                             <p class="text-sm text-gray-500 dark:text-gray-400 text-end">{{ stateProject.progress
-                            }}%
+                                }}%
                             </p>
                         </UFormField>
                     </div>

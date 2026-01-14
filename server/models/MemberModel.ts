@@ -436,15 +436,14 @@ memberSchema.virtual("organizer").get(function () {
 /**
  * Pre-save middleware to check the semester value before saving.
  */
-memberSchema.pre("save", function (next) {
+memberSchema.pre("save", function () {
   if (this.isModified("semester")) {
     if (this.semester > 14) {
       this.status = "inactive";
       this.save();
-      return next();
+      return;
     }
   }
-  next();
 });
 
 /**
@@ -479,7 +478,7 @@ memberSchema.post("save", async function (next) {
         },
       }
     );
-    await UserModel.findOneAndDelete({ member: memberId });
+    await UserModel.findOneAndDelete({ member });
   }
 });
 

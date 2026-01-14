@@ -187,7 +187,7 @@ const items = (project: IProject): DropdownMenuItem[][] => [[
     {
         label: 'Delete',
         icon: 'i-heroicons-trash',
-        onSelect: () => DeleteModal(project._id!),
+        onSelect: () => DeleteModal(project._id as string),
         disabled: !isOrganizer.value
     },
     {
@@ -199,7 +199,7 @@ const items = (project: IProject): DropdownMenuItem[][] => [[
     {
         label: 'Publish',
         icon: 'i-ion-arrow-up-right-box-outline',
-        onSelect: () => PublishModal(project._id!),
+        onSelect: () => PublishModal(project._id as string),
         disabled: !isOrganizer.value
     }
 ]]
@@ -362,7 +362,7 @@ onMounted(() => {
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">Rows per page:</span>
-                        <USelect v-model="perPage" :options="perPageOptions" class="w-20 me-2" size="xs" />
+                        <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">

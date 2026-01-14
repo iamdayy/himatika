@@ -334,9 +334,9 @@ const links = computed(() => [{
                     <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" placeholder="Search..."
                         :size="responsiveUISizes.input" class="w-full md:w-auto" />
                     <div class="flex flex-col w-full gap-3 md:flex-row md:w-auto">
-                        <!-- <USelectMenu v-model="filterBy" :options="filterable" placeholder="Filter By"
+                        <!-- <USelectMenu v-model="filterBy" :items="filterable" placeholder="Filter By"
                             :size="responsiveUISizes.select" class="w-full md:w-40" />
-                        <USelectMenu v-model="filter" :options="data.data.filters" multiple
+                        <USelectMenu v-model="filter" :items="data.data.filters" multiple
                             :placeholder="filterBy?.label || 'none'" :disabled="!filterBy"
                             :size="responsiveUISizes.select" class="w-full md:w-40" /> -->
                     </div>
@@ -354,7 +354,7 @@ const links = computed(() => [{
                     </UButton>
                     <div class="flex flex-wrap gap-1.5 md:items-center justify-start md:justify-end">
                         <!--
-    <USelectMenu v-model="selectedColumns" :options="columns" multiple v-if="!isMobile">
+    <USelectMenu v-model="selectedColumns" :items="columns" multiple v-if="!isMobile">
         <UButton icon="i-heroicons-view-columns" color="gray" :size="responsiveUISizes.button">
             Columns
         </UButton>
@@ -390,7 +390,7 @@ const links = computed(() => [{
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
-                        }}</span>
+                            }}</span>
                         <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">

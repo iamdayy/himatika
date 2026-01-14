@@ -649,8 +649,7 @@ const links = computed(() => [
                                 </UButton>
                                 <template #content>
                                     <div class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                        <DatePicker v-model="state.date" mode="datetime" color="orange-hima"
-                                            :min="new Date()" />
+                                        <RangeDatePicker v-model="state.date" :min="new Date()" />
                                     </div>
                                 </template>
                             </UPopover>
@@ -733,9 +732,8 @@ const links = computed(() => [
                                         <template #content>
                                             <div
                                                 class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                <DatePicker v-model="configurationState.committee.canRegisterUntil"
-                                                    mode="datetime" color="orange-hima"
-                                                    :max="new Date(state.date.start as string)" />
+                                                <RangeDatePicker v-model="configurationState.committee.canRegisterUntil"
+                                                    :max="new Date(state.date.start)" />
                                             </div>
                                         </template>
                                     </UPopover>
@@ -835,9 +833,9 @@ const links = computed(() => [
                                         <template #content>
                                             <div
                                                 class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                <DatePicker v-model="configurationState.participant.canRegisterUntil"
-                                                    mode="datetime" color="orange-hima"
-                                                    :max="new Date(state.date.start as string)" />
+                                                <RangeDatePicker
+                                                    v-model="configurationState.participant.canRegisterUntil"
+                                                    :max="new Date(state.date.start)" />
                                             </div>
                                         </template>
                                     </UPopover>
@@ -957,8 +955,7 @@ const links = computed(() => [
                                     </UButton>
                                     <template #content>
                                         <div class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                            <DatePicker v-model="state.date" mode="datetime" color="orange-hima"
-                                                :min="new Date()" />
+                                            <RangeDatePicker v-model="state.date" :min="new Date()" />
                                         </div>
                                     </template>
                                 </UPopover>
@@ -1044,9 +1041,8 @@ const links = computed(() => [
                                         <template #content>
                                             <div
                                                 class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                <DatePicker v-model="configurationState.committee.canRegisterUntil"
-                                                    mode="datetime" color="orange-hima"
-                                                    :max="new Date(state.date.start as string)" />
+                                                <RangeDatePicker v-model="configurationState.committee.canRegisterUntil"
+                                                    :max="new Date(state.date.start)" />
                                             </div>
                                         </template>
                                     </UPopover>
@@ -1130,9 +1126,9 @@ const links = computed(() => [
                                         <template #content>
                                             <div
                                                 class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                                <DatePicker v-model="configurationState.participant.canRegisterUntil"
-                                                    mode="datetime" color="orange-hima"
-                                                    :max="new Date(state.date.start as string)" />
+                                                <RangeDatePicker
+                                                    v-model="configurationState.participant.canRegisterUntil"
+                                                    :max="new Date(state.date.start)" />
                                             </div>
                                         </template>
                                     </UPopover>

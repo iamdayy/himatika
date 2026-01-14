@@ -61,7 +61,7 @@ const submit = async () => {
 
                 <div class="grid grid-cols-2 gap-4">
                     <UFormField label="Kategori">
-                        <USelectMenu v-model="form.type" :options="['achievement', 'activity']" class="w-full" />
+                        <USelectMenu v-model="form.type" :items="['achievement', 'activity']" class="w-full" />
                     </UFormField>
                     <UFormField label="Tanggal">
                         <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
@@ -71,7 +71,7 @@ const submit = async () => {
                             </UButton>
                             <template #content>
                                 <div class="flex items-center divide-gray-200 sm:divide-x dark:divide-gray-800">
-                                    <DatePicker v-model="form.date" mode="datetime" color="orange-hima" />
+                                    <DatePicker v-model="form.date" />
                                 </div>
                             </template>
                         </UPopover>
