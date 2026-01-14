@@ -89,8 +89,6 @@ export default defineCachedEventHandler(
         }
       }
 
-      console.log(query);
-
       // Count total number of newss matching the query
       const newssLength = await NewsModel.countDocuments(query);
 

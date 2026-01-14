@@ -251,7 +251,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
         "NIM avatar fullName email class semester point enteredYear createdAt status"
       )
       .sort(sortOpt)
-      .skip((Number(page) - 1) * Number(perPage))
+      .skip(Number(page) * Number(perPage))
       .limit(Number(perPage));
 
     return {

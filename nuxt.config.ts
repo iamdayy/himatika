@@ -211,8 +211,7 @@ export default defineNuxtConfig({
       },
     },
     sessionRefresh: {
-      enableOnWindowFocus: true,
-      enablePeriodically: 1000 * 60 * 60,
+      enableOnWindowFocus: false,
     },
   },
 });

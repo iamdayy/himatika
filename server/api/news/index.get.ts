@@ -88,9 +88,6 @@ export default defineCachedEventHandler(
           query.published = true; // Allow fetching unpublished news if specified
         }
       }
-
-      console.log(query);
-
       // Count total number of newss matching the query
       const newssLength = await NewsModel.countDocuments(query);
 
