@@ -66,7 +66,10 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
 
   const makeActivinessLetter = async (data: IPoint) => {
     const periodStartYear = new Date(data.range.start).getFullYear();
-    const periodEndYear = new Date(data.range.end).getFullYear();
+    let periodEndYear = new Date(data.range.end).getFullYear();
+    if (periodStartYear === periodEndYear) {
+      periodEndYear = periodStartYear + 1;
+    }
     const Raworganizer = await $api<IOrganizerResponse>("/api/organizer", {
       method: "get",
       query: {
