@@ -1,5 +1,4 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import QRCode from "qrcode";
 import { CustomFormData } from "~/helpers/CustomFormData";
 import type { IAgenda, IDoc, IMember, IPoint } from "~~/types";
 import {
@@ -52,17 +51,17 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
     $api("/api/config")
   );
 
-  async function generateQRCode(data: string): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-      QRCode.toBuffer(data, { type: "png", width: 200 }, (err, buffer) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(buffer);
-        }
-      });
-    });
-  }
+  // async function generateQRCode(data: string): Promise<Uint8Array> {
+  //   return new Promise((resolve, reject) => {
+  //     QRCode.toBuffer(data, { type: "png", width: 200 }, (err, buffer) => {
+  //       if (err) {
+  //         reject(err);
+  //       } else {
+  //         resolve(buffer);
+  //       }
+  //     });
+  //   });
+  // }
 
   const makeActivinessLetter = async (data: IPoint) => {
     const periodStartYear = new Date(data.range.start).getFullYear();
@@ -105,13 +104,13 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
 
     // Generate the last document number in the desired format
     const formatDocNumber = (number: number): string => {
-      const paddedNumber = number.toString().padStart(4, "0");
-      return `${paddedNumber.slice(0, 3)}/${paddedNumber.slice(3)}`;
+      const paddedNumber = number.toString().padStart(3, "0");
+      return paddedNumber;
     };
 
     const lastNumber = lastDocNumber.value?.data || 0;
     const formattedNumber = formatDocNumber(lastNumber + 1);
-    const document_number = `${formattedNumber}/II.3.AI/BO1.01/02.A-1/S.Ket/${monthToRomanFromDate()}/${new Date(
+    const document_number = `${formattedNumber}/II.3.AI/B01.01/02.A-1/S.Ket/${monthToRomanFromDate()}/${new Date(
       Date.now()
     ).getFullYear()}`;
 
@@ -174,19 +173,33 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       // Organization Name
       const orgName1 =
         configdata.value?.data.name || "Himpunan Mahasiswa Informatika";
-      const orgName2 =
+      const orgName2 = "FAKULTAS SAINS DAN TEKNOLOGI";
+      const orgName3 =
         "INSTITUT TEKNOLOGI DAN SAINS NAHDLATUL ULAMA PEKALONGAN";
+      const period = `${periodStartYear} - ${periodEndYear}`;
       const secretariat = configdata.value?.data.address || "";
-      const email = configdata.value?.data.contact.email || "";
+      const email = `narahubung: ${
+        configdata.value?.data.contact.phone || ""
+      } surel: ${configdata.value?.data.contact.email || ""}`;
 
       // Calculate text widths to center them between logos
-      const orgName1Width = timesRomanBoldFont.widthOfTextAtSize(orgName1, 14);
+      const orgName1Width = timesRomanBoldFont.widthOfTextAtSize(orgName1, 12);
+      const orgName1Height = timesRomanBoldFont.heightAtSize(12) + 2;
       const orgName2Width = timesRomanBoldFont.widthOfTextAtSize(orgName2, 12); // Slightly smaller font for second line in original
+      const orgName2Height = timesRomanBoldFont.heightAtSize(12) + 2;
+      const orgName3Width = timesRomanBoldFont.widthOfTextAtSize(orgName3, 12); // Slightly smaller font for second line
+      const orgName3Height = timesRomanBoldFont.heightAtSize(12) + 2;
+      const periodWidth = timesRomanBoldFont.widthOfTextAtSize(period, 12);
+      const periodHeight = timesRomanBoldFont.heightAtSize(12) + 2;
       const secretariatWidth = timesRomanItalicFont.widthOfTextAtSize(
         secretariat,
         11
       );
+      const secretariatHeight = timesRomanItalicFont.heightAtSize(11);
       const emailWidth = timesRomanItalicFont.widthOfTextAtSize(email, 11);
+      const emailHeight = timesRomanItalicFont.heightAtSize(11);
+
+      // Center text between logos
 
       const textStartX = margin + logoWidth + 10; // 10px padding from logo
       const textEndX = pageWidth - margin - logoWidth - 10;
@@ -197,31 +210,59 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         x: textStartX + (textContainerWidth - orgName1Width) / 2,
         y: headerY,
         font: timesRomanBoldFont,
-        size: 14,
-        color: rgb(0, 0.5, 0), // Green color
+        size: 12,
+        color: rgb(0, 0, 0), // Black color
       });
       page.drawText(orgName2, {
         x: textStartX + (textContainerWidth - orgName2Width) / 2,
-        y: headerY - 15, // Adjust line spacing
+        y: headerY - orgName1Height, // Adjust line spacing
         font: timesRomanBoldFont,
         size: 12, // Original used bold, but 12pt for second line
-        color: rgb(0, 0.5, 0), // Green color
+        color: rgb(0, 0, 0), // Black color
+      });
+      page.drawText(orgName3, {
+        x: textStartX + (textContainerWidth - orgName3Width) / 2,
+        y: headerY - (orgName1Height + orgName2Height), // Adjust line spacing
+        font: timesRomanBoldFont,
+        size: 12, // Original used bold, but 12pt for second line
+        color: rgb(0, 0, 0), // Black color
+      });
+      page.drawText(period, {
+        x: textStartX + (textContainerWidth - periodWidth) / 2,
+        y: headerY - (orgName1Height + orgName2Height + orgName3Height),
+        font: timesRomanBoldFont,
+        size: 12,
       });
       page.drawText(secretariat, {
         x: textStartX + (textContainerWidth - secretariatWidth) / 2,
-        y: headerY - 30,
+        y:
+          headerY -
+          (orgName1Height + orgName2Height + orgName3Height + periodHeight),
         font: timesRomanItalicFont,
         size: 11,
       });
       page.drawText(email, {
         x: textStartX + (textContainerWidth - emailWidth) / 2,
-        y: headerY - 42,
+        y:
+          headerY -
+          (orgName1Height +
+            orgName2Height +
+            orgName3Height +
+            periodHeight +
+            secretariatHeight),
         font: timesRomanItalicFont,
         size: 11,
       });
 
       // Lines
-      const lineY1 = headerY - 55; // Adjust position based on text
+      const lineY1 =
+        headerY -
+        (orgName1Height +
+          orgName2Height +
+          orgName3Height +
+          periodHeight +
+          secretariatHeight +
+          emailHeight); // Adjust position based on text
       const lineY2 = lineY1 - 5;
       const lineWidth = pageWidth - 2 * margin; // Page width minus margins
 
@@ -558,14 +599,14 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         y: headerY,
         font: timesRomanBoldFont,
         size: 14,
-        color: rgb(0, 0.5, 0), // Green color
+        color: rgb(0, 0, 0), // Black color
       });
       page2.drawText(orgName2, {
         x: textStartX + (textContainerWidth - orgName2Width) / 2,
         y: headerY - 15, // Adjust line spacing
         font: timesRomanBoldFont,
         size: 12, // Original used bold, but 12pt for second line
-        color: rgb(0, 0.5, 0), // Green color
+        color: rgb(0, 0, 0), // Black color
       });
       page2.drawText(secretariat, {
         x: textStartX + (textContainerWidth - secretariatWidth) / 2,
@@ -816,13 +857,13 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
   //         text: "HIMPUNAN MAHASISWA INFORMATIKA",
   //         font: timesRomanBoldFont,
   //         size: 14,
-  //         color: rgb(0, 0.5, 0),
+  //         color: rgb(0, 0, 0),
   //       },
   //       {
   //         text: "INSTITUT TEKNOLOGI DAN SAINS NAHDLATUL ULAMA PEKALONGAN",
   //         font: timesRomanBoldFont,
   //         size: 12,
-  //         color: rgb(0, 0.5, 0),
+  //         color: rgb(0, 0, 0),
   //       },
   //       {
   //         text: "Sekretariat : Gedung ITS NU Jl. Karangdowo No. 9 Kedungwuni Pekalongan 51173",

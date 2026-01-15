@@ -432,6 +432,7 @@ const addModal = () => {
     AddMemberModal.open({
         onTriggerRefresh() {
             refresh();
+            AddMemberModal.close(); 5
         }
     });
 };

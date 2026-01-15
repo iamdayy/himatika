@@ -106,10 +106,5 @@ export default defineCachedEventHandler(
           "An unexpected error occurred while fetching agenda data",
       };
     }
-  },
-  {
-    maxAge: 60 * 5, // Cache selama 5 Menit
-    name: "agenda-cache",
-    swr: true,
   }
 );

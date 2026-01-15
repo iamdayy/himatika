@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ModalsConfirmation } from '#components';
-import type { IDoc, IPoint } from '~~/types';
+import type { IPoint } from '~~/types';
 import type { IActivinessLetterResponse, IConfigResponse } from '~~/types/IResponse';
 
-interface IPointWithDisabled extends IPoint {
+interface IPointWithDisabledAndDoc extends IPoint {
     disabled: boolean;
+    doc: string
 }
 
 const { $api } = useNuxtApp();
@@ -12,7 +13,12 @@ const toast = useToast();
 const overlay = useOverlay();
 
 const { data: configData } = useAsyncData('config', () => $api<IConfigResponse>('/api/config'));
-const { data: ActivinessLetterData, refresh: refreshActivinessLetterData } = useLazyAsyncData('ActivinessLetterData', () => $api<IActivinessLetterResponse>('/api/me/documents/activiness-letter'));
+const { data: ActivinessLetters, refresh: refreshActivinessLetterData, pending: loadingActivinessLetter } = useLazyAsyncData('ActivinessLetterData', () => $api<IActivinessLetterResponse>('/api/me/documents/activiness-letter'), {
+    transform: (data) => {
+        if (!data.data) return [];
+        return data.data;
+    }
+});
 const { data: user } = useAuth();
 
 const { makeActivinessLetter } = useMakeDocs();
@@ -24,20 +30,16 @@ const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 const config = computed(() => configData.value?.data);
 const loading = ref(false);
-
-const ActivinessLetters = computed<IDoc[] | null>(() => {
-    if (!ActivinessLetterData.value?.data) return null;
-    return ActivinessLetterData.value.data;
-});
-const points = computed<IPointWithDisabled[]>(() => {
+const points = computed<IPointWithDisabledAndDoc[]>(() => {
     if (!user.value?.member?.point) return [];
     return user.value.member.point.map((point) => ({
         ...point,
-        disabled: ActivinessLetters.value?.some((doc) => doc.tags.includes(`Semester ${point.semester}`)) || point.point < (config.value?.minPoint || 0)
+        disabled: ActivinessLetters.value?.some((doc) => doc.tags.includes(`Semester ${point.semester}`)) || point.point < (config.value?.minPoint || 0),
+        doc: ActivinessLetters.value?.find((doc) => doc.tags.includes(`Semester ${point.semester}`))?._id as string || ''
     }));
 });
 
-const generate = async (point: IPointWithDisabled) => {
+const generate = async (point: IPointWithDisabledAndDoc) => {
     if (point.disabled) {
         toast.add({ title: $ts('activity_letter_already_generated'), color: 'warning' });
         return;
@@ -62,7 +64,7 @@ const generate = async (point: IPointWithDisabled) => {
     });
 };
 
-const canDownload = (point: IPointWithDisabled) => {
+const canDownload = (point: IPointWithDisabledAndDoc) => {
     const ActivinessLetter = ActivinessLetters.value?.find(doc => doc.tags.includes(`Semester ${point.semester}`));
     if (!ActivinessLetter) {
         return false;
@@ -70,7 +72,7 @@ const canDownload = (point: IPointWithDisabled) => {
     return true;
 }
 
-const downloadActivinessLetter = (point: IPointWithDisabled) => {
+const downloadActivinessLetter = (point: IPointWithDisabledAndDoc) => {
     const ActivinessLetter = ActivinessLetters.value?.find(doc => doc.tags.includes(`Semester ${point.semester}`));
     if (!ActivinessLetter) {
         toast.add({ title: $ts('activity_letter_not_found'), color: 'error' });
@@ -88,8 +90,8 @@ const downloadActivinessLetter = (point: IPointWithDisabled) => {
 }
 </script>
 <template>
-    <UModal :title="$ts('generate_activiness_letter')" :show="true" @close="$emit('refreshTrigger')">
-        <template #body>
+    <UModal :title="$ts('generate_activiness_letter')" @close="$emit('refreshTrigger')">
+        <template #body="{ close }">
             <div class="flex flex-col gap-4 px-4 py-2">
                 <div class="flex flex-col gap-2">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -99,7 +101,10 @@ const downloadActivinessLetter = (point: IPointWithDisabled) => {
                         *{{ $ts('generate_activiness_letter_info', { point: config?.minPoint || 0 }) }}*
                     </p>
                 </div>
-                <div v-for="point, i in points" :key="i" class="flex items-center gap-2 my-2">
+                <div class="flex flex-col gap-2" v-if="loadingActivinessLetter || loading">
+                    <USkeleton class="h-12 w-full" v-for="i in 3" :key="i" />
+                </div>
+                <div v-for="point, i in points" :key="i" class="flex items-center gap-2 my-2" v-else>
                     <div class="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                     <div class="flex flex-row items-center justify-between w-full">
                         <div class="flex flex-col">
@@ -107,9 +112,12 @@ const downloadActivinessLetter = (point: IPointWithDisabled) => {
                             <p class="text-sm text-gray-500 dark:text-gray-400">{{ point.point }} Point</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <UButton class="!px-4 !py-2" :loading="loading" variant="outline" :disabled="point.disabled"
+                            <UButton class="!px-4 !py-2" :loading="loading" variant="outline" v-if="!point.disabled"
                                 @click="generate(point)">{{
                                     $ts('generate') }}</UButton>
+                            <UButton class="!px-4 !py-2" :loading="loading" variant="subtle" v-else
+                                :to="`/signatures/${point.doc}`" @click="close">{{
+                                    $ts('view') }}</UButton>
                             <UButton class="!px-4 !py-2" v-if="canDownload(point)" variant="solid"
                                 :disabled="!canDownload(point)" :loading="loading"
                                 @click="downloadActivinessLetter(point)">{{
@@ -118,7 +126,6 @@ const downloadActivinessLetter = (point: IPointWithDisabled) => {
                         </div>
                     </div>
                 </div>
-
             </div>
         </template>
     </UModal>

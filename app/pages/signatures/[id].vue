@@ -33,6 +33,10 @@ const config = computed<IConfig>(() => configData.value?.data as IConfig);
 const pdf = ref<string>('');
 const pdfDocument = ref<PDFDocument>();
 const loading = ref<boolean>(false);
+const docFullSigned = computed(() => {
+    if (!doc.value.signs) return false;
+    return doc.value.signs.every((sign) => sign.signed);
+});
 
 const trails = computed<AccordionItem[]>(() => {
     const trails = doc.value.trails || [];
@@ -252,11 +256,11 @@ const links = computed(() => [{
 
             <template #footer>
                 <UButton :label="$ts('sign')" @click="signDocument" block :loading="loading"
-                    v-if="!data?.data?.signedByMe" />
+                    v-if="data?.data?.signedByMe === false" />
                 <UButton :label="$ts('download')" block @click="download" :loading="loading"
-                    v-else-if="user?.member.NIM == (doc.uploader as IMember | undefined)?.NIM" />
+                    v-else-if="user?.member.NIM == (doc.uploader as IMember | undefined)?.NIM"
+                    :disabled="docFullSigned === false" />
             </template>
-
         </UCard>
     </div>
 </template>

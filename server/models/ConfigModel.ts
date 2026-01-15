@@ -59,8 +59,6 @@ configSchema.pre("save", async function (next) {
       await oldestConfig.deleteOne();
     }
   }
-
-  next();
 });
 
 export const ConfigModel = mongoose.model<IConfigSchema>(

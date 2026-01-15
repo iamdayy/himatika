@@ -462,7 +462,7 @@ export interface ITrail {
   doc?: string;
 }
 export interface IDoc {
-  _id?: string;
+  _id?: string | Types.ObjectId;
   label: string;
   no: string;
   doc: string | File;

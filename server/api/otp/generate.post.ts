@@ -38,7 +38,7 @@ export default defineEventHandler(
         name: `${configUse.name} App OTP Code`,
       };
 
-      const otp = await OTPModel.findOne({ email });
+      const otp = await OTPModel.findOne({ email, type, NIM });
       if (otp) {
         // otp.code = code;
         otp.expiresAt = expiresAt;
