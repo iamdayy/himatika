@@ -38,7 +38,6 @@ export default defineEventHandler(async (event) => {
         });
       }
     }
-    console.log(member);
 
     // Find user by username
     const user = await UserModel.findOne().or([
@@ -92,6 +91,7 @@ export default defineEventHandler(async (event) => {
       refreshToken,
     };
   } catch (error: any) {
+    console.error(error);
     throw createError({
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || "An error occurred during sign-in.",
