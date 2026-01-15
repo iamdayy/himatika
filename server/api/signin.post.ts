@@ -29,11 +29,7 @@ export default defineEventHandler(async (event) => {
     const NIM = parseInt(body.username);
     // Check if the username is a number
     if (!isNaN(NIM)) {
-      const member = await MemberModel.findOne(
-        { NIM },
-        {},
-        { autopulate: false }
-      );
+      member = await MemberModel.findOne({ NIM }, {}, { autopulate: false });
       if (!member) {
         throw createError({
           statusCode: 401,
@@ -42,6 +38,7 @@ export default defineEventHandler(async (event) => {
         });
       }
     }
+    console.log(member);
 
     // Find user by username
     const user = await UserModel.findOne().or([
