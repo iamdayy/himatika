@@ -17,7 +17,7 @@ const searchQuery = ref('');
 const { $ts } = useI18n();
 const { token } = useAuth();
 const { data, refresh } = await useAsyncData(() => $fetch<IConfigResponse>("/api/config"));
-const { data: enscriptions } = await useAsyncData(() => $fetch<IEncryptionsResponse>('/api/enscryption', {
+const { data: enscriptions, refresh: refreshEncriptions } = await useAsyncData(() => $fetch<IEncryptionsResponse>('/api/enscryption', {
     query: {
         search: searchQuery.value
     },
@@ -195,6 +195,33 @@ const deletePhoto = async (index: number, id: string) => {
         toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_carrousel'), color: "error" });
     }
 
+}
+
+const createNewEncription = async (title: string) => {
+    try {
+        const response = await $api<IResponse>('/api/enscryption', {
+            method: 'POST',
+            body: {
+                title
+            }
+        });
+        if (response.statusCode == 200) {
+            toast.add({
+                title: $ts('success'),
+                description: $ts('success_to_create_new_encription'),
+                icon: 'i-heroicons-check-circle',
+                color: 'success'
+            });
+            refreshEncriptions();
+        }
+    } catch (error) {
+        toast.add({
+            title: $ts('failed'),
+            description: $ts('failed_to_create_new_encription'),
+            icon: 'i-heroicons-x-circle',
+            color: 'error'
+        });
+    }
 }
 
 // Responsive design
@@ -427,7 +454,8 @@ const links = computed(() => [{
                 <UFormField :label="$ts('enscript_activiness_letter')">
                     <USelectMenu v-model="(Config.enscriptActivinessLetter as string)" v-model:search-term="searchQuery"
                         :size="responsiveUISizes.select" :disabled="notEditMode && !isSaving" class="px-2 md:px-4"
-                        :items="enscriptions" value-key="value" searchable v-model:query="searchQuery">
+                        :items="enscriptions" value-key="value" searchable v-model:query="searchQuery" create-item
+                        @create="createNewEncription">
                     </USelectMenu>
                 </UFormField>
                 <UFormField :label="$ts('min_point')">
