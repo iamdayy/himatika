@@ -16,7 +16,7 @@ const toast = useToast();
 
 // --- DATA FETCHING ---
 const { data: agenda, pending, refresh } = await useAsyncData('admin-agenda-detail',
-    () => $api<IAgendaResponse>('/api/agenda', { query: { id } }), {
+    () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda
 });
 
@@ -209,6 +209,8 @@ const saveConfig = async () => {
     }
 };
 const cetakQrCode = () => {
+    if (!agenda.value) return;
+
     // 1. Cari elemen SVG di dalam container
     const svgElement = document.querySelector('#qr-container svg');
 
@@ -268,7 +270,7 @@ const cetakQrCode = () => {
     win.document.body.innerHTML = `
         <div class="card">
             <h2>${agenda.value?.title}</h2>
-            <p>${new Date(agenda.value?.date.start as string).toLocaleDateString('id-ID', { dateStyle: 'full' })}</p>
+            <p>${new Date(agenda.value.date.start).toLocaleDateString('id-ID', { dateStyle: 'full' })}</p>
             <p>${agenda.value?.at}</p>
             
             <img id="qr-img" src="${qrUrl}" alt="QR Code" />
@@ -315,7 +317,7 @@ const cetakQrCode = () => {
                     </h1>
                     <p class="text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2 text-sm">
                         <UIcon name="i-heroicons-calendar" />
-                        {{ new Date(agenda.date.start as string).toLocaleDateString('id-ID', { dateStyle: 'long' }) }}
+                        {{ new Date(agenda.date.start).toLocaleDateString('id-ID', { dateStyle: 'long' }) }}
                         <span class="mx-1">•</span>
                         <UIcon name="i-heroicons-map-pin" />
                         {{ agenda.at }}

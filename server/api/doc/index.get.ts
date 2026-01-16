@@ -12,7 +12,8 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
       getQuery<IReqDocQuery>(event);
 
     const isOrganizer = event.context.organizer;
-    if (!isOrganizer) {
+    const user = event.context.user;
+    if (!isOrganizer && !id) {
       const docs = await DocModel.find({
         archived: false,
         onModel: { $in: ["Agenda", "Project"] },
@@ -32,6 +33,12 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
       };
     }
     if (id) {
+      if (!user) {
+        return {
+          statusCode: 401,
+          statusMessage: "Unauthorized",
+        };
+      }
       const doc = await DocModel.findById(id);
       if (!doc) {
         return {
@@ -39,8 +46,14 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
           statusMessage: "Doc not found",
         };
       }
+      if ((doc.uploader as IMember).NIM !== user.member.NIM && !isOrganizer) {
+        return {
+          statusCode: 403,
+          statusMessage: "Unauthorized",
+        };
+      }
       const signedByMe = doc.signs?.find(
-        (sign) => (sign.user as IMember).NIM == event.context.user.member.NIM
+        (sign) => (sign.user as IMember).NIM == user.member.NIM
       )?.signed;
       return {
         statusCode: 200,

@@ -72,22 +72,10 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                             v-model="member.phone" required :size="responsiveUISizes.input" />
                     </UFormField>
                     <UFormField class="col-span-1 md:col-span-3" :label="$ts('birth')" required>
-                        <div class="flex flex-row justify-between">
+                        <div class="flex flex-row justify-between gap-4">
                             <UInput type="text" name="birth" id="birth" placeholder="Jakarta"
                                 v-model="member.birth.place" required :size="responsiveUISizes.input" class="w-full" />
-                            <div class="flex items-center justify-end min-w-44">
-                                <VDatePicker id="date" v-model="member.birth.date" mode="date">
-                                    <template #default="{ togglePopover }">
-                                        <button @click="togglePopover">
-                                            <Icon name="solar:calendar-date-outline"
-                                                class="w-6 h-6 mx-2 text-gray-400 hover:text-blue-600" />
-                                        </button>
-                                    </template>
-                                </VDatePicker>
-                                <label class="block text-sm font-medium text-gray-900 dark:text-white">
-                                    {{ member.birth.date.toLocaleDateString('id-ID', { dateStyle: 'long' }) }}
-                                </label>
-                            </div>
+                            <DatePicker v-model="member.birth.date" />
                         </div>
                     </UFormField>
                     <UFormField class="col-span-1 md:col-span-3" :label="$ts('gender')" required>

@@ -20,9 +20,10 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
     const t = await useTranslationServerMiddleware(event);
     const memberFound = await MemberModel.findOne({ NIM: body.NIM });
     const emailExists = await MemberModel.exists({ email: body.email });
-    const userFound = await UserModel.findOne({
-      $or: [{ username: body.username }, { member: memberFound?._id }],
-    });
+    const userFound = await UserModel.findOne().or([
+      { username: body.username },
+      { member: memberFound },
+    ]);
 
     if (!memberFound) {
       throw createError({
@@ -78,7 +79,7 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
         member: memberFound.id,
       };
       const userAlreadyExists = await UserModel.findOne({
-        member: memberFound._id,
+        member: memberFound,
       });
       if (userAlreadyExists) {
         throw createError({
@@ -120,6 +121,7 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
     };
   } catch (error: any) {
     await session.abortTransaction();
+    console.error(error);
     throw createError({
       statusCode: error.statusCode || 500,
       statusMessage:

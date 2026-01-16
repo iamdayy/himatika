@@ -328,7 +328,6 @@ export interface IAgenda {
   at: string;
   atLink: string;
   description: string;
-  registerLink?: string;
   configuration: IAgendaConfiguration;
   committees?: ICommittee[];
   participants?: IParticipant[];
@@ -462,7 +461,7 @@ export interface ITrail {
   doc?: string;
 }
 export interface IDoc {
-  _id?: string;
+  _id?: string | Types.ObjectId;
   label: string;
   no: string;
   doc: string | File;

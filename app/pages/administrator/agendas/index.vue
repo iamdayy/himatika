@@ -39,7 +39,7 @@ const perPage = ref(0);
 const upcomingOnly = ref(false);
 
 
-const { data: agendas, refresh: refreshAgendas } = useLazyAsyncData("agendas", () => $api<IAgendaResponse>('/api/agenda', {
+const { data: agendas, refresh: refreshAgendas, pending: agendasPending } = useLazyAsyncData("agendas", () => $api<IAgendaResponse>('/api/agenda', {
     method: 'GET',
     query: {
         page: page.value,
@@ -120,7 +120,7 @@ const pickDate = ref<Date | null>(null);
 const attributes = computed(() => [
     ...<[]>agendas.value.data?.map(agenda => ({
         highlight: 'orange-hima',
-        dates: { start: new Date(agenda.date.start as string), end: new Date(agenda.date.end as string) },
+        dates: { start: new Date(agenda.date.start), end: new Date(agenda.date.end) },
         popover: {
             label: agenda.title
         },
@@ -217,7 +217,7 @@ const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
             {
                 label: $ts('open'),
                 icon: 'i-heroicons-eye',
-                to: `/agendas/${agenda.value?._id}`,
+                to: `/administrator/agendas/${agenda.value?._id}`,
                 target: '_blank'
             },
             {
@@ -245,7 +245,7 @@ const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
         options[0]!.push({
             label: $ts('edit'),
             icon: 'i-heroicons-pencil',
-            to: `/agendas/${agenda.value?._id}/edit`,
+            to: `/administrator/agendas/${agenda.value?._id}/edit`,
         });
         options.push([
             {
@@ -254,16 +254,6 @@ const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
                 onSelect: async () => deleteModal()
             }
         ])
-        if (agenda.value?.registerLink) {
-            options[0]!.push({
-                label: $ts('form'),
-                icon: 'i-heroicons-link',
-                onSelect: async () => {
-                    window.open((agenda.value?.registerLink as string).replace('question', 'form'), '_blank');
-                    return Promise.resolve();
-                }
-            })
-        }
     }
     return options;
 });
@@ -335,7 +325,14 @@ const selectDate = (date: Date) => {
                 </div>
 
             </template>
-            <div class="flex flex-col w-full gap-3 md:flex-row">
+            <div class="flex flex-col w-full gap-3 md:flex-row" v-if="agendasPending">
+                <USkeleton class="w-1/3" />
+                <div :class="['px-4 py-4 border-gray-400 w-full space-y-2', responsiveClasses.eventDetailsWrapper]">
+                    <USkeleton class="w-full h-8" />
+                    <USkeleton class="w-8/12 h-24" />
+                </div>
+            </div>
+            <div class="flex flex-col w-full gap-3 md:flex-row" v-else>
                 <ClientOnly>
                     <VCalendar id="calendar" :attributes="attributes" class="max-w-full" v-if="agendas" transparent
                         @dayclick="(day: any) => selectDate(day.date)" :expanded="isMobile" :is-dark="isDarkMode"
@@ -345,8 +342,8 @@ const selectDate = (date: Date) => {
                                 <div class="mx-auto">
                                     <div class="pt-2 border-t border-gray-800 dark:border-gray-700">
                                         <div v-for="event, i in agendas.data?.filter((event: IAgenda) => {
-                                            const startDate = new Date(event.date.start as string).setHours(0, 0, 0, 0);
-                                            const endDate = new Date(event.date.end as string).setHours(23, 59, 59, 999);
+                                            const startDate = new Date(event.date.start).setHours(0, 0, 0, 0);
+                                            const endDate = new Date(event.date.end).setHours(23, 59, 59, 999);
                                             const selectedDate = new Date(pickDate!).setHours(0, 0, 0, 0);
                                             return selectedDate >= startDate && selectedDate <= endDate;
                                         })" :key="i"
@@ -354,9 +351,9 @@ const selectDate = (date: Date) => {
                                             @click="pickDetail(event._id as string)">
                                             <p
                                                 class="text-sm font-normal text-gray-700 sm:text-right dark:text-gray-200 shrink-0">
-                                                {{ format(new Date(event.date.start as string), 'HH:mm') }}
+                                                {{ format(new Date(event.date.start), 'HH:mm') }}
                                                 -
-                                                {{ format(new Date(event.date.end as string), 'HH:mm') }}
+                                                {{ format(new Date(event.date.end), 'HH:mm') }}
                                             </p>
                                             <h3 class="text-lg font-semibold text-gray-600 text-wrap dark:text-white">
                                                 {{ event.title }}
@@ -398,16 +395,16 @@ const selectDate = (date: Date) => {
                                 <span
                                     :class="['font-normal leading-tight text-gray-700 dark:text-gray-200 ms-2', responsiveClasses.listItem]">
                                     <template v-if="item === 'date'">
-                                        {{ format(new Date(agenda.date.start as string), 'dd MMMM yyyy') === format(new
-                                            Date(agenda.date.end as string),
-                                            'dd MMMM yyyy') ? format(new Date(agenda.date.start as string), 'dd MMMM yyyy')
+                                        {{ format(new Date(agenda.date.start), 'dd MMMM yyyy') === format(new
+                                            Date(agenda.date.end),
+                                            'dd MMMM yyyy') ? format(new Date(agenda.date.start), 'dd MMMM yyyy')
                                             :
-                                            `${format(new Date(agenda.date.start as string), 'dd MMMM yyyy')} -
-                                        ${format(new Date(agenda.date.end as string), 'dd MMMM yyyy')}` }}
+                                            `${format(new Date(agenda.date.start), 'dd MMMM yyyy')} -
+                                        ${format(new Date(agenda.date.end), 'dd MMMM yyyy')}` }}
                                     </template>
                                     <template v-else-if="item === 'time'">
-                                        {{ format(new Date(agenda.date.start as string), 'HH:mm') }} - {{ format(new
-                                            Date(agenda.date.end as string),
+                                        {{ format(new Date(agenda.date.start), 'HH:mm') }} - {{ format(new
+                                            Date(agenda.date.end),
                                             'HH:mm') }}
                                     </template>
                                     <template v-else-if="item === 'location'">
@@ -422,7 +419,8 @@ const selectDate = (date: Date) => {
                             </li>
                             <li class="flex items-center justify-center">
                                 <UButton color="neutral" variant="link" :size="responsiveUISizes.button"
-                                    icon="i-heroicons-arrow-long-right" :to="`/agendas/${agenda._id}`" trailing>
+                                    icon="i-heroicons-arrow-long-right" :to="`/administrator/agendas/${agenda._id}`"
+                                    trailing>
                                     {{ $ts('seeMore') }}
                                 </UButton>
                             </li>

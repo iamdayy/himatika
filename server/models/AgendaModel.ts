@@ -33,6 +33,7 @@ const IGuestSchema = new Schema<IGuestSchema>({
     type: String,
     required: true,
     unique: true,
+    sparse: true,
   },
   phone: {
     type: String,
@@ -249,8 +250,6 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
   member: {
     type: Types.ObjectId,
     ref: "Member",
-    unique: true,
-    sparse: true,
     autopopulate: {
       select: "NIM avatar fullName email class semester createdAt",
     },
@@ -298,8 +297,6 @@ const participantSchema = new Schema<IParticipantSchema>({
   member: {
     type: Types.ObjectId,
     ref: "Member",
-    unique: true,
-    sparse: true,
     autopopulate: {
       select: "NIM avatar fullName email class semester createdAt",
     },
@@ -372,9 +369,6 @@ const agendaSchema = new Schema<IAgendaSchema, IAgendaModel, IAgendaMethods>(
       type: String,
     },
     description: {
-      type: String,
-    },
-    registerLink: {
       type: String,
     },
     configuration: {

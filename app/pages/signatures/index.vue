@@ -21,7 +21,7 @@ const activeTab = ref('0');
 const signed = ref<boolean>(false);
 const page = ref(1);
 const perPage = ref(10);
-const { data, refresh } = useLazyAsyncData(() => $api<IDocResponse>(`/api/signatures`, {
+const { data, refresh, pending: loading, error } = useLazyAsyncData(() => $api<IDocResponse>(`/api/signatures`, {
     query: {
         page: page.value,
         perPage: perPage.value,
@@ -183,8 +183,15 @@ useSeoMeta({
                         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-300">{{ item.description }}</h2>
                     </template>
                     <ol class="mt-3 space-y-2 divide-y divide-gray-200 dark:divide-gray-700">
-                        <li v-for="doc in documents" :key="doc._id"
-                            class="rounded-lg cursor-pointer bg-secondary-light/15 dark:bg-secondary-dark/15">
+                        <USkeleton v-for="i in 5" :key="i" class="h-14 w-full" v-if="loading" />
+                        <div v-else-if="error">
+                            <h1 class="text-red-500 text-2xl text-center">{{ error.message }}</h1>
+                        </div>
+                        <div v-else-if="documents.length === 0">
+                            <h1 class="text-2xl text-center">{{ $ts('no_data') }}</h1>
+                        </div>
+                        <li v-for="doc, i in documents" :key="(doc._id as string)"
+                            class="rounded-lg cursor-pointer bg-secondary-light/15 dark:bg-secondary-dark/15" v-else>
                             <div class="items-center block p-3 sm:flex">
                                 <NuxtImg provider="localProvider" class="w-12 h-12 mb-3 rounded-full me-3 sm:mb-0"
                                     :src="(doc.uploader as IMember).avatar || '/img/profile-blank.png'"
@@ -195,7 +202,7 @@ useSeoMeta({
                                         <span>{{ doc.label }}</span> |
                                         <span class="font-semibold text-gray-800 dark:text-gray-200">{{ (doc.uploader as
                                             IMember).fullName
-                                            }}</span>
+                                        }}</span>
                                     </ULink>
                                     <span
                                         class="inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400">
@@ -213,7 +220,7 @@ useSeoMeta({
                         <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                             <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                                 <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
-                                }}</span>
+                                    }}</span>
                                 <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                             </div>
                             <div class="mb-2 sm:mb-0">
@@ -231,7 +238,7 @@ useSeoMeta({
                         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-300">{{ item.description }}</h2>
                     </template>
                     <ol class="mt-3 space-y-2 divide-y divide-gray-200 dark:divide-gray-700">
-                        <li v-for="doc in documents" :key="doc._id"
+                        <li v-for="doc in documents" :key="(doc._id as string)"
                             class="rounded-lg cursor-pointer bg-secondary-light/15 dark:bg-secondary-dark/15">
                             <div class="items-center block p-3 sm:flex">
                                 <NuxtImg provider="localProvider" class="w-12 h-12 mb-3 rounded-full me-3 sm:mb-0"
@@ -243,7 +250,7 @@ useSeoMeta({
                                         <span>{{ doc.label }}</span> |
                                         <span class="font-semibold text-gray-800 dark:text-gray-200">{{ (doc.uploader as
                                             IMember).fullName
-                                            }}</span>
+                                        }}</span>
                                     </ULink>
                                     <span
                                         class="inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400">
@@ -261,7 +268,7 @@ useSeoMeta({
                         <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                             <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                                 <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
-                                }}</span>
+                                    }}</span>
                                 <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                             </div>
                             <div class="mb-2 sm:mb-0">
