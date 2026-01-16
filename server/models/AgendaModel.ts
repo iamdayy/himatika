@@ -371,9 +371,6 @@ const agendaSchema = new Schema<IAgendaSchema, IAgendaModel, IAgendaMethods>(
     description: {
       type: String,
     },
-    registerLink: {
-      type: String,
-    },
     configuration: {
       type: configurationSchema,
       default: {},

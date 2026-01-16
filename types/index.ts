@@ -328,7 +328,6 @@ export interface IAgenda {
   at: string;
   atLink: string;
   description: string;
-  registerLink?: string;
   configuration: IAgendaConfiguration;
   committees?: ICommittee[];
   participants?: IParticipant[];
