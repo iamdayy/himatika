@@ -1,4 +1,5 @@
 import { UserModel } from "~~/server/models/UserModel";
+import { validatePassword } from "~~/server/utils/validatePassword";
 
 export default defineEventHandler(async (event) => {
   const { newPassword, newPasswordConfirmation, oldPassword } = await readBody(
@@ -42,6 +43,9 @@ export default defineEventHandler(async (event) => {
         },
       });
     }
+
+    validatePassword(newPassword);
+
     user.password = newPassword;
     await user.save();
     return {

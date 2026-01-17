@@ -19,6 +19,10 @@ const sessionSchema = new Schema<ISessionSchema>(
       type: String,
       index: true,
     },
+    previousToken: {
+      type: String,
+      index: true,
+    },
     user: {
       type: Types.ObjectId,
       ref: "User",

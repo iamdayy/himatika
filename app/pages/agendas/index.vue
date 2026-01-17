@@ -18,14 +18,16 @@ const { width } = useWindowSize();
 const { $api } = useNuxtApp();
 const { $ts } = useI18n();
 const router = useRouter();
+const route = useRoute();
 
+const categories = ref(route.query.categories as string);
 const page = ref(1);
-const perPage = ref(3);
+const perPage = ref(9); // Increased to 9 for grid view (3x3)
 const sort = ref('date');
 const order = ref('desc');
 const upcomingOnly = ref(false);
 const search = ref('');
-const selectedCategory = ref('');
+const selectedCategory = ref<string>(categories.value);
 const selectedTags = ref<string[]>([]);
 
 // const { agendas, refreshAgendas, page, perPage, sort, order, upcomingOnly, agendasCount, search, selectedCategory, selectedTags } = useAgendas();
@@ -83,18 +85,18 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
 });
 
 const perPageOptions = computed(() => {
-    const baseOptions = [3, 5, 10, 20, 50, 100];
+    const baseOptions = [3, 6, 9, 12, 24, 48];
     if (agendas.value && (agendas.value.data.length || 0) <= 3) {
-        perPage.value = 3;
+        // perPage.value = 3;
         return baseOptions.filter((option) => option <= 3);
     }
     const filteredOptions = baseOptions.filter((option) => option <= pageTotal.value);
 
-    if (isMobile.value && filteredOptions.length > 3) {
-        return filteredOptions.slice(0, 3);
-    }
+    // if (isMobile.value && filteredOptions.length > 3) {
+    //     return filteredOptions.slice(0, 3);
+    // }
 
-    return filteredOptions;
+    return baseOptions;
 });
 const pageTotal = computed(() => agendas.value.count || 0) // This value should be dynamic coming from the API
 const pageFrom = computed(() => (page.value! - 1) * perPage.value! + 1)
@@ -115,8 +117,8 @@ const groupedAgendas = computed<groupedAgendas>(() => {
     const grouped: groupedAgendas = {};
 
     agendas.value?.data?.forEach((agenda) => {
-        const month = new Date(agenda.date.start as string).toLocaleString('default', { month: 'long' });
-        const year = new Date(agenda.date.start as string).toLocaleString('default', { year: 'numeric' });
+        const month = new Date(agenda.date.start).toLocaleString('default', { month: 'long' });
+        const year = new Date(agenda.date.start).toLocaleString('default', { year: 'numeric' });
         if (!grouped[year]) {
             grouped[year] = {};
         }
@@ -206,9 +208,11 @@ const dropdownFilterOptions = computed(() => [
     }
 ] satisfies DropdownMenuItem[]);
 function isRegistrationOpen(agenda: any): boolean {
-    const now = new Date()
+    if (!agenda.configuration) return false;
+    const participantStart = new Date(agenda.configuration.participant.canRegisterUntil.start)
     const participantEnd = new Date(agenda.configuration.participant.canRegisterUntil.end)
-    return now <= participantEnd
+    const now = new Date()
+    return now >= participantStart && now <= participantEnd && participantStart <= participantEnd
 };
 
 function formatDateRange(date: any): string {
@@ -247,270 +251,339 @@ const links = computed(() => [{
 </script>
 
 <template>
-    <div class="items-center justify-center mb-2">
+    <div class="min-h-screen space-y-2">
         <UBreadcrumb :items="links" />
-        <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
+        <UCard :ui="{ header: 'p-0 sm:p-0 px-0 md:px-0' }">
             <template #header>
-                <h1 class="text-2xl font-bold text-gray-600 dark:text-white md:text-3xl">{{ $ts('agenda') }}</h1>
-                <div class="my-4">
-                    <div class="flex md:flex-row flex-col gap-2 mt-4 mb-8 md:items-center md:justify-between">
-                        <UInput v-model="search" :size="responsiveUISizes.input" icon="i-heroicons-magnifying-glass"
-                            :placeholder="$ts('search')" class="mt-2 mb-4 mb:mt-4 sm:mb-0 sm:w-64" />
-                        <div class="flex items-center gap-2 w-full md:w-auto">
-                            <UFieldGroup :size="responsiveUISizes.button" class="w-full md:w-auto">
-                                <USelect :size="responsiveUISizes.button" v-model="sort" :items="sortOptions"
-                                    placeholder="Sort by" value-key="value" class="w-full" />
-                                <UButton :size="responsiveUISizes.button" variant="subtle" color="neutral"
-                                    :icon="order == 'asc' ? 'i-heroicons-arrow-up' : order == 'desc' ? 'i-heroicons-arrow-down' : 'i-heroicons-arrows-up-down'"
-                                    @click="changeOrder()" />
-                            </UFieldGroup>
+                <!-- Modern Hero Section -->
+                <div class="relative overflow-hidden">
+                    <div class="absolute inset-0">
+                        <NuxtImg provider="localProvider" src="/img/placeholder-banner-1.jpeg"
+                            class="w-full h-full object-cover opacity-30" alt="Hero Background" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent">
                         </div>
                     </div>
-                    <div class="flex flex-col md:flex-row md:items-center gap-2 justify-between">
-                        <div class="flex items-center gap-2 flex-wrap w-full">
-                            <USelectMenu v-model="selectedCategory" :size="responsiveUISizes.select"
-                                :items="categoryOptions" value-key="value" label-key="title"
-                                :placeholder="$ts('filter_by', { key: 'category' })" class="w-full md:w-auto" />
-                            <USelectMenu v-model="selectedTags" :size="responsiveUISizes.select" :items="tags" multiple
-                                :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full md:w-auto" />
-                        </div>
-                        <div class="flex flex-row items-center gap-2 w-full md:justify-end justify-between">
-                            <UDropdownMenu :items="dropdownFilterOptions" :ui="{ content: 'w-48' }">
-                                <UButton icon="i-lucide-funnel" color="neutral" variant="subtle" />
-                            </UDropdownMenu>
-                            <USwitch @change="() => viewMode = viewMode === 'grid' ? 'list' : 'grid'" color="primary"
-                                size="xl" checked-icon="i-lucide-list" unchecked-icon="i-lucide-layout-grid"
-                                :label="$ts('view')" />
+
+                    <div class="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
+                        <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg">
+                            Agenda & Kegiatan
+                        </h1>
+                        <p class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-8 font-light">
+                            Temukan dan ikuti berbagai kegiatan menarik, workshop, dan seminar yang diselenggarakan oleh
+                            Himatika.
+                        </p>
+
+                        <!-- Search Box in Hero -->
+                        <div class="max-w-xl mx-auto relative group">
+                            <UInput v-model="search" :size="responsiveUISizes.input" icon="i-heroicons-magnifying-glass"
+                                placeholder="Cari agenda menarik..." />
                         </div>
                     </div>
                 </div>
-            </template>
+                <div class="mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
+                    <!-- Filter Bar -->
+                    <UCard
+                        class="mb-8 shadow-lg border-none ring-1 ring-gray-200 dark:ring-gray-800 backdrop-blur-xl bg-white/30 dark:bg-gray-900/40">
+                        <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+                            <!-- Filters Left -->
+                            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                                <USelectMenu v-model="selectedCategory" :size="responsiveUISizes.select"
+                                    :items="categoryOptions" value-key="value" label-key="title"
+                                    :placeholder="$ts('filter_by', { key: 'category' })" class="min-w-[150px]"
+                                    icon="i-heroicons-tag" />
+                                <USelectMenu v-model="selectedTags" :size="responsiveUISizes.select" :items="tags"
+                                    multiple :placeholder="$ts('filter_by', { key: 'tags' })" class="min-w-[150px]"
+                                    icon="i-heroicons-hashtag" />
+                                <UPopover :popper="{ placement: 'bottom-start' }">
+                                    <UButton icon="i-heroicons-adjustments-horizontal" color="neutral" variant="soft"
+                                        :label="$ts('filter') || 'Filter'" />
+                                    <template #content>
+                                        <div class="p-4 space-y-3 min-w-[200px]">
+                                            <h4 class="font-semibold text-sm mb-2 text-gray-900 dark:text-white">Status
+                                            </h4>
+                                            <div class="space-y-2">
+                                                <UCheckbox v-model="upcomingOnly" :label="$ts('only_open_registration')"
+                                                    color="primary" />
+                                                <UCheckbox v-model="showPaidOnly" :label="$ts('only_paid')"
+                                                    color="primary" />
+                                                <UCheckbox v-model="showFreeOnly" :label="$ts('only_free')"
+                                                    color="primary" />
+                                            </div>
+                                            <USeparator class="my-2" />
+                                            <UButton block size="xs" color="neutral" variant="ghost"
+                                                @click="refreshAgendas()">
+                                                Apply
+                                                Filter</UButton>
+                                        </div>
+                                    </template>
+                                </UPopover>
+                                <UButton
+                                    v-if="selectedCategory || selectedTags.length || upcomingOnly || showPaidOnly || showFreeOnly"
+                                    icon="i-heroicons-x-mark" size="sm" color="error" variant="ghost" @click="() => {
+                                        selectedCategory = '';
+                                        selectedTags = [];
+                                        upcomingOnly = false;
+                                        showPaidOnly = false;
+                                        showFreeOnly = false;
+                                        refreshAgendas();
+                                    }">
+                                    {{ $ts('reset_filter') }}
+                                </UButton>
+                            </div>
 
-            <div class="mt-4 space-y-2">
-                <div v-for="(year, yearIndex) in Object.keys(groupedAgendas).sort((a, b) => order == 'asc' ? parseInt(a) - parseInt(b) : parseInt(b) - parseInt(a))"
-                    :key="yearIndex" class="mb-4">
-                    <h3 class="text-lg font-bold md:text-xl dark:text-gray-200">{{ year }}</h3>
-                    <div v-for="(month, monthIndex) in Object.keys(groupedAgendas[year]!)" :key="monthIndex"
-                        class="my-2">
-                        <h3 class="font-semibold md:text-lg dark:text-gray-200 ms-3 mb-6">{{ month }}</h3>
-                        <!-- Grid View -->
-                        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <NuxtLink v-for="agenda, i in groupedAgendas[year]![month]" :key="i"
-                                :to="`/agendas/${agenda?._id}`">
-                                <UCard class="hover:shadow-lg transition-shadow">
-                                    <template #header>
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <div class="flex items-center gap-2 mb-2">
-                                                    <UBadge v-if="agenda?.category" color="secondary" variant="soft"
-                                                        size="xs">
+                            <!-- Actions Right -->
+                            <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                                    <UButton
+                                        :icon="viewMode === 'grid' ? 'i-heroicons-squares-2x2-solid' : 'i-heroicons-squares-2x2'"
+                                        :color="viewMode === 'grid' ? 'neutral' : 'secondary'"
+                                        :variant="viewMode === 'grid' ? 'solid' : 'ghost'" size="sm"
+                                        @click="viewMode = 'grid'" />
+                                    <UButton
+                                        :icon="viewMode === 'list' ? 'i-heroicons-list-bullet-solid' : 'i-heroicons-list-bullet'"
+                                        :color="viewMode === 'list' ? 'neutral' : 'secondary'"
+                                        :variant="viewMode === 'list' ? 'solid' : 'ghost'" size="sm"
+                                        @click="viewMode = 'list'" />
+                                </div>
+                                <USelect v-model="sort" :items="sortOptions" :size="responsiveUISizes.select"
+                                    icon="i-heroicons-arrows-up-down" class="w-32" />
+                            </div>
+                        </div>
+                    </UCard>
+                </div>
+            </template>
+            <!-- Agendas List -->
+            <div class="space-y-12">
+                <template v-if="agendas.count > 0">
+                    <div v-for="(year, yearIndex) in Object.keys(groupedAgendas).sort((a, b) => order == 'asc' ? parseInt(a) - parseInt(b) : parseInt(b) - parseInt(a))"
+                        :key="yearIndex">
+
+                        <div class="flex items-center gap-4 mb-6">
+                            <h2 class="text-3xl font-bold text-gray-300">{{ year }}</h2>
+                            <div class="h-px bg-gray-200 dark:bg-gray-800 flex-1"></div>
+                        </div>
+
+                        <div v-for="(month, monthIndex) in Object.keys(groupedAgendas[year]!)" :key="monthIndex"
+                            class="mb-8">
+                            <h3 class="text-xl font-bold text-primary-500 mb-4 flex items-center gap-2">
+                                <UIcon name="i-heroicons-calendar" class="w-5 h-5" />
+                                {{ month }}
+                            </h3>
+
+                            <!-- Grid View -->
+                            <div v-if="viewMode === 'grid'"
+                                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <NuxtLink v-for="agenda in groupedAgendas[year]![month]" :key="(agenda._id as string)"
+                                    :to="`/agendas/${agenda._id}`" class="group h-full">
+                                    <UCard
+                                        :ui="{ body: 'p-0 sm:p-0 px-0 md:px-0', header: 'p-0 sm:p-0', footer: 'p-4 sm:p-4' }"
+                                        class="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ring-1 ring-gray-200 dark:ring-gray-800 border-none">
+
+                                        <!-- Card Image -->
+                                        <div class="relative aspect-video overflow-hidden">
+                                            <NuxtImg provider="localProvider" v-if="agenda.photos?.[0]?.image"
+                                                :src="(agenda.photos[0].image as string)"
+                                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                loading="lazy" />
+                                            <div v-else
+                                                class="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                                <UIcon name="i-heroicons-photo" class="w-12 h-12 text-gray-400" />
+                                            </div>
+
+                                            <!-- Badges -->
+                                            <div class="absolute top-3 right-3 flex flex-col gap-2 items-end">
+                                                <UBadge v-if="agenda.category" color="neutral" variant="solid" size="xs"
+                                                    class="shadow-sm !text-gray-800">
+                                                    {{ (agenda.category as ICategory).title }}
+                                                </UBadge>
+                                                <UBadge v-if="isRegistrationOpen(agenda)" color="primary"
+                                                    variant="solid" size="xs" class="shadow-sm">
+                                                    {{ $ts('open') }}
+                                                </UBadge>
+                                            </div>
+
+                                            <!-- Price Tag (Float bottom left of image) -->
+                                            <div class="absolute bottom-3 left-3">
+                                                <div v-if="agenda.configuration.participant.pay"
+                                                    class="bg-black/70 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md border border-white/20 shadow-sm">
+                                                    {{ formatCurrency(agenda.configuration.participant.amount) }}
+                                                </div>
+                                                <div v-else
+                                                    class="bg-green-500/90 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md border border-white/20 shadow-sm">
+                                                    {{ $ts('free') }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Content -->
+                                        <div class="p-4 space-y-3">
+                                            <h3
+                                                class="text-lg font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight group-hover:text-primary-500 transition-colors">
+                                                {{ agenda.title }}
+                                            </h3>
+
+                                            <div class="space-y-1.5">
+                                                <div
+                                                    class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                                    <UIcon name="i-heroicons-calendar-days"
+                                                        class="w-4 h-4 text-primary-500" />
+                                                    <span>{{ formatDateRange(agenda.date) }}</span>
+                                                </div>
+                                                <div
+                                                    class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                                    <UIcon name="i-heroicons-map-pin" class="w-4 h-4 text-red-400" />
+                                                    <span class="line-clamp-1 break-all">{{ agenda.at }}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex flex-wrap gap-1 pt-1">
+                                                <span v-for="tag in agenda.tags?.slice(0, 3)" :key="tag"
+                                                    class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                                                    #{{ tag }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Footer/Stats -->
+                                        <template #footer>
+                                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="flex items-center gap-1" :title="$ts('participant')"
+                                                        v-if="agenda.participants">
+                                                        <UIcon name="i-heroicons-user-group" class="w-3.5 h-3.5" />
+                                                        {{ agenda.participants.length }}
+                                                    </div>
+                                                    <div class="flex items-center gap-1" :title="$ts('committee')"
+                                                        v-if="agenda.committees">
+                                                        <UIcon name="i-heroicons-users" class="w-3.5 h-3.5" />
+                                                        {{ agenda.committees.length }}
+                                                    </div>
+                                                </div>
+                                                <div class="text-primary-500 font-medium group-hover:underline">
+                                                    {{ $ts('see_more') }} &rarr;
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </UCard>
+                                </NuxtLink>
+                            </div>
+
+                            <!-- List View -->
+                            <div v-else class="space-y-4">
+                                <NuxtLink v-for="agenda in groupedAgendas[year]![month]" :key="(agenda._id as string)"
+                                    :to="`/agendas/${agenda._id}`" class="block group">
+                                    <UCard :ui="{ body: 'p-0 sm:p-0 px-0 md:px-0' }"
+                                        class="overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary-500/50 border border-transparent ring-1 ring-gray-200 dark:ring-gray-800">
+                                        <div class="flex flex-col sm:flex-row h-full sm:h-48">
+                                            <!-- Image -->
+                                            <div
+                                                class="relative w-full sm:w-64 h-48 sm:h-auto shrink-0 overflow-hidden">
+                                                <NuxtImg provider="localProvider" v-if="agenda.photos?.[0]?.image"
+                                                    :src="(agenda.photos[0].image as string)"
+                                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                <div v-else
+                                                    class="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                                    <UIcon name="i-heroicons-photo" class="w-12 h-12 text-gray-400" />
+                                                </div>
+                                                <div class="absolute top-2 left-2">
+                                                    <UBadge v-if="agenda.category" color="neutral" variant="solid"
+                                                        size="xs" class="shadow-sm !text-gray-800">
                                                         {{ (agenda.category as ICategory).title }}
                                                     </UBadge>
-                                                    <UBadge v-if="isRegistrationOpen(agenda)" color="success"
-                                                        variant="soft" size="xs">
-                                                        {{ $ts('open') }}
-                                                    </UBadge>
                                                 </div>
-                                                <h3
-                                                    class="text-lg font-semibold text-gray-900 dark:text-gray-200 line-clamp-2">
-                                                    {{
-                                                        agenda.title }}</h3>
                                             </div>
-                                        </div>
-                                    </template>
 
-                                    <div class="space-y-4">
-                                        <!-- Image -->
-                                        <div class="relative h-48 rounded-lg overflow-hidden">
-                                            <NuxtImg provider="localProvider"
-                                                v-if="agenda.photos !== undefined && agenda.photos.length > 0"
-                                                :src="(agenda.photos[0]!.image as string)" alt="Agenda Image"
-                                                class="w-full h-full object-cover" loading="lazy" />
-                                            <div v-else
-                                                class="bg-gray-200 dark:bg-gray-700 w-full h-full flex items-center justify-center">
-                                                <UIcon name="i-heroicons-photo"
-                                                    class="w-12 h-12 text-gray-400 dark:text-gray-500" />
-                                            </div>
-                                        </div>
-                                        <!-- Date and Location -->
-                                        <div class="space-y-2">
-                                            <div
-                                                class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                                                <UIcon name="i-heroicons-calendar-days" class="w-4 h-4" />
-                                                <span>{{ formatDateRange(agenda.date) }}</span>
-                                            </div>
-                                            <UButton :to="agenda.atLink" variant="link" size="sm"
-                                                class="text-sm text-gray-600 dark:text-gray-300">
-                                                <UIcon name="i-heroicons-map-pin" class="w-4 h-4" />
-                                                <span class="line-clamp-1">{{ agenda.at }}</span>
-                                            </UButton>
-                                        </div>
-
-                                        <!-- Tags -->
-                                        <div v-if="agenda.tags && agenda.tags.length" class="flex flex-wrap gap-1">
-                                            <UBadge v-for="tag in agenda.tags.slice(0, 3)" :key="tag" color="neutral"
-                                                variant="soft" size="xs">
-                                                {{ tag }}
-                                            </UBadge>
-                                            <UBadge v-if="agenda.tags.length > 3" color="neutral" variant="soft"
-                                                size="xs">
-                                                +{{ agenda.tags.length - 3 }}
-                                            </UBadge>
-                                        </div>
-
-                                        <!-- Stats -->
-                                        <div
-                                            class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
-                                            <div class="flex items-center gap-4">
-                                                <span>{{ agenda.committees?.length || 0 }} {{ $ts('committee') }}</span>
-                                                <span>{{ agenda.participants?.length || 0 }} {{ $ts('participant')
-                                                    }}</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <UBadge v-if="agenda.configuration.participant.pay" color="error"
-                                                    variant="soft" size="xs">
-                                                    {{ formatCurrency(agenda.configuration.participant.amount) }}
-                                                </UBadge>
-                                                <UBadge v-else color="success" variant="soft" size="xs">
-                                                    {{ $ts('free') }}
-                                                </UBadge>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <template #footer>
-                                        <div class="flex items-center justify-between">
-                                            <UButton :to="`/agendas/${agenda._id}`" variant="link" size="sm">
-                                                {{ $ts('see_more') }}
-                                            </UButton>
-                                            <UDropdownMenu :items="dropdownOptions(agenda)" :ui="{
-                                                content: 'w-48'
-                                            }">
-                                                <UButton icon="i-lucide-ellipsis-vertical" color="neutral"
-                                                    variant="link" />
-                                            </UDropdownMenu>
-                                        </div>
-                                    </template>
-                                </UCard>
-                            </NuxtLink>
-                        </div>
-                        <!-- List View -->
-                        <div v-else class="space-y-4">
-                            <NuxtLink v-for="agenda, i in groupedAgendas[year]![month]" :key="i"
-                                :to="`/agendas/${agenda._id}`">
-                                <UCard class="hover:shadow-md transition-shadow">
-                                    <div class="flex flex-col lg:flex-row lg:items-center gap-4">
-                                        <!-- Main Content -->
-                                        <div class="flex-1">
-                                            <div class="flex items-start justify-between mb-3">
-                                                <div class="flex-1">
-                                                    <div class="flex items-center justify-between">
-                                                        <div class="flex-1">
-                                                            <div class="flex items-center gap-2 mb-2">
-                                                                <UBadge v-if="agenda.category" color="secondary"
-                                                                    variant="soft" size="xs">
-                                                                    {{ (agenda.category as ICategory).title }}
-                                                                </UBadge>
-                                                                <UBadge v-if="isRegistrationOpen(agenda)"
-                                                                    color="success" variant="soft" size="xs">
-                                                                    {{ $ts('open') }}
-                                                                </UBadge>
-                                                                <UBadge v-if="agenda.configuration.participant.pay"
-                                                                    color="error" variant="soft" size="xs">
-                                                                    {{
-                                                                        formatCurrency(agenda.configuration.participant.amount)
-                                                                    }}
-                                                                </UBadge>
-                                                                <UBadge v-else color="success" variant="soft" size="xs">
-                                                                    {{ $ts('free') }}
-                                                                </UBadge>
-                                                            </div>
-                                                            <h3
-                                                                class="text-xl font-semibold text-gray-900 mb-2 dark:text-gray-200">
-                                                                {{
-                                                                    agenda.title }}
-                                                            </h3>
-
-                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                                                                <div
-                                                                    class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                                                                    <UIcon name="i-heroicons-calendar-days"
-                                                                        class="w-4 h-4" />
-                                                                    <span>{{ formatDateRange(agenda.date) }}</span>
-                                                                </div>
-                                                                <UButton :to="agenda.atLink" variant="link" size="sm"
-                                                                    class="text-sm text-gray-600 dark:text-gray-300">
-                                                                    <UIcon name="i-heroicons-map-pin" class="w-4 h-4" />
-                                                                    <span class="line-clamp-1">{{ agenda.at }}</span>
-                                                                </UButton>
-                                                            </div>
-                                                        </div>
-                                                        <UDropdownMenu :items="dropdownOptions(agenda)" :ui="{
-                                                            content: 'w-48'
-                                                        }">
-                                                            <UButton icon="i-lucide-ellipsis-vertical" color="neutral"
-                                                                variant="link" size="sm" />
-                                                        </UDropdownMenu>
-                                                    </div>
-
-                                                    <!-- Tags -->
-                                                    <div v-if="agenda.tags && agenda.tags.length"
-                                                        class="flex flex-wrap gap-1 mb-3">
-                                                        <UBadge v-for="tag in agenda.tags.slice(0, 5)" :key="tag"
-                                                            color="neutral" variant="soft" size="xs">
-                                                            {{ tag }}
-                                                        </UBadge>
-                                                        <UBadge v-if="agenda.tags.length > 5" color="neutral"
-                                                            variant="soft" size="xs">
-                                                            +{{ agenda.tags.length - 5 }}
+                                            <!-- Content -->
+                                            <div class="flex-1 p-4 sm:p-5 flex flex-col justify-between">
+                                                <div>
+                                                    <div class="flex justify-between items-start mb-2">
+                                                        <h3
+                                                            class="text-lg font-bold text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary-500 transition-colors">
+                                                            {{ agenda.title }}
+                                                        </h3>
+                                                        <UBadge v-if="isRegistrationOpen(agenda)" color="primary"
+                                                            variant="subtle" size="xs">
+                                                            {{ $ts('open') }}
                                                         </UBadge>
                                                     </div>
 
-                                                    <!-- Stats -->
+                                                    <p
+                                                        class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
+                                                        {{ agenda.description }}
+                                                    </p>
+
                                                     <div
-                                                        class="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-300">
-                                                        <div class="flex items-center gap-1">
-                                                            <UIcon name="i-heroicons-users" class="w-4 h-4" />
-                                                            <span>{{ agenda.committees?.length || 0 }} {{
-                                                                $ts('committee') }}</span>
+                                                        class="flex flex-col sm:flex-row sm:items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <UIcon name="i-heroicons-calendar-days"
+                                                                class="w-4 h-4 text-primary-500" />
+                                                            {{ formatDateRange(agenda.date) }}
                                                         </div>
-                                                        <div class="flex items-center gap-1">
-                                                            <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
-                                                            <span>{{ agenda.participants?.length || 0 }} {{
-                                                                $ts('participant')
-                                                            }}</span>
+                                                        <div class="hidden sm:block text-gray-300">•</div>
+                                                        <div class="flex items-center gap-1.5">
+                                                            <UIcon name="i-heroicons-map-pin"
+                                                                class="w-4 h-4 text-red-500" />
+                                                            {{ agenda.at }}
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <div class="flex items-center justify-between mt-4">
+                                                    <div class="flex items-center gap-2">
+                                                        <span v-if="agenda.configuration.participant.pay"
+                                                            class="font-bold text-primary-600 dark:text-primary-400">
+                                                            {{
+                                                                formatCurrency(agenda.configuration.participant.amount)
+                                                            }}
+                                                        </span>
+                                                        <span v-else
+                                                            class="font-bold text-green-600 dark:text-green-400">
+                                                            {{ $ts('free') }}
+                                                        </span>
+                                                    </div>
+                                                    <UButton variant="ghost" color="neutral"
+                                                        icon="i-heroicons-arrow-right" trailing
+                                                        class="group-hover:translate-x-1 transition-transform">
+                                                        {{ $ts('details') }}
+                                                    </UButton>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </UCard>
-                            </NuxtLink>
+                                    </UCard>
+                                </NuxtLink>
+                            </div>
+
                         </div>
                     </div>
+                </template>
+
+                <!-- Empty State -->
+                <div v-else class="flex flex-col items-center justify-center py-16 text-center">
+                    <div
+                        class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                        <UIcon name="i-heroicons-calendar" class="w-12 h-12 text-gray-400" />
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Tidak ada agenda ditemukan</h3>
+                    <p class="text-gray-500 max-w-sm mb-6">Coba ubah filter atau kata kunci pencarian Anda untuk
+                        menemukan agenda yang
+                        Anda cari.</p>
+                    <UButton color="neutral" variant="solid" @click="() => {
+                        search = '';
+                        selectedCategory = '';
+                        selectedTags = [];
+                        upcomingOnly = false;
+                        refreshAgendas();
+                    }">Reset Filter</UButton>
                 </div>
             </div>
             <template #footer>
-                <div class="flex flex-wrap items-center justify-between gap-1.5">
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-sm leading-5">{{ $ts('rows_per_page') }}</span>
-                        <USelect v-model="perPage" :items="perPageOptions" :size="responsiveUISizes.select"
-                            class="w-20 me-2" />
-                    </div>
-                    <div>
-
-                        <span class="text-sm leading-5">
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <UPagination v-model:page="page" :items-per-page="perPage" :total="agendas.count"
-                            :sibling-count="isMobile ? 2 : 6" />
-                    </div>
+                <div v-if="agendas.count > 0" class="flex justify-center mt-12 mb-8">
+                    <UPagination v-model:page="page" :items-per-page="perPage" :total="agendas.count"
+                        :ui="{ list: 'gap-1', first: 'rounded-l-lg', last: 'rounded-r-lg' }" :max="5" />
                 </div>
             </template>
         </UCard>
+
     </div>
 </template>
 

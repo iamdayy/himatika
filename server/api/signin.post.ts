@@ -30,13 +30,6 @@ export default defineEventHandler(async (event) => {
     // Check if the username is a number
     if (!isNaN(NIM)) {
       member = await MemberModel.findOne({ NIM }, {}, { autopulate: false });
-      if (!member) {
-        throw createError({
-          statusCode: 401,
-          statusMessage: t("login_page.user_not_found"),
-          data: { message: t("login_page.check_username"), name: "username" },
-        });
-      }
     }
 
     // Find user by username
@@ -44,12 +37,14 @@ export default defineEventHandler(async (event) => {
       { username: body.username },
       { member: member },
     ]);
+
+    const invalidCredentialsError = createError({
+      statusCode: 401,
+      statusMessage: t("login_page.invalid_credentials") || "Invalid credentials",
+    });
+
     if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: t("login_page.user_not_found"),
-        data: { message: t("login_page.check_username"), name: "username" },
-      });
+      throw invalidCredentialsError;
     }
     if (!user?.verified) {
       throw createError({
@@ -62,11 +57,7 @@ export default defineEventHandler(async (event) => {
     // Verify password
     const passMatch = await user.verifyPassword(body.password, user.password);
     if (!passMatch) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: t("login_page.wrong_password"),
-        data: { message: t("login_page.check_password"), name: "password" },
-      });
+      throw invalidCredentialsError;
     }
 
     // Generate JWT tokens

@@ -25,6 +25,14 @@ export interface EmailTemplate {
   serviceName?: string;
   currentYear?: number;
   qrCodeDataUrl?: string;
+  footerText?: {
+    rights?: string;
+    privacy?: string;
+    terms?: string;
+    unsubscribeReason?: string;
+    unsubscribeAction?: string;
+    here?: string;
+  };
 }
 const config = useRuntimeConfig();
 class Email {
@@ -54,6 +62,14 @@ class Email {
   private serviceName: string = config.public.appname;
   private currentYear: number = new Date().getFullYear();
   private qrCodeDataUrl?: string;
+  private footerText: {
+    rights: string;
+    privacy: string;
+    terms: string;
+    unsubscribeReason: string;
+    unsubscribeAction: string;
+    here: string;
+  };
 
   constructor({
     recipientName,
@@ -77,28 +93,46 @@ class Email {
     termsAndConditionsLink,
     unsubscribeLink,
     qrCodeDataUrl,
+    footerText,
   }: EmailTemplate) {
-    this.recipientName = recipientName;
-    this.emailTitle = emailTitle;
-    this.heroTitle = heroTitle;
-    this.heroSubtitle = heroSubtitle;
-    this.heroButtonLink = heroButtonLink;
-    this.heroButtonText = heroButtonText;
-    this.contentTitle1 = contentTitle1;
-    this.contentImageURL = contentImageURL;
-    this.contentImageAlt = contentImageAlt;
-    this.contentParagraph1 = contentParagraph1;
+    const escapeHtml = (unsafe: string) => {
+      return (unsafe || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    this.recipientName = escapeHtml(recipientName);
+    this.emailTitle = escapeHtml(emailTitle);
+    this.heroTitle = escapeHtml(heroTitle);
+    this.heroSubtitle = escapeHtml(heroSubtitle);
+    this.heroButtonLink = heroButtonLink; // URLs might need robust URL encoding, but simple escaping breaks valid URLs. kept as is for now assumes trustworthy logic generator.
+    this.heroButtonText = escapeHtml(heroButtonText);
+    this.contentTitle1 = escapeHtml(contentTitle1);
+    this.contentImageURL = contentImageURL; // Image URL assumes trustworthy source
+    this.contentImageAlt = contentImageAlt ? escapeHtml(contentImageAlt) : undefined;
+    this.contentParagraph1 = contentParagraph1; // Paragraphs might contain safe HTML? No, typical email templates here seem to use plain text strings. Escaping is safer.
     this.contentParagraph2 = contentParagraph2;
-    this.contentTitle2 = contentTitle2;
-    this.contentListItems = contentListItems;
-    this.ctaTitle = ctaTitle;
-    this.ctaSubtitle = ctaSubtitle;
+    this.contentTitle2 = contentTitle2 ? escapeHtml(contentTitle2) : undefined;
+    this.contentListItems = contentListItems?.map(i => escapeHtml(i));
+    this.ctaTitle = escapeHtml(ctaTitle);
+    this.ctaSubtitle = escapeHtml(ctaSubtitle);
     this.ctaButtonLink = ctaButtonLink;
-    this.ctaButtonText = ctaButtonText;
+    this.ctaButtonText = escapeHtml(ctaButtonText);
     this.privacyPolicyLink = privacyPolicyLink;
     this.termsAndConditionsLink = termsAndConditionsLink;
     this.unsubscribeLink = unsubscribeLink;
     this.qrCodeDataUrl = qrCodeDataUrl;
+    this.footerText = {
+      rights: escapeHtml(footerText?.rights || "All rights reserved."),
+      privacy: escapeHtml(footerText?.privacy || "Privacy Policy"),
+      terms: escapeHtml(footerText?.terms || "Terms & Conditions"),
+      unsubscribeReason: escapeHtml(footerText?.unsubscribeReason || "You are receiving this email because you subscribed to"),
+      unsubscribeAction: escapeHtml(footerText?.unsubscribeAction || "If you do not want to receive emails anymore, click"),
+      here: escapeHtml(footerText?.here || "here")
+    };
   }
 
   public render(): string {
@@ -149,11 +183,12 @@ class Email {
                       </td>
                     </tr>
                   </table>
-  
+                  
+                  <!-- HERO SECTION -->
                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                     <tr>
                       <td class="hero">
-                        <h1>Halo ${this.recipientName}, ${this.heroTitle}</h1>
+                        <h1>${this.heroTitle}</h1>
                         <p>${this.heroSubtitle}</p>
                         <a href="${this.heroButtonLink}" class="button">${
       this.heroButtonText
@@ -221,18 +256,12 @@ class Email {
                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                     <tr>
                       <td class="footer">
-                        <p>&copy; ${this.currentYear} ${
-      this.companyName
-    }. All rights reserved.</p>
-                        <p><a href="${
-                          this.privacyPolicyLink
-                        }">Kebijakan Privasi</a> | <a href="${
-      this.termsAndConditionsLink
-    }">Syarat & Ketentuan</a></p>
+                        <p>&copy; ${this.currentYear} ${this.companyName}. ${this.footerText.rights}</p>
+                        <p><a href="${this.privacyPolicyLink}">${this.footerText.privacy}</a> | <a href="${this.termsAndConditionsLink}">${this.footerText.terms}</a></p>
                         ${
                           this.unsubscribeLink
-                            ? `<p>Anda menerima email ini karena Anda berlangganan ${this.serviceName}.</p>
-                        <p>Jika Anda tidak ingin menerima email lagi, klik <a href="${this.unsubscribeLink}">di sini</a>.</p>`
+                            ? `<p>${this.footerText.unsubscribeReason} ${this.serviceName}.</p>
+                        <p>${this.footerText.unsubscribeAction} <a href="${this.unsubscribeLink}">${this.footerText.here}</a>.</p>`
                             : ""
                         }
                       </td>

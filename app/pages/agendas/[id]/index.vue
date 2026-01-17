@@ -121,6 +121,25 @@ const navigateToRegisterCommittee = () => {
     }
 };
 
+const links = computed(() => [
+    {
+        label: $ts('home'),
+        to: '/'
+    },
+    {
+        label: $ts('agenda'),
+        to: '/agendas'
+    },
+    {
+        label: (agenda.value?.category as ICategory)?.title,
+        to: `/agendas/?categories=${(agenda.value?.category as ICategory)?._id}`
+    },
+    {
+        label: agenda.value?.title,
+        to: `/agendas/${id}`
+    }
+])
+
 // --- SEO ---
 useSeoMeta({
     title: () => agenda.value?.title || 'Detail Agenda',
@@ -128,10 +147,46 @@ useSeoMeta({
     description: () => agenda.value?.description?.substring(0, 160) || '',
     ogImage: () => bannerImage.value,
 });
+
+// --- RELATED AGENDAS ---
+const { data: relatedAgendas } = useAsyncData('relatedAgendas',
+    () => $api<IAgendaResponse>('/api/agenda', {
+        params: {
+            category: (agenda.value?.category as ICategory)?._id,
+            perPage: 3,
+            sort: 'date',
+            order: 'desc'
+        }
+    }),
+    {
+        transform: (data) => {
+            // Filter out current agenda and take top 3
+            return (data.data?.agendas || [])
+                .filter((a) => a._id !== id)
+                .slice(0, 3);
+        },
+        immediate: !!agenda.value?.category, // Only fetch if category exists
+        watch: [() => agenda.value?.category]
+    }
+);
+
+// Helpers for related card (reused from index logic manually for now to keep it simple)
+function formatDateRange(date: any): string {
+    if (!date) return 'Date not set'
+    const start = new Date(date.start)
+    const end = new Date(date.end)
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+    if (start.toDateString() === end.toDateString()) return start.toLocaleDateString('id-ID', { ...options, year: 'numeric' })
+    return `${start.toLocaleDateString('id-ID', options)} - ${end.toLocaleDateString('id-ID', { ...options, year: 'numeric' })}`
+};
+function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
+};
 </script>
 
 <template>
-    <div>
+    <div class="min-h-screen space-y-2">
+        <UBreadcrumb :items="links" />
         <div v-if="pending" class="flex h-screen items-center justify-center">
             <UIcon name="i-heroicons-arrow-path" class="animate-spin text-4xl text-primary" />
         </div>
@@ -172,6 +227,15 @@ useSeoMeta({
                             class="flex items-center gap-2 bg-white/30/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                             <UIcon name="i-heroicons-tag" class="text-yellow-400 w-5 h-5" />
                             <span>{{ (agenda.category as ICategory)?.title }}</span>
+                        </div>
+                        <!-- New: Tags -->
+                        <div v-if="agenda.tags && agenda.tags.length > 0"
+                            class="flex items-center gap-2 bg-white/30/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                            <UIcon name="i-heroicons-hashtag" class="text-blue-400 w-5 h-5" />
+                            <span class="flex gap-1">
+                                <span v-for="(tag, i) in agenda.tags" :key="i">
+                                    {{ tag }}{{ i < agenda.tags.length - 1 ? ',' : '' }} </span>
+                                </span>
                         </div>
                     </div>
                 </div>
@@ -233,34 +297,73 @@ useSeoMeta({
                                             : 'Peserta' }}</p>
                                     </div>
                                     <UButton
-                                        :to="`/administrator/agendas/${id}/${isRegistered === 'Committee' ? 'committee' : 'participant'}`"
+                                        :to="`/agendas/${id}/${isRegistered === 'Committee' ? 'committee' : 'participant'}`"
                                         variant="link" size="xs">
                                         Lihat Detail Tiket &rarr;
                                     </UButton>
                                 </div>
 
-                                <div v-else class="space-y-3">
-                                    <UButton v-if="eventStatus?.label !== 'Selesai'" block size="xl" color="primary"
-                                        class="font-bold rounded-xl" :disabled="!canMeRegisterAsParticipant"
-                                        @click="navigateToRegisterParticipant">
-                                        {{ canMeRegisterAsParticipant ? 'Daftar Sekarang' : 'Pendaftaran Tutup' }}
-                                    </UButton>
+                                <div v-else class="space-y-6">
+                                    <!-- Participant Registration -->
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center text-xs">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-300">Peserta</span>
+                                            <UBadge v-if="agenda.configuration.participant.point" color="warning"
+                                                variant="soft" size="xs">
+                                                +{{ agenda.configuration.participant.point }} Poin
+                                            </UBadge>
+                                        </div>
 
+                                        <UButton v-if="eventStatus?.label !== 'Selesai'" block size="lg" color="primary"
+                                            class="font-bold rounded-xl" :disabled="!canMeRegisterAsParticipant"
+                                            @click="navigateToRegisterParticipant">
+                                            {{ canMeRegisterAsParticipant ? 'Daftar Sekarang' : 'Pendaftaran Tutup' }}
+                                        </UButton>
+
+                                        <p v-if="agenda.configuration.participant.canRegisterUntil"
+                                            class="text-[10px] text-center text-gray-400">
+                                            Tutup: {{ new
+                                                Date(agenda.configuration.participant.canRegisterUntil.end).toLocaleDateString('id-ID',
+                                                    {
+                                                        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:
+                                                            '2-digit'
+                                                    }) }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Committee Registration -->
                                     <div v-if="canMeRegisterAsCommittee" class="relative py-2">
                                         <div class="absolute inset-0 flex items-center" aria-hidden="true">
                                             <div class="w-full border-t border-gray-300 dark:border-gray-700"></div>
                                         </div>
                                         <div class="relative flex justify-center">
                                             <span
-                                                class="bg-white dark:bg-gray-800 px-2 text-xs text-gray-500">Atau</span>
+                                                class="bg-gray-50 dark:bg-gray-900 px-2 text-xs text-gray-500">Panitia</span>
                                         </div>
                                     </div>
 
-                                    <UButton v-if="canMeRegisterAsCommittee" block size="lg" variant="outline"
-                                        color="primary" icon="i-heroicons-user-group"
-                                        @click="navigateToRegisterCommittee">
-                                        Daftar Panitia
-                                    </UButton>
+                                    <div v-if="canMeRegisterAsCommittee" class="space-y-2">
+                                        <div class="flex justify-between items-center text-xs px-1">
+                                            <span class="text-gray-500">Open Recruitment</span>
+                                            <UBadge v-if="agenda.configuration.committee.point" color="warning"
+                                                variant="soft" size="xs">
+                                                +{{ agenda.configuration.committee.point }} Poin
+                                            </UBadge>
+                                        </div>
+                                        <UButton block size="md" variant="outline" color="primary"
+                                            icon="i-heroicons-user-group" @click="navigateToRegisterCommittee">
+                                            Daftar Panitia
+                                        </UButton>
+                                        <p v-if="agenda.configuration.committee.canRegisterUntil"
+                                            class="text-[10px] text-center text-gray-400">
+                                            Tutup: {{ new
+                                                Date(agenda.configuration.committee.canRegisterUntil.end).toLocaleDateString('id-ID',
+                                                    {
+                                                        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute:
+                                                            '2-digit'
+                                                    }) }}
+                                        </p>
+                                    </div>
 
                                     <UButton v-if="eventStatus?.label === 'Selesai' && !canMeRegisterAsCommittee" block
                                         disabled color="neutral" variant="soft">Acara Selesai</UButton>
@@ -309,6 +412,61 @@ useSeoMeta({
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            <!-- Related Agendas Section -->
+            <div v-if="relatedAgendas && relatedAgendas.length > 0"
+                class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200 dark:border-gray-800 mt-12">
+                <h2 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Agenda Terkait</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <NuxtLink v-for="related in relatedAgendas" :key="(related._id as string)"
+                        :to="`/agendas/${related._id}`" class="group h-full">
+                        <UCard :ui="{ body: 'p-0 sm:p-0 px-0 md:px-0', header: 'p-0 sm:p-0', footer: 'p-4 sm:p-4' }"
+                            class="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ring-1 ring-gray-200 dark:ring-gray-800 border-none">
+
+                            <!-- Card Image -->
+                            <div class="relative aspect-video overflow-hidden">
+                                <NuxtImg provider="localProvider" v-if="related.photos?.[0]?.image"
+                                    :src="(related.photos[0].image as string)"
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    loading="lazy" />
+                                <div v-else
+                                    class="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                    <UIcon name="i-heroicons-photo" class="w-12 h-12 text-gray-400" />
+                                </div>
+                                <div class="absolute bottom-3 left-3">
+                                    <div v-if="related.configuration.participant.pay"
+                                        class="bg-black/70 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md border border-white/20 shadow-sm">
+                                        {{ formatCurrency(related.configuration.participant.amount) }}
+                                    </div>
+                                    <div v-else
+                                        class="bg-green-500/90 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md border border-white/20 shadow-sm">
+                                        {{ $ts('free') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Content -->
+                            <div class="p-4 space-y-3">
+                                <h3
+                                    class="text-lg font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight group-hover:text-primary-500 transition-colors">
+                                    {{ related.title }}
+                                </h3>
+
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                        <UIcon name="i-heroicons-calendar-days" class="w-4 h-4 text-primary-500" />
+                                        <span>{{ formatDateRange(related.date) }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                        <UIcon name="i-heroicons-map-pin" class="w-4 h-4 text-red-400" />
+                                        <span class="line-clamp-1 break-all">{{ related.at }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </UCard>
+                    </NuxtLink>
                 </div>
             </div>
 

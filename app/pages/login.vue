@@ -44,6 +44,12 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
     try {
         const route = useRoute();
         let redirectUrl = route.query.redirect as string;
+
+        // Security: Ensure redirectUrl is a relative path to prevent Open Redirect attacks
+        if (redirectUrl && !redirectUrl.startsWith('/')) {
+            redirectUrl = '';
+        }
+
         const previousUrlCookie = useCookie<string | null>('previousUrl');
         const previousUrl = previousUrlCookie.value;
         if (previousUrl) {

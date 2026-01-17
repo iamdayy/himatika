@@ -46,7 +46,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
       committees = await Promise.all(
         body.committees?.map(async (committee) => {
           try {
-            const member = await MemberModel.findOne({ NIM: committee.member });
+            const member = await MemberModel.findOne({ NIM: Number(committee.member) });
             if (!member) {
               return {
                 job: committee.job,
@@ -78,7 +78,12 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
       agenda.configuration.committee.questions as IQuestion[]
     ).map((question) => question._id as Types.ObjectId);
     const saved = await agenda.updateOne({
-      ...body,
+      title: body.title,
+      description: body.description,
+      date: body.date,
+      at: body.at,
+      category: body.category,
+      configuration: body.configuration,
       committees: committees,
     });
     if (!saved) {

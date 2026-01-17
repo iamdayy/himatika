@@ -357,6 +357,7 @@ const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => 
     // confirmation: (value: string) => value ? null : $ts('confirmation_required'),
 }));
 const onCompleted = async () => {
+    // TODO: CREATE TICKET PAGE
     router.push(`/agendas/${id}/participant`);
 }
 async function handleAnswer() {

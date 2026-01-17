@@ -32,7 +32,7 @@ const isDarkMode = useDark();
 
 const agendaIsPast = (agenda: IAgenda) => {
     const now = new Date();
-    const agendaEnd = new Date(agenda.date.end as string);
+    const agendaEnd = new Date(agenda.date.end);
     return now > agendaEnd;
 };
 
@@ -59,7 +59,7 @@ const calendarAttributes = computed(() => [
                 fillMode: 'outline',
             },
         },
-        dates: { start: new Date(agenda.date.start as string), end: new Date(agenda.date.end as string) },
+        dates: { start: new Date(agenda.date.start), end: new Date(agenda.date.end) },
         popover: {
             label: agenda.title,
         },
@@ -79,7 +79,7 @@ const calendarAttributes = computed(() => [
                 fillMode: 'outline',
             },
         },
-        dates: { start: new Date(agenda.date.start as string), end: new Date(agenda.date.end as string) },
+        dates: { start: new Date(agenda.date.start), end: new Date(agenda.date.end) },
         popover: {
             label: agenda.title,
         },
@@ -137,10 +137,10 @@ const links = computed(() => [{
                     <div class="flex-shrink-0">
                         <div
                             class="w-24 h-24 md:w-32 md:h-32 bg-white/20 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center border border-white/30 text-center p-2">
-                            <span class="text-4xl md:text-5xl font-bold">{{ new Date(nearestAgenda.date.start as
-                                string).getDate() }}</span>
+                            <span class="text-4xl md:text-5xl font-bold">{{ new Date(nearestAgenda.date.start).getDate()
+                                }}</span>
                             <span class="text-sm md:text-base uppercase tracking-wider">{{
-                                new Date(nearestAgenda.date.start as string)
+                                new Date(nearestAgenda.date.start)
                                     .toLocaleDateString('id-ID',
                                         {
                                             month: 'short'
@@ -157,7 +157,7 @@ const links = computed(() => [{
                             <div class="flex items-center gap-1">
                                 <UIcon name="i-heroicons-clock" />
                                 <span>{{
-                                    new Date(nearestAgenda.date.start as string)
+                                    new Date(nearestAgenda.date.start)
                                         .toLocaleTimeString([],
                                             {
                                                 hour: '2-digit',

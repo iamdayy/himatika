@@ -17,8 +17,10 @@ const getSecretKey = () => {
  */
 export const checkSession = async (payload: string) => {
   try {
-    // 1. Cari session berdasarkan Access Token
-    const session = await SessionModel.findOne({ token: payload });
+    // 1. Cari session berdasarkan Access Token ATAU Previous Access Token
+    const session = await SessionModel.findOne({
+      $or: [{ token: payload }, { previousToken: payload }],
+    });
 
     if (!session) {
       throw createError({
@@ -27,9 +29,31 @@ export const checkSession = async (payload: string) => {
       });
     }
 
+    // 1.5 Cek Grace Period untuk Access Token
+    if (session.previousToken === payload) {
+      const timeDiff =
+        new Date().getTime() - new Date(session.updatedAt as Date).getTime();
+        
+      // Grace period 20 detik untuk Access Token (mengatasi race condition refresh)
+      if (timeDiff > 20000) {
+         throw createError({
+          statusMessage: "Access Token Expired (Grace Period Over)",
+          statusCode: 401,
+        });
+      }
+      // Jika < 20s, LANJUT (gunakan session ini seolah-olah valid)
+    }
+
     // 2. Verifikasi Signature JWT
-    // jwt.verify akan throw error otomatis jika expired/invalid
-    jwt.verify(session.token, getSecretKey());
+    // Kita verify payload dengan secret. 
+    // Note: Jika tokennya "previousToken" (yg mungkin sudah expired secara waktu claims), 
+    // kita mungkin perlu ignoreExpiration? 
+    // Tapi biasanya refresh dilakukan SEBELUM expired, jadi token lama pun "signature" nya valid tapi belum expired.
+    // Jika benar-benar expired, jwt.verify akan throw error. 
+    // Solusi: Kita coba verify, jika TokenExpiredError TAPI masih dalam Grace Period DB, kita toleransi?
+    // TIDAK, Access Token biasanya 1 hari (di kode existing). Jadi dalam 20 detik setelah refresh, 
+    // token lama PASTI belum expired secara claims. Jadi aman verify biasa.
+    jwt.verify(payload, getSecretKey());
 
     // 3. Ambil user dengan populate member (asumsi member adalah relasi/field)
     // Menggunakan lean() untuk performa lebih cepat (return POJO, bukan Mongoose Document)
@@ -123,14 +147,25 @@ export const refreshSession = async (payload: string) => {
       const newToken = jwt.sign({ user: session.user }, getSecretKey(), {
         expiresIn: "1d",
       });
-      // Update token baru
+      const newRefreshToken = jwt.sign({ user: session.user }, getSecretKey(), {
+        expiresIn: "90d",
+      });
+
+      // Update token baru & Simpan history untuk grace period
+      session.previousToken = session.token; // Simpan Access Token lama
+      session.previousRefreshToken = session.refreshToken; // Simpan Refresh Token lama
+      
       session.token = newToken;
+      session.refreshToken = newRefreshToken;
+
+      // Update timestamp agar perhitungan grace period akurat
+      session.updatedAt = new Date();
 
       await session.save();
 
       return {
         token: newToken,
-        refreshToken: session.refreshToken,
+        refreshToken: newRefreshToken,
       };
     }
 

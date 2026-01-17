@@ -29,7 +29,7 @@ export default defineCachedEventHandler(
       }
       const members = await MemberModel.find(
         query,
-        {},
+        "NIM fullName avatar class email status enteredYear", // Select only public fields
         { autopopulate: false }
       );
       return {

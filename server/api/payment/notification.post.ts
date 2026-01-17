@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { verifySignature } from "~~/server/utils/midtrans";
 import { IError, IResponse } from "~~/types/IResponse";
 interface midtransNotificationBody {
   order_id: string;
@@ -19,15 +20,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
   try {
     // Generate a new ID for the registration
     // Find the agenda by ID
-    const agenda = await AgendaModel.findOne({
-      "registered._id": registeredId,
-    });
-    if (!agenda) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Agenda not found",
-      });
-    }
+    // Verify signature first (fail fast)
     if (status_code === "200") {
       const verified = verifySignature(body);
       if (!verified) {
@@ -36,55 +29,83 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
           statusMessage: "Invalid signature",
         });
       }
-      if (
+
+      // Helper for Atomic Status Update
+      const updatePaymentStatus = async (
+        collectionField: "committees" | "participants",
+        status: string
+      ) => {
+        const setFields: any = {
+          [`${collectionField}.$.payment.status`]: status,
+        };
+
+        // Clear sensitive/temporary fields on success/cancel
+        if (status === "success" || status === "canceled") {
+          setFields[`${collectionField}.$.payment.expiry`] = null; // Use null for unsetting in Mongoose (or undefined if strict) - usually null safe
+          setFields[`${collectionField}.$.payment.va_number`] = "";
+        }
+        
+        // Use atomic updateOne with $set
+        return await AgendaModel.updateOne(
+          { [`${collectionField}._id`]: registeredId },
+          { $set: setFields }
+        );
+      };
+
+      // 1. Handle SUCCESS (Settlement)
+      if (transaction_status === "settlement" && fraud_status === "accept") {
+        // Try updating Committee
+        let result = await updatePaymentStatus("committees", "success");
+        
+        // If not found in committees, try Participants
+        if (result.matchedCount === 0) {
+          result = await updatePaymentStatus("participants", "success");
+        }
+
+        if (result.matchedCount === 0) {
+             throw createError({ statusCode: 404, statusMessage: "Registration ID not found" });
+        }
+      } 
+      
+      // 2. Handle FAILURE (Cancel, Deny, Expire)
+      else if (
         transaction_status === "cancel" ||
         transaction_status === "deny" ||
         transaction_status === "expire"
       ) {
-        const registration = agenda.registered?.find(
-          (reg) => reg._id?.toString() === registeredId
-        );
-        if (registration) {
-          if (!registration.payment) {
-            throw createError({
-              statusCode: 400,
-              statusMessage: "Payment not found",
-            });
-          }
-          registration.payment.status = "canceled";
-          registration.payment.va_number = "";
-          registration.payment.expiry = undefined;
-          registration.payment.transaction_id = "";
-          if (registration.guest) {
-            agenda.registered = agenda.registered?.filter(
-              (reg) => reg._id?.toString() !== registeredId
+         // Try updating Committee first (Simple update)
+        let result = await updatePaymentStatus("committees", "canceled");
+
+        if (result.matchedCount === 0) {
+            // Check Participant for Guest Deletion Logic
+            // We read ONLY the specific participant data to check 'guest' status
+            const agenda = await AgendaModel.findOne(
+                { "participants._id": registeredId },
+                { "participants.$": 1 } 
             );
-          }
+
+            if (agenda && agenda.participants && agenda.participants[0]) {
+                const participant = agenda.participants[0];
+                // Atomic Deletion for Guest
+                if ((participant as any).guest) {
+                    await AgendaModel.updateOne(
+                        { _id: agenda._id },
+                        { $pull: { participants: { _id: registeredId } } }
+                    );
+                } else {
+                    // Atomic Update for Registered User
+                    await updatePaymentStatus("participants", "canceled");
+                }
+            } else {
+                 // Not found in either
+                 // Note: We don't throw 404 here usually for notifications to avoid Midtrans retries if it's already gone
+            }
         }
-        await agenda.save();
-      }
-      if (transaction_status === "settlement" && fraud_status === "accept") {
-        // Add the user to the agenda's registered list
-        const registration = agenda.registered?.find(
-          (reg) => reg._id?.toString() === registeredId
-        );
-        if (registration) {
-          if (!registration.payment) {
-            throw createError({
-              statusCode: 400,
-              statusMessage: "Payment not found",
-            });
-          }
-          registration.payment.status = "success";
-          registration.payment.expiry = undefined;
-          registration.payment.va_number = "";
-        }
-        await agenda.save();
       }
     }
     return {
       statusCode: 200,
-      statusMessage: "Notification received",
+      statusMessage: "Notification processed atomically",
     };
   } catch (error: any) {
     return {
