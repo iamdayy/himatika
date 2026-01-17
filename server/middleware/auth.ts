@@ -1,5 +1,11 @@
 export default defineEventHandler(async (event) => {
   const path = event.path.split("?")[0];
+
+  // Only run auth middleware for /api routes
+  if (!path.startsWith("/api")) {
+    return;
+  }
+
   // Explicitly public routes (method independent or specific checks needed)
   if (
     path === "/api/refresh" ||
