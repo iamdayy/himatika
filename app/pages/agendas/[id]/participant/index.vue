@@ -159,7 +159,7 @@ definePageMeta({
 
             <div v-else-if="error || !agenda" class="text-center max-w-md mx-auto">
                 <div class="bg-red-50 text-red-600 rounded-2xl p-6 shadow-sm border border-red-100">
-                    <Icon name="heroicons:exclamation-triangle" class="w-12 h-12 mx-auto mb-3" />
+                    <Icon name="i-heroicons-exclamation-triangle" class="w-12 h-12 mx-auto mb-3" />
                     <h3 class="text-lg font-bold mb-1">Gagal Memuat Data</h3>
                     <p class="text-sm opacity-90 mb-6">Kami tidak dapat menemukan data agenda yang Anda cari.</p>
                     <UButton to="/agendas" color="error" variant="soft" block>Kembali ke Beranda</UButton>
@@ -173,7 +173,7 @@ definePageMeta({
                     <div class="bg-red-500 rounded-xl p-4 text-white space-y-2">
                         <div class="flex items-start gap-3">
                             <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-                                <Icon name="heroicons:credit-card" class="w-6 h-6" />
+                                <Icon name="i-heroicons-credit-card" class="w-6 h-6" />
                             </div>
                             <div class="flex-1">
                                 <h3 class="font-bold text-sm">Menunggu Pembayaran</h3>
@@ -185,7 +185,7 @@ definePageMeta({
                         </div>
                         <UButton @click="doPayment" color="error" variant="solid" block>
                             Bayar Sekarang
-                            <Icon name="heroicons:arrow-right" class="w-4 h-4" />
+                            <Icon name="i-heroicons-arrow-right" class="w-4 h-4" />
                         </UButton>
                     </div>
                 </div>
@@ -194,7 +194,7 @@ definePageMeta({
                     <div class="bg-yellow-500 rounded-xl p-4 text-white space-y-2">
                         <div class="flex items-start gap-3">
                             <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-                                <Icon name="heroicons:document-text" class="w-6 h-6" />
+                                <Icon name="i-heroicons-document-text" class="w-6 h-6" />
                             </div>
                             <div class="flex-1">
                                 <h3 class="font-bold text-sm">Data Belum Lengkap</h3>
@@ -205,7 +205,7 @@ definePageMeta({
                         </div>
                         <UButton @click="doAnswer" color="warning" variant="solid" block>
                             Lengkapi Data
-                            <Icon name="heroicons:arrow-right" class="w-4 h-4" />
+                            <Icon name="i-heroicons-arrow-right" class="w-4 h-4" />
                         </UButton>
                     </div>
                 </div>
@@ -242,7 +242,7 @@ definePageMeta({
                                     {{ agenda.title }}
                                 </h1>
                                 <div class="flex items-center text-gray-300 text-xs sm:text-sm font-medium gap-2 mt-2">
-                                    <Icon name="heroicons:map-pin" class="w-4 h-4" />
+                                    <Icon name="i-heroicons-map-pin" class="w-4 h-4" />
                                     <span class="truncate max-w-[250px]">{{ agenda.at }}</span>
                                 </div>
                             </div>
@@ -309,12 +309,12 @@ definePageMeta({
                                         </p>
                                         <div v-if="me?.visiting"
                                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold mt-2">
-                                            <Icon name="heroicons:check-badge-solid" class="w-4 h-4" />
+                                            <Icon name="i-heroicons-check-badge-solid" class="w-4 h-4" />
                                             Sudah Check-in
                                         </div>
                                         <div v-else
                                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-bold mt-2">
-                                            <Icon name="heroicons:clock" class="w-4 h-4" />
+                                            <Icon name="i-heroicons-clock" class="w-4 h-4" />
                                             Belum Check-in
                                         </div>
                                     </div>
@@ -327,11 +327,11 @@ definePageMeta({
                         <div
                             class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 flex gap-3 border-t border-gray-100 dark:border-gray-800">
                             <UButton @click="downloadTicket" :loading="isGeneratingPdf" color="neutral" variant="solid"
-                                class="flex-1 justify-center font-bold" icon="heroicons:arrow-down-tray">
+                                class="flex-1 justify-center font-bold" icon="i-heroicons-arrow-down-tray">
                                 Unduh Tiket (PDF)
                             </UButton>
                             <UButton to="/agendas" color="neutral" variant="solid" class="justify-center"
-                                icon="heroicons:home">
+                                icon="i-heroicons-home">
                                 Kembali
                             </UButton>
                         </div>

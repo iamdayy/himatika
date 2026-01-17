@@ -44,14 +44,13 @@ export default defineEventHandler(async (event) => {
      return;
   }
 
-  // For everything else, ENFORCE Authentication
   try {
     event.context.user = await ensureAuth(event);
     event.context.organizer = event.context.user.member.organizer;
   } catch (error) {
-     return createError({
+     return {
         statusCode: 401,
         statusMessage: "Unauthorized: You must be logged in to access this endpoint",
-     });
+     };
   }
 });
