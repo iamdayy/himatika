@@ -1,11 +1,11 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { CustomFormData } from "~/helpers/CustomFormData";
-import type { IAgenda, IDoc, IMember, IPoint } from "~~/types";
+import type { IAgenda, ICommittee, IDoc, IMember, IParticipant, IPoint } from "~~/types";
 import {
   type IConfigResponse,
   type IDocResponse,
   type IOrganizerResponse,
-  type IResponse,
+  type IResponse
 } from "~~/types/IResponse";
 
 function monthToRomanFromDate(): string {
@@ -370,6 +370,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         x: margin + 20,
         y: currentY,
         maxWidth: pageWidth - 2 * (margin + 20), // Ensure text wraps within content area
+        lineHeight: 1.2, // Adjust line height as needed
       });
       currentY -= timesRomanFont.heightAtSize(12) * 2; // Estimate line height for two lines
 
@@ -603,20 +604,29 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       });
       page2.drawText(orgName2, {
         x: textStartX + (textContainerWidth - orgName2Width) / 2,
-        y: headerY - 15, // Adjust line spacing
+        y: headerY - orgName1Height, // Adjust line spacing
         font: timesRomanBoldFont,
         size: 12, // Original used bold, but 12pt for second line
         color: rgb(0, 0, 0), // Black color
       });
+      page2.drawText(orgName3, {
+        x: textStartX + (textContainerWidth - orgName3Width) / 2,
+        y: headerY - (orgName1Height + orgName2Height),
+      });
       page2.drawText(secretariat, {
         x: textStartX + (textContainerWidth - secretariatWidth) / 2,
-        y: headerY - 30,
+        y: headerY - (orgName1Height + orgName2Height + orgName3Height),
         font: timesRomanItalicFont,
         size: 11,
       });
       page2.drawText(email, {
         x: textStartX + (textContainerWidth - emailWidth) / 2,
-        y: headerY - 42,
+        y:
+          headerY -
+          (orgName1Height +
+            orgName2Height +
+            orgName3Height +
+            secretariatHeight),
         font: timesRomanItalicFont,
         size: 11,
       });
@@ -692,7 +702,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         font: timesRomanBoldFont,
         size: 12,
       });
-      page2.drawText(data.activities.agendas.committees.toString(), {
+      page2.drawText(data.activities.agendas.committees.toString() || "-", {
         x: tableMargin + columnWidths[0]!,
         y: tableStartY,
       });
@@ -704,7 +714,18 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         font: timesRomanBoldFont,
         size: 12,
       });
-      page2.drawText(data.activities.agendas.participants.toString(), {
+      page2.drawText(data.activities.agendas.participants.toString() || "-", {
+        x: tableMargin + columnWidths[0]!,
+        y: tableStartY,
+      });
+      tableStartY -= rowHeight; // Move down for the next row
+      page2.drawText("Prestasi", {
+        x: tableMargin,
+        y: tableStartY,
+        font: timesRomanBoldFont,
+        size: 12,
+      });
+      page2.drawText(data.activities.manualPoints.toString() || "-", {
         x: tableMargin + columnWidths[0]!,
         y: tableStartY,
       });
@@ -716,7 +737,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         font: timesRomanBoldFont,
         size: 12,
       });
-      page2.drawText(data.activities.projects.toString(), {
+      page2.drawText(data.activities.projects.toString() || "-", {
         x: tableMargin + columnWidths[0]!,
         y: tableStartY,
       });
@@ -728,7 +749,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         font: timesRomanBoldFont,
         size: 12,
       });
-      page2.drawText(data.activities.aspirations.toString(), {
+      page2.drawText(data.activities.aspirations.toString() || "-", {
         x: tableMargin + columnWidths[0]!,
         y: tableStartY,
       });
@@ -1054,8 +1075,205 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
 
   //   return response;
   // };
+  const makeTicket = async (
+    agenda: IAgenda,
+    participant: IParticipant | ICommittee,
+    role: "participant" | "committee" = "participant"
+  ) => {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      // Ukuran Tiket Custom (kira-kira 1/3 A4 Landscape atau ukuran amplop besar)
+      // 600 x 250 points
+      const page = pdfDoc.addPage([600, 250]);
+      const { width, height } = page.getSize();
+
+      // Embed Fonts
+      const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+      const timesBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // --- Background / Banner ---
+      // Fix potential type error with explicit check
+      const agendaImageRaw = agenda.photos?.[0]?.image;
+      if (typeof agendaImageRaw === 'string') {
+        try {
+            const bannerUrl = agendaImageRaw;
+            // Fetch image with specific headers if needed, otherwise standard fetch
+            const bannerBytes = await fetch(bannerUrl).then((res) => res.arrayBuffer());
+            
+            let bannerImage;
+            if (bannerUrl.endsWith('.png')) {
+                bannerImage = await pdfDoc.embedPng(bannerBytes);
+            } else {
+                bannerImage = await pdfDoc.embedJpg(bannerBytes);
+            }
+            
+            if (bannerImage) {
+                // Draw faded background
+                page.drawImage(bannerImage, {
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height,
+                    opacity: 0.1, // Very subtle background
+                });
+            }
+        } catch (e) {
+            console.warn("Gagal load banner image untuk PDF", e);
+        }
+      }
+
+      // --- Content ---
+      const margin = 20;
+
+      // 1. Header: Event Title
+      // Draw Title multi-line support if needed (simple implementation here)
+      page.drawText(agenda.title.toUpperCase(), {
+        x: margin,
+        y: height - 40,
+        size: 18,
+        font: helveticaBold,
+        color: rgb(0, 0, 0),
+        maxWidth: width - 160, 
+      });
+
+      // 2. Info Grid
+      let currentY = height - 70;
+      const labelSize = 8;
+      const valueSize = 10;
+      
+      const drawField = (label: string, value: string, y: number) => {
+          page.drawText(label, { x: margin, y: y, size: labelSize, font: timesRomanFont, color: rgb(0.5, 0.5, 0.5) });
+          page.drawText(value, { x: margin, y: y - 12, size: valueSize, font: timesBoldFont, color: rgb(0, 0, 0) });
+      };
+
+      const dateStr = new Date(agenda.date.start).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const timeStr = `${new Date(agenda.date.start).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`;
+
+      drawField("TANGGAL", dateStr, currentY);
+      currentY -= 35;
+      drawField("WAKTU", timeStr, currentY);
+      currentY -= 35;
+      drawField("LOKASI", agenda.at, currentY);
+
+      // 3. User Info (Bottom Left)
+      currentY = 50; 
+      
+      // Handle Member extraction safely
+      let memberName = 'Peserta';
+      // Type guard helper or cast
+      const member = participant.member as unknown as IMember;
+      if (member && member.fullName) {
+        memberName = member.fullName;
+      } else if ((participant as IParticipant).guest && (participant as IParticipant).guest?.fullName) {
+         memberName = (participant as IParticipant).guest!.fullName;
+      }
+
+      const memberId = participant._id || '-';
+
+      // Role Badge
+      const roleText = role === 'committee' ? 'PANITIA' : 'PESERTA';
+      const roleColor = role === 'committee' ? rgb(0.8, 0, 0) : rgb(0, 0.5, 0);
+      
+      page.drawText(roleText, {
+          x: margin,
+          y: currentY + 35,
+          size: 10,
+          font: helveticaBold,
+          color: roleColor
+      });
+
+      page.drawText(memberName, {
+          x: margin,
+          y: currentY + 20,
+          size: 12,
+          font: timesBoldFont,
+          maxWidth: width - 200
+      });
+
+      if (role === 'committee') {
+        const job = (participant as ICommittee).job || '-';
+        page.drawText(job, {
+            x: margin,
+            y: currentY + 8,
+            size: 10,
+            font: timesRomanFont,
+            color: rgb(0.3, 0.3, 0.3),
+            maxWidth: width - 200
+        });
+      }
+
+      page.drawText(`ID: ${String(memberId).slice(-8).toUpperCase()}`, {
+          x: margin,
+          y: currentY - 5,
+          size: 8,
+          font: timesRomanFont,
+          color: rgb(0.4, 0.4, 0.4)
+      });
+
+
+      // 4. QR Code (Right Side)
+      const QRCode = (await import('qrcode')).default;
+      const qrData = JSON.stringify({
+        a: agenda._id,
+        c: role === 'committee' ? participant._id : undefined,
+        p: role === 'participant' ? participant._id : undefined,
+        t: role === 'committee' ? 'c' : 'p'
+      });
+      
+      const qrDataUrl = await QRCode.toDataURL(qrData, { margin: 0 });
+      const qrImageBytes = await fetch(qrDataUrl).then(res => res.arrayBuffer());
+      const qrImage = await pdfDoc.embedPng(qrImageBytes);
+
+      const qrSize = 140;
+      const qrX = width - margin - qrSize;
+      const qrY = (height - qrSize) / 2;
+
+      // Dashed Border around QR
+      page.drawRectangle({
+          x: qrX - 5,
+          y: qrY - 5,
+          width: qrSize + 10,
+          height: qrSize + 10,
+          borderWidth: 1,
+          borderColor: rgb(0.7, 0.7, 0.7),
+          borderDashArray: [5, 5],
+          opacity: 0,
+          borderOpacity: 1
+      });
+
+      page.drawImage(qrImage, {
+        x: qrX,
+        y: qrY,
+        width: qrSize,
+        height: qrSize,
+      });
+
+      page.drawText("SCAN SAAT MASUK", {
+          x: qrX + (qrSize - 80) / 2, // Approximate center
+          y: qrY - 20,
+          size: 9,
+          font: helveticaBold,
+          color: rgb(0, 0, 0)
+      });
+
+      // Save and Download
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Tiket-${role}-${agenda.title.substring(0, 10)}-${memberName.substring(0, 10)}.pdf`.replace(/\s/g, '_');
+      link.click();
+      URL.revokeObjectURL(link.href);
+
+    } catch (e) {
+      console.error("PDF Generation Error", e);
+      alert("Gagal membuat PDF tiket. Silakan coba lagi.");
+    }
+  };
+
   return {
     makeActivinessLetter,
-    // makeAgendaPrecenceWithQRCode,
+    makeTicket
   };
 };
