@@ -87,7 +87,12 @@ export default defineEventHandler(
 
       // Create a new agenda
       const newAgenda = new AgendaModel({
-        ...body,
+        title: body.title,
+        description: body.description,
+        date: body.date,
+        at: body.at,
+        category: body.category,
+        configuration: body.configuration,
         committees: committees ? await Promise.all(committees) : [],
       });
       // Save the new agenda
@@ -103,57 +108,68 @@ export default defineEventHandler(
         name: "Administrator",
       };
       // email bulk
-      const members = await MemberModel.find({ status: "active" });
-      const emails = members.map((member) => {
-        return {
-          email: member.email,
-        };
-      });
-      const configuration = await ConfigModel.findOne().sort({ createdAt: -1 });
-      if (!configuration) {
-        throw createError({
-           statusCode: 500,
-           statusMessage: "System configuration not found"
-        });
-      }
       if (body.enableSubscription) {
+        // Use event.waitUntil for background processing (Serverless friendly)
+        // This allows the response to be sent immediately while email sending continues
         const t = await useTranslationServerMiddleware(event);
-        const emailBody = new Email({
-          recipientName: t('emails.agenda.recipient_name'),
-          emailTitle: t('emails.agenda.email_title', { orgName: configuration.name }),
-          heroTitle: t('emails.agenda.hero_title', { agendaTitle: savedAgenda.title, orgName: configuration.name }),
-          heroSubtitle: t('emails.agenda.hero_subtitle'),
-          heroButtonLink: `${config.public.public_uri}/agendas/${savedAgenda._id}`,
-          heroButtonText: t('emails.agenda.hero_button'),
-          contentTitle1: t('emails.agenda.content_title'),
-          contentParagraph1: `
-          <ul>
-            <li><strong>${t('emails.agenda.description')}:</strong> ${savedAgenda.description}</li>
-            <li><strong>${t('emails.agenda.date')}:</strong> ${savedAgenda.date}</li>
-            <li><strong>${t('emails.agenda.location')}:</strong> ${savedAgenda.at}</li>
-          </ul>
-            `,
-          ctaTitle: t('emails.agenda.cta_title'),
-          ctaSubtitle: t('emails.agenda.cta_subtitle'),
-          ctaButtonText: t('emails.agenda.cta_button'),
-          ctaButtonLink: `${config.public.public_uri}/agendas/${savedAgenda._id}`,
-          footerText: {
-            rights: t('emails.footer.rights'),
-            privacy: t('emails.footer.privacy'),
-            terms: t('emails.footer.terms'),
-            unsubscribeReason: t('emails.footer.unsubscribe_reason', { serviceName: configuration.name }),
-            unsubscribeAction: t('emails.footer.unsubscribe_action'),
-            here: t('emails.footer.here')
-          }
-        });
-        await sendBulkEmail(
-          sender,
-          emails,
-          emailBody.render(),
-          t('emails.agenda.subject'),
-          t('emails.agenda.category'),
-          newAgenda.id
-        );
+        
+        // Optimize Query: Select ONLY email, exclude _id. 
+        // Drastically reduces memory usage (no full Mongoose documents)
+        const emailPromise = (async () => {
+             const members = await MemberModel.find({ status: "active" }).select("email -_id").lean();
+             const emails = members.map((member: any) => ({ email: member.email }));
+
+             const configuration = await ConfigModel.findOne().sort({ createdAt: -1 });
+             // Fallback if config missing, though unlikely
+             const orgName = configuration?.name || config.public.appname; 
+             
+             const emailBody = new Email({
+               recipientName: t('emails.agenda.recipient_name'),
+               emailTitle: t('emails.agenda.email_title', { orgName }),
+               heroTitle: t('emails.agenda.hero_title', { agendaTitle: savedAgenda.title, orgName }),
+               heroSubtitle: t('emails.agenda.hero_subtitle'),
+               heroButtonLink: `${config.public.public_uri}/agendas/${savedAgenda._id}`,
+               heroButtonText: t('emails.agenda.hero_button'),
+               contentTitle1: t('emails.agenda.content_title'),
+               contentParagraph1: `
+               <ul>
+                 <li><strong>${t('emails.agenda.description')}:</strong> ${savedAgenda.description}</li>
+                 <li><strong>${t('emails.agenda.date')}:</strong> ${savedAgenda.date}</li>
+                 <li><strong>${t('emails.agenda.location')}:</strong> ${savedAgenda.at}</li>
+               </ul>
+                 `,
+               ctaTitle: t('emails.agenda.cta_title'),
+               ctaSubtitle: t('emails.agenda.cta_subtitle'),
+               ctaButtonText: t('emails.agenda.cta_button'),
+               ctaButtonLink: `${config.public.public_uri}/agendas/${savedAgenda._id}`,
+               footerText: {
+                 rights: t('emails.footer.rights'),
+                 privacy: t('emails.footer.privacy'),
+                 terms: t('emails.footer.terms'),
+                 unsubscribeReason: t('emails.footer.unsubscribe_reason', { serviceName: orgName }),
+                 unsubscribeAction: t('emails.footer.unsubscribe_action'),
+                 here: t('emails.footer.here')
+               }
+             });
+             
+             await sendBulkEmail(
+               sender,
+               emails,
+               emailBody.render(),
+               t('emails.agenda.subject'),
+               t('emails.agenda.category'),
+               newAgenda.id
+             );
+        })();
+
+        // If waitUntil is available (Nitro/Cloudflare/Vercel), use it.
+        if (event.waitUntil) {
+             event.waitUntil(emailPromise);
+        } else {
+             // Fallback for environments without waitUntil (just unawaited promise)
+             // catch error to prevent unhandled rejection crashing process
+             emailPromise.catch(console.error);
+        }
       }
 
       return {

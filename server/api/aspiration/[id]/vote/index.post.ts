@@ -1,6 +1,5 @@
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IMember } from "~~/types";
 import type { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
@@ -37,38 +36,50 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const Aspiration = await AspirationModel.findById(AspirationId);
-
-    if (!Aspiration) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Aspiration not found",
-      });
-    }
-
-    // Check if user has already voted
-    const existingVoteIndex = Aspiration.votes.findIndex(
-      (vote) => (vote.user as IMember).NIM === user.member.NIM
+    // 1. Check current state (Read)
+    // We strictly need the user's current vote status to decide the action (Toggle vs Add)
+    // Note: We use findOne with projection to fetch ONLY this user's vote for efficiency
+    const currentAspiration = await AspirationModel.findOne(
+        { _id: AspirationId },
+        { votes: { $elemMatch: { user: user.member._id } } }
     );
 
-    if (existingVoteIndex !== -1) {
-      // User has already voted, update the vote
-      const existingVote = Aspiration.votes[existingVoteIndex];
-      if (existingVote.voteType === voteType) {
-        // Remove vote if it's the same type
-        Aspiration.votes.splice(existingVoteIndex, 1);
-      } else {
-        // Change vote type
-        existingVote.voteType = voteType;
-      }
-    } else {
-      // Add new vote
-      const member = await MemberModel.findOne({ NIM: user.member.NIM });
-      Aspiration.votes.push({ user: member?._id as any, voteType });
+    if (!currentAspiration) {
+      throw createError({ statusCode: 404, statusMessage: "Aspiration not found" });
     }
 
-    await Aspiration.save();
+    const existingVote = currentAspiration.votes?.[0]; // Mongoose $elemMatch returns array with 1 item if found
 
+    // 2. Perform Atomic Write based on intent
+    if (existingVote) {
+       // SCENARIO: User HAS voted
+       if (existingVote.voteType === voteType) {
+         // SAME type -> REMOVE vote (Toggle Off)
+         // Atomic Condition: User MUST match
+         await AspirationModel.updateOne(
+           { _id: AspirationId, "votes.user": user.member._id }, 
+           { $pull: { votes: { user: user.member._id } } }
+         );
+       } else {
+         // DIFFERENT type -> UPDATE vote (Change detected)
+         // Atomic Condition: User MUST match
+         await AspirationModel.updateOne(
+            { _id: AspirationId, "votes.user": user.member._id },
+            { $set: { "votes.$.voteType": voteType } }
+         );
+       }
+    } else {
+       // SCENARIO: User has NOT voted -> ADD vote
+       // Atomic Condition: User MUST NOT be in array (Prevent Double Vote Race Condition)
+       const memberId = await getMemberIdByNim(user.member.NIM); // Ensure proper ObjectId
+       
+       await AspirationModel.updateOne(
+          { _id: AspirationId, "votes.user": { $ne: user.member._id } }, // Crucial Check
+          { $push: { votes: { user: memberId, voteType } } }
+       );
+    }
+
+    // No need to save(). updateOne is direct.
     return {
       statusCode: 200,
       statusMessage: "Vote recorded successfully",
@@ -80,3 +91,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     };
   }
 });
+
+// Helper to get pure ObjectId for pushing (avoid large object if not needed)
+const getMemberIdByNim = async (NIM: number) => {
+    const member = await MemberModel.findOne({ NIM }).select("_id");
+    return member?._id;
+};

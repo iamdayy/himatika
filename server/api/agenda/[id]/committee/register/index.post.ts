@@ -74,6 +74,23 @@ export default defineEventHandler(
           });
         }
 
+        // Check Job Availability
+        const jobAvailables = agenda.configuration?.committee?.jobAvailables || [];
+        const jobConfig = jobAvailables.find(
+          (j) => j.label === job
+        );
+        if (jobConfig) {
+          const currentCount = (agenda.committees || []).filter(
+            (c) => c.job === job
+          ).length;
+          if (currentCount >= jobConfig.count) {
+             throw createError({
+              statusCode: 400,
+              statusMessage: "This job position is full",
+            });
+          }
+        }
+
       // Atomic Update: Push to committees ONLY if member is not already in it
       const result = await AgendaModel.updateOne(
         { 

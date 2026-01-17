@@ -155,6 +155,7 @@ export interface ISession {
   token: string;
   refreshToken: string;
   previousRefreshToken?: string;
+  previousToken?: string;
   user: Types.ObjectId | IUser;
 }
 

@@ -2,8 +2,8 @@
     <UCard class="group block" :to="`/agendas/${agenda._id}`">
         <template #header>
             <div class="flex justify-between items-start mb-2">
-                <UBadge size="xs" :color="agendaIsPast(agenda) ? 'success' : 'neutral'" variant="subtle">
-                    {{ agendaIsPast(agenda) ? $ts('open') : $ts('closed') }}
+                <UBadge size="xs" :color="agendaIsPast(agenda) ? 'neutral' : 'success'" variant="subtle">
+                    {{ agendaIsPast(agenda) ? $ts('closed') : $ts('open') }}
                 </UBadge>
                 <span class="text-xs dark:text-gray-300 text-gray-500">{{
                     new Date(agenda.date.start).toLocaleDateString() }}</span>

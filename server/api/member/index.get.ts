@@ -32,6 +32,7 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
     // If NIM is provided without pagination, return a single member
     if (NIM && !perPage && !page) {
       const member = await MemberModel.findOne({ NIM })
+        .select("-phone -address -religion -citizen -birth") // Exclude Sensitive PII
         .populate({
           path: "agendasCommittee",
           select: "title date at description configuration -_id",

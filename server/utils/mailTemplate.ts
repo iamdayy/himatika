@@ -95,34 +95,43 @@ class Email {
     qrCodeDataUrl,
     footerText,
   }: EmailTemplate) {
-    this.recipientName = recipientName;
-    this.emailTitle = emailTitle;
-    this.heroTitle = heroTitle;
-    this.heroSubtitle = heroSubtitle;
-    this.heroButtonLink = heroButtonLink;
-    this.heroButtonText = heroButtonText;
-    this.contentTitle1 = contentTitle1;
-    this.contentImageURL = contentImageURL;
-    this.contentImageAlt = contentImageAlt;
-    this.contentParagraph1 = contentParagraph1;
+    const escapeHtml = (unsafe: string) => {
+      return (unsafe || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    this.recipientName = escapeHtml(recipientName);
+    this.emailTitle = escapeHtml(emailTitle);
+    this.heroTitle = escapeHtml(heroTitle);
+    this.heroSubtitle = escapeHtml(heroSubtitle);
+    this.heroButtonLink = heroButtonLink; // URLs might need robust URL encoding, but simple escaping breaks valid URLs. kept as is for now assumes trustworthy logic generator.
+    this.heroButtonText = escapeHtml(heroButtonText);
+    this.contentTitle1 = escapeHtml(contentTitle1);
+    this.contentImageURL = contentImageURL; // Image URL assumes trustworthy source
+    this.contentImageAlt = contentImageAlt ? escapeHtml(contentImageAlt) : undefined;
+    this.contentParagraph1 = contentParagraph1; // Paragraphs might contain safe HTML? No, typical email templates here seem to use plain text strings. Escaping is safer.
     this.contentParagraph2 = contentParagraph2;
-    this.contentTitle2 = contentTitle2;
-    this.contentListItems = contentListItems;
-    this.ctaTitle = ctaTitle;
-    this.ctaSubtitle = ctaSubtitle;
+    this.contentTitle2 = contentTitle2 ? escapeHtml(contentTitle2) : undefined;
+    this.contentListItems = contentListItems?.map(i => escapeHtml(i));
+    this.ctaTitle = escapeHtml(ctaTitle);
+    this.ctaSubtitle = escapeHtml(ctaSubtitle);
     this.ctaButtonLink = ctaButtonLink;
-    this.ctaButtonText = ctaButtonText;
+    this.ctaButtonText = escapeHtml(ctaButtonText);
     this.privacyPolicyLink = privacyPolicyLink;
     this.termsAndConditionsLink = termsAndConditionsLink;
     this.unsubscribeLink = unsubscribeLink;
     this.qrCodeDataUrl = qrCodeDataUrl;
     this.footerText = {
-      rights: footerText?.rights || "All rights reserved.",
-      privacy: footerText?.privacy || "Privacy Policy",
-      terms: footerText?.terms || "Terms & Conditions",
-      unsubscribeReason: footerText?.unsubscribeReason || "You are receiving this email because you subscribed to",
-      unsubscribeAction: footerText?.unsubscribeAction || "If you do not want to receive emails anymore, click",
-      here: footerText?.here || "here"
+      rights: escapeHtml(footerText?.rights || "All rights reserved."),
+      privacy: escapeHtml(footerText?.privacy || "Privacy Policy"),
+      terms: escapeHtml(footerText?.terms || "Terms & Conditions"),
+      unsubscribeReason: escapeHtml(footerText?.unsubscribeReason || "You are receiving this email because you subscribed to"),
+      unsubscribeAction: escapeHtml(footerText?.unsubscribeAction || "If you do not want to receive emails anymore, click"),
+      here: escapeHtml(footerText?.here || "here")
     };
   }
 

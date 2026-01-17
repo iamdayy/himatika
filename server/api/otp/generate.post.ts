@@ -14,11 +14,17 @@ export default defineEventHandler(
       const member = await MemberModel.findOne({ email, NIM });
       if (!member) {
         if (type !== "Change Email") {
-          throw createError({
-            statusCode: 404,
-            statusMessage: "Member not found",
-            data: { message: "Email not found", name: "email" },
-          });
+          // Silent failure: return fake success to prevent user enumeration
+          const now = new Date();
+          const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+          return {
+            statusCode: 200,
+            statusMessage: "OTP code has been sent to your email",
+            data: {
+              email,
+              expiresAt: expiresAt.toString(),
+            },
+          };
         }
       }
       const configuration = await ConfigModel.find().select("-id");

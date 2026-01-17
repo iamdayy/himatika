@@ -132,6 +132,29 @@ npm run preview
 - `/public`: Static assets.
 - `/types`: TypeScript type definitions.
 
+## 🛡️ Security & Best Practices
+
+The codebase implements several security standards that must be maintained:
+
+### Authentication
+
+- **Secure by Default**: The `auth` middleware blocks all routes by default. Public routes must be explicitly allowlisted in `server/middleware/auth.ts`.
+- **Session**: Uses `sidebase/nuxt-auth` with JWT.
+
+### Input Validation
+
+- **Password Policy**: Always use `validatePassword` from `server/utils/validatePassword.ts` for any password set/change operations.
+  - Min 8 chars, 1 Uppercase, 1 Lowercase, 1 Number.
+- **Sanitization**: Avoid passing full Request Body to Mongoose models. Destructure strict fields.
+
+### Concurrency
+
+- **Atomic Operations**: For high-concurrency actions (like Event Registration), use Atomic MongoDB operators (`$push`, `$addToSet` with query conditions) instead of "Read-Check-Write" in memory to prevent race conditions.
+
+### Internationalization (i18n)
+
+- **Backend Emails**: All email templates (Agenda, OTP) must use `useTranslationServerMiddleware` to respect the user's locale. Hardcoded strings in emails are prohibited.
+
 ## 📊 System Design
 
 ### Architecture
