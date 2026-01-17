@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
     "/api/agenda/nearest",
     "/api/organizer",
     "/api/aspiration", // Reading aspirations might be public? Let's check. Original code didn't have it.
+    "/api/ip"
     // If not in original, let's stick to original publicRoutes list but enforce auth for others.
   ];
 
@@ -48,7 +49,7 @@ export default defineEventHandler(async (event) => {
     event.context.user = await ensureAuth(event);
     event.context.organizer = event.context.user.member.organizer;
   } catch (error) {
-     throw createError({
+     return createError({
         statusCode: 401,
         statusMessage: "Unauthorized: You must be logged in to access this endpoint",
      });
