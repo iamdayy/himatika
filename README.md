@@ -166,7 +166,7 @@ graph TD
     
     subgraph "Backend Services"
         App <-->|Mongoose| DB[(MongoDB)]
-        App <-->|AWS SDK| Storage[Object Storage (S3/R2)]
+        App <-->|AWS SDK| Storage[Object Storage <S3/R2>]
         App -->|SMTP| Mail[Mailtrap]
         App <-->|API| Payment[Midtrans Payment Gateway]
     end
