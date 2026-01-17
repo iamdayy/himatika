@@ -88,7 +88,7 @@ export default defineEventHandler(
       // Create a new agenda
       const newAgenda = new AgendaModel({
         ...body,
-        committees: await Promise.all(committees!),
+        committees: committees ? await Promise.all(committees) : [],
       });
       // Save the new agenda
       const savedAgenda = await newAgenda.save();
@@ -109,35 +109,49 @@ export default defineEventHandler(
           email: member.email,
         };
       });
-      const configurations = await ConfigModel.find();
-      const configuration = configurations[configurations.length - 1];
+      const configuration = await ConfigModel.findOne().sort({ createdAt: -1 });
+      if (!configuration) {
+        throw createError({
+           statusCode: 500,
+           statusMessage: "System configuration not found"
+        });
+      }
       if (body.enableSubscription) {
+        const t = await useTranslationServerMiddleware(event);
         const emailBody = new Email({
-          recipientName: "Kawan Tika",
-          emailTitle: `Psst... Ada Agenda Seru Nih di ${configuration.name}`,
-          heroTitle: `${savedAgenda.title} - ${configuration.name}`,
-          heroSubtitle: `Ada agenda seru baru nih!`,
+          recipientName: t('emails.agenda.recipient_name'),
+          emailTitle: t('emails.agenda.email_title', { orgName: configuration.name }),
+          heroTitle: t('emails.agenda.hero_title', { agendaTitle: savedAgenda.title, orgName: configuration.name }),
+          heroSubtitle: t('emails.agenda.hero_subtitle'),
           heroButtonLink: `${config.public.public_uri}/agendas/${savedAgenda._id}`,
-          heroButtonText: "Lihat Detail",
-          contentTitle1: `Ada agenda seru baru nih! Jangan sampai kelewatan ya!`,
+          heroButtonText: t('emails.agenda.hero_button'),
+          contentTitle1: t('emails.agenda.content_title'),
           contentParagraph1: `
           <ul>
-            <li><strong>Deskripsi:</strong> ${savedAgenda.description}</li>
-            <li><strong>Tanggal:</strong> ${savedAgenda.date}</li>
-            <li><strong>LoKasi:</strong> ${savedAgenda.at}</li>
+            <li><strong>${t('emails.agenda.description')}:</strong> ${savedAgenda.description}</li>
+            <li><strong>${t('emails.agenda.date')}:</strong> ${savedAgenda.date}</li>
+            <li><strong>${t('emails.agenda.location')}:</strong> ${savedAgenda.at}</li>
           </ul>
             `,
-          ctaTitle: `Klik di sini untuk melihat detailnya!`,
-          ctaSubtitle: `Sampai jumpa di acara!`,
-          ctaButtonText: "Lihat Detail",
+          ctaTitle: t('emails.agenda.cta_title'),
+          ctaSubtitle: t('emails.agenda.cta_subtitle'),
+          ctaButtonText: t('emails.agenda.cta_button'),
           ctaButtonLink: `${config.public.public_uri}/agendas/${savedAgenda._id}`,
+          footerText: {
+            rights: t('emails.footer.rights'),
+            privacy: t('emails.footer.privacy'),
+            terms: t('emails.footer.terms'),
+            unsubscribeReason: t('emails.footer.unsubscribe_reason', { serviceName: configuration.name }),
+            unsubscribeAction: t('emails.footer.unsubscribe_action'),
+            here: t('emails.footer.here')
+          }
         });
         await sendBulkEmail(
           sender,
           emails,
           emailBody.render(),
-          "Agenda Baru!",
-          "Pemberitahuan Agenda Baru",
+          t('emails.agenda.subject'),
+          t('emails.agenda.category'),
           newAgenda.id
         );
       }

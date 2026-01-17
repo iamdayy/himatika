@@ -309,7 +309,7 @@ const links = computed(() => [{
                                                 <UCheckbox v-model="showFreeOnly" :label="$ts('only_free')"
                                                     color="primary" />
                                             </div>
-                                            <UDivider class="my-2" />
+                                            <USeparator class="my-2" />
                                             <UButton block size="xs" color="neutral" variant="ghost"
                                                 @click="refreshAgendas()">
                                                 Apply

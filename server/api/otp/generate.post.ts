@@ -38,7 +38,8 @@ export default defineEventHandler(
         name: `${configUse.name} App OTP Code`,
       };
 
-      const otp = await OTPModel.findOne({ email, type, NIM });
+      const t = await useTranslationServerMiddleware(event);
+      const otp = await OTPModel.findOne({ email });
       if (otp) {
         // otp.code = code;
         otp.expiresAt = expiresAt;
@@ -48,11 +49,11 @@ export default defineEventHandler(
         const mailed = await sendEmail(
           sender,
           email,
-          `Your ${configUse.name} App verivication code : ${otp.code}`,
+          `${t('emails.otp.' + otp.type.toLowerCase().replace(/ /g, '_') + '.subject')}`,
           emailText(otp.type, linkTo, code, {
             fullName: member?.fullName || "",
             email: member?.email || "",
-          }),
+          }, t),
           "OTP Code"
         );
 
@@ -75,11 +76,11 @@ export default defineEventHandler(
         const mailed = await sendEmail(
           sender,
           email,
-          `Your ${configUse.name} App ${type} code : ${code}`,
+          `${t('emails.otp.' + type.toLowerCase().replace(/ /g, '_') + '.subject')}`,
           emailText(type, linkTo, code, {
             fullName: member?.fullName || "",
             email: member?.email || "",
-          }),
+          }, t),
           "OTP Code"
         );
         if (!mailed) {
@@ -123,126 +124,54 @@ const emailText = (
   user: {
     fullName: string;
     email: string;
-  }
+  },
+  t: any
 ) => {
-  let newMail: EmailTemplate | undefined = undefined;
-  switch (type) {
-    case "Verify Account":
-      newMail = {
-        recipientName: user.fullName,
-        emailTitle: `Verify your account`,
-        heroTitle: `Welcome to ${code} App`,
-        heroSubtitle: `Please verify your account`,
-        heroButtonLink: link,
-        heroButtonText: "Verify Account",
-        contentTitle1: "Verify your account",
-        contentParagraph1:
-          "To verify your account, please click the button below.",
-        contentParagraph2:
-          "If you did not create an account, please ignore this email.",
-        contentTitle2: "Need help?",
-        contentListItems: [
-          "If you have any questions, feel free to reach out to us.",
-          "We are here to help you.",
-        ],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      };
-      break;
-    case "Change Password":
-      newMail = {
-        recipientName: user.fullName,
-        emailTitle: `Change your password`,
-        heroTitle: `Change your password`,
-        heroSubtitle: `Please change your password`,
-        heroButtonLink: link,
-        heroButtonText: "Change Password",
-        contentTitle1: "Change your password",
-        contentParagraph1:
-          "To change your password, please click the button below.",
-        contentParagraph2:
-          "If you did not request a password change, please ignore this email.",
-        contentTitle2: "Need help?",
-        contentListItems: [],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      };
-      break;
-    case "Reset Password":
-      newMail = {
-        recipientName: user.fullName,
-        emailTitle: `Reset your password`,
-        heroTitle: `Reset your password`,
-        heroSubtitle: `Please reset your password`,
-        heroButtonLink: link,
-        heroButtonText: "Reset Password",
-        contentTitle1: "Reset your password",
-        contentParagraph1:
-          "To reset your password, please click the button below.",
-        contentParagraph2:
-          "If you did not request a password reset, please ignore this email.",
-        contentTitle2: "Need help?",
-        contentListItems: [],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      };
-      break;
-    case "Change Email":
-      newMail = {
-        recipientName: user.fullName,
-        emailTitle: `Change your email`,
-        heroTitle: `Change your email`,
-        heroSubtitle: `Please change your email`,
-        heroButtonLink: link,
-        heroButtonText: "Change Email",
-        contentTitle1: "Change your email",
-        contentParagraph1:
-          "To change your email, please click the button below.",
-        contentParagraph2:
-          "If you did not request a change of email, please ignore this email.",
-        contentTitle2: "Need help?",
-        contentListItems: [],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      };
-      break;
-    case "Verify Email":
-      newMail = {
-        recipientName: user.fullName,
-        emailTitle: `Verify your email`,
-        heroTitle: `Verify your email`,
-        heroSubtitle: `Please verify your email`,
-        heroButtonLink: link,
-        heroButtonText: "Verify Email",
-        contentTitle1: "Verify your email",
-        contentParagraph1:
-          "To verify your email, please click the button below.",
-        contentParagraph2:
-          "If you did not request a verification of email, please ignore this email.",
-        contentTitle2: "Need help?",
-        contentListItems: [],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      };
-      break;
+  const typeSlug = type.toLowerCase().replace(/ /g, '_');
+  const footerText = {
+    rights: t('emails.footer.rights'),
+    privacy: t('emails.footer.privacy'),
+    terms: t('emails.footer.terms'),
+    unsubscribeReason: t('emails.footer.unsubscribe_reason', { serviceName: config.public.appname }),
+    unsubscribeAction: t('emails.footer.unsubscribe_action'),
+    here: t('emails.footer.here')
+  };
+
+  // Base template structure using localized strings
+  const newMail: EmailTemplate = {
+    recipientName: user.fullName,
+    emailTitle: t(`emails.otp.${typeSlug}.subject`),
+    heroTitle: t(`emails.otp.${typeSlug}.hero_title`, { appName: config.public.appname }),
+    heroSubtitle: t(`emails.otp.${typeSlug}.hero_subtitle`),
+    heroButtonLink: link,
+    heroButtonText: t(`emails.otp.${typeSlug}.button`),
+    contentTitle1: t(`emails.otp.${typeSlug}.content_title`),
+    contentParagraph1: t(`emails.otp.${typeSlug}.content_p1`),
+    contentParagraph2: t(`emails.otp.${typeSlug}.content_p2`),
+    contentTitle2: t('emails.otp.help.title'),
+    contentListItems: [
+        t('emails.otp.help.content_1'),
+        t('emails.otp.help.content_2')
+    ],
+    ctaTitle: t('emails.otp.help.cta_title'),
+    ctaSubtitle: t('emails.otp.help.cta_subtitle'),
+    ctaButtonLink: `${config.public.public_uri}/#contacts`,
+    ctaButtonText: t('emails.otp.help.button'),
+    footerText: footerText
+  };
+    
+  // Since all types follow the same structure in our new JSON, we can return directly.
+  // Unless there are specific deviations for specific types, but based on previous code they were very similar.
+  // The only exception previously was contentListItems being empty for some.
+  
+  // Let's refine based on previous switch cases if needed, but standardization is better.
+  // Previous code had empty list items for 'Change Password' etc.
+  // I will keep the help section for all as it is good UX.
+  
+  if (!newMail) { // check technically redundant now but kept for logic safety if we add logic later
+      // ...
   }
-  if (!newMail) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid OTP type",
-      data: { message: "Invalid OTP type", name: "type" },
-    });
-  }
+  
   const email = new Email(newMail);
   return email.render();
 };

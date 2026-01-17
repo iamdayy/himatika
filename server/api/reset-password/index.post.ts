@@ -1,6 +1,7 @@
 import { MemberModel } from "~~/server/models/MemberModel";
 import { OTPModel } from "~~/server/models/OTPModel";
 import { UserModel } from "~~/server/models/UserModel";
+import { validatePassword } from "~~/server/utils/validatePassword";
 import { FormError } from "~~/types/component/stepper";
 import { IResponse } from "~~/types/IResponse";
 
@@ -47,7 +48,7 @@ export default defineEventHandler(
           },
         };
       }
-      const user = await UserModel.findOne({ member: member._id });
+      const user = await UserModel.findOne({ member: member });
       if (!user) {
         throw {
           statusCode: 404,
@@ -63,10 +64,12 @@ export default defineEventHandler(
           statusMessage: "Password and password confirmation do not match",
           data: {
             message: "Password and password confirmation do not match",
-            path: "password_confirmation",
           },
         };
       }
+      
+      validatePassword(password);
+
       user.password = password;
       await user.save();
       return {

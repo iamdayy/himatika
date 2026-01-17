@@ -2,10 +2,10 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { CustomFormData } from "~/helpers/CustomFormData";
 import type { IAgenda, ICommittee, IDoc, IMember, IParticipant, IPoint } from "~~/types";
 import {
-  type IConfigResponse,
-  type IDocResponse,
-  type IOrganizerResponse,
-  type IResponse
+    type IConfigResponse,
+    type IDocResponse,
+    type IOrganizerResponse,
+    type IResponse
 } from "~~/types/IResponse";
 
 function monthToRomanFromDate(): string {
@@ -1163,7 +1163,8 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
       let memberName = 'Peserta';
       // Type guard helper or cast
       const member = participant.member as unknown as IMember;
-      if (member && member.fullName) {
+      
+      if (member && typeof member === 'object' && 'fullName' in member) {
         memberName = member.fullName;
       } else if ((participant as IParticipant).guest && (participant as IParticipant).guest?.fullName) {
          memberName = (participant as IParticipant).guest!.fullName;

@@ -2,17 +2,24 @@ import { Types } from "mongoose";
 import { CommentModel } from "~~/server/models/CommentModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
-import { IComment } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   try {
     const { id } = event.context.params as { id: string };
     const { anonymous } = getQuery(event);
     const user = event.context.user;
-    const body = await readBody<IComment>(event);
+    const { content } = await readBody<{ content: string }>(event);
+    
+    // Construct strict comment object
+    const commentData: any = {
+      content,
+      news: new Types.ObjectId(id),
+    };
+
     if (user && anonymous == "false") {
-      body.author = (await getIdByNim(user.member.NIM)) as Types.ObjectId;
+      commentData.author = (await getIdByNim(user.member.NIM)) as Types.ObjectId;
     }
+
     const news = await NewsModel.findById(id);
     if (!news) {
       throw createError({
@@ -21,7 +28,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const comment = await CommentModel.create(body);
+    const comment = await CommentModel.create(commentData);
     if (!comment) {
       throw createError({
         statusCode: 500,
