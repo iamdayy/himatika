@@ -2,10 +2,10 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { CustomFormData } from "~/helpers/CustomFormData";
 import type { IAgenda, ICommittee, IDoc, IMember, IParticipant, IPoint } from "~~/types";
 import {
-    type IConfigResponse,
-    type IDocResponse,
-    type IOrganizerResponse,
-    type IResponse
+  type IConfigResponse,
+  type IDocResponse,
+  type IOrganizerResponse,
+  type IResponse
 } from "~~/types/IResponse";
 
 function monthToRomanFromDate(): string {
@@ -370,7 +370,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
         x: margin + 20,
         y: currentY,
         maxWidth: pageWidth - 2 * (margin + 20), // Ensure text wraps within content area
-        lineHeight: 1.2, // Adjust line height as needed
+        // lineHeight: 1.2, // Adjust line height as needed
       });
       currentY -= timesRomanFont.heightAtSize(12) * 2; // Estimate line height for two lines
 
