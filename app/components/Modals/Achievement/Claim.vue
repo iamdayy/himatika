@@ -3,6 +3,10 @@ import { format } from 'date-fns';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { IPointLog } from '~~/types';
 
+const props = defineProps<{
+    initialData?: IPointLog | null
+}>();
+
 const emit = defineEmits(['close', 'success']);
 const { $api } = useNuxtApp();
 const sizes = useResponsiveUiSizes();
@@ -17,41 +21,71 @@ const form = reactive({
     file: null as File | null
 });
 
+// Prefill form if editing
+onMounted(() => {
+    if (props.initialData) {
+        form.title = props.initialData.reason || '';
+        form.desc = props.initialData.description || '';
+        form.type = props.initialData.type || 'achievement';
+        form.date = props.initialData.date ? new Date(props.initialData.date) : new Date();
+        // file cannot be prefilled, but we can detect if we are in edit mode
+    }
+});
+
 const submit = async () => {
-    if (!form.title || !form.file) {
-        toast.add({ title: 'Isi semua field yang diperlukan', color: 'warning' });
+    // Validation
+    if (!form.title) {
+        toast.add({ title: 'Judul wajib diisi', color: 'warning' });
+        return;
+    }
+    // If creating new, file is required. If editing, file is optional (keep old one).
+    if (!props.initialData && !form.file) {
+        toast.add({ title: 'Bukti wajib diupload', color: 'warning' });
         return;
     }
 
     loading.value = true;
     try {
-        const formData = new CustomFormData<IPointLog & { file: File }>();
+        const formData = new CustomFormData<IPointLog & { file?: File }>();
         formData.append('reason', form.title);
         formData.append('description', form.desc);
         formData.append('type', form.type);
         formData.append('date', form.date.toDateString());
-        formData.append('file', form.file!);
+        if (form.file) {
+            formData.append('file', form.file);
+        }
 
-        await $api('/api/me/achievement/claim', {
-            method: 'POST',
-            body: formData.getFormData()
-        });
+        if (props.initialData) {
+            // Update
+            await $api(`/api/me/achievement/${props.initialData._id}`, {
+                method: 'PUT',
+                body: formData.getFormData()
+            });
+            toast.add({ title: 'Prestasi diperbarui!', description: 'Menunggu validasi ulang admin', color: 'success' });
+        } else {
+            // Create
+            await $api('/api/me/achievement/claim', {
+                method: 'POST',
+                body: formData.getFormData()
+            });
+            toast.add({ title: 'Klaim terkirim!', description: 'Menunggu validasi admin', color: 'success' });
+        }
 
-        toast.add({ title: 'Klaim terkirim!', description: 'Menunggu validasi admin', color: 'success' });
         emit('success');
         emit('close');
     } catch (e: any) {
-        toast.add({ title: 'Gagal', description: e.statusMessage, color: 'error' });
+        toast.add({ title: 'Gagal', description: e.statusMessage || 'Terjadi kesalahan', color: 'error' });
     } finally {
         loading.value = false;
     }
+
 };
 </script>
 
 <template>
     <UModal prevent-close>
         <template #header>
-            <h3 class="font-semibold">Klaim Prestasi / Aktivitas</h3>
+            <h3 class="font-semibold">{{ initialData ? 'Edit' : 'Klaim' }} Prestasi / Aktivitas</h3>
         </template>
         <template #body>
             <div class="space-y-4">
@@ -78,20 +112,26 @@ const submit = async () => {
                     </UFormField>
                 </div>
 
-                <UFormField label="Bukti (Sertifikat/Foto)" required>
+                <UFormField :label="initialData ? 'Ubah Bukti (Opsional)' : 'Bukti (Sertifikat/Foto)'"
+                    :required="!initialData">
                     <UFileUpload v-model="form.file" accept="image/*" />
+                    <p v-if="initialData?.proof" class="text-xs text-gray-500 mt-1">
+                        File saat ini: <a :href="initialData.proof" target="_blank"
+                            class="text-primary hover:underline">Lihat Bukti</a>
+                    </p>
                 </UFormField>
 
                 <UFormField label="Deskripsi Tambahan">
-                    <UTextarea v-model="form.desc" placeholder="Ceritakan sedikit tentang pencapaian ini..." />
+                    <CoreTiptap v-model="form.desc" />
                 </UFormField>
             </div>
         </template>
 
         <template #footer>
-            <div class="flex justify-end gap-2">
+            <div class="flex justify-between gap-2 w-full">
                 <UButton variant="ghost" @click="$emit('close')">Batal</UButton>
-                <UButton :loading="loading" @click="submit">Kirim Klaim</UButton>
+                <UButton :loading="loading" @click="submit">{{ initialData ? 'Simpan Perubahan' : 'Kirim Klaim' }}
+                </UButton>
             </div>
         </template>
     </UModal>

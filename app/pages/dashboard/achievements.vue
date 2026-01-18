@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ModalsAchievementClaim, UBadge, UButton } from '#components';
+import { ModalsAchievementClaim, ModalsConfirmation, UBadge, UBreadcrumb, UButton } from '#components';
 import type { TableColumn } from '@nuxt/ui';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import type { IPointLog } from '~~/types';
+
+const UDropdownMenu = resolveComponent('UDropdownMenu');
 
 definePageMeta({
     layout: 'dashboard'
@@ -11,12 +13,25 @@ definePageMeta({
 
 const { $api } = useNuxtApp();
 const overlay = useOverlay();
+const toast = useToast();
 
 const ClaimModalComponent = overlay.create(ModalsAchievementClaim);
+const ConfirmationModalComponent = overlay.create(ModalsConfirmation);
 
 // Fetch data achievement dari API yang baru kita buat
 const { data: achievements, refresh, status } = await useAsyncData('achievement-me', () => $api<IPointLog[]>('/api/me/achievement'));
 
+const links = [
+    {
+        label: 'Dashboard',
+        icon: 'i-heroicons-home',
+        to: '/dashboard'
+    },
+    {
+        label: 'Prestasi & Aktivitas',
+        icon: 'i-heroicons-trophy'
+    }
+];
 
 const columns = computed<TableColumn<IPointLog>[]>(() => [
     {
@@ -73,22 +88,36 @@ const columns = computed<TableColumn<IPointLog>[]>(() => [
             });
         }
     },
-    // {
-    //     accessorKey: 'actions',
-    //     header: 'Aksi',
-    //     size: 100,
-    //     cell: ({ row }) => {
-    //         return h(UButton, {
-    //             color: 'neutral',
-    //             variant: 'ghost',
-    //             icon: 'i-heroicons-ellipsis-horizontal',
-    //             size: 'xs',
-    //             onClick: () => {
-    //                 isModalOpen.value = true;
-    //             }
-    //         });
-    //     }
-    // }
+    {
+        accessorKey: 'actions',
+        header: 'Aksi',
+        size: 100,
+        cell: ({ row }) => {
+            const items = [
+                [{
+                    label: 'Edit',
+                    icon: 'i-heroicons-pencil-square',
+                    onClick: () => handleEdit(row.original)
+                }, {
+                    label: 'Hapus',
+                    icon: 'i-heroicons-trash',
+                    color: 'error' as const,
+                    onClick: () => handleDelete(row.original)
+                }]
+            ];
+
+            return h(UDropdownMenu, {
+                items,
+            }, {
+                default: () => h(UButton, {
+                    color: 'neutral',
+                    variant: 'ghost',
+                    icon: 'i-heroicons-ellipsis-horizontal',
+                    size: 'xs'
+                })
+            });
+        }
+    }
 ])
 
 function getStatusColor(status: string) {
@@ -102,6 +131,7 @@ function getStatusColor(status: string) {
 function translateType(type: string) {
     return type === 'achievement' ? 'Prestasi' : 'Aktivitas';
 }
+
 function openClaimModal() {
     ClaimModalComponent.open({
         onSuccess: () => {
@@ -110,10 +140,44 @@ function openClaimModal() {
         }
     });
 }
+
+function handleEdit(item: IPointLog) {
+    ClaimModalComponent.open({
+        initialData: item,
+        onSuccess: () => {
+            refresh();
+            ClaimModalComponent.close();
+        }
+    });
+}
+
+function handleDelete(item: IPointLog) {
+    ConfirmationModalComponent.open({
+        title: 'Hapus Prestasi?',
+        body: 'Apakah Anda yakin ingin menghapus prestasi ini? Data yang dihapus tidak dapat dikembalikan.',
+        onConfirm: async () => {
+            try {
+                await $api(`/api/me/achievement/${item._id}`, {
+                    method: 'DELETE'
+                });
+                toast.add({ title: 'Berhasil', description: 'Prestasi berhasil dihapus', color: 'success' });
+                refresh();
+                ConfirmationModalComponent.close();
+            } catch (e: any) {
+                toast.add({ title: 'Gagal', description: e.statusMessage || 'Gagal menghapus', color: 'error' });
+            }
+        },
+        onClose: () => {
+            ConfirmationModalComponent.close();
+        }
+    });
+}
 </script>
 
 <template>
     <div class="space-y-6">
+        <UBreadcrumb :links="links" />
+
         <UCard>
             <template #header>
                 <div class="flex items-center justify-between">
