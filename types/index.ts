@@ -601,6 +601,7 @@ export interface IOverlayLocation {
 }
 
 export interface IPointLog {
+  _id?: string | Types.ObjectId;
   member: Types.ObjectId | IMember | number;
   admin?: Types.ObjectId | IUser | number;
   amount: number;
