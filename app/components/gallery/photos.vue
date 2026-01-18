@@ -1,8 +1,29 @@
 <script setup lang='ts'>
-import type { IPhotoGrouped } from '~/types';
-import type { IPhotoResponse, ITagsResponse } from '~/types/IResponse';
+import { ModalsImageEdit } from '#components';
+import type { IPhoto, IPhotoGrouped } from '~~/types';
+import type { IPhotoResponse, ITagsResponse } from '~~/types/IResponse';
 
 const { width } = useWindowSize();
+const { data: authData } = useAuth();
+const isOrganizer = computed(() => !!authData.value?.member?.organizer);
+
+const overlay = useOverlay();
+const EditPhotoComp = overlay.create(ModalsImageEdit);
+
+const openEditModal = (photo: IPhoto) => {
+    EditPhotoComp.open({
+        photo,
+        onUpdated: () => {
+            refresh();
+            EditPhotoComp.close();
+        },
+        modelValue: true,
+        'onUpdate:modelValue': (val: boolean) => {
+            if (!val) EditPhotoComp.close();
+        }
+    });
+}
+
 
 const isMobile = computed(() => width.value < 768);
 
@@ -108,11 +129,18 @@ const getImageStyles = (index: number, groupSize: number) => {
                             class="rounded-lg shadow-2xl ease-out transition-transform bg-gradient-to-b from-transparent from-60% to-primary-light dark:to-primary-dark h-full">
                             <div class="relative w-56 h-56 mx-auto mt-5 md:w-80 md:h-80">
                                 <div v-for="photo, i in group.photos.slice(0, 5)" :key="i"
-                                    class="absolute overflow-hidden transition-all duration-300 ease-in-out bg-gray-200 rounded-lg shadow-md w-44 h-44 group-hover:scale-110 md:w-72 md:h-72"
+                                    class="absolute overflow-hidden transition-all duration-300 ease-in-out bg-gray-200 rounded-lg shadow-md w-44 h-44 group-hover:scale-110 md:w-72 md:h-72 group/photo"
                                     :class="getImageClasses(i, group.photos.length)"
                                     :style="getImageStyles(i, group.photos.length)">
                                     <NuxtImg provider="localProvider" :src="(photo.image as string)"
                                         class="object-cover w-full h-full" loading="lazy" />
+                                    <!-- Edit Button Overlay -->
+                                    <div v-if="isOrganizer"
+                                        class="absolute top-1 right-1 z-20 hidden group-hover/photo:block">
+                                        <UButton icon="i-heroicons-pencil-square" color="neutral" variant="solid"
+                                            size="xs" :ui="{ base: 'rounded-full' }"
+                                            @click.prevent="openEditModal(photo)" />
+                                    </div>
                                 </div>
                             </div>
                             <div class="p-4">

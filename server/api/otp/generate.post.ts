@@ -40,7 +40,7 @@ export default defineEventHandler(
 
       let linkTo = `${config.public.public_uri}${link}&code=${code}&expiresAt=${expiresAt}`;
       const sender = {
-        email: "otp-code@" + config.mailtrap_domain,
+        email: config.resend_from,
         name: `${configUse.name} App OTP Code`,
       };
 
@@ -163,7 +163,8 @@ const emailText = (
     ctaSubtitle: t('emails.otp.help.cta_subtitle'),
     ctaButtonLink: `${config.public.public_uri}/#contacts`,
     ctaButtonText: t('emails.otp.help.button'),
-    footerText: footerText
+    footerText: footerText,
+    otpCode: code,
   };
     
   // Since all types follow the same structure in our new JSON, we can return directly.

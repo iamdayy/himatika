@@ -22,7 +22,7 @@ async function sendConfirmationEmail(
 ) {
   const config = useRuntimeConfig();
   const sender = {
-    email: `agenda@${config.mailtrap_domain}`,
+    email: config.resend_from,
     name: "Administrator",
   };
 

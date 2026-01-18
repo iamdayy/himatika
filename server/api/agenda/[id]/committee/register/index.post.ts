@@ -128,7 +128,7 @@ export default defineEventHandler(
       // Note: 'agenda' object in memory is stale now regarding the new committee, but strictly for email text it's fine.
       
       let sender = {
-        email: `agenda@${config.mailtrap_domain}`,
+        email: config.resend_from,
         name: "Administrator",
       };
       const newMail = new Email({

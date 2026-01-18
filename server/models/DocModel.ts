@@ -2,9 +2,9 @@ import { model, Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IDoc } from "~~/types";
 import type {
-  IDocSchema,
-  IRequestSignSchema,
-  ITrailSchema,
+    IDocSchema,
+    IRequestSignSchema,
+    ITrailSchema,
 } from "~~/types/ISchemas";
 import SignModel from "./SignModel";
 
@@ -142,7 +142,7 @@ docSchema.post("save", async function (doc) {
   //       await sendEmail(
   //         {
   //           name: config.public.appname,
-  //           email: `signature@${config.mailtrap_domain}`,
+  //           email: config.resend_from,
   //         },
   //         user.email,
   //         `New document ${doc.label} needs your signature`,
@@ -161,7 +161,7 @@ docSchema.post("findOneAndUpdate", async function (doc: IDoc) {
   //   await sendEmail(
   //     {
   //       name: config.public.appname,
-  //       email: `signature@${config.mailtrap_domain}`,
+  //       email: config.resend_from,
   //     },
   //     (doc.uploader as IMember).email,
   //     `Dokumen ${doc.label} telah ditandatangani`,

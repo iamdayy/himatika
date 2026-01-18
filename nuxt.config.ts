@@ -13,10 +13,10 @@ export default defineNuxtConfig({
     "/profile/**": { ssr: false },
     "/administrator/**": { ssr: false },
 
-    // 2. Homepage & Berita: Update cache setiap 1 jam (SWR)
+    // 2. Homepage & Berita: Update cache setiap 10 detik (SWR)
     // Server membuat HTML sekali, lalu disimpan di CDN Vercel
-    "/news/**": { swr: 3600 },
-    "/agendas/**": { swr: 3600 },
+    "/news/**": { swr: 10 },
+    "/agendas/**": { swr: 10 },
 
     // 3. Halaman yang tidak pernah berubah (Static)
     // Dibuat saat 'npm run build', 0ms loading time di server
@@ -46,8 +46,10 @@ export default defineNuxtConfig({
     dbName: process.env.DBNAME,
     vercelBlobToken: process.env.BLOB_READ_WRITE_TOKEN,
     storageDir: process.env.BLOB_URI,
-    mailtrap_token: process.env.MAILTRAP_TOKEN,
-    mailtrap_domain: process.env.MAILTRAP_DOMAIN,
+    // mailtrap_token: process.env.MAILTRAP_TOKEN,
+    // mailtrap_domain: process.env.MAILTRAP_DOMAIN,
+    resend_api_key: process.env.RESEND_API_KEY,
+    resend_from: process.env.RESEND_FROM,
     recaptcha_site_key: process.env.RECAPTCHA_SITE_KEY,
     recaptcha_secret_key: process.env.RECAPTCHA_SECRET_KEY,
     midtrans_url: process.env.MIDTRANS_URL,

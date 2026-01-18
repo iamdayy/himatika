@@ -89,6 +89,7 @@ export default defineCachedEventHandler(
     maxAge: 60 * 30, // Cache selama 30 Menit
     name: "photo-cache",
     swr: true,
+    getKey: (event) => event.path,
   }
 );
 

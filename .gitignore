@@ -29,3 +29,7 @@ server/assets/_locales
 
 .vercel
 .env*.local
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md

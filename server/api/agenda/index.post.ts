@@ -104,7 +104,7 @@ export default defineEventHandler(
         });
       }
       let sender = {
-        email: `agenda@${config.mailtrap_domain}`,
+        email: config.resend_from,
         name: "Administrator",
       };
       // email bulk
@@ -131,13 +131,22 @@ export default defineEventHandler(
                heroButtonLink: `${config.public.public_uri}/agendas/${savedAgenda._id}`,
                heroButtonText: t('emails.agenda.hero_button'),
                contentTitle1: t('emails.agenda.content_title'),
-               contentParagraph1: `
-               <ul>
-                 <li><strong>${t('emails.agenda.description')}:</strong> ${savedAgenda.description}</li>
-                 <li><strong>${t('emails.agenda.date')}:</strong> ${savedAgenda.date}</li>
-                 <li><strong>${t('emails.agenda.location')}:</strong> ${savedAgenda.at}</li>
-               </ul>
-                 `,
+               contentParagraph1: "",
+               contentAgendaDetails: {
+                 description: savedAgenda.description,
+                 date: (() => {
+                     const start = new Date(savedAgenda.date.start);
+                     const end = new Date(savedAgenda.date.end);
+                     const isSameDay = start.toDateString() === end.toDateString();
+                     if (isSameDay) {
+                         return `${start.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, ${start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+                     } else {
+                         return `${start.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - ${end.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                     }
+                 })(),
+                 location: savedAgenda.at,
+                 imageURL: savedAgenda.photos && savedAgenda.photos[0] ? `${config.public.public_uri}${savedAgenda.photos[0].image}` : undefined
+               },
                ctaTitle: t('emails.agenda.cta_title'),
                ctaSubtitle: t('emails.agenda.cta_subtitle'),
                ctaButtonText: t('emails.agenda.cta_button'),
