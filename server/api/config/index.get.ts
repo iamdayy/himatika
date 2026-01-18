@@ -28,5 +28,6 @@ export default defineCachedEventHandler(
     maxAge: 60 * 60, //Cache selama 1 Jam
     name: "config-cache",
     swr: true,
+    getKey: (event) => event.path,
   }
 );

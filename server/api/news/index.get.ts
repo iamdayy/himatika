@@ -119,5 +119,6 @@ export default defineCachedEventHandler(
     maxAge: 60 * 15, // Cache selama 15 Menit
     name: "news-cache",
     swr: true,
+    getKey: (event) => event.path,
   }
 );

@@ -13,10 +13,10 @@ export default defineNuxtConfig({
     "/profile/**": { ssr: false },
     "/administrator/**": { ssr: false },
 
-    // 2. Homepage & Berita: Update cache setiap 1 jam (SWR)
+    // 2. Homepage & Berita: Update cache setiap 10 detik (SWR)
     // Server membuat HTML sekali, lalu disimpan di CDN Vercel
-    "/news/**": { swr: 3600 },
-    "/agendas/**": { swr: 3600 },
+    "/news/**": { swr: 10 },
+    "/agendas/**": { swr: 10 },
 
     // 3. Halaman yang tidak pernah berubah (Static)
     // Dibuat saat 'npm run build', 0ms loading time di server
