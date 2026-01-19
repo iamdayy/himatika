@@ -198,8 +198,7 @@ const inputSize = computed(() => {
                         </UFormField>
                         <!-- Image upload -->
                         <UFormField class="col-span-full min-h-36" :label="$ts('image')">
-                            <UFileUpload v-model="file" accept="image/*">
-                            </UFileUpload>
+                            <UFileUpload v-model="file" accept="image/*" @update:model-value="handleCropImage" />
                         </UFormField>
                         <UFormField class="col-span-full" :label="$ts('description')">
                             <CoreTiptap v-model="stateProject.description" />
