@@ -215,7 +215,7 @@ export default defineNuxtConfig({
       },
     },
     sessionRefresh: {
-      enableOnWindowFocus: false,
+      enableOnWindowFocus: true,
     },
   },
 });

@@ -5,6 +5,8 @@ export default defineEventHandler(async (event) => {
   if (!path.startsWith("/api")) {
     return;
   }
+  console.log("Auth middleware running for path:", path);
+  console.log("Auth status", checkAuth(event))
 
   if (checkAuth(event)) {
     event.context.user = await ensureAuth(event);
