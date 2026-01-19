@@ -36,7 +36,6 @@ export default defineEventHandler(
       }
       const length = await CategoryModel.countDocuments(query);
       const categories = await CategoryModel.find(query)
-        .populate("agendas projects news")
         .skip(skip || 0)
         .limit(limit || 0)
         .sort(sortOpt);

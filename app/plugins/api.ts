@@ -26,8 +26,9 @@ export default defineNuxtPlugin((nuxtApp) => {
         const { token, refreshToken, setToken } = useAuthState();
 
         // Jika tidak ada refresh token, langsung logout (tidak bisa diselamatkan)
+        const { signOut } = useAuth();
         if (!refreshToken.value) {
-          nuxtApp.runWithContext(() => navigateTo("/login"));
+          await signOut({ callbackUrl: "/login", redirect: true });
           return Promise.reject();
         }
 
@@ -48,10 +49,10 @@ export default defineNuxtPlugin((nuxtApp) => {
               isRefreshing = null;
               return Promise.resolve();
             })
-            .catch((error) => {
+            .catch(async (error) => {
               // Gagal: Token refresh expired/invalid
               isRefreshing = null; // Reset lock
-              nuxtApp.runWithContext(() => navigateTo("/login"));
+              await signOut({ callbackUrl: "/login", redirect: true });
               return Promise.reject(error);
             });
         }

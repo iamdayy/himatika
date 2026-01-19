@@ -74,12 +74,14 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
       }
     }
     // Update project fields
-    project.title = body.title as any;
-    project.category = body.category as any;
-    project.image = imageUrl as any;
-    project.date = body.date as any;
-    project.description = body.description as any;
-    project.tags = body.tags as any;
+    project.title = body.title as string;
+    project.category = body.category as string;
+    if (file) {
+      project.image = imageUrl;
+    }
+    project.date = new Date(body.date as string);
+    project.description = body.description as string;
+    project.tags = typeof body.tags === "string" ? body.tags.split(",") : [];
     project.progress = body.progress as any;
     project.published = body.published as any;
     project.url = body.url as any;

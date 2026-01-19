@@ -37,7 +37,7 @@ const sort = computed(() => {
 });
 const order = ref<string>("");
 const { data: user } = useAuth();
-const { data: projects, refresh: refreshProjects } = useLazyAsyncData(
+const { data: projects, refresh: refreshProjects, pending: pendingProjects } = useLazyAsyncData(
     "projects",
     () =>
         $api<IProjectsResponse>("/api/project", {
@@ -300,7 +300,12 @@ onMounted(() => {
                 </div>
             </template>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <UCard v-for="project, i in projects.data" :id="`card-${i}`" :key="i">
+                <div v-if="pendingProjects" class="flex items-center justify-center">
+                    <USkeleton class="w-full h-16" />
+                    <USkeleton class="w-full h-14" />
+                    <USkeleton class="w-full h-12" />
+                </div>
+                <UCard v-for="project, i in projects.data" :id="`card-${i}`" :key="i" v-else>
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
@@ -333,9 +338,8 @@ onMounted(() => {
                             <UIcon name="i-heroicons-calendar" />
                             <h1>{{ new Date(project.date).toLocaleDateString('id-ID', { dateStyle: 'long' }) }}</h1>
                         </div>
-                        <UProgress :model-value="Math.ceil(project.progress / 20)"
-                            :color="project.progress === 100 ? 'success' : 'secondary'" status
-                            :max="['Not Started', 'Starting', 'On Progress', 'On Progress', 'On Progress', 'Complete']" />
+                        <UProgress v-model="project.progress"
+                            :color="project.progress === 100 ? 'success' : 'secondary'" status />
                     </div>
                     <template #footer>
                         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">

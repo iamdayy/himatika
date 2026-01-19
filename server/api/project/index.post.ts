@@ -57,6 +57,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     // Create a new project instance with mapped members
     const project = new ProjectModel({
       ...body,
+      tags: typeof body.tags === "string" ? body.tags.split(",") : body.tags,
       image: imageUrl,
       members: await Promise.all(
         (JSON.parse(body.members as any) as number[])?.map(
