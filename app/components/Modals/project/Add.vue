@@ -198,7 +198,7 @@ const inputSize = computed(() => {
                         </UFormField>
                         <!-- Image upload -->
                         <UFormField class="col-span-full min-h-36" :label="$ts('image')">
-                            <UFileUpload v-model="file" accept="image/*" @change="handleCropImage" />
+                            <UFileUpload v-model="file" accept="image/*" @update:model-value="handleCropImage" />
                         </UFormField>
                         <UFormField class="col-span-full" :label="$ts('description')">
                             <CoreTiptap v-model="stateProject.description" />
@@ -225,7 +225,7 @@ const inputSize = computed(() => {
                         <UFormField class="space-y-4 col-span-full" :label="$ts('progress')">
                             <USlider v-model="stateProject.progress" :min="0" :max="100" :step="5" />
                             <p class="text-sm text-gray-500 dark:text-gray-400 text-end">{{ stateProject.progress
-                            }}%
+                                }}%
                             </p>
                         </UFormField>
                     </div>
