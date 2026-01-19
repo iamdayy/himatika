@@ -1,9 +1,9 @@
 <script setup lang='ts'>
 import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
-import imageCompression from 'browser-image-compression';
 import type { PropType } from 'vue';
-import type { ICategory, IMember, IProject } from '~/types';
-import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~/types/IResponse';
+import { CustomFormData } from '~/helpers/CustomFormData';
+import type { ICategory, IMember, IProject } from '~~/types';
+import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
 
 // Access Nuxt app instance and utilities
 const { $api } = useNuxtApp();
@@ -19,6 +19,7 @@ const props = defineProps({
     }
 });
 const config = useRuntimeConfig();
+const loading = ref(false);
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/project/tags'));
 const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
     transform: (data) => {
@@ -32,7 +33,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     default: () => []
 });
 const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
-    transform: (data) => {
+    transform: (data: IMemberResponse) => {
         const members = data.data?.members || [];
         return members.map((member) => ({
             label: member.fullName,
@@ -53,7 +54,6 @@ const AddCategoryModal = overlay.create(ModalsCategoryAdd);
 
 // Get window size
 const windowSize = useWindowSize();
-const { convert } = useImageToBase64();
 
 /**
  * Initialize new project object with default values
@@ -71,17 +71,10 @@ const stateProject = reactive<IProject>({
     tags: props.project.tags,
     progress: props.project.progress
 });
-const tagsSelected = ref<{ id: number, label: string }[]>([]);
 
-/**
- * Reactive references
- */
-const openModal = ref<boolean>(false);
 const file = ref<File>();
-const fileToCropped = ref<{ blob: string, name: string }>({
-    blob: "",
-    name: ""
-});
+const fileCropped = ref<File>();
+
 
 /**
  * Add a new project to the database
@@ -89,28 +82,31 @@ const fileToCropped = ref<{ blob: string, name: string }>({
  * @throws {Error} When the API call fails
  */
 const addProject = async (): Promise<void> => {
+    loading.value = true;
     try {
+        const formData = new CustomFormData<IProject>();
+        formData.append('title', stateProject.title);
+        formData.append('image', fileCropped.value!);
+        formData.append('date', stateProject.date.toISOString());
+        formData.append('category', stateProject.category as string || '');
+        formData.append('progress', stateProject.progress.toString());
+        formData.append('description', stateProject.description);
+        formData.append('url', stateProject.url || '');
+        formData.append('tags', stateProject ? JSON.stringify(stateProject.tags) : '');
+        formData.append('members', stateProject ? JSON.stringify(stateProject.members) : '');
         const added = await $api<IResponse>("/api/project", {
             method: "PUT",
-            body: {
-                ...stateProject,
-                image: {
-                    name: file.value!.name,
-                    content: await convert(file.value!),
-                    size: file.value!.size.toString(),
-                    type: file.value!.type,
-                    lastModified: file.value!.lastModified.toString()
-                },
-                tags: tagsSelected.value.map(tag => tag.label),
-            },
+            body: formData.getFormData(),
             query: {
                 id: stateProject._id
             }
         });
         toast.add({ title: added.statusMessage! });
-        emit("triggerRefresh");
     } catch (error) {
-        toast.add({ title: "Failed to add new Project" });
+        toast.add({ title: "Failed to update Project" });
+    } finally {
+        loading.value = false;
+        emit("close");
     }
 };
 
@@ -137,47 +133,22 @@ const addNewCategory = async (category: string) => {
     })
 }
 
-/**
- * Handle cropped image
- * @param {File} f - Cropped image file
- */
-const onCropped = async (f: File) => {
-    file.value = f;
-    const blob = URL.createObjectURL(f);
-    fileToCropped.value.blob = blob;
-    openModal.value = false;
-}
-
-/**
- * Handle image change
- * @param {File} f - Selected image file
- */
-const onChangeImage = async (files: FileList) => {
-    if (files.length === 0) return;
-    const f = files[0]!;
-    const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        alwaysKeepResolution: true
-    }
-    const compressedFile = await imageCompression(f, options);
-    const blob = URL.createObjectURL(compressedFile);
+const handleCropImage = (fileFromInput?: File | null) => {
+    if (!fileFromInput) return;
     CropImageModal.open({
-        img: blob,
-        title: compressedFile.name,
+        img: URL.createObjectURL(fileFromInput),
+        title: fileFromInput.name,
         stencil: {
             movable: true,
             resizable: true,
             aspectRatio: 16 / 9,
         },
-        onCropped: (file: File) => {
-            onCropped(file);
+        onCropped: (f: File) => {
+            fileCropped.value = f;
             CropImageModal.close();
         }
     });
 }
-
 
 /**
  * Compute the layout based on window size
@@ -221,18 +192,7 @@ const inputSize = computed(() => {
                                 class="w-full" />
                         </UFormField>
                         <UFormField class="col-span-full lg:col-span-3" :label="$ts('date')">
-                            <div class="flex gap-3 border border-gray-300 rounded-lg shadow-sm dark:border-gray-700">
-                                <VDatePicker id="date" v-model="stateProject.date" mode="date">
-                                    <template #default="{ togglePopover }">
-                                        <UButton @click="togglePopover" icon="i-heroicons-calendar" :size="buttonSize"
-                                            variant="link" />
-                                    </template>
-                                </VDatePicker>
-                                <label class="block my-auto text-sm font-medium text-gray-900 dark:text-white"
-                                    for="date">
-                                    {{ stateProject.date.toLocaleDateString() }}
-                                </label>
-                            </div>
+                            <DatePicker v-model="stateProject.date" />
                         </UFormField>
                         <UFormField class="col-span-full lg:col-span-3" :label="$ts('url')">
                             <UInput type="url" name="url" id="url" placeholder="https://example.com"
@@ -240,14 +200,16 @@ const inputSize = computed(() => {
                         </UFormField>
                         <!-- Image upload -->
                         <UFormField class="col-span-full min-h-36" :label="$ts('image')">
-                            <DropFile @change="onChangeImage" accept="image/*">
-                                <NuxtImg :src="fileToCropped.blob" v-if="file" :alt="fileToCropped.name" class="mx-auto"
-                                    loading="lazy" />
-                                <div v-else-if="stateProject.image && typeof stateProject.image === 'string'">
-                                    <NuxtImg provider="localProvider" :src="stateProject.image"
+                            <UFileUpload v-model="file" accept="image/*" @update:model-value="handleCropImage">
+                                <template #default="{ open }">
+                                    <NuxtImg v-if="typeof stateProject.image === 'string'" :src="stateProject.image"
                                         :alt="stateProject.title" class="mx-auto" loading="lazy" />
-                                </div>
-                            </DropFile>
+                                    <div v-else class="flex items-center justify-center h-32">
+                                        <UButton @click="open()" icon="i-heroicons-plus" :size="buttonSize"
+                                            variant="link" />
+                                    </div>
+                                </template>
+                            </UFileUpload>
                         </UFormField>
                         <UFormField class="col-span-full" :label="$ts('description')">
                             <CoreTiptap v-model="stateProject.description" />
@@ -274,7 +236,7 @@ const inputSize = computed(() => {
                         <UFormField class="space-y-4 col-span-full" :label="$ts('progress')">
                             <USlider v-model="stateProject.progress" :min="0" :max="100" :step="5" />
                             <p class="text-sm text-gray-500 dark:text-gray-400 text-end">{{ stateProject.progress
-                            }}%
+                                }}%
                             </p>
                         </UFormField>
                     </div>
@@ -285,9 +247,9 @@ const inputSize = computed(() => {
         <template #footer>
             <div class="flex items-center justify-between w-full">
                 <UButton @click="emit('close')" label="Close" icon="i-heroicons-x-mark" variant="ghost" color="error"
-                    :size="buttonSize" />
+                    :size="buttonSize" :loading="loading" />
                 <UButton type="submit" @click="addProject" label="Save" icon="i-heroicons-clipboard" trailing
-                    :size="buttonSize" />
+                    :size="buttonSize" :loading="loading" />
             </div>
         </template>
     </UModal>

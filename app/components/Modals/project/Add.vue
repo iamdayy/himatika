@@ -1,6 +1,5 @@
 <script setup lang='ts'>
 import { ModalsCategoryAdd, ModalsImageCrop } from '#components';
-import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { IProject } from '~~/types';
 import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } from '~~/types/IResponse';
@@ -10,15 +9,16 @@ const { $api } = useNuxtApp();
 const toast = useToast();
 
 const searchMember = ref('');
+const loading = ref(false);
 
 const config = useRuntimeConfig();
 
 const overlay = useOverlay();
 
-const ImageCropModal = overlay.create(ModalsImageCrop);
+const CropImageModal = overlay.create(ModalsImageCrop);
 const AddCategoryModal = overlay.create(ModalsCategoryAdd)
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/project/tags'));
-const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
+const { data: categoryOptions, refresh: refreshCategory, pending: pendingCategory } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
@@ -51,7 +51,6 @@ const emit = defineEmits(["close"]);
 
 // Get window size
 const windowSize = useWindowSize();
-const { convert } = useImageToBase64();
 
 /**
  * Initialize new project object with default values
@@ -75,10 +74,7 @@ const stateProject: IProject = reactive<IProject>({
  * Reactive references
  */
 const file = ref<File>();
-const fileToCropped = ref<{ blob: string, name: string }>({
-    blob: "",
-    name: ""
-});
+const fileCropped = ref<File>();
 
 /**
  * Add a new project to the database
@@ -86,10 +82,11 @@ const fileToCropped = ref<{ blob: string, name: string }>({
  * @throws {Error} When the API call fails
  */
 const addProject = async (): Promise<void> => {
+    loading.value = true;
     try {
         const formData = new CustomFormData<IProject>();
         formData.append('title', stateProject.title);
-        formData.append('image', stateProject.image);
+        formData.append('image', fileCropped.value!);
         formData.append('date', stateProject.date.toISOString());
         formData.append('category', stateProject.category as string || '');
         formData.append('progress', stateProject.progress.toString());
@@ -102,9 +99,11 @@ const addProject = async (): Promise<void> => {
             body: formData.getFormData()
         });
         toast.add({ title: added.statusMessage! });
-        emit("close");
     } catch (error) {
         toast.add({ title: "Failed to add new Project" });
+    } finally {
+        loading.value = false;
+        emit("close");
     }
 };
 
@@ -131,38 +130,20 @@ const addNewCategory = async (category: string) => {
     })
 }
 
-
-
-/**
- * Handle image change
- * @param {File} f - Selected image file
- */
-const onChangeImage = async (value: FileList) => {
-    const f = value[0]!;
-    const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        alwaysKeepResolution: true
-    }
-    const compressedFile = await imageCompression(f, options);
-    const blob = URL.createObjectURL(compressedFile);
-    fileToCropped.value.name = f.name;
-    fileToCropped.value.blob = blob;
-    ImageCropModal.open({
-        img: blob,
-        title: f.name,
+const handleCropImage = (fileFromInput?: File | null) => {
+    if (!fileFromInput) return;
+    CropImageModal.open({
+        img: URL.createObjectURL(fileFromInput),
+        title: fileFromInput.name,
         stencil: {
             movable: true,
             resizable: true,
-            aspectRatio: 16 / 9,
         },
-        onCropped: (file: File) => {
-            stateProject.image = file;
-            ImageCropModal.close();
+        onCropped: (f: File) => {
+            fileCropped.value = f;
+            CropImageModal.close();
         }
-    })
-
+    });
 }
 
 
@@ -204,14 +185,12 @@ const inputSize = computed(() => {
 
                         <!-- Categories input -->
                         <UFormField class="col-span-full" :label="$ts('category')">
-                            <USelectMenu v-model="stateProject.category as string" :items="categoryOptions" searchable
-                                create-item @create="addNewCategory" label-key="label" value-key="value"
-                                class="w-full" />
+                            <USelectMenu v-model="(stateProject.category as string)" :items="categoryOptions" searchable
+                                create-item @create="addNewCategory" label-key="label" value-key="value" class="w-full"
+                                :loading="pendingCategory" />
                         </UFormField>
                         <UFormField class="col-span-full lg:col-span-3" :label="$ts('date')">
-                            <div class="flex gap-3 border border-gray-300 rounded-lg shadow-sm dark:border-gray-700">
-                                <DatePicker v-model="stateProject.date" />
-                            </div>
+                            <DatePicker v-model="stateProject.date" />
                         </UFormField>
                         <UFormField class="col-span-full lg:col-span-3" :label="$ts('url')">
                             <UInput type="url" name="url" id="url" placeholder="https://example.com"
@@ -219,10 +198,8 @@ const inputSize = computed(() => {
                         </UFormField>
                         <!-- Image upload -->
                         <UFormField class="col-span-full min-h-36" :label="$ts('image')">
-                            <DropFile @change="onChangeImage" accept="image/*">
-                                <NuxtImg :src="fileToCropped.blob" v-if="file" :alt="fileToCropped.name" class="mx-auto"
-                                    loading="lazy" />
-                            </DropFile>
+                            <UFileUpload v-model="file" accept="image/*">
+                            </UFileUpload>
                         </UFormField>
                         <UFormField class="col-span-full" :label="$ts('description')">
                             <CoreTiptap v-model="stateProject.description" />
@@ -260,9 +237,9 @@ const inputSize = computed(() => {
         <template #footer>
             <div class="flex items-center justify-between w-full">
                 <UButton @click="emit('close')" label="Close" icon="i-heroicons-x-mark" variant="ghost" color="error"
-                    :size="buttonSize" />
+                    :size="buttonSize" :loading="loading" />
                 <UButton type="submit" @click="addProject" label="Save" icon="i-heroicons-clipboard" trailing
-                    :size="buttonSize" />
+                    :size="buttonSize" :loading="loading" />
             </div>
         </template>
     </UModal>
