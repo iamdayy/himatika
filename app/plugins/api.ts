@@ -34,6 +34,23 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         // --- MULAI LOGIKA PROMISE LOCKING ---
 
+        // 0. Cek Optimis: Apakah token di state SUDAH berbeda dengan token di header request ini?
+        // Jika ya, berarti sudah ada reload/refresh lain yang sukses barusan.
+        const currentToken = token.value;
+        const usedToken = (options.headers as any)?.Authorization;
+        
+        // Asumsi format "Bearer <token>"
+        if (currentToken && usedToken && currentToken !== usedToken) {
+           // Token sudah baru, langsung retry tanpa refresh
+           return $fetch(request, {
+            ...options,
+            headers: {
+              ...options.headers,
+              Authorization: currentToken, 
+            },
+          } as any);
+        }
+
         // Cek apakah ada proses refresh yang sedang berjalan?
         if (!isRefreshing) {
           // Jika TIDAK, kita yang memulainya.

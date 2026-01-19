@@ -57,7 +57,7 @@ export const checkSession = async (payload: string) => {
 
     // 3. Ambil user dengan populate member (asumsi member adalah relasi/field)
     // Menggunakan lean() untuk performa lebih cepat (return POJO, bukan Mongoose Document)
-    const user: any = await UserModel.findById(session.user);
+    const user = await UserModel.findById(session.user);
 
     if (!user) {
       throw createError({
@@ -92,84 +92,56 @@ export const checkSession = async (payload: string) => {
  */
 export const refreshSession = async (payload: string) => {
   try {
-    // 1. Validasi signature token (meskipun expired/lama, signature harus asli)
-    // Kita gunakan decode dulu atau verify dengan ignoreExpiration jika perlu,
-    // tapi biasanya refresh token belum expired secara waktu, hanya status DB nya.
     const decoded = jwt.verify(payload, getSecretKey()) as jwt.JwtPayload;
     if (!decoded || !decoded.user) {
       throw createError({ statusMessage: "Invalid Token", statusCode: 401 });
     }
 
-    // 2. Cari session berdasarkan Refresh Token SAAT INI atau SEBELUMNYA
-    const session = await SessionModel.findOne({
-      $or: [
-        { refreshToken: payload },
-        { previousRefreshToken: payload }, // Cek juga kolom history
-      ],
+    // 1. Coba fetch session biasa untuk cek kondisi awal
+    let session = await SessionModel.findOne({
+      refreshToken: payload
     });
 
     if (!session) {
-      // Token valid secara kriptografi tapi tidak ada di DB (Reuse Detection)
-      // Ini berarti token sudah sangat lama atau dipalsukan.
       throw createError({
-        statusMessage: "Session not found",
+        statusMessage: "Session not found or invalid",
         statusCode: 401,
       });
     }
 
-    // SKENARIO A: RACE CONDITION / GRACE PERIOD
-    // Jika token yang dikirim adalah token SEBELUMNYA (yang baru saja diganti)
-    if (session.previousRefreshToken === payload) {
-      // Hitung selisih waktu sejak update terakhir
-      const timeDiff =
-        new Date().getTime() - new Date(session.updatedAt as Date).getTime();
-
-      // Jika kurang dari 20 detik (Window Tolerance), anggap ini request parallel yang sah
-      if (timeDiff < 20000) {
-        // Kembalikan token yang SUDAH ADA (yang valid saat ini), JANGAN generate baru lagi
-        return {
-          token: session.token,
-          refreshToken: session.refreshToken,
-        };
-      } else {
-        // Jika sudah lebih dari 20 detik, ini mencurigakan (Replay Attack)
-        await session.deleteOne(); // Hapus session demi keamanan
-        throw createError({
-          statusMessage: "Token Reuse Detected",
-          statusCode: 401,
-        });
-      }
-    }
-
-    // SKENARIO B: ROTASI NORMAL
-    // Jika token yang dikirim adalah token SAAT INI
+    // Kita hanya update JIKA refreshToken di DB masih sama dengan payload (belum diubah orang lain)
     if (session.refreshToken === payload) {
       const newToken = jwt.sign({ user: session.user }, getSecretKey(), {
         expiresIn: "1d",
       });
-      const newRefreshToken = jwt.sign({ user: session.user }, getSecretKey(), {
-        expiresIn: "90d",
+
+      const updatedSession = await SessionModel.findOneAndUpdate(
+        {
+          _id: session._id,
+          refreshToken: payload,
+        },
+        {
+          $set: {
+            token: newToken,
+            previousToken: session.token,
+            updatedAt: new Date(),
+          },
+        },
+        { new: true } // Return dokumen baru
+      );
+
+      // Jika berhasil update (atomic)
+      if (updatedSession) {
+        return {
+          token: newToken,
+        };
+      }
+      throw createError({
+         statusMessage: "Concurrent Refresh Failed",
+         statusCode: 401,
       });
-
-      // Update token baru & Simpan history untuk grace period
-      session.previousToken = session.token; // Simpan Access Token lama
-      session.previousRefreshToken = session.refreshToken; // Simpan Refresh Token lama
-      
-      session.token = newToken;
-      session.refreshToken = newRefreshToken;
-
-      // Update timestamp agar perhitungan grace period akurat
-      session.updatedAt = new Date();
-
-      await session.save();
-
-      return {
-        token: newToken,
-        refreshToken: newRefreshToken,
-      };
     }
 
-    // Fallback jika tidak match keduanya
     throw createError({
       statusMessage: "Invalid Session State",
       statusCode: 401,
