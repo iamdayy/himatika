@@ -36,7 +36,6 @@ const sort = computed(() => {
     }
 });
 const order = ref<string>("");
-const { data: user } = useAuth();
 const { data: projects, refresh: refreshProjects, pending: pendingProjects } = useLazyAsyncData(
     "projects",
     () =>
@@ -76,7 +75,6 @@ const { data: projects, refresh: refreshProjects, pending: pendingProjects } = u
         }),
     }
 );
-// const { projects, notPublished, refreshProjects, search, selectedCategory, selectedTags, page, perPage, totalProjects, sortBy, order } = useProjects();
 const isMobile = computed(() => width.value <= 768);
 
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/project/tags'));
@@ -261,9 +259,9 @@ onMounted(() => {
 </script>
 <template>
     <div class="items-center justify-center mb-24">
+        <UBreadcrumb :items="links" />
         <UCard class="p-2 mt-2 md:p-4">
             <template #header>
-                <UBreadcrumb :links="links" />
                 <div class="p-1 md:p-2">
                     <div class="flex flex-row items-center justify-between gap-2">
                         <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">

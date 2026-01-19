@@ -81,7 +81,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         // Setelah refresh selesai, coba ulang request ORIGINAL yang tadi gagal
         // Kita harus update header Authorization dengan token BARU dan method yang benar
-        await $fetch(request, {
+        return $fetch(request, {
           ...options,
           headers: {
             ...options.headers,
@@ -89,7 +89,6 @@ export default defineNuxtPlugin((nuxtApp) => {
           },
           method: options.method, // Pastikan method asli tetap digunakan
         } as any);
-        return Promise.resolve(); // Sukses setelah retry
       }
     },
   });
