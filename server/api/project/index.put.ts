@@ -81,7 +81,7 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
     }
     project.date = new Date(body.date as string);
     project.description = body.description as string;
-    project.tags = typeof body.tags === "string" ? body.tags.split(",") : [];
+    project.tags = typeof body.tags === "string" ? JSON.parse(body.tags as string) : [];
     project.progress = body.progress as any;
     project.published = body.published as any;
     project.url = body.url as any;
