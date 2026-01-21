@@ -1,12 +1,12 @@
 <script setup lang='ts'>
-import type { ICategory, IMember } from "~~/types";
+import type { ICategory, ILeaderboard, IMember } from "~~/types";
 
-import { ModalsAchievementClaim, ModalsActions, NuxtLink, UAvatar } from '#components';
+import { ModalsAchievementClaim, ModalsActions, NuxtLink, UAvatar, UIcon } from '#components';
 import type { TableColumn } from "#ui/types";
-import type { DriveStep } from "driver.js";
 import { useStatsStore } from "~/stores/useStatsStore";
 import type { IProjectsResponse } from "~~/types/IResponse";
 const NuxtImg = resolveComponent('NuxtImg');
+const UTooltip = resolveComponent('UTooltip');
 interface IPoint {
     avatar?: string;
     fullName: string;
@@ -32,45 +32,74 @@ useHead({
     title: 'Home | Himatika ' + $ts('dashboard')
 })
 
+/**
+ * Get authentication data
+ */
+const { status, data: user } = useAuth();
 const { $pageGuide, $api } = useNuxtApp();
 
-const pointLeaderBoardColumn: TableColumn<IPoint>[] = [
+const rankIcon = (rank: number, userNIM: number) => {
+    if (rank === 0) {
+        return h('span', { class: 'text-xl' }, '🥇')
+    } else if (rank === 1) {
+        return h('span', { class: 'text-xl' }, '🥈')
+    } else if (rank === 2) {
+        return h('span', { class: 'text-xl' }, '🥉')
+    } else if (user.value?.member.NIM === userNIM) {
+        return h('span', { class: 'text-xl bg-primary-500 text-white px-2 py-1 rounded-full' }, 'KAMU')
+    } else {
+        return h('span', { class: 'text-xl' }, '#' + rank)
+    }
+}
+
+const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
     {
-        accessorKey: 'rank',
+        accessorKey: 'no',
         header: $ts('rank'),
         cell: ({ row }) => {
-            return row.index + 1
+            return h('span', undefined, [
+                rankIcon(row.index, row.original.nim)
+            ])
         },
     },
     {
         accessorKey: 'fullName',
         header: $ts('fullName'),
         cell: ({ row }) => {
-            return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.NIM}` }, [
+            return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.nim}` }, [
                 h(NuxtImg, { src: row.original.avatar || '/img/profile-blank.png', size: 'sm', provider: 'localProvider', class: "object-cover rounded-full max-w-8 aspect-square", loading: 'lazy', alt: row.original.fullName }),
                 h('div', undefined, [
                     h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.fullName),
-                    h('p', { class: '' }, `${row.original.NIM}`)
+                    h('p', { class: '' }, `${row.original.nim}`)
                 ])
             ])
         },
     },
     {
-        accessorKey: 'semester',
-        header: $ts('semester'),
-    },
-    {
-        accessorKey: 'point',
+        accessorKey: 'points',
         header: $ts('point'),
         cell: ({ row }) => {
-            if (!row.original.point || row.original.point.length === 0) {
+            if (!row.original.points || row.original.points === 0) {
                 return h('span', {
                     class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
                 }, '0');
             }
             return h('span', {
                 class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
-            }, row.original.point?.[0]?.point || '0');
+            }, row.original.points || '0');
+        }
+    },
+    {
+        accessorKey: 'badges',
+        header: $ts('badges'),
+        cell: ({ row }) => {
+            return h('div', undefined, [
+                row.original.badges.length > 0
+                    ? row.original.badges.map((badge) => h(UTooltip, { text: badge.name }, () => h('div', { class: 'w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center ring-2 ring-white dark:ring-gray-800' }, [
+                        h(UIcon, { name: badge.icon, class: 'w-4 h-4 text-primary-500' })
+                    ])))
+                    : h('span', { class: 'text-sm font-semibold text-gray-600 dark:text-gray-200' }, '-')
+            ])
         }
     }
 ]
@@ -98,10 +127,6 @@ const { data: configData } = useAsyncData(() => $api('/api/config'));
 
 
 
-/**
- * Get authentication data
- */
-const { status, data: user } = useAuth();
 const isMobile = computed(() => width.value < 768);
 
 
@@ -173,47 +198,7 @@ const color = computed(() => {
         case aspirations.value.length < 30: return 'info'
         default: return 'error'
     }
-})
-onMounted(() => {
-    const steps: DriveStep[] = [
-        {
-            element: '#card-registered',
-            popover: {
-                title: 'Your total contributions',
-                description: 'This card shows the total number of events participed in / project you have registered.',
-                side: 'right'
-            }
-        },
-        {
-            element: '#card-agendas',
-            popover: {
-                title: 'Your total participed agendas',
-                description: 'This card shows the total number of events you participated in.',
-                side: 'right'
-            }
-        },
-        {
-            element: '#card-projects',
-            popover: {
-                title: 'Your total projects',
-                description: 'This card shows the total number of projects you have',
-                side: 'right'
-            }
-        },
-        {
-            element: '#maido',
-            popover: {
-                title: "Let's give us a Paidoan!🔥",
-                description: 'Click this button to add your aspirationism to us',
-                side: 'left'
-            }
-        }
-    ]
-    $pageGuide('dashboard', steps, {
-        showProgress: true,
-        showButtons: ['next', 'previous'],
-    });
-})
+});
 </script>
 <template>
     <div>
@@ -256,7 +241,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
                         <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
@@ -269,7 +254,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 projectsMe.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="projectsMe.length || 0" :color="color" :max="data?.count || 100"
@@ -282,7 +267,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 aspirations.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
@@ -301,11 +286,12 @@ onMounted(() => {
                     </template>
                     <div class="flex items-center justify-between w-full mb-2">
                         <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                            memberProfile?.point?.[0]?.point || 0 }}
+                            memberProfile?.point?.find((p) => p.semester === memberProfile?.semester)?.point || 0}}
                         </h2>
                         <UIcon name="i-heroicons-arrow-trending-up" class="text-6xl" />
                     </div>
-                    <UProgress :model-value="(memberProfile?.point?.[0]?.point || 0)"
+                    <UProgress
+                        :model-value="(memberProfile?.point?.find((p) => p.semester === memberProfile?.semester)?.point || 0)"
                         :max="configData?.data.minPoint || 100" indicator />
                     <template #footer>
                         <div class="flex items-center justify-between w-full">

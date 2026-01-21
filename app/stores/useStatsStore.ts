@@ -1,8 +1,9 @@
 import { defineStore } from "pinia";
-import type { IAgenda, IAspiration, IProject } from "~~/types";
+import type { IAgenda, IAspiration, ILeaderboard, IMember, IProject } from "~~/types";
 import type {
   IAgendaResponse,
   IAspirationMeResponse,
+  ILeaderboardResponse,
   IMeResponse,
 } from "~~/types/IResponse";
 
@@ -22,11 +23,11 @@ export const useStatsStore = defineStore("stats", () => {
   const { canMeRegister } = useCanMeRegister();
 
   // --- State (Data Mentah) ---
-  const memberProfile = ref<any>(null); // Menyimpan detailed member data dari /api/me
+  const memberProfile = ref<IMember & { username: string }|undefined>(); // Menyimpan detailed member data dari /api/me
   const rawAgendas = ref<IAgenda[]>([]);
   const rawAgendasCount = ref(0);
   const aspirations = ref<IAspiration[]>([]);
-  const points = ref<IPoint[]>([]);
+  const points = ref<ILeaderboard[]>([]);
 
   // Loading States (Opsional, tapi bagus untuk UX)
   const loading = ref(false);
@@ -68,8 +69,8 @@ export const useStatsStore = defineStore("stats", () => {
 
   async function fetchPoints() {
     try {
-      const response = await $api<any>("/api/point");
-      points.value = response.data?.points || [];
+      const response = await $api<ILeaderboardResponse>("/api/point/leaderboard");
+      points.value = response.data?.leaderboard || [];
     } catch (error) {
       console.error("Failed to fetch points", error);
     }

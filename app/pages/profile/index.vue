@@ -85,33 +85,35 @@ const onFileChange = async ($event: Event) => {
     }
 }
 const member = ref({
-    email: user?.value?.member.email || "",
-    fullName: user?.value?.member.fullName || "",
-    class: user?.value?.member.class || "",
-    semester: user?.value?.member.semester || 1,
+    email: fullProfile.value?.email || "",
+    fullName: fullProfile.value?.fullName || "",
+    class: fullProfile.value?.class || "",
+    semester: fullProfile.value?.semester || 1,
     birth: {
-        place: user?.value?.member.birth.place || "",
-        date: new Date(user?.value?.member.birth.date!) || new Date(),
+        place: fullProfile.value?.birth?.place || "",
+        date: new Date(fullProfile.value?.birth?.date!) || new Date(),
     },
-    sex: user?.value?.member.sex || "male",
-    religion: user?.value?.member.religion || "",
-    citizen: user?.value?.member.citizen || "",
-    phone: user?.value?.member.phone || "",
+    sex: fullProfile.value?.sex || "male",
+    religion: fullProfile.value?.religion || "",
+    citizen: fullProfile.value?.citizen || "",
+    phone: fullProfile.value?.phone || "",
     address: {
-        fullAddress: user?.value?.member.address.fullAddress || "",
-        village: user?.value?.member.address.village || "",
-        district: user?.value?.member.address.district || "",
-        city: user?.value?.member.address.city || "",
-        province: user?.value?.member.address.province || "",
-        country: user?.value?.member.address.country || "",
-        zip: user?.value?.member.address.zip || "",
+        fullAddress: fullProfile.value?.address?.fullAddress || "",
+        village: fullProfile.value?.address?.village || "",
+        district: fullProfile.value?.address?.district || "",
+        city: fullProfile.value?.address?.city || "",
+        province: fullProfile.value?.address?.province || "",
+        country: fullProfile.value?.address?.country || "",
+        zip: fullProfile.value?.address?.zip || "",
     },
+    enteredYear: fullProfile.value?.enteredYear || "",
     // Data berat diambil dari fullProfile
     point: fullProfile.value?.point || [],
     agendasCommittee: fullProfile.value?.agendas?.committees || [],
     agendasMember: fullProfile.value?.agendas?.members || [],
     projects: fullProfile.value?.projects || [],
     aspirations: fullProfile.value?.aspirations || [],
+    badges: fullProfile.value?.badges || [],
     organizer: user?.value?.member.organizer || undefined,
 })
 
@@ -124,6 +126,7 @@ watch(fullProfile, (newVal) => {
         member.value.agendasMember = newVal.agendas?.members || [];
         member.value.projects = newVal.projects || [];
         member.value.aspirations = newVal.aspirations || [];
+        member.value.badges = newVal.badges || [];
         // Update basic info if needed? Usually session is fast enough for basic info.
         // But for completeness:
         if (newVal.class) member.value.class = newVal.class;
@@ -352,7 +355,7 @@ const breadcumbs = computed(() => [
                                     </div>
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{ `${member.birth.place},
                                         ${new
-                                            Date(user?.member.birth.date!).toLocaleDateString('id-ID', {
+                                            Date(member.birth.date).toLocaleDateString('id-ID', {
                                                 year: 'numeric', month:
                                                     'long', day: 'numeric'
                                             })}` }}</dd>
@@ -365,25 +368,25 @@ const breadcumbs = computed(() => [
                                         :items="[{ value: 'male', label: $ts('male') }, { value: 'female', label: $ts('female') }]">
                                     </USelect>
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{
-                                        $ts(user?.member.sex === 'male' ? 'male' : 'female') }}</dd>
+                                        $ts(member.sex === 'male' ? 'male' : 'female') }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
                                         $ts('religion') }}
                                     </dt>
                                     <UInput v-model="member.religion" v-if="editMode" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.religion }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.religion }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('citizenship')
                                     }}</dt>
                                     <UInput v-model="member.citizen" v-if="editMode" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.citizen }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.citizen }}</dd>
                                 </div>
                                 <div class="flex flex-col pt-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('phone') }}</dt>
                                     <UInput v-model="member.phone" v-if="editMode" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.phone }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.phone }}</dd>
                                 </div>
                             </dl>
                         </UCard>
@@ -404,7 +407,7 @@ const breadcumbs = computed(() => [
                                         v-model="member.address.fullAddress">
                                     </UTextarea>
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{
-                                        user?.member.address.fullAddress }}
+                                        member.address.fullAddress }}
                                     </dd>
                                 </div>
                                 <div class="flex flex-col py-2">
@@ -413,7 +416,7 @@ const breadcumbs = computed(() => [
                                     </dt>
                                     <UInput v-model="member.address.village" v-if="editMode" />
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{
-                                        user?.member.address.village }}
+                                        member.address.village }}
                                     </dd>
                                 </div>
                                 <div class="flex flex-col py-2">
@@ -421,30 +424,30 @@ const breadcumbs = computed(() => [
                                         $ts('district') }}
                                     </dt>
                                     <UInput v-model="member.address.district" v-if="editMode" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.address.district }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.address.district }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('city') }}</dt>
                                     <UInput v-model="member.address.city" v-if="editMode" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.address.city }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.address.city }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('province') }}
                                     </dt>
                                     <UInput v-model="member.address.province" v-if="editMode" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.address.province }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.address.province }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('country') }}
                                     </dt>
                                     <UInput v-model="member.address.country" v-if="editMode" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.address.country }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.address.country }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('zipcode') }}
                                     </dt>
                                     <UInput v-model="member.address.zip" v-if="editMode" type="number" />
-                                    <dd v-else class="text-lg font-semibold">{{ user?.member.address.zip }}</dd>
+                                    <dd v-else class="text-lg font-semibold">{{ member.address.zip }}</dd>
                                 </div>
                             </dl>
                         </UCard>
@@ -482,6 +485,27 @@ const breadcumbs = computed(() => [
                                         ? $ts('active') : $ts('inactive') }}</UBadge>
                             </div>
                         </UCard>
+
+                        <!-- Badges -->
+                        <UCard>
+                            <template #header>
+                                <h3 class="text-lg font-semibold">Badges</h3>
+                            </template>
+                            <div class="grid grid-cols-3 gap-4" v-if="member.badges && member.badges.length > 0">
+                                <div v-for="badge in member.badges" :key="badge.slug"
+                                    class="flex flex-col items-center text-center">
+                                    <div
+                                        class="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mb-2">
+                                        <UIcon :name="badge.icon" class="w-6 h-6 text-primary-500" />
+                                    </div>
+                                    <h5 class="text-sm font-medium">{{ badge.name }}</h5>
+                                </div>
+                            </div>
+                            <div v-else class="text-center text-gray-500 py-4">
+                                <p class="text-sm">No badges earned yet.</p>
+                            </div>
+                        </UCard>
+
                         <!-- Points Summary -->
                         <UCard>
                             <template #header>
@@ -743,7 +767,7 @@ const breadcumbs = computed(() => [
                             </div>
                             <div class="flex flex-col">
                                 <dt class="text-sm text-gray-500 dark:text-gray-400">{{ $ts('generation') }}</dt>
-                                <dd class="text-lg font-semibold">{{ user?.member.enteredYear }}</dd>
+                                <dd class="text-lg font-semibold">{{ member.enteredYear }}</dd>
                             </div>
                         </dl>
                     </div>

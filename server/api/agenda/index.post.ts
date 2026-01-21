@@ -1,8 +1,10 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { ConfigModel } from "~~/server/models/ConfigModel";
 import { MemberModel } from "~~/server/models/MemberModel";
+import { logAction } from "~~/server/utils/logger";
 import { sendBulkEmail } from "~~/server/utils/mailer";
 import Email from "~~/server/utils/mailTemplate";
+import { broadcast } from "~~/server/utils/sse";
 import { IReqAgenda } from "~~/types/IRequestPost";
 import { IError, IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -180,6 +182,23 @@ export default defineEventHandler(
              emailPromise.catch(console.error);
         }
       }
+      
+      // Broadcast notification
+      broadcast('notification', {
+        title: 'New Agenda',
+        message: `${savedAgenda.title} has been created.`,
+        type: 'info',
+        icon: 'i-heroicons-calendar',
+        link: `/agendas`
+      });
+
+      // Audit Log
+      logAction({
+        action: 'CREATE',
+        event,
+        target: `Agenda: ${savedAgenda.title}`,
+        details: { agendaId: savedAgenda._id }
+      });
 
       return {
         statusCode: 200,

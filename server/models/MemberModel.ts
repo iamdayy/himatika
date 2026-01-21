@@ -106,6 +106,12 @@ const memberSchema = new Schema<IMemberSchema, MemberModel, MemberMethods>(
       enum: ["active", "inactive", "free", "deleted"],
       default: "free",
     },
+    badges: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Badge",
+      },
+    ],
   },
   {
     timestamps: true,
