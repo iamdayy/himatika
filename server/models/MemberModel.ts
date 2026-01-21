@@ -2,6 +2,10 @@ import mongoose, { Schema } from "mongoose";
 import { IAgenda, IMember, IPoint } from "~~/types";
 import { IAddressSchema, IMemberSchema } from "~~/types/ISchemas";
 import { AgendaModel } from "./AgendaModel";
+import './AspirationModel';
+import './BadgeModel';
+import './OrganizerModel';
+import './PointLogModel';
 import { ProjectModel } from "./ProjectModel";
 import { UserModel } from "./UserModel";
 

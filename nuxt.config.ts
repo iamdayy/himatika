@@ -184,7 +184,7 @@ export default defineNuxtConfig({
     headers: {
        crossOriginEmbedderPolicy: 'unsafe-none',
        contentSecurityPolicy: {
-        'img-src': ["'self'", 'data:', 'blob:', 'https:', 'http:',  process.env.PUBLIC_URI || 'http://localhost:3000'],
+        'img-src': ['self', 'data:', 'blob:', 'https:', 'http:',  process.env.PUBLIC_URI || 'http://localhost:3000'],
        }
     },
     rateLimiter: {
