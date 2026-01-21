@@ -26,9 +26,9 @@ const auditLogSchema = new Schema<IAuditLogSchema>(
   { timestamps: true }
 );
 
-// TTL Index: Automatically expire logs after 1 year (31536000 seconds)
+// TTL Index: Automatically expire logs after 3 months (7776000 seconds)
 // Adjust as needed for compliance/storage
-auditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 31536000 });
+auditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
 
 export const AuditLogModel = mongoose.model<IAuditLogSchema>(
   "AuditLog",

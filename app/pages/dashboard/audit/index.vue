@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { UBadge, UButton } from "#components";
 import type { TableColumn } from "#ui/types";
 import type { IAuditLog, IMember } from "~~/types";
+const UPopover = resolveComponent('UPopover');
 definePageMeta({
     layout: 'dashboard',
     middleware: 'sidebase-auth'
@@ -15,10 +17,16 @@ const columns: TableColumn<IAuditLog>[] = [
     {
         accessorKey: 'createdAt',
         header: 'Date',
+        cell(props) {
+            return h('span', { class: 'text-xs' }, formatDate(props.row.original.createdAt || ''));
+        },
     },
     {
         accessorKey: 'action',
         header: 'Action',
+        cell(props) {
+            return h(UBadge, { color: props.row.original.action === 'LOGIN' ? 'secondary' : props.row.original.action === 'LOGOUT' ? 'neutral' : props.row.original.action === 'CREATE' ? 'success' : 'primary', variant: 'subtle' }, props.row.original.action);
+        },
     },
     {
         accessorKey: 'target',
@@ -28,10 +36,13 @@ const columns: TableColumn<IAuditLog>[] = [
         accessorKey: 'user',
         header: 'User',
         cell(props) {
-            return h('div', undefined, [
-                h('span', undefined, (props.row.original.user as IMember)?.fullName || '-'),
-                h('span', undefined, (props.row.original.user as IMember)?.email || '-')
-            ])
+            if (props.row.original.user && typeof props.row.original.user === 'object') {
+                return h('div', { class: 'flex flex-col' }, [
+                    h('span', { class: 'font-medium' }, (props.row.original.user as IMember)?.fullName || '-'),
+                    h('span', { class: 'text-xs text-gray-400' }, (props.row.original.user as IMember)?.email || '-')
+                ])
+            }
+            return h('span', { class: 'text-xs' }, 'System/Guest');
         }
     },
     {
@@ -42,8 +53,16 @@ const columns: TableColumn<IAuditLog>[] = [
         accessorKey: 'details',
         header: 'Details',
         cell(props) {
-            return h('pre', undefined, JSON.stringify(props.row.original.details, null, 2));
-        },
+            if (props.row.original.details && Object.keys(props.row.original.details || {}).length > 0) {
+                return h(UPopover, { trigger: 'click' }, {
+                    default: () => h(UButton, { color: 'neutral', variant: 'ghost', icon: 'i-heroicons-eye', size: 'xs', label: 'View' }),
+                    content: () => h('div', { class: 'p-4 max-w-xs overflow-auto text-xs' }, [
+                        h('pre', { class: 'whitespace-pre-wrap' }, JSON.stringify(props.row.original.details || {}, null, 2))
+                    ])
+                })
+            }
+            return h('span', { class: 'text-xs' }, '-');
+        }
     }
 ];
 
@@ -59,8 +78,15 @@ const { data, pending, refresh } = useAsyncData(() => $api('/api/audit', {
     watch: [page]
 }));
 
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleString('id-ID');
+const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric'
+    });
 };
 </script>
 
@@ -77,18 +103,6 @@ const formatDate = (date: string) => {
             </div>
             <div v-else>
                 <UTable :data="data?.data || []" :columns="columns" :loading="pending">
-                    <template #createdAt-data="{ row }">
-                        <span class="text-sm">{{ formatDate(row.original.createdAt) }}</span>
-                    </template>
-                    <template #user-data="{ row }">
-                        <div v-if="row.original.user && typeof row.original.user === 'object'" class="flex flex-col">
-                            <span class="font-medium text-sm">{{ row.original.user.fullName }}</span>
-                            <span class="text-xs text-gray-500">{{ row.original.user.email }}</span>
-                        </div>
-                        <div v-else>
-                            <span class="text-sm italic text-gray-400">System/Guest</span>
-                        </div>
-                    </template>
                     <template #details-data="{ row }">
                         <UPopover v-if="row.original.details && Object.keys(row.original.details || {}).length > 0">
                             <UButton color="neutral" variant="ghost" icon="i-heroicons-eye" size="xs" label="View" />
@@ -97,13 +111,6 @@ const formatDate = (date: string) => {
                             </div>
                         </UPopover>
                         <span v-else class="text-gray-400">-</span>
-                    </template>
-                    <template #action-data="{ row }">
-                        <UBadge
-                            :color="row.original.action === 'LOGIN' ? 'secondary' : row.original.action === 'LOGOUT' ? 'neutral' : row.original.action === 'CREATE' ? 'success' : 'primary'"
-                            variant="subtle">
-                            {{ row.original.action }}
-                        </UBadge>
                     </template>
                 </UTable>
 
