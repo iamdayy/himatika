@@ -106,6 +106,12 @@ const memberSchema = new Schema<IMemberSchema, MemberModel, MemberMethods>(
       enum: ["active", "inactive", "free", "deleted"],
       default: "free",
     },
+    badges: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Badge",
+      },
+    ],
   },
   {
     timestamps: true,
@@ -365,11 +371,6 @@ memberSchema.virtual("documents", {
   ref: "Doc",
   localField: "_id",
   foreignField: "uploader",
-});
-memberSchema.virtual("docsRequestSign", {
-  ref: "Doc",
-  localField: "_id",
-  foreignField: "signs.user",
 });
 
 // Virtual for considerationBoards

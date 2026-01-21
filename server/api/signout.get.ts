@@ -1,3 +1,4 @@
+import { logAction } from "~~/server/utils/logger";
 import { killAuth } from "../utils/authHelper";
 
 /**
@@ -14,6 +15,10 @@ export default defineEventHandler(async (event) => {
   try {
     // Attempt to terminate the authentication session
     const data = await killAuth(event);
+    
+    // Audit Log: Logout
+    logAction({ action: 'LOGOUT', event, target: 'Auth' });
+
     return {
       statusCode: 200,
       statusMessage: "Sign-out successful",

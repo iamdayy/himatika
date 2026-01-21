@@ -7,6 +7,8 @@ import type {
   IAgendaParticipantConfiguration,
   IAnswer,
   IAspiration,
+  IAuditLog,
+  IBadge,
   ICategory,
   IComment,
   ICommittee,
@@ -36,7 +38,7 @@ import type {
   ISign,
   ITrail,
   IUser,
-  IVideo,
+  IVideo
 } from ".";
 
 /**
@@ -236,6 +238,16 @@ export interface ISignSchema extends Document, Omit<ISign, "_id"> {
 }
 
 export interface IPointLogSchema extends Document, Omit<IPointLog, "_id"> {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IBadgeSchema extends Document, Omit<IBadge, "_id"> {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IAuditLogSchema extends Document, Omit<IAuditLog, "_id"> {
   createdAt: Date;
   updatedAt: Date;
 }

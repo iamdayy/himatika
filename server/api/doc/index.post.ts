@@ -78,6 +78,24 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Failed to save doc",
       });
     }
+    
+    // Broadcast notification
+    // broadcast('notification', {
+    //   title: 'New Document',
+    //   message: `${saved.label} has been uploaded.`,
+    //   type: 'success',
+    //   icon: 'i-heroicons-document-text',
+    //   link: `/dashboard/signature` // Adjust link as needed
+    // });
+    
+    // Audit Log
+    logAction({
+        action: 'CREATE',
+        event,
+        target: `Document: ${saved.label}`,
+        details: { docId: saved._id }
+    });
+
     return {
       statusCode: 200,
       statusMessage: "Doc added successfully",

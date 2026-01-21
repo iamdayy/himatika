@@ -83,6 +83,11 @@ export const useDashboardNavigation = () => {
           icon: "i-heroicons-cog",
           to: "/administrator/config",
         },
+        {
+          label: "Audit Logs",
+          icon: "i-heroicons-clipboard-document-check",
+          to: "/dashboard/audit",
+        },
       ]);
     }
     return baseLinks;

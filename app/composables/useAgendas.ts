@@ -1,3 +1,4 @@
+import { useStatsStore } from "~/stores/useStatsStore";
 import type { IAgenda, IMember, IUser, TPaymentStatus } from "~~/types";
 
 export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
@@ -6,11 +7,10 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
 
   const { data: dataUser, status } = useAuth();
   const user = computed(() => dataUser.value as IUser);
-  const agendasMe = computed<
-    { committees?: IAgenda[]; members?: IAgenda[] } | undefined
-  >(() => {
-    return user.value?.member.agendas;
-  });
+
+  // Use stats store for deep data (agendasMe)
+  const statsStore = useStatsStore();
+  const { agendasMe } = storeToRefs(statsStore);
   const canMeRegisterAsCommittee = computed<boolean>(() => {
     const date = agenda.value?.configuration.committee.canRegisterUntil.end;
     const canRegister = agenda.value?.configuration.committee.canRegister;

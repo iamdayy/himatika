@@ -22,7 +22,8 @@ const isDarkMode = computed({
 });
 
 // UI state
-const isOpen = ref<boolean>(false)
+const isOpen = ref<boolean>(false);
+
 
 // Navigation links
 const navigation = computed<NavigationMenuItem[]>(() => [

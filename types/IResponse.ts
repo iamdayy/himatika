@@ -7,6 +7,7 @@ import type {
   IDoc,
   IDocGrouped,
   IEncryption,
+  ILeaderboard,
   IMember,
   IMessage,
   INews,
@@ -314,5 +315,18 @@ export interface IEncryptionsResponse extends IResponse {
     encryptions?: Omit<IEncryption, "private_key">[];
     count?: number;
     encryption?: Omit<IEncryption, "_id">;
+  };
+}
+
+export interface IMeResponse extends IResponse {
+  data?: {
+    user?: IMember & { username: string };
+  };
+}
+
+export interface ILeaderboardResponse extends IResponse {
+  data?: {
+    leaderboard?: ILeaderboard[];
+    length: number;
   };
 }

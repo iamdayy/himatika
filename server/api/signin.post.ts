@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { UserModel } from "~~/server/models/UserModel";
 import { MemberModel } from "../models/MemberModel";
 import { setSession } from "../utils/Sessions";
@@ -74,6 +75,17 @@ export default defineEventHandler(async (event) => {
       token,
       refreshToken,
       user: user._id as Types.ObjectId,
+    });
+    
+    // Audit Log: Login
+    // Note: getRequestIP needs to be handled carefully in production (e.g. x-forwarded-for)
+    const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
+    await AuditLogModel.create({
+        action: 'LOGIN',
+        user: user.member, // or user._id
+        ip: ip,
+        details: { username: body.username },
+        target: 'Auth'
     });
 
     // Return tokens

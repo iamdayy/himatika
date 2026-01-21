@@ -115,7 +115,7 @@ export interface IMember {
   aspirations?: IAspiration[];
   manualPoints?: IPointLog[];
   documents?: IDoc[];
-  docsRequestSign?: IDoc[];
+  badges?: IBadge[];
   organizer?: {
     role: string;
     period: IPeriod;
@@ -611,4 +611,32 @@ export interface IPointLog {
   proof?: string;
   status?: "pending" | "approved" | "rejected";
   date?: Date;
+}
+
+export interface IBadge {
+  _id?: string | Types.ObjectId;
+  name: string;
+  description: string;
+  icon: string;
+  slug: string;
+  minPoints?: number;
+}
+
+export interface ILeaderboard {
+  _id: string | Types.ObjectId;
+  fullName: string;
+  avatar?: string;
+  nim: number;
+  points: number;
+  badges: IBadge[];
+}
+
+export interface IAuditLog {
+  _id?: string | Types.ObjectId;
+  action: string;
+  user?: Types.ObjectId | IMember | number;
+  ip?: string;
+  details?: any;
+  target?: string; // e.g., "Agenda: 12345" or "Document: abcde"
+  createdAt?: Date;
 }
