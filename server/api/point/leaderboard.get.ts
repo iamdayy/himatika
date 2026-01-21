@@ -1,4 +1,6 @@
+import { BadgeModel } from "~~/server/models/BadgeModel";
 import { MemberModel } from "~~/server/models/MemberModel";
+import { PointModel } from "~~/server/models/PointModel";
 import { IBadge } from "~~/types";
 import { ILeaderboardResponse } from "~~/types/IResponse";
 
@@ -11,8 +13,8 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
     .populate("agendasMember")
     .populate("projects")
     .populate("aspirations")
-    .populate("manualPoints")
-    .populate("badges");
+    .populate({path:"manualPoints", model:PointModel})
+    .populate({path:"badges", model:BadgeModel});
 
   let leaderboard = members
     .map((member) => {
