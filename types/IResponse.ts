@@ -316,3 +316,9 @@ export interface IEncryptionsResponse extends IResponse {
     encryption?: Omit<IEncryption, "_id">;
   };
 }
+
+export interface IMeResponse extends IResponse {
+  data?: {
+    user?: IMember & { username: string };
+  };
+}

@@ -115,7 +115,6 @@ export interface IMember {
   aspirations?: IAspiration[];
   manualPoints?: IPointLog[];
   documents?: IDoc[];
-  docsRequestSign?: IDoc[];
   organizer?: {
     role: string;
     period: IPeriod;

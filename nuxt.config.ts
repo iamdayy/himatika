@@ -17,6 +17,40 @@ export default defineNuxtConfig({
     // Server membuat HTML sekali, lalu disimpan di CDN Vercel
     "/news/**": { swr: 10 },
     "/agendas/**": { swr: 10 },
+    
+    // 2.1 API Caching (Optimasi)
+    "/api/news/**": { swr: 60 },
+    "/api/agendas/**": { swr: 60 },
+    "/api/gallery/**": { swr: 300 },
+
+    // 2.2 Security Rate Limiting (Nuxt Security)
+    "/api/signin": {
+        security: {
+            rateLimiter: {
+                tokensPerInterval: 10,
+                interval: 60000,
+                headers: false,
+            }
+        }
+    },
+    "/api/signup": {
+        security: {
+            rateLimiter: {
+                tokensPerInterval: 10,
+                interval: 60000,
+                headers: false,
+            }
+        }
+    },
+    "/api/reset-password": {
+        security: {
+            rateLimiter: {
+                tokensPerInterval: 10,
+                interval: 60000,
+                headers: false,
+            }
+        }
+    },
 
     // 3. Halaman yang tidak pernah berubah (Static)
     // Dibuat saat 'npm run build', 0ms loading time di server
@@ -79,7 +113,21 @@ export default defineNuxtConfig({
     "nuxt-qrcode",
     "@vueuse/nuxt",
     "@pinia/nuxt",
+    "nuxt-security",
   ],
+  security: {
+    headers: {
+       crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+       contentSecurityPolicy: {
+        'img-src': ["'self'", 'data:', 'blob:', 'https:', 'http:',  process.env.PUBLIC_URI || 'http://localhost:3000'],
+       }
+    },
+    rateLimiter: {
+        driver: {
+            name: 'lruCache'
+        }
+    }
+  },
   css: ["./app/assets/css/main.css"],
   colorMode: {
     preference: "system",
@@ -185,31 +233,12 @@ export default defineNuxtConfig({
             NIM: "number",
             fullName: "string",
             avatar: "string",
-            class: "string",
-            semester: "number",
-            birth: {
-              place: "string",
-              date: "Date",
-            },
-            sex: "'female' | 'male'",
-            religion: "string",
-            citizen: "string",
-            phone: "string",
             email: "string",
-            address: "IAddress",
-            isRegistered: "boolean",
-            enteredYear: "number",
-            point:
-              "{ semester: number, range: { start: Date, end: Date }, point: number, activities: any }[]",
-            agendas: {
-              committees: "IAgenda[]",
-              members: "IAgenda[]",
-            },
-            projects: "IProject[]",
-            organizer: "IOrganizer",
-            aspirations: "IAspiration[]",
-            documents: "IDoc[]",
-            docsRequestSign: "IDoc[]",
+            organizer: "{role: string; period: {start: Date; end: Date}}",
+            status: "string",
+            semester: "number",
+            class: "string",
+            sex: "'female' | 'male'",
           },
         },
       },

@@ -366,11 +366,6 @@ memberSchema.virtual("documents", {
   localField: "_id",
   foreignField: "uploader",
 });
-memberSchema.virtual("docsRequestSign", {
-  ref: "Doc",
-  localField: "_id",
-  foreignField: "signs.user",
-});
 
 // Virtual for considerationBoards
 memberSchema.virtual("organizersConsiderationBoard", {

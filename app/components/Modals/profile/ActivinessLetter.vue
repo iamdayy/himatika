@@ -28,11 +28,14 @@ const { $ts } = useI18n();
 
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 
+const { data: fullProfile } = await useFetch<any>('/api/me');
+
 const config = computed(() => configData.value?.data);
 const loading = ref(false);
 const points = computed<IPointWithDisabledAndDoc[]>(() => {
-    if (!user.value?.member?.point) return [];
-    return user.value.member.point.map((point) => ({
+    // Use fullProfile instead of user.member
+    if (!fullProfile.value?.point) return [];
+    return fullProfile.value.point.map((point: any) => ({
         ...point,
         disabled: ActivinessLetters.value?.some((doc) => doc.tags.includes(`Semester ${point.semester}`)) || point.point < (config.value?.minPoint || 0),
         doc: ActivinessLetters.value?.find((doc) => doc.tags.includes(`Semester ${point.semester}`))?._id as string || ''

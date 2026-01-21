@@ -4,7 +4,7 @@ import type { AccordionItem, TabsItem } from "@nuxt/ui";
 import imageCompression from "browser-image-compression";
 import type { DriveStep } from "driver.js";
 import type { IAgenda } from "~~/types";
-import { type IConfigResponse } from "~~/types/IResponse";
+import { type IMeResponse } from "~~/types/IResponse";
 // Define page metadata
 definePageMeta({
     layout: 'dashboard',
@@ -30,11 +30,21 @@ const CropImageModal = overlay.create(ModalsImageCrop);
 const ImageModal = overlay.create(ModalsImageOpen);
 const ActivinessLetterModal = overlay.create(ModalsProfileActivinessLetter);
 
+// Fetch Full Profile data because session is now Lite
+const { data: fullProfile, refresh: refreshProfile, pending: pendingProfile } = useAsyncData(() => $api<IMeResponse>('/api/me'), {
+    transform: (data) => {
+        if (data.statusCode === 200 && data.data) {
+            return data.data.user;
+        }
+        return null;
+    },
+});
+
+
 
 
 const editMode = ref(false);
 const file = ref<File | null>(null);
-const { data: configData } = useAsyncData(() => $api<IConfigResponse>("/api/config"));
 
 // Use window size to determine if the device is mobile
 const windowSize = useWindowSize();
@@ -78,12 +88,12 @@ const member = ref({
     email: user?.value?.member.email || "",
     fullName: user?.value?.member.fullName || "",
     class: user?.value?.member.class || "",
-    semester: user?.value?.member.semester || "",
+    semester: user?.value?.member.semester || 1,
     birth: {
         place: user?.value?.member.birth.place || "",
         date: new Date(user?.value?.member.birth.date!) || new Date(),
     },
-    sex: user?.value?.member.sex || "",
+    sex: user?.value?.member.sex || "male",
     religion: user?.value?.member.religion || "",
     citizen: user?.value?.member.citizen || "",
     phone: user?.value?.member.phone || "",
@@ -96,13 +106,34 @@ const member = ref({
         country: user?.value?.member.address.country || "",
         zip: user?.value?.member.address.zip || "",
     },
-    point: user?.value?.member.point || [],
-    agendasCommittee: user?.value?.member.agendas.committees || [],
-    agendasMember: user?.value?.member.agendas.members || [],
-    projects: user?.value?.member.projects || [],
-    aspirations: user?.value?.member.aspirations || [],
-    organizer: user?.value?.member.organizer || null,
+    // Data berat diambil dari fullProfile
+    point: fullProfile.value?.point || [],
+    agendasCommittee: fullProfile.value?.agendas?.committees || [],
+    agendasMember: fullProfile.value?.agendas?.members || [],
+    projects: fullProfile.value?.projects || [],
+    aspirations: fullProfile.value?.aspirations || [],
+    organizer: user?.value?.member.organizer || undefined,
 })
+
+// Watch fullProfile changes (e.g. after first hydration)
+watch(fullProfile, (newVal) => {
+    if (newVal) {
+        if (!member.value) return;
+        member.value.point = newVal.point || [];
+        member.value.agendasCommittee = newVal.agendas?.committees || [];
+        member.value.agendasMember = newVal.agendas?.members || [];
+        member.value.projects = newVal.projects || [];
+        member.value.aspirations = newVal.aspirations || [];
+        // Update basic info if needed? Usually session is fast enough for basic info.
+        // But for completeness:
+        if (newVal.class) member.value.class = newVal.class;
+        if (newVal.semester) member.value.semester = newVal.semester;
+        if (newVal.birth && member.value.birth) {
+            member.value.birth.place = newVal.birth.place;
+            member.value.birth.date = new Date(newVal.birth.date);
+        }
+    }
+}, { immediate: true });
 const openImage = () => {
     ImageModal.open({
         photo: {
@@ -217,9 +248,9 @@ const pointAccordionItems = computed<AccordionItem[]>(() => {
 const getAgendasCommitteeByRange = (range: { start: Date; end: Date }): IAgenda[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const agendas = member.value?.agendasCommittee?.filter((agenda: { date: { start: string; end: string; }; }) => {
-        const agendaDateStart = new Date(agenda.date.start as string);
-        const agendaDateEnd = new Date(agenda.date.end as string);
+    const agendas = member.value?.agendasCommittee?.filter((agenda) => {
+        const agendaDateStart = new Date(agenda.date.start);
+        const agendaDateEnd = new Date(agenda.date.end);
         return agendaDateStart >= start && agendaDateEnd <= end;
     }) || [];
     return agendas;
@@ -227,9 +258,9 @@ const getAgendasCommitteeByRange = (range: { start: Date; end: Date }): IAgenda[
 const getAgendasMemberByRange = (range: { start: Date; end: Date }): IAgenda[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const agendas = member.value?.agendasMember?.filter((agenda: { date: { start: string; end: string; }; }) => {
-        const agendaDateStart = new Date(agenda.date.start as string);
-        const agendaDateEnd = new Date(agenda.date.end as string);
+    const agendas = member.value?.agendasMember?.filter((agenda) => {
+        const agendaDateStart = new Date(agenda.date.start);
+        const agendaDateEnd = new Date(agenda.date.end);
         return agendaDateStart >= start && agendaDateEnd <= end;
     }) || [];
     return agendas;
@@ -237,7 +268,7 @@ const getAgendasMemberByRange = (range: { start: Date; end: Date }): IAgenda[] =
 const getProjectsByRange = (range: { start: Date; end: Date }) => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const projects = member.value?.projects?.filter((project: { date: string | number | Date; }) => {
+    const projects = member.value?.projects?.filter((project) => {
         const projectDate = new Date(project.date);
         return projectDate >= start && projectDate <= end;
     }) || [];
@@ -246,8 +277,8 @@ const getProjectsByRange = (range: { start: Date; end: Date }) => {
 const getAspirationsByRange = (range: { start: Date; end: Date }) => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const aspirations = member.value?.aspirations?.filter((aspiration: { createdAt: string | number | Date; anonymous: any; }) => {
-        const aspirationDate = new Date(aspiration.createdAt);
+    const aspirations = member.value?.aspirations?.filter((aspiration) => {
+        const aspirationDate = new Date(aspiration.createdAt || new Date());
         return aspirationDate >= start && aspirationDate <= end && !aspiration.anonymous;
     }) || [];
     return aspirations;
@@ -266,14 +297,24 @@ const tabItems = computed(() => [
     }
 ] satisfies TabsItem[]);
 const breadcumbs = computed(() => [
-    { label: $ts('dashboard'), icon: 'i-heroicons-home' },
+    { label: $ts('dashboard'), icon: 'i-heroicons-home', to: '/dashboard' },
     { label: $ts('profile'), icon: 'i-heroicons-user' }
 ]);
 </script>
 <template>
     <div class="items-center justify-center mb-2">
         <UBreadcrumb :items="breadcumbs" class="ms-4" v-if="!isMobile" />
-        <div class="pt-12 mt-2 md:pt-0 gap-4 flex flex-col-reverse md:flex-row">
+        <div class="pt-12 mt-2 md:pt-0 gap-4 flex flex-col-reverse md:flex-row" v-if="pendingProfile">
+            <div class="md:flex-3/4 flex-1 space-y-4 h-screen">
+                <USkeleton class="h-12 w-full" />
+                <div class="flex flex-col gap-2 w-full h-full">
+                    <USkeleton class="w-full h-1/2" />
+                    <USkeleton class="w-full h-1/2" />
+                </div>
+            </div>
+            <USkeleton class="flex-1 md:flex-1/4 space-y-4 pt-12" />
+        </div>
+        <div class="pt-12 mt-2 md:pt-0 gap-4 flex flex-col-reverse md:flex-row" v-else>
             <UTabs :items="tabItems" class="md:flex-3/4 flex-1" v-if="user">
                 <template #personal>
                     <div class="space-y-4">
@@ -335,7 +376,7 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('citizenship')
-                                        }}</dt>
+                                    }}</dt>
                                     <UInput v-model="member.citizen" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ user?.member.citizen }}</dd>
                                 </div>
@@ -458,7 +499,7 @@ const breadcumbs = computed(() => [
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{
                                                     member.point[index]!.point
-                                                }} pts</UBadge>
+                                                    }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -470,7 +511,7 @@ const breadcumbs = computed(() => [
                                                         member.point[index]!.activities.agendas.committees +
                                                         member.point[index]!.activities.agendas.participants }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
-                                                    }}
+                                                        }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -480,7 +521,7 @@ const breadcumbs = computed(() => [
                                                         0
                                                     }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project')
-                                                    }}
+                                                        }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -489,7 +530,7 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('aspiration')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -580,13 +621,13 @@ const breadcumbs = computed(() => [
                                                         <div
                                                             v-if="getProjectsByRange(member.point[index]!.range) && getProjectsByRange(member.point[index]!.range).length > 0">
                                                             <div v-for="project in getProjectsByRange(member.point[index]!.range)"
-                                                                :key="project._id"
+                                                                :key="(project._id as string)"
                                                                 class="flex items-center justify-between p-3 bg-purple-50/20 rounded-lg">
                                                                 <div class="flex-1">
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                        }}</p>
+                                                                    }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -612,7 +653,7 @@ const breadcumbs = computed(() => [
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
                                                             <h3 class="text-lg font-semibold">{{ $ts('aspiration')
-                                                            }}
+                                                                }}
                                                             </h3>
                                                             <UBadge variant="subtle">{{
                                                                 getAspirationsByRange(member.point[index]!.range)?.length

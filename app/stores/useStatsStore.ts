@@ -3,6 +3,7 @@ import type { IAgenda, IAspiration, IProject } from "~~/types";
 import type {
   IAgendaResponse,
   IAspirationMeResponse,
+  IMeResponse,
 } from "~~/types/IResponse";
 
 interface IPoint {
@@ -21,6 +22,7 @@ export const useStatsStore = defineStore("stats", () => {
   const { canMeRegister } = useCanMeRegister();
 
   // --- State (Data Mentah) ---
+  const memberProfile = ref<any>(null); // Menyimpan detailed member data dari /api/me
   const rawAgendas = ref<IAgenda[]>([]);
   const rawAgendasCount = ref(0);
   const aspirations = ref<IAspiration[]>([]);
@@ -30,6 +32,17 @@ export const useStatsStore = defineStore("stats", () => {
   const loading = ref(false);
 
   // --- Actions (Fetching Data) ---
+  async function fetchMemberProfile() {
+      try {
+          const response = await $api<IMeResponse>("/api/me");
+          if (response.statusCode === 200 && response.data) {
+            memberProfile.value = response.data.user;
+          }
+      } catch (error) {
+          console.error("Failed to fetch member profile", error);
+      }
+  }
+
   // Menggantikan useAsyncData
   async function fetchAgendas() {
     try {
@@ -64,7 +77,7 @@ export const useStatsStore = defineStore("stats", () => {
 
   // Fungsi wrapper untuk memanggil semua (mirip init di composable)
   async function init() {
-    await Promise.all([fetchAgendas(), fetchAspirations(), fetchPoints()]);
+    await Promise.all([fetchAgendas(), fetchAspirations(), fetchPoints(), fetchMemberProfile()]);
   }
 
   // --- Getters (Computed) ---
@@ -72,7 +85,7 @@ export const useStatsStore = defineStore("stats", () => {
   const agendasMe = computed<
     { committees?: IAgenda[]; members?: IAgenda[] } | undefined
   >(() => {
-    return user.value?.member.agendas;
+    return memberProfile.value?.agendas;
   });
 
   const agendasCanMeRegistered = computed<IAgenda[] | undefined>(() => {
@@ -85,7 +98,7 @@ export const useStatsStore = defineStore("stats", () => {
   });
 
   const projectsMe = computed<IProject[]>(() => {
-    return user.value?.member.projects || [];
+    return memberProfile.value?.projects || [];
   });
 
   const all = computed<number>(() => {
@@ -104,6 +117,7 @@ export const useStatsStore = defineStore("stats", () => {
   return {
     // State
     rawAgendas,
+    memberProfile,
     aspirations,
     points,
     loading,
@@ -111,6 +125,7 @@ export const useStatsStore = defineStore("stats", () => {
     fetchAgendas,
     fetchAspirations,
     fetchPoints,
+    fetchMemberProfile,
     init,
     // Getters
     agendasMe,

@@ -121,10 +121,6 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
             },
           },
           {
-            path: "docsRequestSign",
-            model: DocModel,
-          },
-          {
             path: "organizersDailyManagement",
             model: OrganizerModel,
             transform: (doc: IOrganizer, id: any) => {

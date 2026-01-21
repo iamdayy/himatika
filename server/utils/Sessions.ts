@@ -55,9 +55,33 @@ export const checkSession = async (payload: string) => {
     // token lama PASTI belum expired secara claims. Jadi aman verify biasa.
     jwt.verify(payload, getSecretKey());
 
-    // 3. Ambil user dengan populate member (asumsi member adalah relasi/field)
-    // Menggunakan lean() untuk performa lebih cepat (return POJO, bukan Mongoose Document)
-    const user = await UserModel.findById(session.user);
+    // 3. Ambil user dengan populate member (Lite version)
+    // Kita disable autopopulate default User -> Member yang load semua project/agenda
+    // Kita manual populate hanya field penting
+    const user = await UserModel.findById(session.user)
+      .select("username member")
+      .populate({
+        path: "member",
+        populate: [
+          {
+            path: 'organizersConsiderationBoard'
+          },
+          {
+            path: 'organizersDailyManagement'
+          },
+          {
+            path: 'organizersDepartmentCoordinator'
+          },
+          {
+            path: 'organizersDepartmentMembers'
+          },
+          // {
+          //   path: 'organizer'
+          // }
+        ],
+        select: "NIM fullName avatar email organizer status semester class sex",
+        options: { autopopulate: false }, // Penting: Matikan autopopulate di level Member
+      })
 
     if (!user) {
       throw createError({
@@ -66,13 +90,13 @@ export const checkSession = async (payload: string) => {
       });
     }
 
-    // 4. Return data yang bersih
+    // 4. Return data yang bersih (Lite Session)
     return {
       username: user.username,
-      // Menggunakan spread operator agar tidak perlu update manual jika field member bertambah
       member: user.member ? user.member : null,
     };
   } catch (error: any) {
+    console.log(error);
     // Jika error dari JWT (expired), kita lempar 401
     if (
       error.name === "TokenExpiredError" ||

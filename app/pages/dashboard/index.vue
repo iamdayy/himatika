@@ -1,11 +1,12 @@
 <script setup lang='ts'>
 import type { ICategory, IMember } from "~~/types";
 
-import { ModalsAchievementClaim, ModalsActions, NuxtImg, NuxtLink, UAvatar } from '#components';
+import { ModalsAchievementClaim, ModalsActions, NuxtLink, UAvatar } from '#components';
 import type { TableColumn } from "#ui/types";
 import type { DriveStep } from "driver.js";
 import { useStatsStore } from "~/stores/useStatsStore";
 import type { IProjectsResponse } from "~~/types/IResponse";
+const NuxtImg = resolveComponent('NuxtImg');
 interface IPoint {
     avatar?: string;
     fullName: string;
@@ -82,7 +83,7 @@ await useAsyncData('dashboard-stats', async () => {
     await statsStore.init();
     return true; // Return sesuatu agar useAsyncData tahu proses selesai
 });
-const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations } = storeToRefs(statsStore);
+const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations, memberProfile } = storeToRefs(statsStore);
 const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
     transform: (data) => ({
         data: data.data?.projects || [],
@@ -255,7 +256,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
                         <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
@@ -268,7 +269,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 projectsMe.length
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="projectsMe.length || 0" :color="color" :max="data?.count || 100"
@@ -281,7 +282,7 @@ onMounted(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 aspirations.length
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
@@ -300,11 +301,11 @@ onMounted(() => {
                     </template>
                     <div class="flex items-center justify-between w-full mb-2">
                         <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                            user?.member.point[0]!.point || 0 }}
+                            memberProfile?.point?.[0]?.point || 0 }}
                         </h2>
                         <UIcon name="i-heroicons-arrow-trending-up" class="text-6xl" />
                     </div>
-                    <UProgress :model-value="(user?.member.point[0]!.point || 0)"
+                    <UProgress :model-value="(memberProfile?.point?.[0]?.point || 0)"
                         :max="configData?.data.minPoint || 100" indicator />
                     <template #footer>
                         <div class="flex items-center justify-between w-full">
