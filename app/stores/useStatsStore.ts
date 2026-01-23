@@ -19,7 +19,6 @@ interface IPoint {
 export const useStatsStore = defineStore("stats", () => {
   // --- Dependencies ---
   const { $api } = useNuxtApp();
-  const { data: user } = useAuth(); // Mengambil user dari auth module
   const { canMeRegister } = useCanMeRegister();
 
   // --- State (Data Mentah) ---
