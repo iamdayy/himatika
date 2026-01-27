@@ -69,17 +69,32 @@ const onFileChange = async ($event: Event) => {
             img: blob,
             title: file.value.name,
             async onCropped(file: File) {
-                const body = new FormData();
-                body.append("avatar", file);
-                await $api("/api/member/avatar", {
-                    method: "put",
-                    query: {
-                        NIM: user?.value?.member.NIM
-                    },
-                    body
+                CropImageModal.patch({
+                    loading: true
                 });
-                CropImageModal.close();
-                refresh();
+                try {
+                    const body = new FormData();
+                    body.append("avatar", file);
+                    await $api("/api/member/avatar", {
+                        method: "put",
+                        query: {
+                            NIM: user?.value?.member.NIM
+                        },
+                        body
+                    });
+                    CropImageModal.patch({
+                        loading: false
+                    });
+                } catch (error) {
+                    toast.add({
+                        title: "Error",
+                        description: "Failed to update avatar",
+                        color: "error",
+                    });
+                } finally {
+                    CropImageModal.close();
+                    refresh();
+                }
             }
         });
     }
@@ -113,6 +128,7 @@ const member = ref({
     agendasMember: fullProfile.value?.agendas?.members || [],
     projects: fullProfile.value?.projects || [],
     aspirations: fullProfile.value?.aspirations || [],
+    manualPoints: fullProfile.value?.manualPoints || [],
     badges: fullProfile.value?.badges || [],
     organizer: user?.value?.member.organizer || undefined,
 })
@@ -121,11 +137,13 @@ const member = ref({
 watch(fullProfile, (newVal) => {
     if (newVal) {
         if (!member.value) return;
+        member.value.enteredYear = newVal.enteredYear || "";
         member.value.point = newVal.point || [];
         member.value.agendasCommittee = newVal.agendas?.committees || [];
         member.value.agendasMember = newVal.agendas?.members || [];
         member.value.projects = newVal.projects || [];
         member.value.aspirations = newVal.aspirations || [];
+        member.value.manualPoints = newVal.manualPoints || [];
         member.value.badges = newVal.badges || [];
         // Update basic info if needed? Usually session is fast enough for basic info.
         // But for completeness:
@@ -285,6 +303,17 @@ const getAspirationsByRange = (range: { start: Date; end: Date }) => {
         return aspirationDate >= start && aspirationDate <= end && !aspiration.anonymous;
     }) || [];
     return aspirations;
+};
+
+const getManualPointsByRange = (range: { start: Date; end: Date }) => {
+    const start = new Date(range.start);
+    const end = new Date(range.end);
+    const manualPoints = member.value?.manualPoints?.filter(point => {
+        if (!point.date) return false;
+        const pointDate = new Date(point.date);
+        return pointDate >= start && pointDate <= end;
+    }) || [];
+    return manualPoints;
 };
 
 const tabItems = computed(() => [
@@ -529,7 +558,7 @@ const breadcumbs = computed(() => [
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
                                                     formatDate(member.point[index]!.range.end) }}
                                             </div>
-                                            <div class="grid grid-cols-3 gap-2 mt-2 text-xs">
+                                            <div class="grid grid-cols-4 gap-2 mt-2 text-xs">
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.agendas.committees +
@@ -554,6 +583,14 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('aspiration')
+                                                        }}</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="font-medium">{{
+                                                        getManualPointsByRange(member.point[index]!.range)?.length ||
+                                                        0 }}</div>
+                                                    <div class="text-gray-500 dark:text-gray-300">{{
+                                                        $ts('achievement')
                                                         }}</div>
                                                 </div>
                                             </div>
@@ -704,6 +741,25 @@ const breadcumbs = computed(() => [
                                                     <div v-else
                                                         class="text-center text-gray-500 dark:text-gray-300 py-4">
                                                         {{ $ts('no_aspirations') }}
+                                                    </div>
+                                                </UCard>
+                                                <UCard
+                                                    v-if="getManualPointsByRange(member.point[index]!.range)?.length > 0"
+                                                    class="mt-4">
+                                                    <template #header>
+                                                        <h3 class="text-lg font-semibold">{{ $ts('achievement') }}</h3>
+                                                    </template>
+                                                    <div class="space-y-4">
+                                                        <div v-for="manualPoint, i in getManualPointsByRange(member.point[index]!.range)"
+                                                            :key="i"
+                                                            class="flex items-center justify-between p-3 bg-yellow-50/20 rounded-lg">
+                                                            <div class="flex-1">
+                                                                <p class="font-medium">{{ manualPoint.reason }}
+                                                                </p>
+                                                            </div>
+                                                            <UBadge variant="subtle">{{ manualPoint.amount }}
+                                                            </UBadge>
+                                                        </div>
                                                     </div>
                                                 </UCard>
                                             </div>

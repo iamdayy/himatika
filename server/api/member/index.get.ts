@@ -1,6 +1,7 @@
 import { SortOrder } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
+import { PointModel } from "~~/server/models/PointModel";
 import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
 import { IReqMemberQuery } from "~~/types/IRequestPost";
 import { IMemberResponse } from "~~/types/IResponse";
@@ -107,7 +108,13 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
         })
         .populate({
           path: "aspirations",
+        })
+        .populate({
+          path: "manualPoints",
+          model: PointModel,
+          select: "amount reason type date status -_id",
         });
+
       if (!member) {
         throw createError({
           statusCode: 404,
@@ -247,6 +254,12 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       })
       .populate({
         path: "aspirations",
+      })
+      .populate({
+        path: "manualPoints",
+        model: PointModel,
+        select: "amount reason date status -_id",
+        match: { status: "approved" },
       })
       .select(
         "NIM avatar fullName email class semester point enteredYear createdAt status"

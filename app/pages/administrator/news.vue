@@ -47,11 +47,11 @@ const searchQuery = ref('');
 const selectedTags = ref([]);
 const selectedCategory = ref([]);
 const notPublished = ref(true);
-const archived = ref(true);
+const archived = ref(false);
 /**
  * Fetch newss data
  */
-const { data, refresh, pending } = useLazyAsyncData('news', () => $api<INewsResponse>('/api/admin/news', {
+const { data, refresh, pending } = useAsyncData('admin-news', () => $api<INewsResponse>('/api/admin/news', {
     query: {
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,

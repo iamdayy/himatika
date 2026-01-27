@@ -18,9 +18,6 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
 
   let leaderboard = members
     .map((member) => {
-      // Accessing the virtual 'point'
-      // Note: member.point is IPoint[] or 0 based on MemberModel logic
-      // @ts-ignore
       const pointsData = member.point;
       let totalPoints = 0;
 
@@ -34,13 +31,12 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
         avatar: member.avatar,
         nim: member.NIM,
         points: totalPoints,
-        // @ts-ignore
         badges: member.badges as IBadge[],
       };
     })
-    .filter(m => m.points > 0) // Optional: Hide members with 0 points
+    .filter(m => m.points > 0)
     .sort((a, b) => b.points - a.points)
-    .slice(0, 5); // Top 50
+    .slice(0, 5);
 
     const meRaw = members.find(
       (member) => member.NIM == event.context.user.member.NIM
@@ -52,12 +48,12 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
         totalPoints = meRaw.point.reduce((sum, p) => sum + (p.point || 0), 0);
       }
         me = {
-        _id: meRaw?._id,
-        fullName: meRaw?.fullName,
-        avatar: meRaw?.avatar,
-        nim: meRaw?.NIM,
+        _id: meRaw._id,
+        fullName: meRaw.fullName,
+        avatar: meRaw.avatar,
+        nim: meRaw.NIM,
         points: totalPoints,
-        badges: meRaw?.badges as IBadge[],
+        badges: meRaw.badges as IBadge[],
     };
     }
 

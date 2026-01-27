@@ -165,7 +165,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
                                         $ts('generation')
-                                        }}</label>
+                                    }}</label>
                                     <p class="text-sm">{{ member.enteredYear || 'Not specified' }}</p>
                                 </div>
                             </div>
@@ -214,13 +214,13 @@
                                                     {{ member.point[index]!.semester
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{ member.point[index]!.point
-                                                }} pts</UBadge>
+                                                    }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
                                                     formatDate(member.point[index]!.range.end) }}
                                             </div>
-                                            <div class="grid grid-cols-3 gap-2 mt-2 text-xs">
+                                            <div class="grid grid-cols-4 gap-2 mt-2 text-xs">
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.agendas.committees +
@@ -230,7 +230,7 @@
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{ member.point[index]!.activities.projects
-                                                    }}</div>
+                                                        }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project') }}
                                                     </div>
                                                 </div>
@@ -238,7 +238,13 @@
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.aspirations }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('aspiration')
-                                                        }}</div>
+                                                    }}</div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="font-medium">{{
+                                                        member.point[index]!.activities.manualPoints }}</div>
+                                                    <div class="text-gray-500 dark:text-gray-300">{{ $ts('achievement')
+                                                    }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -330,7 +336,7 @@
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                    }}</p>
+                                                                        }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -381,6 +387,29 @@
                                                     <div v-else
                                                         class="text-center text-gray-500 dark:text-gray-300 py-4">
                                                         {{ $ts('no_aspirations') }}
+                                                    </div>
+                                                </UCard>
+                                                <!-- Achievements / Manual Point -->
+                                                <UCard>
+                                                    <template #header>
+                                                        <div class="flex items-center justify-between">
+                                                            <h3 class="text-lg font-medium">{{ $ts('achievement') }}
+                                                            </h3>
+                                                            <UBadge color="secondary" variant="subtle">{{
+                                                                getManualPointsByRange(member.point[index]!.range).length
+                                                                }}</UBadge>
+                                                        </div>
+                                                    </template>
+                                                    <div class="p-6 space-y-4">
+                                                        <div v-for="manualPoint, i in getManualPointsByRange(member.point[index]!.range)"
+                                                            :key="i"
+                                                            class="flex items-center justify-between p-3 bg-yellow-50/20 rounded-lg">
+                                                            <div class="flex-1">
+                                                                <p class="font-medium">{{ manualPoint.reason }}</p>
+                                                            </div>
+                                                            <UBadge variant="subtle">{{ manualPoint.amount }} pts
+                                                            </UBadge>
+                                                        </div>
                                                     </div>
                                                 </UCard>
                                             </div>
@@ -466,8 +495,8 @@ const getAgendasCommitteeByRange = (range: { start: Date; end: Date }) => {
     const start = new Date(range.start);
     const end = new Date(range.end);
     const agendas = member.value?.agendasCommittee?.filter(agenda => {
-        const agendaDateStart = new Date(agenda.date.start as string);
-        const agendaDateEnd = new Date(agenda.date.end as string);
+        const agendaDateStart = new Date(agenda.date.start);
+        const agendaDateEnd = new Date(agenda.date.end);
         return agendaDateStart >= start && agendaDateEnd <= end;
     }) || [];
     return agendas;
@@ -476,8 +505,8 @@ const getAgendasMemberByRange = (range: { start: Date; end: Date }) => {
     const start = new Date(range.start);
     const end = new Date(range.end);
     const agendas = member.value?.agendasMember?.filter(agenda => {
-        const agendaDateStart = new Date(agenda.date.start as string);
-        const agendaDateEnd = new Date(agenda.date.end as string);
+        const agendaDateStart = new Date(agenda.date.start);
+        const agendaDateEnd = new Date(agenda.date.end);
         return agendaDateStart >= start && agendaDateEnd <= end;
     }) || [];
     return agendas;
@@ -499,6 +528,17 @@ const getAspirationsByRange = (range: { start: Date; end: Date }) => {
         return aspirationDate >= start && aspirationDate <= end && !aspiration.anonymous;
     }) || [];
     return aspirations;
+};
+
+const getManualPointsByRange = (range: { start: Date; end: Date }) => {
+    const start = new Date(range.start);
+    const end = new Date(range.end);
+    const manualPoints = member.value?.manualPoints?.filter(point => {
+        if (!point.date) return false;
+        const pointDate = new Date(point.date);
+        return pointDate >= start && pointDate <= end;
+    }) || [];
+    return manualPoints;
 };
 
 /**

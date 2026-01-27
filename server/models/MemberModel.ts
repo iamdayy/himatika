@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IAgenda, IMember, IPoint } from "~~/types";
+import { IAgenda, IMember, IPoint, IPointLog } from "~~/types";
 import { IAddressSchema, IMemberSchema } from "~~/types/ISchemas";
 import { AgendaModel } from "./AgendaModel";
 import { ProjectModel } from "./ProjectModel";
@@ -149,7 +149,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     .filter(
       (agenda: IAgenda) =>
         agenda.committees?.find(
-          (c) => (c.member as IMember).NIM === this.NIM && c.visiting
+          (c) => (c.member as IMember)?.NIM === this.NIM && c.visiting
         ) === undefined
     );
   const agendasMember = (this.agendasMember || [])
@@ -171,7 +171,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     .filter(
       (agenda: IAgenda) =>
         agenda.participants?.find(
-          (r) => (r.member as IMember).NIM === this.NIM && r.visiting
+          (r) => (r.member as IMember)?.NIM === this.NIM && r.visiting
         ) === undefined
     );
   const committeesAgenda =
@@ -219,7 +219,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     aspirations.reduce((acc: number, asp) => acc + 50, 0) || 0;
 
   // Ambil dari virtual 'manualPoints'
-  const manualPointsLog = (this.manualPoints || []).filter((p: any) => {
+  const manualPointsLog = (this.manualPoints || []).filter((p: IPointLog) => {
     // 1. Cek Tanggal (Semester)
     if (!p.date) return false;
     const pDate = new Date(p.date);
@@ -232,7 +232,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
   });
 
   const manualTotal =
-    manualPointsLog.reduce((acc: number, p: any) => acc + (p.amount || 0), 0) ||
+    manualPointsLog.reduce((acc: number, p: IPointLog) => acc + (p.amount || 0), 0) ||
     0;
 
   const total =
@@ -312,6 +312,9 @@ memberSchema.virtual("manualPoints", {
   ref: "PointLog", // Harus sama dengan nama model di mongoose.model('PointLog', ...)
   localField: "_id",
   foreignField: "member",
+  match: {
+    status: "approved",
+  },
 });
 
 memberSchema.virtual("point").get(function () {

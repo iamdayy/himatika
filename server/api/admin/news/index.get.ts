@@ -9,7 +9,7 @@ import type { INewsResponse } from "~~/types/IResponse";
  * @returns {Promise<Object>} The news data or an array of newss with total count.
  * @throws {H3Error} If an error occurs during the process.
  */
-export default defineCachedEventHandler(
+export default defineEventHandler(
   async (event): Promise<INewsResponse> => {
     try {
       const {
