@@ -13,16 +13,6 @@ export default defineNuxtConfig({
     "/profile/**": { ssr: false },
     "/administrator/**": { ssr: false },
 
-    // 2. Homepage & Berita: Update cache setiap 10 detik (SWR)
-    // Server membuat HTML sekali, lalu disimpan di CDN Vercel
-    "/news/**": { swr: 10 },
-    "/agendas/**": { swr: 10 },
-    
-    // 2.1 API Caching (Optimasi)
-    "/api/news/**": { swr: 60 },
-    "/api/agendas/**": { swr: 60 },
-    "/api/gallery/**": { swr: 300 },
-
     // 2.2 Security Rate Limiting (Nuxt Security)
     "/api/signin": {
         security: {
@@ -64,7 +54,7 @@ export default defineNuxtConfig({
       headers: {
         "Access-Control-Allow-Origin": process.env.PUBLIC_URI,
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, content-length",
       },
     },
   },

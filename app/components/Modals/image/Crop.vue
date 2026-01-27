@@ -36,14 +36,20 @@ const props = defineProps({
         },
         description: 'Stencil properties for the cropper'
     },
+    loading: {
+        type: Boolean,
+        default: false,
+        description: 'Loading state of the cropper'
+    }
 });
 
 /**
  * Reactive references
  */
 const cropper = ref();
-const loading = ref(false);
+const loadingState = ref(false);
 const model = defineModel<boolean>();
+
 
 /**
  * Emits
@@ -57,7 +63,7 @@ const emits = defineEmits<{
  * Crop the image
  */
 const crop = () => {
-    loading.value = true;
+    loadingState.value = true;
     if (!cropper.value) return;
     if (!props.img) return;
     if (!cropper.value.getResult()) return;
@@ -68,7 +74,7 @@ const crop = () => {
         });
         emits('cropped', file);
         URL.revokeObjectURL(props.img); // Revoke the object URL to free up memory
-        loading.value = false;
+        loadingState.value = false;
     });
 };
 
@@ -92,7 +98,7 @@ const responsiveClasses = computed(() => ({
         <template #body>
             <div :class="responsiveClasses.container">
                 <Cropper :src="img" :auto-zoom="true" :stencil-props="stencil" ref="cropper" class="mb-4" />
-                <UButton label="Done" :size="uiSize" block @click="crop" :loading="loading"
+                <UButton label="Done" :size="uiSize" block @click="crop" :loading="loadingState"
                     :class="responsiveClasses.button" />
             </div>
         </template>
