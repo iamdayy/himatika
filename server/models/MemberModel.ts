@@ -149,7 +149,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     .filter(
       (agenda: IAgenda) =>
         agenda.committees?.find(
-          (c) => (c.member as IMember).NIM === this.NIM && c.visiting
+          (c) => (c.member as IMember)?.NIM === this.NIM && c.visiting
         ) === undefined
     );
   const agendasMember = (this.agendasMember || [])
@@ -171,7 +171,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     .filter(
       (agenda: IAgenda) =>
         agenda.participants?.find(
-          (r) => (r.member as IMember).NIM === this.NIM && r.visiting
+          (r) => (r.member as IMember)?.NIM === this.NIM && r.visiting
         ) === undefined
     );
   const committeesAgenda =
