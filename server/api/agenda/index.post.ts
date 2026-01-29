@@ -33,7 +33,7 @@ export default defineEventHandler(
       }
 
       // Read and validate the request body
-      const body = await readBody<IReqAgenda>(event);
+      const body = await readBody<IReqAgenda & { isDraft?: boolean }>(event);
 
       if (!body.title) {
         throw createError({
@@ -110,7 +110,7 @@ export default defineEventHandler(
         name: "Administrator",
       };
       // email bulk
-      if (body.enableSubscription) {
+      if (body.enableSubscription && !body.isDraft) {
         // Use event.waitUntil for background processing (Serverless friendly)
         // This allows the response to be sent immediately while email sending continues
         const t = await useTranslationServerMiddleware(event);
@@ -184,13 +184,15 @@ export default defineEventHandler(
       }
       
       // Broadcast notification
-      broadcast('notification', {
-        title: 'New Agenda',
-        message: `${savedAgenda.title} has been created.`,
-        type: 'info',
-        icon: 'i-heroicons-calendar',
-        link: `/agendas`
-      });
+      if (!body.isDraft) {
+        broadcast('notification', {
+          title: 'New Agenda',
+          message: `${savedAgenda.title} has been created.`,
+          type: 'info',
+          icon: 'i-heroicons-calendar',
+          link: `/agendas`
+        });
+      }
 
       // Audit Log
       logAction({

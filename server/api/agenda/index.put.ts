@@ -1,6 +1,11 @@
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ConfigModel } from "~~/server/models/ConfigModel";
 import { MemberModel } from "~~/server/models/MemberModel";
+import { logAction } from "~~/server/utils/logger";
+import { sendBulkEmail } from "~~/server/utils/mailer";
+import Email from "~~/server/utils/mailTemplate";
+import { broadcast } from "~~/server/utils/sse";
 import { IAgenda, ICommittee, IQuestion } from "~~/types";
 import { IError, IResponse } from "~~/types/IResponse";
 /**
@@ -30,7 +35,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
     const { id } = getQuery(ev);
 
     // Read and validate the request body
-    const body = await readBody<IAgenda>(ev);
+    const body = await readBody<IAgenda & { isPublish?: boolean, isDraft?: boolean, enableSubscription?: boolean }>(ev);
 
     // Find the agenda by ID
     const agenda = await AgendaModel.findById(id);
@@ -92,6 +97,102 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
         statusMessage: "Failed to update the agenda",
       });
     }
+
+    if (body.isPublish) {
+      const t = await useTranslationServerMiddleware(ev);
+      const config = useRuntimeConfig();
+
+      let sender = {
+        email: config.resend_from,
+        name: "Administrator",
+      };
+
+      if (body.enableSubscription) {
+        // Optimize Query: Select ONLY email, exclude _id. 
+        // Drastically reduces memory usage (no full Mongoose documents)
+        const emailPromise = (async () => {
+             const members = await MemberModel.find({ status: "active" }).select("email -_id").lean();
+             const emails = members.map((member: any) => ({ email: member.email }));
+
+             const configuration = await ConfigModel.findOne().sort({ createdAt: -1 });
+             // Fallback if config missing, though unlikely
+             const orgName = configuration?.name || config.public.appname; 
+             
+             const emailBody = new Email({
+               recipientName: t('emails.agenda.recipient_name'),
+               emailTitle: t('emails.agenda.email_title', { orgName }),
+               heroTitle: t('emails.agenda.hero_title', { agendaTitle: agenda.title, orgName }),
+               heroSubtitle: t('emails.agenda.hero_subtitle'),
+               heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}`,
+               heroButtonText: t('emails.agenda.hero_button'),
+               contentTitle1: t('emails.agenda.content_title'),
+               contentParagraph1: "",
+               contentAgendaDetails: {
+                 description: agenda.description,
+                 date: (() => {
+                     const start = new Date(agenda.date.start);
+                     const end = new Date(agenda.date.end);
+                     const isSameDay = start.toDateString() === end.toDateString();
+                     if (isSameDay) {
+                         return `${start.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}, ${start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+                     } else {
+                         return `${start.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} - ${end.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                     }
+                 })(),
+                 location: agenda.at,
+                 imageURL: agenda.photos && agenda.photos[0] ? `${config.public.public_uri}${agenda.photos[0].image}` : undefined
+               },
+               ctaTitle: t('emails.agenda.cta_title'),
+               ctaSubtitle: t('emails.agenda.cta_subtitle'),
+               ctaButtonText: t('emails.agenda.cta_button'),
+               ctaButtonLink: `${config.public.public_uri}/agendas/${agenda._id}`,
+               footerText: {
+                 rights: t('emails.footer.rights'),
+                 privacy: t('emails.footer.privacy'),
+                 terms: t('emails.footer.terms'),
+                 unsubscribeReason: t('emails.footer.unsubscribe_reason', { serviceName: orgName }),
+                 unsubscribeAction: t('emails.footer.unsubscribe_action'),
+                 here: t('emails.footer.here')
+               }
+             });
+             
+             await sendBulkEmail(
+               sender,
+               emails,
+               emailBody.render(),
+               t('emails.agenda.subject'),
+               t('emails.agenda.category'),
+               agenda.id
+             );
+        })();
+
+        // If waitUntil is available (Nitro/Cloudflare/Vercel), use it.
+        if (ev.waitUntil) {
+             ev.waitUntil(emailPromise);
+        } else {
+             // Fallback for environments without waitUntil (just unawaited promise)
+             // catch error to prevent unhandled rejection crashing process
+             emailPromise.catch(console.error);
+        }
+      }
+
+      broadcast('notification', {
+        title: 'New Agenda',
+        message: `${agenda.title} has been created.`,
+        type: 'info',
+        icon: 'i-heroicons-calendar',
+        link: `/agendas`
+      });
+      
+      // Audit Log
+      logAction({
+        action: 'CREATE',
+        event: ev,
+        target: `Agenda: ${agenda.title}`,
+        details: { agendaId: agenda._id }
+      });
+    }
+
     // Update the agenda with the new data
     // Return success response
     return {
