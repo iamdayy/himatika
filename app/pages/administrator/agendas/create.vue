@@ -57,6 +57,15 @@ const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/agen
     },
     default: () => undefined,
 });
+const tagsItemsRef = ref<string[]>([]);
+const tagsItems = computed({
+    get: () => {
+        return tagsItemsRef.value;
+    },
+    set: (value) => {
+        tagsItemsRef.value = value;
+    }
+});
 const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
     transform: (data) => {
         const categories = data.data?.categories || [];
@@ -73,7 +82,7 @@ const { data: members, status: memberstatus } = useAsyncData(() => $api<IMemberR
     method: 'GET',
     params: {
         search: memberSearchTerm.value,
-        page: 1,
+        page: 0,
         perPage: 10
     }
 }), {
@@ -131,26 +140,7 @@ const configurationState = reactiveComputed<IAgendaConfiguration>(() => {
 type ICommitteeState = {
     [key: number]: ICommittee;
 };
-// const committeesState = reactiveComputed<ICommitteeState>(() => {
-//     const committees: ICommitteeState = {};
-//     if (!configurationState.committee.jobAvailables) {
-//         return committees;
-//     }
-//     for (let i = 0; i < configurationState.committee.jobAvailables.length; i++) {
-//         const jobAvailable: IJob = configurationState.committee.jobAvailables[i]!;
-//         for (let j = 0; j < jobAvailable.count; j++) {
-//             const key = jobAvailable.count > 1 ? `${jobAvailable.label} ${j + 1}` : jobAvailable.label;
-//             committees[key] = {
-//                 job: key,
-//                 member: 0,
-//                 approved: true,
-//                 approvedAt: new Date(),
-//             };
-//         }
-//     }
-//     return committees;
-// });
-const jobsCommittee = computed(() => [
+const jobsCommitteesRef = ref<{ label: string }[]>([
     { label: 'PIC/Penanggung Jawab' },
     {
         label: 'Ketua Pelaksana',
@@ -177,6 +167,17 @@ const jobsCommittee = computed(() => [
         label: 'Sponsorship',
     },
 ]);
+const jobsCommittee = computed({
+    get: () => {
+        return jobsCommitteesRef.value;
+    },
+    set: (value) => {
+        jobsCommitteesRef.value = value;
+    }
+});
+const addJobCommittee = (newJob: string) => {
+    jobsCommitteesRef.value.push({ label: newJob });
+}
 const committeesStateRef = ref<ICommitteeState>({
     1: {
         job: 'PIC/Penanggung Jawab',
@@ -286,6 +287,7 @@ const steps = computed<Step[]>(() => [
         description: $ts('general_information_description'),
         formData: state,
         validationRules: stateRules,
+        onNext: saveStep1,
 
     },
     {
@@ -295,6 +297,7 @@ const steps = computed<Step[]>(() => [
         description: $ts('agenda_configuration_description'),
         formData: configurationState,
         validationRules: configurationStateRules,
+        onNext: saveStep2,
     },
     {
         id: 'step3',
@@ -303,6 +306,7 @@ const steps = computed<Step[]>(() => [
         description: $ts('committee_description'),
         formData: committeesState,
         validationRules: committeesStateRules,
+        onNext: saveStep3,
     },
     {
         id: 'step4',
@@ -313,18 +317,196 @@ const steps = computed<Step[]>(() => [
         onNext: onSubmit,
     }
 ])
+const route = useRoute();
 const tab = ref(0);
-async function onSubmit() {
+const agendaId = ref<string | null>(route.query.id as string || null);
+
+// Update URL when agendaId changes
+watch(agendaId, (newId) => {
+    if (newId) {
+        router.replace({ query: { ...route.query, id: newId } });
+    }
+});
+
+// Initialize form data if ID exists in query
+const initFromQuery = async () => {
+    if (!agendaId.value) return;
+
     loading.value = true;
     try {
-        const response = await $api<IResponse & { data?: string }>('api/agenda', {
-            method: 'POST',
+        const { data } = await $api<IResponse & { data: { agenda: IAgenda } }>(`/api/agenda/${agendaId.value}`);
+        if (data && data.agenda) {
+            const agenda = data.agenda;
+
+            // Map basic state
+            state.title = agenda.title;
+            // Handle category which can be string or object
+            if (agenda.category) {
+                if (typeof agenda.category === 'object' && '_id' in agenda.category) {
+                    state.category = (agenda.category as any)._id;
+                } else {
+                    state.category = agenda.category as string;
+                }
+            }
+            state.tags = agenda.tags || [];
+            state.description = agenda.description;
+            state.at = agenda.at;
+            state.atLink = agenda.atLink;
+            state.date = {
+                start: new Date(agenda.date.start),
+                end: new Date(agenda.date.end),
+            };
+            // state.registerLink = agenda.registerLink;
+            // state.enableSubscription = !!agenda.enableSubscription;
+            // state.enableForm = !!agenda.enableForm;
+
+            // Map configuration
+            Object.assign(configurationState, agenda.configuration);
+            // Ensure dates are Date objects for configuration
+            if (configurationState.committee?.canRegisterUntil) {
+                configurationState.committee.canRegisterUntil.start = new Date(configurationState.committee.canRegisterUntil.start);
+                configurationState.committee.canRegisterUntil.end = new Date(configurationState.committee.canRegisterUntil.end);
+            }
+            if (configurationState.participant?.canRegisterUntil) {
+                configurationState.participant.canRegisterUntil.start = new Date(configurationState.participant.canRegisterUntil.start);
+                configurationState.participant.canRegisterUntil.end = new Date(configurationState.participant.canRegisterUntil.end);
+            }
+
+            // Map committees
+            if (agenda.committees && agenda.committees.length > 0) {
+                const newCommitteesState: ICommitteeState = {};
+                agenda.committees.forEach((c, index) => {
+                    // 1-based index for UI consistency if needed, or just use array index + 1
+                    newCommitteesState[index + 1] = {
+                        ...c,
+                        member: typeof c.member === 'object' ? (c.member as any).NIM : c.member, // UI expects NIM for select menu value
+                    };
+                });
+                committeesStateRef.value = newCommitteesState;
+            }
+        }
+    } catch (error) {
+        toast.add({ title: $ts('failed_to_load_draft'), color: 'error' });
+        console.error("Failed to load draft", error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+// Call init on mount
+onMounted(() => {
+    initFromQuery();
+});
+
+async function saveStep1() {
+    loading.value = true;
+    try {
+        const body = {
+            ...state,
+            isDraft: true,
+        };
+        if (agendaId.value) {
+            const response = await $api<IResponse & { data?: string }>(`api/agenda`, {
+                method: 'PUT',
+                params: { id: agendaId.value },
+                body: body,
+            });
+            if (response.statusCode === 200) {
+                // Keep agendaId as it is
+            }
+        } else {
+            const response = await $api<IResponse & { data?: string }>('api/agenda', {
+                method: 'POST',
+                body: body,
+            });
+            if (response.statusCode === 200 && response.data) {
+                agendaId.value = response.data;
+                // Update URL without reloading to allow refresh persistence if needed (optional)
+                // router.replace({ query: { ...route.query, id: response.data } }) // logic can be added later
+            }
+        }
+    } catch (err: any) {
+        if (err.response) {
+            toast.add({ title: err.response.data.message, color: 'error' });
+        } else {
+            toast.add({ title: $ts('something_went_wrong'), color: 'error' });
+        }
+        throw err; // Stop stepper
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function saveStep2() {
+    if (!agendaId.value) return;
+    loading.value = true;
+    try {
+        const response = await $api<IResponse & { data?: string }>(`api/agenda`, {
+            method: 'PUT',
+            params: { id: agendaId.value },
             body: {
                 ...state,
+                configuration: configurationState,
+                isDraft: true,
+            },
+        });
+    } catch (err: any) {
+        if (err.response) {
+            toast.add({ title: err.response.data.message, color: 'error' });
+        } else {
+            toast.add({ title: $ts('something_went_wrong'), color: 'error' });
+        }
+        throw err;
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function saveStep3() {
+    if (!agendaId.value) return;
+    loading.value = true;
+    try {
+        const response = await $api<IResponse & { data?: string }>(`api/agenda`, {
+            method: 'PUT',
+            params: { id: agendaId.value },
+            body: {
+                ...state,
+                configuration: configurationState,
                 committees: Object.values(committeesState).map((committee) => ({
                     ...committee,
                     member: committee.member as number,
                 })),
+                isDraft: true,
+            },
+        });
+    } catch (err: any) {
+        if (err.response) {
+            toast.add({ title: err.response.data.message, color: 'error' });
+        } else {
+            toast.add({ title: $ts('something_went_wrong'), color: 'error' });
+        }
+        throw err;
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function onSubmit() {
+    if (!agendaId.value) return; // Should not happen if step 1 passed
+    loading.value = true;
+    try {
+        const response = await $api<IResponse & { data?: string }>(`api/agenda`, {
+            method: 'PUT',
+            params: { id: agendaId.value },
+            body: {
+                ...state,
+                configuration: configurationState,
+                committees: Object.values(committeesState).map((committee) => ({
+                    ...committee,
+                    member: committee.member as number,
+                })),
+                isPublish: true, // Trigger notifications
+                enableSubscription: state.enableSubscription,
             },
         });
         if (response.statusCode === 200 && response.data) {
@@ -396,10 +578,7 @@ const addNewCategory = async (category: string) => {
     })
 }
 const addNewTag = async (tag: string) => {
-    if (!tagsData.value) {
-        tagsData.value = [tag];
-    }
-    tagsData.value.push(tag);
+    tagsItemsRef.value.push(tag);
     toast.add({ title: $ts('tag_added', { tag }), color: 'success' });
 }
 
@@ -641,7 +820,7 @@ const links = [
                                 @create="addNewCategory" :size="responsiveUISizes.input" />
                         </UFormField>
                         <UFormField :label="$ts('tags')" :error="errors.tags?.message">
-                            <USelectMenu v-model="state.tags" :placeholder="$ts('tags')" :items="tagsData" multiple
+                            <USelectMenu v-model="state.tags" :placeholder="$ts('tags')" :items="tagsItems" multiple
                                 class="w-full" create-item @create="addNewTag" :size="responsiveUISizes.input" />
                         </UFormField>
                         <UFormField :label="`${$ts('date')} & ${$ts('time')}`" name="date" id="date"
@@ -769,7 +948,7 @@ const links = [
                                 </UFormField>
                                 <UFormField :label="$ts('can_register_period')"
                                     :error="errors.canRegisterUntil?.message">
-                                    <RengeDatePicker v-model="configurationState.participant.canRegisterUntil"
+                                    <RangeDatePicker v-model="configurationState.participant.canRegisterUntil"
                                         :max="new Date(state.date.start)" />
                                 </UFormField>
                                 <UFormField :label="$ts('enable_form')">
@@ -817,7 +996,7 @@ const links = [
                             <UFormField :label="$ts('committee')" :error="errors[index]?.message" class="basis-1/3">
                                 <USelectMenu :items="jobsCommittee" icon="i-lucide-user" :placeholder="$ts('search')"
                                     v-model="(committeesState[index]!.job)" class="w-full" value-key="label"
-                                    :size="responsiveUISizes.input">
+                                    :size="responsiveUISizes.input" create-item @create="addJobCommittee">
                                 </USelectMenu>
                             </UFormField>
                             <UFormField :label="$ts('member')" :error="errors[index]?.message" class="w-full">
