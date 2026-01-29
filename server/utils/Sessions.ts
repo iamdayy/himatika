@@ -51,9 +51,14 @@ export const checkSession = async (payload: string) => {
     // Tapi biasanya refresh dilakukan SEBELUM expired, jadi token lama pun "signature" nya valid tapi belum expired.
     // Jika benar-benar expired, jwt.verify akan throw error. 
     // Solusi: Kita coba verify, jika TokenExpiredError TAPI masih dalam Grace Period DB, kita toleransi?
-    // TIDAK, Access Token biasanya 1 hari (di kode existing). Jadi dalam 20 detik setelah refresh, 
-    // token lama PASTI belum expired secara claims. Jadi aman verify biasa.
-    jwt.verify(payload, getSecretKey());
+    // 2. Verifikasi Signature JWT
+    if (session.previousToken === payload) {
+      // Jika token expired TAPI masih dalam grace period DB (validated above), kita allow.
+      jwt.verify(payload, getSecretKey(), { ignoreExpiration: true });
+    } else {
+      // Verifikasi Signature JWT Normal
+      jwt.verify(payload, getSecretKey());
+    }
 
     // 3. Ambil user dengan populate member (Lite version)
     // Kita disable autopopulate default User -> Member yang load semua project/agenda
