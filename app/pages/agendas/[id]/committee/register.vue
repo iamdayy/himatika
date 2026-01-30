@@ -98,7 +98,7 @@ const steps = computed<Step[]>(() => {
             title: $ts('register'),
             formData: formRegistration,
             validationRules: validationRuleRegistration,
-            onNext: committee.value ? refreshCommittee : register
+            onNext: committee.value?._id ? refreshCommittee : register
         },
         {
             id: 'answer_question',
@@ -312,7 +312,7 @@ onMounted(() => {
             <template #default="{ step, errors }">
 
                 <div v-if="step?.id === 'registration'">
-                    <UAlert v-if="committee" color="success" :title="$ts('already_committee')"
+                    <UAlert v-if="committee?._id" color="success" :title="$ts('already_committee')"
                         :description="$ts('already_committee_desc')" class="mb-4"></UAlert>
                     <Useparator class="my-4" />
                     <div class="text-start">

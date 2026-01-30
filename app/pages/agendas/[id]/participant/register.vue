@@ -135,7 +135,7 @@ const links = computed(() => [
 ]);
 const steps = computed<Step[]>(() => {
     const steps: Step[] = [
-        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value ? nextToAnswerQuestion : register },
+        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value._id ? nextToAnswerQuestion : register },
         { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
         { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method !== 'cash' ? payment : undefined },
         { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
@@ -466,7 +466,7 @@ watch(participant, (newValue) => {
             :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
             <template #default="{ step, errors }">
                 <div v-if="step?.id === 'registration'">
-                    <UAlert v-if="participant" color="success" :title="$ts('already_participant')"
+                    <UAlert v-if="participant._id" color="success" :title="$ts('already_participant')"
                         :description="$ts('already_participant_desc')" class="mb-4"></UAlert>
                     <div class="flex space-x-4">
                         <UFormField :label="$ts('register_as')" class="col-span-6 px-4"
