@@ -205,7 +205,7 @@ export interface IOrganizer {
 export interface ICommittee {
   _id?: string | Types.ObjectId;
   job: string;
-  member: IMember | string | number | Types.ObjectId | undefined;
+  member: Partial<IMember> | string | number | Types.ObjectId | undefined;
   approved: boolean;
   approvedAt?: Date;
   visiting?: boolean;
@@ -249,7 +249,7 @@ export interface IPayment {
  */
 export interface IParticipant {
   _id?: string | Types.ObjectId;
-  member?: Types.ObjectId | IMember | number;
+  member?: Types.ObjectId | Partial<IMember> | number;
   guest?: IGuest;
   visiting?: boolean;
   visitAt?: string;

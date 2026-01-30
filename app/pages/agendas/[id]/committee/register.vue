@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IAgenda, IPayment, IPaymentMethod } from '~~/types';
+import type { IAgenda, ICommittee, IPayment, IPaymentMethod } from '~~/types';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
 import type { IPaymentBody } from '~~/types/IRequestPost';
 import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, ICommitteeResponse } from '~~/types/IResponse';
@@ -30,28 +30,50 @@ const { tab } = route.query as { tab: string; };
 const { $api } = useNuxtApp();
 const { width } = useWindowSize();
 const { $ts } = useI18n();
+const { data: user } = useAuth();
 
 // --- STATE ---
 const isMobile = computed(() => width.value < 768);
 const activeStep = ref(0);
 
 // --- FETCH DATA ---
-const { data: agendaData } = useLazyAsyncData<IAgendaResponse>(() => $api('/api/agenda', {
+const { data: agendaData } = useAsyncData(() => $api<IAgendaResponse>(`/api/agenda/${id}`, {
     method: 'GET',
-    query: { id }
 }));
 
-const { data: committeeData, refresh: refreshCommittee } = useLazyAsyncData<ICommitteeResponse>(() => $api(`/api/agenda/${id}/committee/me`, {
+const { data: committeeData, refresh: refreshCommittee } = useAsyncData(() => $api<ICommitteeResponse>(`/api/agenda/${id}/committee/me`, {
     method: 'GET',
-}));
+}), {
+    transform: (data) => {
+        if (!data.data?.committee) return null;
+        return data.data.committee;
+    }
+});
 
 // --- COMPUTED DATA ---
 const agenda = computed<IAgenda | undefined>(() => agendaData.value?.data?.agenda);
-const committee = computed(() => committeeData.value?.data?.committee);
+const committee = computed<ICommittee | undefined>(() => {
+    if (!committeeData.value) return {
+        _id: '',
+        job: '',
+        payment: {
+            _id: '',
+            method: 'cash',
+            amount: 0,
+            proof: '',
+            status: 'pending',
+            createdAt: '',
+            updatedAt: '',
+        },
+        approved: false,
+        member: user.value?.member,
+    };
+    return committeeData.value;
+});
 const registrationId = computed(() => committee.value?._id);
 
 // --- QUESTIONS ---
-const { data: questions } = useLazyAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
+const { data: questions } = useAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
     method: 'GET',
 }), {
     transform: (data) => data.data?.answers,
