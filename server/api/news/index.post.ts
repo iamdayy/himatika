@@ -25,7 +25,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "You must be organizer to use this endpoint",
       });
     }
 
@@ -105,11 +105,11 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusMessage: `Success to add new News ${news.title}`,
     };
   } catch (error: any) {
-    return {
+    throw createError({
       statusCode: error.statusCode || 500,
       statusMessage:
         error.message || "An unexpected error occurred while creating the news",
-    };
+    });
   }
 });
 
