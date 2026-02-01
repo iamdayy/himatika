@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CoreTiptap, ModalsCarouselAdd, ModalsImageCrop, UInput } from '#components';
+import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICarousel, IConfig, IPhoto } from "~~/types";
 import type { IConfigResponse, IEncryptionsResponse, IResponse } from '~~/types/IResponse';
@@ -11,7 +12,6 @@ definePageMeta({
 useHead({
     title: 'Config'
 });
-const config = useRuntimeConfig();
 const searchQuery = ref('');
 const { $ts } = useI18n();
 const { token } = useAuth();
@@ -38,7 +38,6 @@ const { organizer } = storeToRefs(organizerStore);
 const toast = useToast();
 const { $api } = useNuxtApp();
 const overlay = useOverlay();
-const { convert } = useImageToBase64();
 
 const CropImageModal = overlay.create(ModalsImageCrop);
 const AddCarouselModal = overlay.create(ModalsCarouselAdd);
@@ -61,11 +60,7 @@ const Config = ref<IConfig>({
 
 const notEditMode = ref(true);
 const isSaving = ref(false);
-const fileToCropped = ref({
-    name: '',
-    blob: ''
-});
-const file = ref();
+const file = ref<File>();
 const newDailyManagement = ref('');
 const openPopoverAddDailyManagement = ref(false);
 const newDepartment = ref('');
@@ -93,7 +88,7 @@ const addDepartment = () => {
 };
 const deleteDepartment = (department: string) => {
     if (notEditMode.value) return;
-    Config.value.departments = Config.value.departments.filter(department => department !== department);
+    Config.value.departments = Config.value.departments.filter(d => d !== department);
 };
 const addSocialMedia = () => {
     if (notEditMode.value) return;
@@ -102,7 +97,7 @@ const addSocialMedia = () => {
 };
 const deleteSocialMedia = (socialMedia: { name: string, url: string }) => {
     if (notEditMode.value) return;
-    Config.value.socialMedia = Config.value.socialMedia.filter((sm) => sm.name !== socialMedia.name && sm.url !== socialMedia.url);
+    Config.value.socialMedia = Config.value.socialMedia.filter((sm) => !(sm.name === socialMedia.name && sm.url === socialMedia.url));
 }
 
 const addMission = () => {
@@ -128,13 +123,20 @@ const onCropped = async (f: File) => {
  * Handle image change
  * @param {File} f - Selected image file
  */
-const onChangeImage = async () => {
-    if (!file.value) return;
-    const blob = await convert(file.value);
+const onChangeImage = async (f?: File | null) => {
+    if (!f) return;
+    const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        alwaysKeepResolution: true
+    }
+    const compressedFile = await imageCompression(f, options);
+    const blob = URL.createObjectURL(compressedFile);
     CropImageModal.open({
         onCropped,
         img: blob,
-        title: file.value.name,
+        title: f.name,
         stencil: {
             movable: true,
             resizable: true,
@@ -169,6 +171,8 @@ const addPhoto = async () => {
 }
 
 const deletePhoto = async (index: number, id: string) => {
+    console.log('delete photo');
+    if (notEditMode.value && !isSaving.value) return;
     try {
         const response = await $api<IResponse>("/api/photo", {
             method: "delete",
@@ -337,11 +341,13 @@ const links = computed(() => [{
                     </div>
                     <ul
                         class="px-2 py-2 space-y-2 text-gray-800 list-decimal list-inside md:px-4 text-start dark:text-gray-400">
-                        <li v-for="(mission, index) in Config.mission" :key="index">
-                            <UChip text="x" :ui="{
-                                base: 'hover:cursor-pointer',
-                            }" size="2xl" color="error" variant="solid" @click="deleteMission(mission)">{{ mission }}
-                            </UChip>
+                        <li v-for="(mission, index) in Config.mission" :key="index"
+                            class="flex items-start gap-2 group">
+                            <span class="flex-1">{{ mission }}</span>
+                            <UButton icon="i-heroicons-trash" color="error" variant="ghost" size="xs"
+                                :disabled="notEditMode"
+                                class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                                @click="deleteMission(mission)" />
                         </li>
                     </ul>
                 </UFormField>
@@ -391,7 +397,7 @@ const links = computed(() => [{
                                         <UInput name="socialMedia.url" v-model="Config.socialMedia[i]!.url"
                                             :disabled="notEditMode && !isSaving" :size="responsiveUISizes.input" />
                                     </UFormField>
-                                    <UButton icon="i-heroicons-trash" color="error" variant="link"
+                                    <UButton icon="i-heroicons-trash" color="error" variant="ghost"
                                         :disabled="notEditMode" class="flex-none md:mt-2"
                                         @click="deleteSocialMedia(socialMedia)" />
                                 </div>
@@ -411,13 +417,14 @@ const links = computed(() => [{
                                 @click="addDailyManagement" />
                         </div>
                         <div class="flex flex-wrap items-center w-full gap-2 py-2 ps-2">
-                            <UChip v-for="(dailyManagement, index) in Config.dailyManagements" :key="index" text="x"
-                                :ui="{
-                                    base: 'hover:cursor-pointer',
-                                }" size="2xl" color="error" variant="solid"
-                                @click="deleteDailyManagement(dailyManagement)">
-                                <UBadge variant="solid">{{ dailyManagement }}</UBadge>
-                            </UChip>
+                            <UBadge v-for="(dailyManagement, index) in Config.dailyManagements" :key="index"
+                                :label="dailyManagement" variant="subtle" size="lg" class="pr-1 gap-1">
+                                <template #trailing>
+                                    <UButton icon="i-heroicons-x-mark" color="neutral" variant="link" :padded="false"
+                                        size="xs" @click="deleteDailyManagement(dailyManagement)"
+                                        :disabled="notEditMode" />
+                                </template>
+                            </UBadge>
                         </div>
                     </div>
                 </UFormField>
@@ -432,11 +439,13 @@ const links = computed(() => [{
                                 :disabled="notEditMode && !isSaving" @click="addDepartment" />
                         </div>
                         <div class="flex flex-wrap items-center w-full gap-2 py-2 ps-2">
-                            <UChip v-for="(department, index) in Config.departments" :key="index" text="x" :ui="{
-                                base: 'hover:cursor-pointer',
-                            }" size="2xl" color="error" variant="solid" @click="deleteDepartment(department)">
-                                <UBadge variant="solid">{{ department }}</UBadge>
-                            </UChip>
+                            <UBadge v-for="(department, index) in Config.departments" :key="index" :label="department"
+                                variant="subtle" size="lg" class="pr-1 gap-1">
+                                <template #trailing>
+                                    <UButton icon="i-heroicons-x-mark" color="neutral" variant="link" :padded="false"
+                                        size="xs" @click="deleteDepartment(department)" :disabled="notEditMode" />
+                                </template>
+                            </UBadge>
                         </div>
                     </div>
                 </UFormField>
@@ -454,7 +463,7 @@ const links = computed(() => [{
                 <UFormField :label="$ts('carousel')">
                     <div class="flex flex-col gap-2 px-2 md:gap-4 md:px-8">
                         <UFileUpload v-model="file" accept="image/*" :disabled="notEditMode && !isSaving"
-                            @change="onChangeImage">
+                            @update:model-value="onChangeImage">
                         </UFileUpload>
                         <UButton block @click="addPhoto" :disabled="notEditMode && !isSaving"
                             :size="responsiveUISizes.button">

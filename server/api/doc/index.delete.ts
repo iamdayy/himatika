@@ -1,4 +1,4 @@
-import { del } from "@vercel/blob";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { DocModel } from "~~/server/models/DocModel";
 import { IMember } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
@@ -29,13 +29,25 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     // Delete the associated main doc file if it exists
     if (doc && doc.doc) {
-      await del(doc.doc as string);
+      const mainImageKey = (doc.doc as string).split("/").pop(); //Get only file name without domain;
+      await r2Client.send(
+        new DeleteObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: mainImageKey,
+        })
+      );
     }
     if (doc && doc.trails) {
       // Delete the associated trail doc files if they exist
       doc.trails.forEach(async (trail) => {
         if (trail.doc) {
-          await del(trail.doc as string);
+          const mainImageKey = (trail.doc as string).split("/").pop(); //Get only file name without domain;
+          await r2Client.send(
+            new DeleteObjectCommand({
+              Bucket: R2_BUCKET_NAME,
+              Key: mainImageKey,
+            })
+          );
         }
       });
     }
