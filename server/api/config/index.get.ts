@@ -25,7 +25,7 @@ export default defineCachedEventHandler(
     }
   },
   {
-    maxAge: 60 * 60, //Cache selama 1 Jam
+    maxAge: 5 * 60, //Cache selama 5 Menit
     name: "config-cache",
     swr: true,
     getKey: (event) => event.path,
