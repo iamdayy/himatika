@@ -6,23 +6,24 @@ export default defineEventHandler(async (event) => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus admin / departement untuk menggunakan endpoint ini",
       });
     }
     const body = await readBody<IConfig>(event);
     const config = await ConfigModel.create(body);
     return {
       statusCode: 200,
-      statusMessage: "Config created",
+      statusMessage: "Config berhasil dibuat",
       data: config,
     };
   } catch (error: any) {
+    console.error(error);
     throw createError({
       statusCode: 500,
       statusMessage: error.message,
