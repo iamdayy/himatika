@@ -26,12 +26,30 @@ export default defineNuxtPlugin((nuxtApp) => {
         const { token, refreshToken, setToken } = useAuthState();
 
         // Jika tidak ada refresh token, langsung logout (tidak bisa diselamatkan)
+        const { signOut } = useAuth();
         if (!refreshToken.value) {
-          nuxtApp.runWithContext(() => navigateTo("/login"));
+          await signOut({ callbackUrl: "/login", redirect: true });
           return Promise.reject();
         }
 
         // --- MULAI LOGIKA PROMISE LOCKING ---
+
+        // 0. Cek Optimis: Apakah token di state SUDAH berbeda dengan token di header request ini?
+        // Jika ya, berarti sudah ada reload/refresh lain yang sukses barusan.
+        const currentToken = token.value;
+        const usedToken = (options.headers as any)?.Authorization;
+        
+        // Asumsi format "Bearer <token>"
+        if (currentToken && usedToken && currentToken !== usedToken) {
+           // Token sudah baru, langsung retry tanpa refresh
+           return $fetch(request, {
+            ...options,
+            headers: {
+              ...options.headers,
+              Authorization: currentToken, 
+            },
+          } as any);
+        }
 
         // Cek apakah ada proses refresh yang sedang berjalan?
         if (!isRefreshing) {
@@ -48,10 +66,10 @@ export default defineNuxtPlugin((nuxtApp) => {
               isRefreshing = null;
               return Promise.resolve();
             })
-            .catch((error) => {
+            .catch(async (error) => {
               // Gagal: Token refresh expired/invalid
               isRefreshing = null; // Reset lock
-              nuxtApp.runWithContext(() => navigateTo("/login"));
+              await signOut({ callbackUrl: "/login", redirect: true });
               return Promise.reject(error);
             });
         }
@@ -63,7 +81,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         // Setelah refresh selesai, coba ulang request ORIGINAL yang tadi gagal
         // Kita harus update header Authorization dengan token BARU dan method yang benar
-        await $fetch(request, {
+        return $fetch(request, {
           ...options,
           headers: {
             ...options.headers,
@@ -71,7 +89,6 @@ export default defineNuxtPlugin((nuxtApp) => {
           },
           method: options.method, // Pastikan method asli tetap digunakan
         } as any);
-        return Promise.resolve(); // Sukses setelah retry
       }
     },
   });

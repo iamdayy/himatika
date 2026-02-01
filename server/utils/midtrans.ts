@@ -178,5 +178,11 @@ export const verifySignature = (body: midtransNotificationBody) => {
     .createHash("sha512")
     .update(`${order_id}${status_code}${gross_amount}${midtrans_server_key}`)
     .digest("hex");
-  return signature === signature_key;
+  const signatureBuffer = Buffer.from(signature);
+  const keyBuffer = Buffer.from(signature_key);
+
+  if (signatureBuffer.length !== keyBuffer.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(signatureBuffer, keyBuffer);
 };

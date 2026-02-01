@@ -21,7 +21,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
     if (!user || !user.member.organizer) {
-      throw createError({ statusCode: 403, statusMessage: "Forbidden" });
+      throw createError({ statusCode: 403, statusMessage: "Dilarang" });
     }
 
     // Terima data tambahan: createNews, newsTitle, newsBody
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
             mainImage: record.proof || "/img/placeholder-banner.png",
             body: finalBody,
             category: category._id,
-            authors: [(record.member as IMember).id], // Author tetap member ybs
+            authors: [(record.member as IMember)], // Author tetap member ybs
             tags: ["Prestasi", "Achievement"],
             published: true,
             publishedAt: new Date(),

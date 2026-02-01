@@ -41,7 +41,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
-        label: category.title,
+            label: category.title,
             description: category.description,
             value: category._id as string
         }))
@@ -99,12 +99,15 @@ const addNews = async () => {
             body: body.getFormData()
         });
         if (added.statusCode !== 200) {
-            throw new Error(added.statusMessage);
+            throw createError({
+                statusCode: added.statusCode,
+                statusMessage: added.statusMessage
+            });
         }
         toast.add({ title: $ts("success"), description: $ts("success_to_add_news") });
         emit("triggerRefresh");
-    } catch (error) {
-        toast.add({ title: $ts("failed"), description: $ts("failed_to_add_news") });
+    } catch (error: any) {
+        toast.add({ title: $ts("failed"), description: error.statusMessage });
     } finally {
         loading.value = false;
     }
@@ -117,24 +120,24 @@ const addNews = async () => {
  */
 const onChangeImage = async (f?: File | null) => {
     if (!f) return;
-    const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        alwaysKeepResolution: true
-    }
-    const compressedFile = await imageCompression(f, options);
-    const blob = URL.createObjectURL(compressedFile);
+    const blob = URL.createObjectURL(f);
     ImageCropModal.open({
         img: blob,
-        title: compressedFile.name,
+        title: f.name,
         stencil: {
             movable: true,
             resizable: true,
             aspectRatio: 16 / 9,
         },
-        onCropped: (f: File) => {
-            file.value = f;
+        async onCropped(f: File) {
+            const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+                alwaysKeepResolution: true
+            }
+            const compressedFile = await imageCompression(f, options);
+            file.value = compressedFile;
             ImageCropModal.close();
         }
     });
@@ -202,7 +205,8 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                 </UFormField>
                 <!-- Image upload -->
                 <UFormField :label="$ts('image')">
-                    <UFileUpload :size="responsiveUISizes.input"  accept="image/*" v-model="file" @update:model-value="onChangeImage">
+                    <UFileUpload :size="responsiveUISizes.input" accept="image/*" v-model="file"
+                        @update:model-value="onChangeImage">
                     </UFileUpload>
                 </UFormField>
                 <!-- Description input -->
@@ -229,9 +233,11 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
         </template>
         <template #footer>
             <div class="flex flex-row justify-between w-full gap-2">
-                <UButton @click="$emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button" :loading="loading" :disabled="loading" />
+                <UButton @click="$emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button"
+                    :loading="loading" :disabled="loading" />
                 <!-- Submit button -->
-                <UButton @click="addNews" :label="$ts('save')" :size="responsiveUISizes.button" :loading="loading" :disabled="loading" />
+                <UButton @click="addNews" :label="$ts('save')" :size="responsiveUISizes.button" :loading="loading"
+                    :disabled="loading" />
             </div>
         </template>
     </UModal>

@@ -12,7 +12,7 @@ const config = useRuntimeConfig();
 /**
  * Computed properties for authentication and color mode
  */
-const isLoggedIn = computed(() => status.value === 'authenticated');
+const isLoggedIn = computed(() => status.value === 'authenticated' || (status.value === 'loading' && !!user.value));
 const isDarkMode = useDark({
     selector: 'html',
     attribute: 'class',
@@ -194,7 +194,7 @@ const openSlideOver = ref<boolean>(false);
                                     {{ $ts('signed_as') }}
                                 </p>
                                 <p class="font-medium text-gray-900 truncate dark:text-white">
-                                    {{ item.label }}
+                                    {{ (item as any).label }}
                                 </p>
                             </div>
                         </template>

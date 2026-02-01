@@ -36,8 +36,7 @@ const sort = computed(() => {
     }
 });
 const order = ref<string>("");
-const { data: user } = useAuth();
-const { data: projects, refresh: refreshProjects } = useLazyAsyncData(
+const { data: projects, refresh: refreshProjects, pending: pendingProjects } = useLazyAsyncData(
     "projects",
     () =>
         $api<IProjectsResponse>("/api/project", {
@@ -76,7 +75,6 @@ const { data: projects, refresh: refreshProjects } = useLazyAsyncData(
         }),
     }
 );
-// const { projects, notPublished, refreshProjects, search, selectedCategory, selectedTags, page, perPage, totalProjects, sortBy, order } = useProjects();
 const isMobile = computed(() => width.value <= 768);
 
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/project/tags'));
@@ -261,9 +259,9 @@ onMounted(() => {
 </script>
 <template>
     <div class="items-center justify-center mb-24">
+        <UBreadcrumb :items="links" />
         <UCard class="p-2 mt-2 md:p-4">
             <template #header>
-                <UBreadcrumb :links="links" />
                 <div class="p-1 md:p-2">
                     <div class="flex flex-row items-center justify-between gap-2">
                         <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
@@ -300,7 +298,12 @@ onMounted(() => {
                 </div>
             </template>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <UCard v-for="project, i in projects.data" :id="`card-${i}`" :key="i">
+                <div v-if="pendingProjects" class="flex items-center justify-center">
+                    <USkeleton class="w-full h-16" />
+                    <USkeleton class="w-full h-14" />
+                    <USkeleton class="w-full h-12" />
+                </div>
+                <UCard v-for="project, i in projects.data" :id="`card-${i}`" :key="i" v-else>
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
@@ -333,9 +336,8 @@ onMounted(() => {
                             <UIcon name="i-heroicons-calendar" />
                             <h1>{{ new Date(project.date).toLocaleDateString('id-ID', { dateStyle: 'long' }) }}</h1>
                         </div>
-                        <UProgress :model-value="Math.ceil(project.progress / 20)"
-                            :color="project.progress === 100 ? 'success' : 'secondary'" status
-                            :max="['Not Started', 'Starting', 'On Progress', 'On Progress', 'On Progress', 'Complete']" />
+                        <UProgress v-model="project.progress"
+                            :color="project.progress === 100 ? 'success' : 'secondary'" status />
                     </div>
                     <template #footer>
                         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">

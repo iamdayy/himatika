@@ -39,7 +39,7 @@ export const ensureAuth = async (event: H3Event) => {
     throw createError({
       statusCode: 401,
       statusMessage:
-        "Need to pass valid Bearer-Authorization header to access this endpoint",
+        "Perlu menyertakan header Authorization Bearer yang valid untuk mengakses endpoint ini",
     });
   }
 
@@ -49,7 +49,7 @@ export const ensureAuth = async (event: H3Event) => {
   } catch (error) {
     throw createError({
       statusCode: 401,
-      statusMessage: "You must be logged in to use this endpoint",
+      statusMessage: "Anda harus login untuk menggunakan endpoint ini",
     });
   }
 };
@@ -68,7 +68,7 @@ export const refreshAuth = async (event: H3Event) => {
       throw createError({
         statusCode: 401,
         statusMessage:
-          "Need to pass valid Bearer-Authorization header to access this endpoint",
+          "Perlu menyertakan header Authorization Bearer yang valid untuk mengakses endpoint ini",
       });
     }
     const token = await refreshSession(refreshToken);
@@ -78,7 +78,7 @@ export const refreshAuth = async (event: H3Event) => {
     throw createError({
       statusCode: 401,
       statusMessage:
-        error.statusMessage || "You must be logged in to use this endpoint",
+        error.statusMessage || "Anda harus login untuk menggunakan endpoint ini",
     });
   }
 };
@@ -95,7 +95,7 @@ export const killAuth = async (event: H3Event) => {
     throw createError({
       statusCode: 401,
       statusMessage:
-        "Need to pass valid Bearer-Authorization header to access this endpoint",
+        "Perlu menyertakan header Authorization Bearer yang valid untuk mengakses endpoint ini",
     });
   }
 
@@ -105,7 +105,7 @@ export const killAuth = async (event: H3Event) => {
   } catch (error) {
     throw createError({
       statusCode: 401,
-      statusMessage: "You must be logged in to use this endpoint",
+      statusMessage: "Anda harus login untuk menggunakan endpoint ini",
     });
   }
 };

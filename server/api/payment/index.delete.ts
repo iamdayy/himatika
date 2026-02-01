@@ -1,5 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
-import { getTransactionStatus } from "~~/server/utils/midtrans";
+import { cancelPayment } from "~~/server/utils/midtrans";
+import { ICommittee, IParticipant } from "~~/types";
 import { IReqPaymentQuery } from "~~/types/IRequestPost";
 import { IError, IResponse } from "~~/types/IResponse";
 
@@ -7,38 +8,69 @@ export default defineEventHandler(
   async (event): Promise<IResponse | IError> => {
     const { transaction_id } = getQuery<IReqPaymentQuery>(event);
     try {
-      const response = await getTransactionStatus(transaction_id);
-      if (response.status_code === "404") {
+      const user = event.context.user;
+      if (!user) {
         throw createError({
-          statusCode: 404,
-          statusMessage: "Failed to find transaction",
-          data: { message: response.status_message },
+          statusCode: 403,
+          statusMessage: "Anda harus login untuk membatalkan transaksi",
         });
       }
 
+      // Find agenda where this transaction exists AND belongs to the current user
       const agenda = await AgendaModel.findOne({
-        "registered.payment.transaction_id": transaction_id,
+        $or: [
+          {
+            "committees.payment.transaction_id": transaction_id,
+            "committees.member": user.member._id,
+          },
+          {
+            "participants.payment.transaction_id": transaction_id,
+            "participants.member": user.member._id,
+          },
+        ],
       });
+
       if (!agenda) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Agenda & registration not found",
+            statusMessage:
+            "Transaksi tidak ditemukan atau anda tidak memiliki izin untuk membatalkannya",
         });
       }
-      const registered = agenda.registered?.find(
+      let registered: IParticipant | ICommittee | undefined;
+      
+      registered = agenda.committees?.find(
         (r) => r.payment?.transaction_id === transaction_id
       );
+
+      if (!registered) {
+        registered = agenda.participants?.find(
+          (r) => r.payment?.transaction_id === transaction_id
+        );
+      }
+
+      // Double check (redundant but safe)
       if (!registered || !registered.payment) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Transaction not found",
+          statusMessage: "Transaksi tidak ditemukan",
         });
       }
+
+      // Ensure the registered user matches the authenticated user (extra safety)
+      if (registered.member?.toString() !== user.member._id.toString()) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: "Aksi tidak diizinkan",
+        });
+      }
+
       const cancel = await cancelPayment(transaction_id);
-      if (cancel.status_code !== "200") {
+      if (cancel.status_code !== "200" && cancel.status_code !== "412") {
+        // 412 is "Merchant cannot modify status of the transaction" (already cancelled/settled)
         throw createError({
           statusCode: 500,
-          statusMessage: "Failed to cancel transaction",
+          statusMessage: "Gagal membatalkan transaksi dari Payment Gateway",
           data: { message: cancel.status_message },
         });
       }
@@ -53,13 +85,13 @@ export default defineEventHandler(
       await agenda.save();
       return {
         statusCode: 200,
-        statusMessage: "Transaction canceled",
+        statusMessage: "Transaksi dibatalkan",
       };
     } catch (error: any) {
       throw createError({
-        statusCode: 500,
-        statusMessage: "Internal Server Error",
-        data: { message: error.message },
+        statusCode: error.statusCode || 500,
+        statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
+        data: error.data,
       });
     }
   }

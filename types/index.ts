@@ -115,7 +115,7 @@ export interface IMember {
   aspirations?: IAspiration[];
   manualPoints?: IPointLog[];
   documents?: IDoc[];
-  docsRequestSign?: IDoc[];
+  badges?: IBadge[];
   organizer?: {
     role: string;
     period: IPeriod;
@@ -155,6 +155,7 @@ export interface ISession {
   token: string;
   refreshToken: string;
   previousRefreshToken?: string;
+  previousToken?: string;
   user: Types.ObjectId | IUser;
 }
 
@@ -204,7 +205,7 @@ export interface IOrganizer {
 export interface ICommittee {
   _id?: string | Types.ObjectId;
   job: string;
-  member: IMember | string | number | Types.ObjectId | undefined;
+  member: Partial<IMember> | string | number | Types.ObjectId | undefined;
   approved: boolean;
   approvedAt?: Date;
   visiting?: boolean;
@@ -248,7 +249,7 @@ export interface IPayment {
  */
 export interface IParticipant {
   _id?: string | Types.ObjectId;
-  member?: Types.ObjectId | IMember | number;
+  member?: Types.ObjectId | Partial<IMember> | number;
   guest?: IGuest;
   visiting?: boolean;
   visitAt?: string;
@@ -600,6 +601,7 @@ export interface IOverlayLocation {
 }
 
 export interface IPointLog {
+  _id?: string | Types.ObjectId;
   member: Types.ObjectId | IMember | number;
   admin?: Types.ObjectId | IUser | number;
   amount: number;
@@ -609,4 +611,32 @@ export interface IPointLog {
   proof?: string;
   status?: "pending" | "approved" | "rejected";
   date?: Date;
+}
+
+export interface IBadge {
+  _id?: string | Types.ObjectId;
+  name: string;
+  description: string;
+  icon: string;
+  slug: string;
+  minPoints?: number;
+}
+
+export interface ILeaderboard {
+  _id: string | Types.ObjectId;
+  fullName: string;
+  avatar?: string;
+  nim: number;
+  points: number;
+  badges: IBadge[];
+}
+
+export interface IAuditLog {
+  _id?: string | Types.ObjectId;
+  action: string;
+  user?: Types.ObjectId | IMember | number;
+  ip?: string;
+  details?: any;
+  target?: string; // e.g., "Agenda: 12345" or "Document: abcde"
+  createdAt?: Date;
 }

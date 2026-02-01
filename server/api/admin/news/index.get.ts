@@ -9,7 +9,7 @@ import type { INewsResponse } from "~~/types/IResponse";
  * @returns {Promise<Object>} The news data or an array of newss with total count.
  * @throws {H3Error} If an error occurs during the process.
  */
-export default defineCachedEventHandler(
+export default defineEventHandler(
   async (event): Promise<INewsResponse> => {
     try {
       const {
@@ -34,7 +34,7 @@ export default defineCachedEventHandler(
         if (!news) {
           throw createError({
             statusCode: 404,
-            statusMessage: "News not found",
+            statusMessage: "Berita tidak ditemukan",
           });
         }
 
@@ -43,7 +43,7 @@ export default defineCachedEventHandler(
 
         return {
           statusCode: 200,
-          statusMessage: "News fetched",
+          statusMessage: "Berita berhasil diambil",
           data: {
             news: { ...news.toJSON(), related: relatedNews },
             length: 1,
@@ -101,7 +101,7 @@ export default defineCachedEventHandler(
       // Return newss and total count
       return {
         statusCode: 200,
-        statusMessage: "News fetched",
+        statusMessage: "Berita berhasil diambil",
         data: {
           news,
           length: newssLength,
@@ -112,7 +112,7 @@ export default defineCachedEventHandler(
       return {
         statusCode: error.statusCode || 500,
         statusMessage:
-          error.message || "An unexpected error occurred while fetching news",
+          error.message || "Terjadi kesalahan yang tidak terduga saat mengambil berita",
       };
     }
   }

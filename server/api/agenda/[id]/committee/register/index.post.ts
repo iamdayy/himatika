@@ -74,30 +74,61 @@ export default defineEventHandler(
           });
         }
 
-        // Add the user as committee to the agenda
-        agenda.committees?.push({
-          _id: committeeId,
-          job: job,
-          member: me._id as Types.ObjectId,
-          approved: false,
-        });
+        // Check Job Availability
+        const jobAvailables = agenda.configuration?.committee?.jobAvailables || [];
+        const jobConfig = jobAvailables.find(
+          (j) => j.label === job
+        );
+        if (jobConfig) {
+          const currentCount = (agenda.committees || []).filter(
+            (c) => c.job === job
+          ).length;
+          if (currentCount >= jobConfig.count) {
+             throw createError({
+              statusCode: 400,
+              statusMessage: "This job position is full",
+            });
+          }
+        }
+
+      // Atomic Update: Push to committees ONLY if member is not already in it
+      const result = await AgendaModel.updateOne(
+        { 
+          _id: id,
+          "committees.member": { $ne: me._id } 
+        },
+        {
+          $push: {
+            committees: {
+              _id: committeeId,
+              job: job,
+              member: me._id as Types.ObjectId,
+              approved: false,
+            },
+          }
+        }
+      );
+
+      if (result.modifiedCount === 0) {
+          // Check if it failed because Agenda not found or User already committee
+          // We know Agenda exists from the findById, so it must be the duplicate check
+           throw createError({
+            statusCode: 409,
+            statusMessage: "You are already committee for this agenda",
+          });
+      }
       } else {
-        throw createError({
-          statusCode: 401,
-          statusMessage: "You must be logged in to register as committee",
-        });
+         throw createError({
+            statusCode: 401,
+            statusMessage: "You must be logged in to register as committee",
+         });
       }
 
-      // Save the updated agenda
-      const saved = await agenda.save();
-      if (!saved) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: "Failed to save agenda registration",
-        });
-      }
+      // Fetch updated agenda to get details for email (or just use existing 'agenda' object which has title)
+      // Note: 'agenda' object in memory is stale now regarding the new committee, but strictly for email text it's fine.
+      
       let sender = {
-        email: `agenda@${config.mailtrap_domain}`,
+        email: config.resend_from,
         name: "Administrator",
       };
       const newMail = new Email({

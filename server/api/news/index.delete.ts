@@ -1,4 +1,4 @@
-import { del } from "@vercel/blob";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { NewsModel } from "~~/server/models/NewsModel";
 import { IResponse } from "~~/types/IResponse";
 
@@ -17,13 +17,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
       });
     }
 
@@ -31,33 +31,39 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const { slug } = getQuery(event);
 
     // Find the news by slug
-    const news = await NewsModel.findOne({ slug });
+    const news = await NewsModel.findOne({ slug: slug as string });
     if (!news) {
       throw createError({
         statusCode: 404,
-        message: "News not found",
+        statusMessage: "Berita tidak ditemukan",
       });
     }
 
     // Delete the associated main image file if it exists
     if (news.mainImage) {
-      await del(news.mainImage as string);
+      const mainImageKey = (news.mainImage as string).split("/").pop(); //Get only file name without domain;
+      await r2Client.send(
+        new DeleteObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: mainImageKey,
+        })
+      );
     }
 
     // Delete the news from the database
-    await NewsModel.findOneAndDelete({ slug });
+    await NewsModel.findOneAndDelete({ slug: slug as string });
 
     // Return success response
     return {
       statusCode: 200,
-      statusMessage: `News "${news.title}" successfully deleted`,
+      statusMessage: `Berita "${news.title}" berhasil dihapus`,
     };
   } catch (error: any) {
     // Handle any errors that occur during the process
     return {
       statusCode: error.statusCode || 500,
       statusMessage:
-        error.message || "An unexpected error occurred while deleting the news",
+        error.message || error.statusMessage || "Terjadi kesalahan yang tidak terduga saat menghapus berita",
     };
   }
 });

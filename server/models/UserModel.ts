@@ -7,6 +7,7 @@ import { AgendaModel } from "./AgendaModel";
 import { AspirationModel } from "./AspirationModel";
 import { DocModel } from "./DocModel";
 import OrganizerModel from "./OrganizerModel";
+import { PointModel } from "./PointModel";
 import { ProjectModel } from "./ProjectModel";
 
 /**
@@ -93,6 +94,11 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
             model: AspirationModel,
           },
           {
+            path: "manualPoints",
+            model: PointModel,
+            select: "amount reason date status -_id",
+          },
+          {
             path: "documents",
             model: DocModel,
           },
@@ -119,10 +125,6 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
                 };
               }
             },
-          },
-          {
-            path: "docsRequestSign",
-            model: DocModel,
           },
           {
             path: "organizersDailyManagement",

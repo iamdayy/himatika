@@ -1,4 +1,5 @@
 import { UserModel } from "~~/server/models/UserModel";
+import { validatePassword } from "~~/server/utils/validatePassword";
 
 export default defineEventHandler(async (event) => {
   const { newPassword, newPasswordConfirmation, oldPassword } = await readBody(
@@ -8,16 +9,16 @@ export default defineEventHandler(async (event) => {
   if (!usr) {
     throw createError({
       statusCode: 401,
-      statusMessage: "Unauthorized",
-      data: { message: "Unauthorized" },
+      statusMessage: "Tidak Diizinkan",
+      data: { message: "Tidak Diizinkan" },
     });
   }
   const user = await UserModel.findOne({ username: usr.username });
   if (!user) {
     throw createError({
       statusCode: 404,
-      statusMessage: "Not Found",
-      data: { message: "User not found" },
+      statusMessage: "Tidak Ditemukan",
+      data: { message: "Pengguna tidak ditemukan" },
     });
   }
   const passwordMatch = await user.verifyPassword(oldPassword, user.password);
@@ -25,9 +26,9 @@ export default defineEventHandler(async (event) => {
     if (newPassword !== newPasswordConfirmation) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Bad Request",
+        statusMessage: "Permintaan Buruk",
         data: {
-          message: "Password confirmation does not match",
+          message: "Konfirmasi kata sandi tidak cocok",
           path: "password_confirmation",
         },
       });
@@ -35,24 +36,27 @@ export default defineEventHandler(async (event) => {
     if (newPassword === oldPassword) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Bad Request",
+        statusMessage: "Permintaan Buruk",
         data: {
-          message: "New password cannot be the same as the old password",
+          message: "Kata sandi baru tidak boleh sama dengan kata sandi lama",
           path: "password",
         },
       });
     }
+
+    validatePassword(newPassword);
+
     user.password = newPassword;
     await user.save();
     return {
       statusCode: 200,
-      statusMessage: "Password updated successfully",
+      statusMessage: "Kata sandi berhasil diperbarui",
     };
   } else {
     throw createError({
       statusCode: 401,
-      statusMessage: "Unauthorized",
-      data: { message: "Incorrect password", path: "password" },
+      statusMessage: "Tidak Diizinkan",
+      data: { message: "Kata sandi salah", path: "password" },
     });
   }
 });

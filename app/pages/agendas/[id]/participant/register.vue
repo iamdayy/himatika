@@ -45,7 +45,7 @@
 * - `registerAsOptions`: Options for the "register as" radio group.
 */
 <script setup lang='ts'>
-import type { IPaymentMethod } from '~~/types';
+import type { IMember, IParticipant, IPaymentMethod } from '~~/types';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
 import type { IPaymentBody } from '~~/types/IRequestPost';
 import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, IParticipantResponse, IResponse } from '~~/types/IResponse';
@@ -67,20 +67,53 @@ const isMobile = computed(() => width.value < 768);
 
 const { data: user } = useAuth();
 
-const { data: agenda, refresh } = useAsyncData('agenda', async () => $api<IAgendaResponse>('/api/agenda', {
-    query: {
-        id
-    }
+const { data: agenda, refresh } = useAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`, {
+    method: 'GET',
 }), {
     transform: (data) => data.data?.agenda,
 });
-const { data: participantData, refresh: refreshParticipant } = useAsyncData<IParticipantResponse>(() => $api(`/api/agenda/${id}/participant/me`, {
+const { data: participantData, refresh: refreshParticipant } = useAsyncData(() => $api<IParticipantResponse>(`/api/agenda/${id}/participant/me`, {
     method: 'GET',
     query: {
         participantId: participantId || undefined,
     }
-}));
-const participant = computed(() => participantData.value?.data?.participant);
+}), {
+    transform: (data) => {
+        return data.data?.participant;
+    }
+});
+const participant = computed<IParticipant>(() => {
+    if (participantData.value) {
+        if (participantData.value.member) {
+            return {
+                ...participantData.value,
+                member: participantData.value.member,
+                guest: undefined,
+            }
+        }
+        if (participantData.value.guest) {
+            return {
+                ...participantData.value,
+                guest: participantData.value.guest,
+                member: undefined,
+            }
+        }
+    }
+    return {
+        _id: '',
+        payment: {
+            _id: '',
+            method: 'cash',
+            amount: 0,
+            proof: '',
+            status: 'pending',
+            createdAt: '',
+            updatedAt: '',
+        },
+        member: user.value?.member,
+        guest: undefined,
+    };
+});
 const registrationId = computed(() => participantId || participant.value?._id || '');
 
 const { data: questions, refresh: refreshQuestions } = useAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
@@ -102,7 +135,7 @@ const links = computed(() => [
 ]);
 const steps = computed<Step[]>(() => {
     const steps: Step[] = [
-        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value ? nextToAnswerQuestion : register },
+        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value._id ? nextToAnswerQuestion : register },
         { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
         { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method !== 'cash' ? payment : undefined },
         { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
@@ -126,12 +159,12 @@ const activeStep = ref(0);
 const registerAs = ref(participant.value?.guest ? participant.value?.guest?.instance ? 'non-student' : 'student-guest' : 'student');
 const formRegistration = reactiveComputed(() => ({
     registerAs: 'student',
-    fullName: user.value?.member.fullName || participant.value?.guest?.fullName || '',
-    email: user.value?.member.email || participant.value?.guest?.email || '',
-    phone: user.value?.member.phone || participant.value?.guest?.phone || '',
-    NIM: user.value?.member.NIM || participant.value?.guest?.NIM || 0,
-    class: user.value?.member.class || participant.value?.guest?.fullName || '',
-    semester: user.value?.member.semester || participant.value?.guest?.semester || 0,
+    fullName: (participant.value?.member as IMember)?.fullName || participant.value?.guest?.fullName || '',
+    email: (participant.value?.member as IMember)?.email || participant.value?.guest?.email || '',
+    phone: (participant.value?.member as IMember)?.phone || participant.value?.guest?.phone || '',
+    NIM: (participant.value?.member as IMember)?.NIM || participant.value?.guest?.NIM || 0,
+    class: (participant.value?.member as IMember)?.class || participant.value?.guest?.class || '',
+    semester: (participant.value?.member as IMember)?.semester || participant.value?.guest?.semester || 0,
     prodi: participant.value?.guest?.prodi || '',
     instance: participant.value?.guest?.instance || '',
 }));
@@ -357,6 +390,7 @@ const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => 
     // confirmation: (value: string) => value ? null : $ts('confirmation_required'),
 }));
 const onCompleted = async () => {
+    // TODO: CREATE TICKET PAGE
     router.push(`/agendas/${id}/participant`);
 }
 async function handleAnswer() {
@@ -432,7 +466,7 @@ watch(participant, (newValue) => {
             :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
             <template #default="{ step, errors }">
                 <div v-if="step?.id === 'registration'">
-                    <UAlert v-if="participant" color="success" :title="$ts('already_participant')"
+                    <UAlert v-if="participant._id" color="success" :title="$ts('already_participant')"
                         :description="$ts('already_participant_desc')" class="mb-4"></UAlert>
                     <div class="flex space-x-4">
                         <UFormField :label="$ts('register_as')" class="col-span-6 px-4"

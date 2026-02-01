@@ -35,14 +35,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!email || typeof email !== "string" || !email.includes("@")) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid or missing email",
+        statusMessage: "Email tidak valid atau hilang",
       });
     }
 
     if (!token || typeof token !== "string" || token.trim() === "") {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid or missing TOKEN",
+        statusMessage: "Token tidak valid atau hilang",
       });
     }
 
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!otpData) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid Email",
+        statusMessage: "Email tidak valid",
       });
     }
 
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!verifiedToken) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid Token",
+        statusMessage: "Token tidak valid",
       });
     }
 
@@ -77,15 +77,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!member) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Member not found",
+        statusMessage: "Anggota tidak ditemukan",
       });
     }
 
-    const user = await UserModel.findOne({ member: member._id });
+    const user = await UserModel.findOne({ member: member });
     if (!user) {
       throw createError({
         statusCode: 400,
-        statusMessage: "User not found",
+        statusMessage: "Pengguna tidak ditemukan",
       });
     }
     await findMemberAndMarkRegister(member._id as Types.ObjectId, email);
@@ -94,12 +94,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     await OTPModel.deleteOne({ email });
     return {
       statusCode: 200,
-      statusMessage: `User verified successfully, welcome to the family!, ${user.username}`,
+      statusMessage: `Pengguna berhasil diverifikasi, selamat datang di keluarga!, ${user.username}`,
     };
   } catch (error: any) {
     return {
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || "Internal Server Error",
+      statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
     };
   }
 });

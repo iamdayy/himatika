@@ -1,32 +1,36 @@
 <script setup lang="ts">
 import { Analytics } from '@vercel/analytics/nuxt';
 import 'driver.js/dist/driver.css';
+import { useNotificationStore } from '~~/app/stores/useNotificationStore';
 const { x, y } = useMouse();
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 const isActive = ref(false);
 const isLoading = ref(true);
-const position = computed(() => {
-  if (isActive.value && !isMobile.value) {
+const
+  position = computed(() => {
+    if (isActive.value && !isMobile.value) {
+      return {
+        left: `${x.value}px`,
+        top: `${y.value}px`,
+        opacity: 0.7,
+      };
+    }
     return {
-      left: `${x.value}px`,
-      top: `${y.value}px`,
-      opacity: 0.7,
+      left: `50%`,
+      top: `0%`,
+      opacity: 1,
     };
-  }
-  return {
-    left: `50%`,
-    top: `0%`,
-    opacity: 1,
-  };
-});
+  });
 
-onMounted(() => {
-  // Berikan sedikit delay agar logo sempat terlihat (estetika)
-  setTimeout(() => {
-    isLoading.value = false;
-  }, 1500);
-});
+// Berikan sedikit delay agar logo sempat terlihat (estetika)
+setTimeout(() => {
+  isLoading.value = false;
+}, 1500);
+
+// Connect to Real-time Notifications
+const notificationStore = useNotificationStore();
+notificationStore.connect();
 </script>
 <template>
   <Analytics />
@@ -43,6 +47,7 @@ onMounted(() => {
       <NuxtLoadingIndicator color="#ff6600" />
       <div class="content">
         <NuxtLayout>
+          <NuxtPwaManifest />
           <NuxtPage />
         </NuxtLayout>
       </div>

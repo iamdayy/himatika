@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ModalsConfirmation } from '#components';
 import type { IPoint } from '~~/types';
-import type { IActivinessLetterResponse, IConfigResponse } from '~~/types/IResponse';
+import type { IActivinessLetterResponse, IConfigResponse, IMeResponse } from '~~/types/IResponse';
 
 interface IPointWithDisabledAndDoc extends IPoint {
     disabled: boolean;
@@ -19,7 +19,6 @@ const { data: ActivinessLetters, refresh: refreshActivinessLetterData, pending: 
         return data.data;
     }
 });
-const { data: user } = useAuth();
 
 const { makeActivinessLetter } = useMakeDocs();
 
@@ -28,11 +27,19 @@ const { $ts } = useI18n();
 
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 
+const { data: fullProfile } = await useAsyncData('fullProfile', () => $api<IMeResponse>('/api/me'), {
+    transform: (data) => {
+        if (!data.data) return null;
+        return data.data.user;
+    }
+});
+
 const config = computed(() => configData.value?.data);
 const loading = ref(false);
 const points = computed<IPointWithDisabledAndDoc[]>(() => {
-    if (!user.value?.member?.point) return [];
-    return user.value.member.point.map((point) => ({
+    // Use fullProfile instead of user.member
+    if (!fullProfile.value?.point) return [];
+    return fullProfile.value.point.map((point: any) => ({
         ...point,
         disabled: ActivinessLetters.value?.some((doc) => doc.tags.includes(`Semester ${point.semester}`)) || point.point < (config.value?.minPoint || 0),
         doc: ActivinessLetters.value?.find((doc) => doc.tags.includes(`Semester ${point.semester}`))?._id as string || ''

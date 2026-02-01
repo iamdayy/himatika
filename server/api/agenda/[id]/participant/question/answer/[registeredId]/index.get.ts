@@ -59,10 +59,11 @@ export default defineEventHandler(async (event): Promise<IAnswersResponse> => {
         answers: result,
       },
     };
-  } catch (error) {
+  } catch (error: any) {
+    console.log(error);
     throw createError({
-      statusCode: 500,
-      statusMessage: "Internal Server Error",
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || error.message,
     });
   }
 });

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
+import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { UserModel } from "~~/server/models/UserModel";
 import { MemberModel } from "../models/MemberModel";
 import { setSession } from "../utils/Sessions";
@@ -30,13 +31,6 @@ export default defineEventHandler(async (event) => {
     // Check if the username is a number
     if (!isNaN(NIM)) {
       member = await MemberModel.findOne({ NIM }, {}, { autopulate: false });
-      if (!member) {
-        throw createError({
-          statusCode: 401,
-          statusMessage: t("login_page.user_not_found"),
-          data: { message: t("login_page.check_username"), name: "username" },
-        });
-      }
     }
 
     // Find user by username
@@ -44,12 +38,14 @@ export default defineEventHandler(async (event) => {
       { username: body.username },
       { member: member },
     ]);
+
+    const invalidCredentialsError = createError({
+      statusCode: 401,
+      statusMessage: t("login_page.invalid_credentials") || "Kredensial tidak valid",
+    });
+
     if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: t("login_page.user_not_found"),
-        data: { message: t("login_page.check_username"), name: "username" },
-      });
+      throw invalidCredentialsError;
     }
     if (!user?.verified) {
       throw createError({
@@ -62,11 +58,7 @@ export default defineEventHandler(async (event) => {
     // Verify password
     const passMatch = await user.verifyPassword(body.password, user.password);
     if (!passMatch) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: t("login_page.wrong_password"),
-        data: { message: t("login_page.check_password"), name: "password" },
-      });
+      throw invalidCredentialsError;
     }
 
     // Generate JWT tokens
@@ -84,6 +76,17 @@ export default defineEventHandler(async (event) => {
       refreshToken,
       user: user._id as Types.ObjectId,
     });
+    
+    // Audit Log: Login
+    // Note: getRequestIP needs to be handled carefully in production (e.g. x-forwarded-for)
+    const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
+    await AuditLogModel.create({
+        action: 'LOGIN',
+        user: user.member, // or user._id
+        ip: ip,
+        details: { username: body.username },
+        target: 'Auth'
+    });
 
     // Return tokens
     return {
@@ -94,7 +97,7 @@ export default defineEventHandler(async (event) => {
     console.error(error);
     throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || "An error occurred during sign-in.",
+      statusMessage: error.statusMessage || "Terjadi kesalahan saat masuk.",
       data: error.data || null,
     });
   }

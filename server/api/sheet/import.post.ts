@@ -29,13 +29,13 @@ export default defineEventHandler(async (event) => {
     if (!file) {
       throw createError({
         statusCode: 402,
-        statusMessage: "Please attach file in the form",
+        statusMessage: "Harap lampirkan berkas dalam formulir",
       });
     }
     // Read the Excel workbook
     const workbook = new ExcelJS.Workbook();
 
-    await workbook.xlsx.load((file as ParsedFile).data);
+    await workbook.xlsx.load((file as ParsedFile).data as any);
     const worksheet = workbook.getWorksheet("template");
 
     const jsonData: DataRow[] = [];
@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       statusCode: 200,
-      statusMessage: "Data imported successfully",
+      statusMessage: "Data berhasil diimpor",
       data: jsonData,
     };
   } catch (error) {

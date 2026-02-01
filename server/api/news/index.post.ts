@@ -1,12 +1,10 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { MultiPartData } from "h3";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
 import { INews } from "~~/types";
 import { IReqNews } from "~~/types/IRequestPost";
 import type { IResponse } from "~~/types/IResponse";
-const config = useRuntimeConfig();
 
 /**
  * Handles NEWS requests for creating a new news.
@@ -21,13 +19,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi pengurus untuk menggunakan endpoint ini",
       });
     }
 
@@ -42,18 +40,17 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       },
       maxFileSize: 2 * 1024 * 1024, // 2MB
     });
-
-    const file = body.mainImage as MultiPartData;
+    const file = body.mainImage;
     if (!file) {
       throw createError({
         statusCode: 400,
-        statusMessage: "No file uploaded",
+        statusMessage: "Tidak ada berkas yang diunggah",
       });
     }
     if (typeof file === "string") {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid file data",
+        statusMessage: "Data berkas tidak valid",
       });
     }
     const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(file.name!)}.${
@@ -72,7 +69,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     } else {
       throw createError({
-        statusMessage: "Please upload nothing but images.",
+        statusMessage: "Harap unggah gambar saja.",
       });
     }
 
@@ -99,20 +96,20 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!saved) {
       throw createError({
         statusCode: 500,
-        statusMessage: `Failed to add new News ${news.title}`,
+        statusMessage: `Gagal menambahkan Berita baru ${news.title}`,
       });
     }
 
     return {
       statusCode: 200,
-      statusMessage: `Success to add new News ${news.title}`,
+      statusMessage: `Berhasil menambahkan Berita baru ${news.title}`,
     };
   } catch (error: any) {
-    return {
+    throw createError({
       statusCode: error.statusCode || 500,
       statusMessage:
-        error.message || "An unexpected error occurred while creating the news",
-    };
+        error.message || "Terjadi kesalahan yang tidak terduga saat membuat berita",
+    });
   }
 });
 
@@ -129,7 +126,7 @@ const getIdByNim = async (NIM: number): Promise<Types.ObjectId | undefined> => {
   } catch (error: any) {
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || "Failed to retrieve user ID by NIM",
+      message: error.message || "Gagal mengambil ID pengguna berdasarkan NIM",
     });
   }
 };

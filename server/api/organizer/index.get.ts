@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
 import { IOrganizer } from "~~/types";
@@ -10,13 +11,11 @@ export default defineCachedEventHandler(
 
       if (query.NIM) {
         const id = await getIdByNim(query.NIM as number);
-        const organizer = await OrganizerModel.findOne({
-          $or: [
-            { "dailyManagement.member": id },
-            { "department.coordinator": id },
-            { "department.members.member": id },
-          ],
-        });
+        const organizer = await OrganizerModel.findOne().or([
+          { "dailyManagement.member": id },
+          { "department.coordinator": id },
+          { "department.members.member": id },
+        ]);
         return {
           statusCode: 200,
           statusMessage: "Organizer fetched successfully.",
@@ -67,13 +66,13 @@ export default defineCachedEventHandler(
     }
   },
   {
-    maxAge: 60 * 60 * 24, // Cache selama 1 Hari
     name: "organizer-cache",
     swr: true,
+    getKey: (event) => event.path,
   }
 );
 
-const getIdByNim = async (NIM: number): Promise<unknown> => {
+const getIdByNim = async (NIM: number): Promise<Types.ObjectId> => {
   try {
     const member = await MemberModel.findOne({ NIM });
     if (!member) {

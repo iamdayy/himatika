@@ -12,7 +12,7 @@ const { data: dataConfig } = useFetch<IConfigResponse>('/api/config', {
     server: true,
 });
 const configs = computed(() => dataConfig.value?.data);
-const isLoggedIn = computed(() => status.value === 'authenticated');
+const isLoggedIn = computed(() => status.value === 'authenticated' || (status.value === 'loading' && !!user.value));
 const config = useRuntimeConfig();
 // Set up color mode
 const colorMode = useColorMode();
@@ -22,7 +22,8 @@ const isDarkMode = computed({
 });
 
 // UI state
-const isOpen = ref<boolean>(false)
+const isOpen = ref<boolean>(false);
+
 
 // Navigation links
 const navigation = computed<NavigationMenuItem[]>(() => [
@@ -175,7 +176,7 @@ useHead({
                                     {{ $ts('signed_as') }}
                                 </p>
                                 <p class="font-medium text-gray-900 truncate dark:text-white">
-                                    {{ item.label }}
+                                    {{ (item as any).label }}
                                 </p>
                             </div>
                         </template>

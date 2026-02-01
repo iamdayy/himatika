@@ -22,7 +22,7 @@ async function sendConfirmationEmail(
 ) {
   const config = useRuntimeConfig();
   const sender = {
-    email: `agenda@${config.mailtrap_domain}`,
+    email: config.resend_from,
     name: "Administrator",
   };
 
@@ -90,30 +90,19 @@ export default defineEventHandler(
         });
       }
 
-      const nimToCheck = user ? user.member.NIM : guest?.NIM;
-      const isAlreadyParticipant = agenda.participants?.some(
-        (p) =>
-          (p.member as IMember)?.NIM === nimToCheck ||
-          p.guest?.NIM === nimToCheck
-      );
-
-      if (isAlreadyParticipant) {
-        throw createError({
-          statusCode: 409,
-          statusMessage: "You are already a participant in this agenda.",
-        });
-      }
-
       const participantId = new Types.ObjectId();
-      let updateQuery = {};
+      let updateQuery: any = {};
+      let conditionQuery: any = { _id: id };
       let email: string, name: string;
 
       if (user) {
         name = user.member.fullName;
         email = user.member.email;
+        // Condition: User must NOT be in participants list
+        conditionQuery["participants.member"] = { $ne: user.member._id };
+        
         updateQuery = {
-          $addToSet: {
-            // Atomic operation: hanya tambah jika belum ada
+          $push: {
             participants: {
               _id: participantId,
               member: user.member._id,
@@ -123,8 +112,11 @@ export default defineEventHandler(
       } else if (guest) {
         name = guest.fullName;
         email = guest.email;
+        // Condition: Guest NIM must NOT be in participants list
+        conditionQuery["participants.guest.NIM"] = { $ne: guest.NIM };
+
         updateQuery = {
-          $addToSet: {
+          $push: {
             participants: {
               _id: participantId,
               guest: {
@@ -141,20 +133,20 @@ export default defineEventHandler(
           },
         };
       } else {
-        // This case should theoretically not be reached due to earlier checks
         throw createError({
           statusCode: 400,
           statusMessage: "Invalid registration data.",
         });
       }
 
-      // Eksekusi update langsung ke DB
-      const result = await AgendaModel.updateOne({ _id: id }, updateQuery);
+      // Execute atomic update
+      const result = await AgendaModel.updateOne(conditionQuery, updateQuery);
 
-      // Cek apakah ada dokumen yang dimodifikasi
+      // Check if document was modified
       if (result.modifiedCount === 0) {
-        // Jika 0, berarti kemungkinan besar user sudah terdaftar (karena $addToSet menolak duplikat)
-        // atau Agenda tidak ditemukan (sudah dicek di awal sih)
+        // If 0, it means either:
+        // 1. Agenda not found (checked earlier, unlikely)
+        // 2. Condition failed (User already registered)
         throw createError({
           statusCode: 409,
           statusMessage: "You are already registered or Agenda not found.",

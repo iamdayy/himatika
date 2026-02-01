@@ -152,8 +152,9 @@ const links = computed(() => [{
                                 <UBadge :label="req.type" color="secondary" variant="subtle" />
                             </div>
 
-                            <p class="mt-2 text-sm bg-gray-50/20 dark:bg-gray-900/20 dark:text-gray-400 p-2 rounded">{{
-                                req.description }}</p>
+                            <div class="mt-2 text-sm bg-gray-50/20 dark:bg-gray-900/20 dark:text-gray-400 p-2 rounded">
+                                <CoreContent :content="req.description" size="sm" />
+                            </div>
                             <p class="text-xs text-gray-400 mt-1">Diajukan: {{ new Date(req.date ||
                                 req.createdAt).toLocaleDateString() }}</p>
                         </div>
