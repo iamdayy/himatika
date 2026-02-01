@@ -19,7 +19,7 @@ export default defineEventHandler(
           const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
           return {
             statusCode: 200,
-            statusMessage: "OTP code has been sent to your email",
+            statusMessage: "Kode OTP telah dikirim ke email Anda",
             data: {
               email,
               expiresAt: expiresAt.toString(),
@@ -66,8 +66,8 @@ export default defineEventHandler(
         if (!mailed) {
           throw createError({
             statusCode: 500,
-            statusMessage: "Internal Server Error",
-            data: { message: "Email not sent", name: "email" },
+            statusMessage: "Terjadi Kesalahan Server",
+            data: { message: "Email gagal dikirim", name: "email" },
           });
         }
       } else {
@@ -92,14 +92,14 @@ export default defineEventHandler(
         if (!mailed) {
           throw createError({
             statusCode: 500,
-            statusMessage: "Internal Server Error",
-            data: { message: "Email not sent", name: "email" },
+            statusMessage: "Terjadi Kesalahan Server",
+            data: { message: "Email gagal dikirim", name: "email" },
           });
         }
       }
       return {
         statusCode: 200,
-        statusMessage: "OTP code has been sent to your email",
+        statusMessage: "Kode OTP telah dikirim ke email Anda",
         data: {
           email,
           expiresAt: expiresAt.toString(),

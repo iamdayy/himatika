@@ -13,18 +13,18 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!message) {
       return {
         statusCode: 404,
-        statusMessage: "Message not created",
+        statusMessage: "Gagal membuat pesan",
       };
     }
     return {
       statusCode: 200,
 
-      statusMessage: "Message created",
+      statusMessage: "Pesan berhasil dibuat",
     };
   } catch (error) {
     throw createError({
       statusCode: 500,
-      statusMessage: "Internal Server Error",
+      statusMessage: "Terjadi Kesalahan Server",
     });
   }
 });

@@ -57,34 +57,40 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const parts = await readMultipartFormData(event);
-    if (!parts) {
+    const uploadedData = await customReadMultipartFormData<any>(event, {
+      allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+      compress: {
+        quality: 75,
+        maxWidth: 1000,
+      },
+      maxFileSize: 2 * 1024 * 1024, // 2MB
+    });
+
+    if (!uploadedData.organizerData) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid form data",
+        statusMessage: "Data pengurus tidak ditemukan",
       });
     }
 
-    const dataPart = parts.find((part) => part.name === "organizerData");
-    if (!dataPart || !dataPart.data) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Missing organizer data",
-      });
-    }
+    // Ensure organizerData is a string before parsing
+    const organizerDataStr =
+      typeof uploadedData.organizerData === "string"
+        ? uploadedData.organizerData
+        : uploadedData.organizerData.data.toString();
 
-    const body = JSON.parse(dataPart.data.toString()) as IOrganizer;
+    const body = JSON.parse(organizerDataStr) as IOrganizer;
 
     const councilPromises = body.council.map(async (council, index) => {
-      const filePart = parts.find(
-        (part) => part.name === `council-image-${index}`
-      );
+      const filePart = uploadedData[`council-image-${index}`];
       let imageUrl = council.image; // Default to existing image path or null
 
-      if (filePart && filePart.type?.startsWith("image/")) {
-        const fileName = `${BASE_AVATAR_FOLDER}/${filePart.filename}.${
-          filePart.type.split("/")[1]
-        }`;
+      if (filePart && typeof filePart !== "string") {
+        const fileExtension = filePart.type?.split("/")[1] || "jpg";
+        const fileName = `${BASE_AVATAR_FOLDER}/${
+          filePart.name || `council-${index}`
+        }.${fileExtension}`;
+
         await r2Client.send(
           new PutObjectCommand({
             Bucket: R2_BUCKET_NAME,
@@ -102,12 +108,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       };
     });
 
-    const advisorFilePart = parts.find((part) => part.name === "advisor-image");
+    const advisorFilePart = uploadedData["advisor-image"];
     let imageUrlAdvisor = body.advisor.image;
-    if (advisorFilePart && advisorFilePart.type?.startsWith("image/")) {
-      const fileName = `${BASE_AVATAR_FOLDER}/${advisorFilePart.filename}.${
-        advisorFilePart.type.split("/")[1]
-      }`;
+    if (advisorFilePart && typeof advisorFilePart !== "string") {
+      const fileExtension = advisorFilePart.type?.split("/")[1] || "jpg";
+      const fileName = `${BASE_AVATAR_FOLDER}/${
+        advisorFilePart.name || "advisor"
+      }.${fileExtension}`;
       await r2Client.send(
         new PutObjectCommand({
           Bucket: R2_BUCKET_NAME,
@@ -188,5 +195,11 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
 const getMemberIdByNim = async (NIM: number) => {
   const member = await MemberModel.findOne({ NIM });
-  return member?._id || null;
+  if (!member) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Anggota dengan NIM ${NIM} tidak ditemukan`,
+    });
+  }
+  return member._id;
 };

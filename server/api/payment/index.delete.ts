@@ -12,7 +12,7 @@ export default defineEventHandler(
       if (!user) {
         throw createError({
           statusCode: 403,
-          statusMessage: "You must be logged in to cancel a transaction",
+          statusMessage: "Anda harus login untuk membatalkan transaksi",
         });
       }
 
@@ -33,8 +33,8 @@ export default defineEventHandler(
       if (!agenda) {
         throw createError({
           statusCode: 404,
-          statusMessage:
-            "Transaction not found or you do not have permission to cancel it",
+            statusMessage:
+            "Transaksi tidak ditemukan atau anda tidak memiliki izin untuk membatalkannya",
         });
       }
       let registered: IParticipant | ICommittee | undefined;
@@ -53,7 +53,7 @@ export default defineEventHandler(
       if (!registered || !registered.payment) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Transaction not found",
+          statusMessage: "Transaksi tidak ditemukan",
         });
       }
 
@@ -61,7 +61,7 @@ export default defineEventHandler(
       if (registered.member?.toString() !== user.member._id.toString()) {
         throw createError({
           statusCode: 403,
-          statusMessage: "Unauthorized action",
+          statusMessage: "Aksi tidak diizinkan",
         });
       }
 
@@ -70,7 +70,7 @@ export default defineEventHandler(
         // 412 is "Merchant cannot modify status of the transaction" (already cancelled/settled)
         throw createError({
           statusCode: 500,
-          statusMessage: "Failed to cancel transaction from Payment Gateway",
+          statusMessage: "Gagal membatalkan transaksi dari Payment Gateway",
           data: { message: cancel.status_message },
         });
       }
@@ -85,12 +85,12 @@ export default defineEventHandler(
       await agenda.save();
       return {
         statusCode: 200,
-        statusMessage: "Transaction canceled",
+        statusMessage: "Transaksi dibatalkan",
       };
     } catch (error: any) {
       throw createError({
         statusCode: error.statusCode || 500,
-        statusMessage: error.statusMessage || "Internal Server Error",
+        statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
         data: error.data,
       });
     }

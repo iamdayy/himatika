@@ -21,7 +21,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
     if (!user || !user.member.organizer) {
-      throw createError({ statusCode: 403, statusMessage: "Forbidden" });
+      throw createError({ statusCode: 403, statusMessage: "Dilarang" });
     }
 
     // Terima data tambahan: createNews, newsTitle, newsBody

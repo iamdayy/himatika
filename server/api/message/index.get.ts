@@ -36,12 +36,12 @@ export default defineEventHandler(async (event): Promise<IMessageResponse> => {
     if (!message) {
       return {
         statusCode: 404,
-        statusMessage: "Message not found",
+        statusMessage: "Pesan tidak ditemukan",
       };
     }
     return {
       statusCode: 200,
-      statusMessage: "Message found",
+      statusMessage: "Pesan ditemukan",
       data: {
         messages: message.map((s) => s.toObject()),
         length,
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event): Promise<IMessageResponse> => {
   } catch (error) {
     throw createError({
       statusCode: 500,
-      statusMessage: "Internal Server Error",
+      statusMessage: "Terjadi Kesalahan Server",
     });
   }
 });

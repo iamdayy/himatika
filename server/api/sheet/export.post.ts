@@ -101,7 +101,7 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 500); // Internal Server Error
     return {
       statusCode: 500,
-      statusMessage: "Error exporting to Excel",
+      statusMessage: "Gagal mengekspor ke Excel",
     };
   }
 });

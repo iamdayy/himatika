@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
 
     const invalidCredentialsError = createError({
       statusCode: 401,
-      statusMessage: t("login_page.invalid_credentials") || "Invalid credentials",
+      statusMessage: t("login_page.invalid_credentials") || "Kredensial tidak valid",
     });
 
     if (!user) {
@@ -97,7 +97,7 @@ export default defineEventHandler(async (event) => {
     console.error(error);
     throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || "An error occurred during sign-in.",
+      statusMessage: error.statusMessage || "Terjadi kesalahan saat masuk.",
       data: error.data || null,
     });
   }

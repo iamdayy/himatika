@@ -10,7 +10,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        statusMessage: "Unauthorized",
+        statusMessage: "Tidak diizinkan",
       });
     }
     const userId = await findMemberByNim(user.member.NIM);
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
     });
     return {
       statusCode: 200,
-      statusMessage: "Docs found",
+      statusMessage: "Dokumen ditemukan",
       data: {
         doc: docs.map((doc) => ({ ...doc.toObject(), _id: String(doc._id) })),
         length: totalDocs,
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
   } catch (error: any) {
     throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || "Internal Server Error",
+      statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
     });
   }
 });

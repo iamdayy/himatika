@@ -34,7 +34,7 @@ export default defineEventHandler(
         if (!news) {
           throw createError({
             statusCode: 404,
-            statusMessage: "News not found",
+            statusMessage: "Berita tidak ditemukan",
           });
         }
 
@@ -43,7 +43,7 @@ export default defineEventHandler(
 
         return {
           statusCode: 200,
-          statusMessage: "News fetched",
+          statusMessage: "Berita berhasil diambil",
           data: {
             news: { ...news.toJSON(), related: relatedNews },
             length: 1,
@@ -101,7 +101,7 @@ export default defineEventHandler(
       // Return newss and total count
       return {
         statusCode: 200,
-        statusMessage: "News fetched",
+        statusMessage: "Berita berhasil diambil",
         data: {
           news,
           length: newssLength,
@@ -112,7 +112,7 @@ export default defineEventHandler(
       return {
         statusCode: error.statusCode || 500,
         statusMessage:
-          error.message || "An unexpected error occurred while fetching news",
+          error.message || "Terjadi kesalahan yang tidak terduga saat mengambil berita",
       };
     }
   }

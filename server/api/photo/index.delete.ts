@@ -8,20 +8,20 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
       });
     }
     const { id } = getQuery(event);
     if (!id) {
       throw createError({
         statusCode: 400,
-        statusMessage: "No photo id provided",
+        statusMessage: "ID foto tidak disertakan",
       });
     }
     const photo = await PhotoModel.findById(id);
@@ -38,15 +38,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!photo) {
       throw createError({
         statusCode: 404,
-        statusMessage: "Photo not found",
+        statusMessage: "Foto tidak ditemukan",
       });
     }
     await PhotoModel.findByIdAndDelete(id);
-    return { statusCode: 200, statusMessage: "Photo deleted" };
+    return { statusCode: 200, statusMessage: "Foto berhasil dihapus" };
   } catch (error: any) {
     return {
       statusCode: error.statusCode || 500,
-      statusMessage: error.message || "Internal Server Error",
+      statusMessage: error.message || "Terjadi Kesalahan Server",
     };
   }
 });

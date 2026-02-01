@@ -2,29 +2,29 @@ export const validatePassword = (password: string) => {
   if (password.length < 8) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Password must be at least 8 characters long",
-      data: { message: "Password too short", path: "password" },
+      statusMessage: "Kata sandi harus minimal 8 karakter",
+      data: { message: "Kata sandi terlalu pendek", path: "password" },
     });
   }
   if (!/[a-z]/.test(password)) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Password must contain at least one lowercase letter",
-      data: { message: "Missing lowercase letter", path: "password" },
+      statusMessage: "Kata sandi harus mengandung setidaknya satu huruf kecil",
+      data: { message: "Kurang huruf kecil", path: "password" },
     });
   }
   if (!/[A-Z]/.test(password)) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Password must contain at least one uppercase letter",
-      data: { message: "Missing uppercase letter", path: "password" },
+      statusMessage: "Kata sandi harus mengandung setidaknya satu huruf besar",
+      data: { message: "Kurang huruf besar", path: "password" },
     });
   }
   if (!/\d/.test(password)) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Password must contain at least one number",
-      data: { message: "Missing number", path: "password" },
+      statusMessage: "Kata sandi harus mengandung setidaknya satu angka",
+      data: { message: "Kurang angka", path: "password" },
     });
   }
   return true;

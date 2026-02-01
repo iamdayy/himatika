@@ -22,13 +22,13 @@ export default defineEventHandler(
       if (!user) {
         throw createError({
           statusCode: 403,
-          statusMessage: "You must be logged in to use this endpoint",
+          statusMessage: "Anda harus login untuk menggunakan endpoint ini",
         });
       }
       if (!event.context.organizer) {
         throw createError({
           statusCode: 403,
-          statusMessage: "You must be admin / departement to use this endpoint",
+          statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
         });
       }
 
@@ -38,32 +38,32 @@ export default defineEventHandler(
       if (!body.title) {
         throw createError({
           statusCode: 400,
-          message: "Title is required",
-          data: { message: "Title is required", path: "title" },
+          message: "Judul harus diisi",
+          data: { message: "Judul harus diisi", path: "title" },
         });
       }
 
       if (!body.description) {
         throw createError({
           statusCode: 400,
-          message: "Description is required",
-          data: { message: "Description is required", path: "description" },
+          message: "Deskripsi harus diisi",
+          data: { message: "Deskripsi harus diisi", path: "description" },
         });
       }
 
       if (!body.date) {
         throw createError({
           statusCode: 400,
-          message: "Date is required",
-          data: { message: "Date is required", path: "date" },
+          message: "Tanggal harus diisi",
+          data: { message: "Tanggal harus diisi", path: "date" },
         });
       }
 
       if (!body.at) {
         throw createError({
           statusCode: 400,
-          message: "Location is required",
-          data: { message: "Location is required", path: "at" },
+          message: "Lokasi harus diisi",
+          data: { message: "Lokasi harus diisi", path: "at" },
         });
       }
 
@@ -102,7 +102,7 @@ export default defineEventHandler(
       if (!savedAgenda) {
         throw createError({
           statusCode: 400,
-          message: "Failed to save the agenda",
+          message: "Gagal menyimpan agenda",
         });
       }
       let sender = {
@@ -186,8 +186,8 @@ export default defineEventHandler(
       // Broadcast notification
       if (!body.isDraft) {
         broadcast('notification', {
-          title: 'New Agenda',
-          message: `${savedAgenda.title} has been created.`,
+          title: 'Agenda Baru',
+          message: `${savedAgenda.title} telah berhasil dibuat.`,
           type: 'info',
           icon: 'i-heroicons-calendar',
           link: `/agendas`
@@ -204,13 +204,13 @@ export default defineEventHandler(
 
       return {
         statusCode: 200,
-        statusMessage: "Agenda created",
+        statusMessage: "Agenda berhasil dibuat",
         data: savedAgenda._id,
       };
     } catch (error: any) {
       return {
         statusCode: error.statusCode || 500,
-        statusMessage: error.message || "An unexpected error occurred",
+        statusMessage: error.message || "Terjadi kesalahan yang tidak terduga",
         data: error.data,
       };
     }
