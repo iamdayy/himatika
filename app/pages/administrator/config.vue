@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CoreTiptap, ModalsCarouselAdd, ModalsImageCrop, UInput } from '#components';
-import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICarousel, IConfig, IPhoto } from "~~/types";
 import type { IConfigResponse, IEncryptionsResponse, IResponse } from '~~/types/IResponse';
@@ -122,8 +121,6 @@ const deleteMission = (miss: string) => {
  */
 const onCropped = async (f: File) => {
     file.value = f;
-    const blob = URL.createObjectURL(f);
-    fileToCropped.value.blob = blob;
     CropImageModal.close();
 }
 
@@ -133,15 +130,7 @@ const onCropped = async (f: File) => {
  */
 const onChangeImage = async () => {
     if (!file.value) return;
-    const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        alwaysKeepResolution: true
-    }
-    const compressedFile = await imageCompression(file.value, options);
-    file.value = compressedFile;
-    const blob = await convert(compressedFile);
+    const blob = await convert(file.value);
     CropImageModal.open({
         onCropped,
         img: blob,
