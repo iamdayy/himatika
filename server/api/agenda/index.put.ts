@@ -21,13 +21,13 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!ev.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
       });
     }
 
@@ -42,7 +42,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
     if (!agenda) {
       throw createError({
         statusCode: 404,
-        statusMessage: "The agenda is not found",
+        statusMessage: "Agenda tidak ditemukan",
       });
     }
     let committees: ICommittee[] | undefined = undefined;
@@ -94,7 +94,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
     if (!saved) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Failed to update the agenda",
+        statusMessage: "Gagal memperbarui agenda",
       });
     }
 
@@ -177,8 +177,8 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
       }
 
       broadcast('notification', {
-        title: 'New Agenda',
-        message: `${agenda.title} has been created.`,
+        title: 'Agenda Baru',
+        message: `${agenda.title} telah dibuat.`,
         type: 'info',
         icon: 'i-heroicons-calendar',
         link: `/agendas`
@@ -197,7 +197,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
     // Return success response
     return {
       statusCode: 200,
-      statusMessage: `Agenda ${agenda.title} updated`,
+      statusMessage: `Agenda ${agenda.title} berhasil diperbarui`,
       data: agenda._id,
     };
   } catch (error: any) {
@@ -206,7 +206,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
       statusCode: error.statusCode || 500,
       statusMessage:
         error.message ||
-        "An unexpected error occurred while updating the agenda",
+        "Terjadi kesalahan yang tidak terduga saat memperbarui agenda",
       data: error.data,
     };
   }

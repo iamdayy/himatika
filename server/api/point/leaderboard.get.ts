@@ -64,7 +64,7 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
 
   return {
     statusCode: 200,
-    statusMessage: "Leaderboard fetched successfully",
+    statusMessage: "Papan peringkat berhasil diambil",
     data: {
         leaderboard,
         length: members.length,

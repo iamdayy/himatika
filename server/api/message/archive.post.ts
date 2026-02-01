@@ -10,7 +10,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!message) {
       throw createError({
         statusCode: 404,
-        statusMessage: "Message not found",
+        statusMessage: "Pesan tidak ditemukan",
       });
     }
     message.archived = true;
@@ -18,13 +18,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     return {
       statusCode: 200,
-      statusMessage: "Message archived successfully",
+      statusMessage: "Pesan berhasil diarsipkan",
     };
   } catch (error) {
     console.log(error);
     throw createError({
       statusCode: 500,
-      statusMessage: "Internal Server Error",
+      statusMessage: "Terjadi Kesalahan Server",
     });
   }
 });

@@ -57,8 +57,8 @@ export async function customReadMultipartFormData<T>(
     if (!isNaN(contentLength) && contentLength > MAX_TOTAL_SIZE) {
       throw createError({
         statusCode: 413,
-        statusMessage: "Payload Too Large",
-        message: `Total upload size exceeds the limit.`,
+        statusMessage: "Payload Terlalu Besar",
+        message: `Total ukuran unggahan melebihi batas.`,
       });
     }
   }
@@ -83,8 +83,8 @@ export async function customReadMultipartFormData<T>(
           if (fileData.length > MAX_FILE_SIZE) {
             throw createError({
               statusCode: 413,
-              statusMessage: "File Too Large",
-              message: `File '${data.filename}' exceeds the limit.`,
+              statusMessage: "Berkas Terlalu Besar",
+              message: `Berkas '${data.filename}' melebihi batas.`,
             });
           }
 
@@ -93,8 +93,8 @@ export async function customReadMultipartFormData<T>(
             if (!options.allowedTypes.includes(fileType)) {
               throw createError({
                 statusCode: 415,
-                statusMessage: "Unsupported Media Type",
-                message: `File type '${fileType}' is not allowed.`,
+                statusMessage: "Tipe Media Tidak Didukung",
+                message: `Tipe berkas '${fileType}' tidak diizinkan.`,
               });
             }
           }

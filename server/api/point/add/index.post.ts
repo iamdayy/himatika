@@ -5,7 +5,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
     if (!user || !user.member.organizer) {
-      throw createError({ statusCode: 403, statusMessage: "Forbidden" });
+      throw createError({ statusCode: 403, statusMessage: "Dilarang" });
     }
 
     const body = await readBody<{
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     console.error(error);
     throw createError({
       statusCode: 500,
-      statusMessage: "Internal Server Error",
+      statusMessage: "Terjadi Kesalahan Server",
     });
   }
 });

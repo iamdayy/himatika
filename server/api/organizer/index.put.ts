@@ -1,8 +1,7 @@
-import fs from "fs";
-import path from "path";
+import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
-import { IFile, IOrganizer } from "~~/types";
+import { IOrganizer } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
 export default defineEventHandler(async (event): Promise<IResponse> => {
@@ -12,13 +11,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 401,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
       });
     }
 
@@ -35,7 +34,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!isChairman) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be chairman to use this endpoint",
+        statusMessage: "Anda harus menjadi ketua untuk menggunakan endpoint ini",
       });
     }
     const { period } = getQuery<{ period: string }>(event);
@@ -51,69 +50,121 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!organizer) {
       throw createError({
         statusCode: 404,
-        statusMessage: "Organizer not found",
+        statusMessage: "Pengurus tidak ditemukan",
       });
     }
 
-    const body = await readBody<IOrganizer>(event);
-    console.log(body);
+    const uploadedData = await customReadMultipartFormData<any>(event, {
+      allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+      compress: {
+        quality: 75,
+        maxWidth: 1000,
+      },
+      maxFileSize: 2 * 1024 * 1024, // 2MB
+    });
 
-    const councilPromises = body.council.map(async (council, i) => {
-      const image = council.image as IFile;
-      if (typeof image === "string") {
-        return council;
-      }
-      if (image.type?.startsWith("image/")) {
-        if (organizer.council[i].image) {
-          const imagePath = path.join(
-            config.storageDir,
-            organizer.council[i].image as string
-          );
-          if (fs.existsSync(imagePath)) {
-            deleteFile(organizer.council[i].image as string);
+    if (!uploadedData.organizerData) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Data pengurus tidak ditemukan",
+      });
+    }
+
+    const organizerDataStr =
+      typeof uploadedData.organizerData === "string"
+        ? uploadedData.organizerData
+        : uploadedData.organizerData.data.toString();
+
+    const body = JSON.parse(organizerDataStr) as IOrganizer;
+
+    const councilPromises = body.council.map(async (council, index) => {
+      const filePart = uploadedData[`council-image-${index}`];
+      let imageUrl = council.image;
+
+      if (filePart && typeof filePart !== "string") {
+        // Delete old image if exists
+        if (organizer.council[index] && organizer.council[index].image) {
+          const oldImageKey = (organizer.council[index].image as string)
+            .split("/")
+            .pop();
+          if (oldImageKey) {
+            try {
+              await r2Client.send(
+                new DeleteObjectCommand({
+                  Bucket: R2_BUCKET_NAME,
+                  Key: oldImageKey,
+                })
+              );
+            } catch (e) {
+              console.warn("Failed to delete old image", e);
+            }
           }
         }
-        const hashedName = await storeFileLocally(
-          image,
-          12,
-          BASE_AVATAR_FOLDER
+
+        const fileExtension = filePart.type?.split("/")[1] || "jpg";
+        const fileName = `${BASE_AVATAR_FOLDER}/${
+          filePart.name || `council-${index}`
+        }.${fileExtension}`;
+
+        await r2Client.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: fileName,
+            Body: filePart.data,
+            ContentType: filePart.type,
+          })
         );
-        council.image = `${BASE_AVATAR_FOLDER}/${hashedName}`;
+        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       }
       return {
         position: council.position,
         name: council.name,
-        image: council.image,
+        image: imageUrl,
       };
     });
 
-    const advisorImage = body.advisor.image as IFile;
-    let imageUrlAdvisor = "";
-    if (advisorImage.type?.startsWith("image/")) {
-      if (organizer.advisor.image) {
-        const imagePath = path.join(
-          config.storageDir,
-          organizer.advisor.image as string
-        );
-        if (fs.existsSync(imagePath)) {
-          deleteFile(organizer.advisor.image as string);
+    const advisorFilePart = uploadedData["advisor-image"];
+    let imageUrlAdvisor = body.advisor.image;
+
+    if (advisorFilePart && typeof advisorFilePart !== "string") {
+      // Delete old advisor image if exists
+      if (organizer.advisor && organizer.advisor.image) {
+        const oldImageKey = (organizer.advisor.image as string).split("/").pop();
+        if (oldImageKey) {
+          try {
+            await r2Client.send(
+              new DeleteObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: oldImageKey,
+              })
+            );
+          } catch (e) {
+            console.warn("Failed to delete old advisor image", e);
+          }
         }
       }
-      const hashedName = await storeFileLocally(
-        advisorImage,
-        12,
-        BASE_AVATAR_FOLDER
+
+      const fileExtension = advisorFilePart.type?.split("/")[1] || "jpg";
+      const fileName = `${BASE_AVATAR_FOLDER}/${
+        advisorFilePart.name || "advisor"
+      }.${fileExtension}`;
+
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: fileName,
+          Body: advisorFilePart.data,
+          ContentType: advisorFilePart.type,
+        })
       );
-      imageUrlAdvisor = `${BASE_AVATAR_FOLDER}/${hashedName}`;
+      imageUrlAdvisor = `${R2_PUBLIC_DOMAIN}/${fileName}`;
     }
+
     const advisor = {
       position: body.advisor.position,
       name: body.advisor.name,
       image: imageUrlAdvisor,
     };
-    if (typeof advisorImage === "string") {
-      advisor.image == body.advisor.image;
-    }
 
     const considerationBoardPromises = body.considerationBoard.map(
       async (member) => {
@@ -171,23 +222,29 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!updated) {
       throw createError({
         statusCode: 500,
-        statusMessage: "Failed to update organizer.",
+        statusMessage: "Gagal memperbarui data pengurus.",
       });
     }
 
     return {
       statusCode: 200,
-      statusMessage: "Organizer update successfully.",
+      statusMessage: "Data pengurus berhasil diperbarui.",
     };
   } catch (error: any) {
     return {
       statusCode: error.statusCode || 500,
-      statusMessage: error.message || "Internal server error.",
+      statusMessage: error.message || "Terjadi kesalahan server.",
     };
   }
 });
 
 const getMemberIdByNim = async (NIM: number) => {
   const member = await MemberModel.findOne({ NIM });
-  return member?._id || null;
+  if (!member) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Anggota dengan NIM ${NIM} tidak ditemukan`,
+    });
+  }
+  return member._id;
 };

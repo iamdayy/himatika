@@ -17,13 +17,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
       });
     }
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!project) {
       throw createError({
         statusCode: 404,
-        message: "Project not found",
+        message: "Proyek tidak ditemukan",
       });
     }
 
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     // Return success response
     return {
       statusCode: 200,
-      statusMessage: `Project "${project.title}" successfully deleted`,
+      statusMessage: `Proyek "${project.title}" berhasil dihapus`,
     };
   } catch (error: any) {
     // Handle any errors that occur during the process
@@ -64,7 +64,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusCode: error.statusCode || 500,
       statusMessage:
         error.message ||
-        "An unexpected error occurred while deleting the project",
+        "Terjadi kesalahan yang tidak terduga saat menghapus proyek",
     };
   }
 });
