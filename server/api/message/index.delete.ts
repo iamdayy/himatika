@@ -9,18 +9,18 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!message) {
       throw createError({
         statusCode: 404,
-        statusMessage: "Message not found",
+        statusMessage: "Pesan tidak ditemukan",
       });
     }
     await message.save();
     return {
       statusCode: 200,
-      statusMessage: "Message deleted",
+      statusMessage: "Pesan berhasil dihapus",
     };
   } catch (error) {
     throw createError({
       statusCode: 500,
-      statusMessage: "Internal Server Error",
+      statusMessage: "Terjadi Kesalahan Server",
     });
   }
 });

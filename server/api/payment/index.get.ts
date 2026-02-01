@@ -17,7 +17,7 @@ export default defineEventHandler(
       if (!agenda) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Agenda & registration not found",
+          statusMessage: "Agenda & pendaftaran tidak ditemukan",
         });
       }
       const registered =
@@ -30,13 +30,13 @@ export default defineEventHandler(
       if (!registered) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Participant not found",
+          statusMessage: "Peserta tidak ditemukan",
         });
       }
       if (!registered.payment) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Payment not found",
+          statusMessage: "Pembayaran tidak ditemukan",
         });
       }
       registered.payment.status = response;
@@ -45,7 +45,7 @@ export default defineEventHandler(
       await agenda.save();
       return {
         statusCode: 200,
-        statusMessage: "Transaction found",
+        statusMessage: "Transaksi ditemukan",
         data: {
           payment: {
             status: registered?.payment?.status || "pending",
@@ -56,7 +56,7 @@ export default defineEventHandler(
       console.error("Error in payment status:", error);
       throw createError({
         statusCode: 500,
-        statusMessage: "Internal Server Error",
+        statusMessage: "Terjadi Kesalahan Server",
         data: { message: error.message },
       });
     }

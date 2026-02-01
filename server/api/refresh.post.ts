@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: error.statusCode || 500,
       statusMessage:
-        error.message || "An error occurred while refreshing the token.",
+        error.message || "Terjadi kesalahan saat memperbarui token.",
     });
   }
 });

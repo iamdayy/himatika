@@ -26,7 +26,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
       if (!verified) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Invalid signature",
+          statusMessage: "Tanda tangan tidak valid",
         });
       }
 
@@ -63,7 +63,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
         }
 
         if (result.matchedCount === 0) {
-             throw createError({ statusCode: 404, statusMessage: "Registration ID not found" });
+             throw createError({ statusCode: 404, statusMessage: "ID Pendaftaran tidak ditemukan" });
         }
       } 
       
@@ -105,12 +105,12 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
     }
     return {
       statusCode: 200,
-      statusMessage: "Notification processed atomically",
+      statusMessage: "Notifikasi diproses secara atomik",
     };
   } catch (error: any) {
-    return {
+    throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || "Internal Server Error",
-    };
+      statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
+    });
   }
 });

@@ -16,13 +16,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
       });
     }
 
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!news) {
       throw createError({
         statusCode: 404,
-        statusMessage: "News not found",
+        statusMessage: "Berita tidak ditemukan",
       });
     }
 
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       await news.save();
       return {
         statusCode: 200,
-        statusMessage: `News "${news.title}" is published`,
+        statusMessage: `Berita "${news.title}" berhasil diterbitkan`,
       };
     } else {
       // Publish the news
@@ -52,7 +52,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       await news.save();
       return {
         statusCode: 200,
-        statusMessage: `News "${news.title}" is unpublished`,
+        statusMessage: `Berita "${news.title}" batal diterbitkan`,
       };
     }
   } catch (error: any) {
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusCode: error.statusCode || 500,
       statusMessage:
         error.message ||
-        "An unexpected error occurred while publishing the news",
+        "Terjadi kesalahan yang tidak terduga saat menerbitkan berita",
     };
   }
 });

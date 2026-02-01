@@ -125,7 +125,7 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
     throw createError({
       statusCode: error.statusCode || 500,
       statusMessage:
-        error.statusMessage || "An error occurred during registration.",
+        error.statusMessage || "Terjadi kesalahan saat pendaftaran.",
       data: error.data || null,
     });
   } finally {

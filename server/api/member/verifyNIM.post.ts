@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     return createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || "Internal Server Error",
+      statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
       data: error.data || {},
     });
   }

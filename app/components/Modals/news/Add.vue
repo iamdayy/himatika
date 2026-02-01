@@ -120,24 +120,24 @@ const addNews = async () => {
  */
 const onChangeImage = async (f?: File | null) => {
     if (!f) return;
-    const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        alwaysKeepResolution: true
-    }
-    const compressedFile = await imageCompression(f, options);
-    const blob = URL.createObjectURL(compressedFile);
+    const blob = URL.createObjectURL(f);
     ImageCropModal.open({
         img: blob,
-        title: compressedFile.name,
+        title: f.name,
         stencil: {
             movable: true,
             resizable: true,
             aspectRatio: 16 / 9,
         },
-        onCropped: (f: File) => {
-            file.value = f;
+        async onCropped(f: File) {
+            const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+                alwaysKeepResolution: true
+            }
+            const compressedFile = await imageCompression(f, options);
+            file.value = compressedFile;
             ImageCropModal.close();
         }
     });

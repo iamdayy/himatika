@@ -46,7 +46,7 @@ const props = defineProps({
 /**
  * Reactive references
  */
-const cropper = ref();
+const cropper = ref<InstanceType<typeof Cropper> | null>(null);
 const loadingState = ref(false);
 const model = defineModel<boolean>();
 
@@ -68,14 +68,15 @@ const crop = () => {
     if (!props.img) return;
     if (!cropper.value.getResult()) return;
     const { canvas } = cropper.value.getResult();
-    canvas.toBlob((blob: Blob) => {
+    canvas?.toBlob((blob) => {
+        if (!blob) return;
         const file = new File([blob], props.title, {
             type: blob.type
         });
         emits('cropped', file);
         URL.revokeObjectURL(props.img); // Revoke the object URL to free up memory
         loadingState.value = false;
-    });
+    }, 'image/jpeg', 0.7);
 };
 
 /**

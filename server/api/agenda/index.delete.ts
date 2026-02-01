@@ -15,34 +15,34 @@ export default defineEventHandler(
       if (!user) {
         throw createError({
           statusCode: 403,
-          statusMessage: "You must be logged in to access this",
+          statusMessage: "Anda harus login untuk menggunakan endpoint ini",
         });
       }
       if (!organizer) {
         throw createError({
           statusCode: 403,
-          statusMessage: "You must be admin / departement to access this",
+          statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
         });
       }
       // Get the agenda ID from the route parameters
-      const { id } = getQuery(event);
+      const { id } = getQuery<{ id: string }>(event);
 
       // Attempt to find and delete the agenda
       const deleted = await AgendaModel.findByIdAndDelete(id);
-      const deletedPhotos = await PhotoModel.findOneAndDelete({ on: id });
+      await PhotoModel.deleteMany({ on: id });
 
       // If the agenda wasn't found, throw an error
       if (!deleted) {
         throw createError({
           statusCode: 404,
-          message: "Agenda not found or already deleted",
+          message: "Agenda tidak ditemukan atau sudah dihapus",
         });
       }
 
       // Return true to indicate successful deletion
       return {
         statusCode: 200,
-        statusMessage: "Agenda deleted successfully",
+        statusMessage: "Agenda berhasil dihapus",
       };
     } catch (error: any) {
       // Handle any errors that occur during the process
@@ -50,7 +50,7 @@ export default defineEventHandler(
         statusCode: error.statusCode || 500,
         statusMessage:
           error.message ||
-          "An unexpected error occurred while deleting the agenda",
+          "Terjadi kesalahan yang tidak terduga saat menghapus agenda",
       };
     }
   }

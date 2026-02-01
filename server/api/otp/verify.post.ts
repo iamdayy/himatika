@@ -62,7 +62,7 @@ export default defineEventHandler(
     } catch (error: any) {
       throw createError({
         statusCode: error.statusCode || 500,
-        statusMessage: error.statusMessage || "Internal Server Error",
+        statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
       });
     }
   }

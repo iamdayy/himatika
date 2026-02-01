@@ -13,7 +13,7 @@ export default defineCachedEventHandler(
       ]);
       return {
         statusCode: 200,
-        statusMessage: "Stats fetched successfully",
+        statusMessage: "Statistik berhasil diambil",
         data: {
           projects,
           members,
@@ -24,7 +24,7 @@ export default defineCachedEventHandler(
       throw createError({
         statusCode: error.statusCode || 500,
         statusMessage:
-          error.message || "An error occurred while fetching stats.",
+          error.message || "Terjadi kesalahan saat mengambil statistik.",
       });
     }
   },

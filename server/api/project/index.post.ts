@@ -15,7 +15,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
 
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
       } else {
         throw createError({
-          statusMessage: "Please upload nothing but images.",
+          statusMessage: "Harap unggah gambar saja.",
         });
       }
     }
@@ -71,19 +71,19 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!saved) {
       return {
         statusCode: 400,
-        statusMessage: `Failed to add new Project ${project.title}`,
+        statusMessage: `Gagal menambahkan Proyek baru ${project.title}`,
       };
     }
     // Return success message
     return {
       statusCode: 200,
-      statusMessage: `Success to add new Project ${project.title}`,
+      statusMessage: `Berhasil menambahkan Proyek baru ${project.title}`,
     };
   } catch (error: any) {
     // Handle any errors that occur during the process
     return {
       statusCode: error.statusCode || 500,
-      statusMessage: error.message || "An unexpected error occurred",
+      statusMessage: error.message || "Terjadi kesalahan yang tidak terduga",
     };
   }
 });

@@ -17,13 +17,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be logged in to use this endpoint",
+        statusMessage: "Anda harus login untuk menggunakan endpoint ini",
       });
     }
     if (!event.context.organizer) {
       throw createError({
         statusCode: 403,
-        statusMessage: "You must be admin / departement to use this endpoint",
+        statusMessage: "Anda harus menjadi admin / departemen untuk menggunakan endpoint ini",
       });
     }
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!news) {
       throw createError({
         statusCode: 404,
-        statusMessage: "News not found",
+        statusMessage: "Berita tidak ditemukan",
       });
     }
 
@@ -56,14 +56,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     // Return success response
     return {
       statusCode: 200,
-      statusMessage: `News "${news.title}" successfully deleted`,
+      statusMessage: `Berita "${news.title}" berhasil dihapus`,
     };
   } catch (error: any) {
     // Handle any errors that occur during the process
     return {
       statusCode: error.statusCode || 500,
       statusMessage:
-        error.message || error.statusMessage || "An unexpected error occurred while deleting the news",
+        error.message || error.statusMessage || "Terjadi kesalahan yang tidak terduga saat menghapus berita",
     };
   }
 });
