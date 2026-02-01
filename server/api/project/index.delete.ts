@@ -1,4 +1,4 @@
-import { del } from "@vercel/blob";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { ProjectModel } from "~~/server/models/ProjectModel";
 import { IResponse } from "~~/types/IResponse";
 
@@ -41,7 +41,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Delete the associated main image file if it exists
     if (project.image) {
-      await del(project.image as string);
+      const mainImageKey = (project.image as string).split("/").pop(); //Get only file name without domain;
+      await r2Client.send(
+        new DeleteObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: mainImageKey,
+        })
+      );
     }
 
     // Delete the project from the database

@@ -9,26 +9,25 @@ export default defineEventHandler(
   async (event): Promise<IResponse & { data?: IPhoto }> => {
     try {
       const photo = await customReadMultipartFormData<IPhoto>(event, {
-        allowedTypes: ["image/png", "image/jpeg", "image/webp"],
+        allowedTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
         compress: {
           quality: 75, // Turunkan kualitas ke 75% (cukup bagus untuk web)
-          maxWidth: 1000, // Resize lebar maksimal jadi 1000px
         },
         maxFileSize: 2 * 1024 * 1024, // 2MB
       });
 
       const user = event.context.user;
-      const organizer = event.context.organizer;
       if (!user) {
         throw createError({
           statusCode: 401,
           statusMessage: "Unauthorized",
         });
       }
+      const organizer = event.context.organizer;
       if (!organizer) {
         throw createError({
           statusCode: 401,
-          statusMessage: "Unauthorized",
+          statusMessage: "You are not authorized to perform this action",
         });
       }
       const BASE_PHOTO_FOLDER = "/uploads/img/carousel/photos";
@@ -85,10 +84,10 @@ export default defineEventHandler(
         data: saved as IPhoto,
       };
     } catch (error: any) {
-      console.log(error);
+      // console.log(error);
       throw createError({
         statusCode: error.statusCode || 500,
-        statusMessage: error.message || "Failed to add photo",
+        statusMessage: error.statusMessage || "Failed to add photo",
       });
     }
   }

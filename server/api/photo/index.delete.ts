@@ -1,4 +1,4 @@
-import { del } from "@vercel/blob";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -27,7 +27,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const photo = await PhotoModel.findById(id);
     // Delete the associated main image file if it exists
     if (photo && photo.image) {
-      await del(photo.image as string);
+      const mainImageKey = (photo.image as string).split("/").pop(); //Get only file name without domain;
+            await r2Client.send(
+              new DeleteObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: mainImageKey,
+              })
+            );
     }
     if (!photo) {
       throw createError({
