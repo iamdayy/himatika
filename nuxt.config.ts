@@ -12,6 +12,60 @@ export default defineNuxtConfig({
     "/dashboard/**": { ssr: false },
     "/profile/**": { ssr: false },
     "/administrator/**": { ssr: false },
+    "/api/news": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/news/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/agendas": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/agendas/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/achievements": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/achievements/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/projects": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/projects/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/config": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
 
     // 2.2 Security Rate Limiting (Nuxt Security)
     "/api/signin": {
@@ -177,12 +231,17 @@ export default defineNuxtConfig({
         'img-src': ['self', 'data:', 'blob:', 'https:', 'http:',  process.env.PUBLIC_URI || 'http://localhost:3000'],
        }
     },
+    requestSizeLimiter: {
+        maxRequestSizeInBytes: 10 * 1024 * 1024, // 10MB
+    },
     rateLimiter: {
         driver: {
             name: 'lruCache'
         }
-    }
+    },
+    
   },
+
   css: ["./app/assets/css/main.css"],
   colorMode: {
     preference: "system",
