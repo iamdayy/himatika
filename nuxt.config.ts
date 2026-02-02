@@ -1,6 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
+  nitro: {
+    prerender: {
+      autoSubfolderIndex: false,
+    }
+  },
   hooks: {
     close: (nuxt) => {
       if (!nuxt.options._prepare) process.exit();
