@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       autoSubfolderIndex: false,
-    }
+    },
   },
   hooks: {
     close: (nuxt) => {
