@@ -7,7 +7,7 @@ export default defineNuxtConfig({
       autoSubfolderIndex: false,
     },
     externals: {
-      external: ["sharp"],
+      external: ["sharp", "@react-email/render"],
     },
     alias: {
       "@img/sharp-wasm32": fileURLToPath(new URL("./server/mocks/sharp.js", import.meta.url)),
@@ -19,9 +19,6 @@ export default defineNuxtConfig({
     close: (nuxt) => {
       if (!nuxt.options._prepare) process.exit();
     },
-  },
-  build: {
-    transpile: ["@react-email/render"],
   },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
