@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     },
   },
   build: {
-    transpile: ["@img/sharp-wasm32", "@react-email/render"],
+    transpile: ["@img/sharp-wasm32", "@react-email/render", "@img/sharp-wasm32/versions"],
   },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
