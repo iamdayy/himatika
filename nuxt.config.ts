@@ -5,6 +5,9 @@ export default defineNuxtConfig({
     prerender: {
       autoSubfolderIndex: false,
     },
+    externals: {
+      external: ["sharp"],
+    },
   },
   hooks: {
     close: (nuxt) => {
@@ -12,7 +15,7 @@ export default defineNuxtConfig({
     },
   },
   build: {
-    transpile: ["@img/sharp-wasm32", "@react-email/render", "@img/sharp-wasm32/versions"],
+    transpile: ["@react-email/render"],
   },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
