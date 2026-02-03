@@ -11,6 +11,9 @@ export default defineNuxtConfig({
       if (!nuxt.options._prepare) process.exit();
     },
   },
+  build: {
+    transpile: ["@img/sharp-wasm32", "@react-email/render"],
+  },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
     // Mengurangi beban CPU server drastis karena server hanya kirim JSON API
