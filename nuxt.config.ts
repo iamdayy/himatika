@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -6,13 +7,13 @@ export default defineNuxtConfig({
       autoSubfolderIndex: false,
     },
     preset: "node-server",
-    // externals: {
-    //   external: ["sharp", "@react-email/render"],
-    // },
-    // alias: {
-    //   "@img/sharp-wasm32": fileURLToPath(new URL("./server/mocks/sharp.js", import.meta.url)),
-    //   "@img/sharp-wasm32/versions": fileURLToPath(new URL("./server/mocks/sharp.js", import.meta.url)),
-    // },
+    externals: {
+      external: ["sharp", "@react-email/render"],
+    },
+    alias: {
+      "@img/sharp-wasm32": fileURLToPath(new URL("./server/mocks/sharp.js", import.meta.url)),
+      "@img/sharp-wasm32/versions": fileURLToPath(new URL("./server/mocks/sharp.js", import.meta.url)),
+    },
 
   },
   hooks: {
