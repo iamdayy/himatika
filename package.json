@@ -12,6 +12,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
     "@img/sharp-libvips-dev": "^1.2.4",
+    "@img/sharp-libvips-dev-wasm32": "^1.2.4",
     "@img/sharp-wasm32": "^0.34.5",
     "@napi-rs/canvas": "^0.1.88",
     "@nuxt/image": "2.0.0",

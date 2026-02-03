@@ -6,6 +6,7 @@
       "dependencies": {
         "@aws-sdk/client-s3": "^3.958.0",
         "@img/sharp-libvips-dev": "^1.2.4",
+        "@img/sharp-libvips-dev-wasm32": "^1.2.4",
         "@img/sharp-wasm32": "^0.34.5",
         "@napi-rs/canvas": "^0.1.88",
         "@nuxt/image": "2.0.0",
@@ -470,6 +471,8 @@
     "@img/sharp-libvips-darwin-x64": ["@img/sharp-libvips-darwin-x64@1.2.4", "", { "os": "darwin", "cpu": "x64" }, "sha512-1IOd5xfVhlGwX+zXv2N93k0yMONvUlANylbJw1eTah8K/Jtpi15KC+WSiaX/nBmbm2HxRM1gZ0nSdjSsrZbGKg=="],
 
     "@img/sharp-libvips-dev": ["@img/sharp-libvips-dev@1.2.4", "", {}, "sha512-7wC6L/1w29DCcE7Zdc0Sy/DKrEqL7rggPp9Gb/5vYquWgtb+QyuHsNbTb33mVOCaFj6txrwt75GUCkS/1+6COA=="],
+
+    "@img/sharp-libvips-dev-wasm32": ["@img/sharp-libvips-dev-wasm32@1.2.4", "", {}, "sha512-ooaV0TJecMBHqOh2m1gaRZUbAtaT4W3pYv9zlsKyc7At1viPVR2o3kfA9G+hyvShmpOQutdn7CKFfqjanaaOuw=="],
 
     "@img/sharp-libvips-linux-arm": ["@img/sharp-libvips-linux-arm@1.2.4", "", { "os": "linux", "cpu": "arm" }, "sha512-bFI7xcKFELdiNCVov8e44Ia4u2byA+l3XtsAj+Q8tfCwO6BQ8iDojYdvoPMqsKDkuoOo+X6HZA0s0q11ANMQ8A=="],
 
