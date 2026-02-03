@@ -23,7 +23,6 @@ export default defineNuxtConfig({
   },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
-    // Mengurangi beban CPU server drastis karena server hanya kirim JSON API
     "/dashboard/**": { ssr: false },
     "/profile/**": { ssr: false },
     "/administrator/**": { ssr: false },
@@ -112,7 +111,6 @@ export default defineNuxtConfig({
     },
 
     // 3. Halaman yang tidak pernah berubah (Static)
-    // Dibuat saat 'npm run build', 0ms loading time di server
     "/login": { prerender: true },
     "/register": { prerender: true },
     "/forgot-password": { prerender: true },
@@ -139,8 +137,6 @@ export default defineNuxtConfig({
     dbName: process.env.DBNAME,
     vercelBlobToken: process.env.BLOB_READ_WRITE_TOKEN,
     storageDir: process.env.BLOB_URI,
-    // mailtrap_token: process.env.MAILTRAP_TOKEN,
-    // mailtrap_domain: process.env.MAILTRAP_DOMAIN,
     resend_api_key: process.env.RESEND_API_KEY,
     resend_from: process.env.RESEND_FROM,
     recaptcha_site_key: process.env.RECAPTCHA_SITE_KEY,
