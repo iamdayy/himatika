@@ -8,6 +8,10 @@ export default defineNuxtConfig({
     externals: {
       external: ["sharp"],
     },
+    alias: {
+      "@img/sharp-wasm32": "unenv/runtime/mock/proxy",
+      "@img/sharp-wasm32/versions": "unenv/runtime/mock/proxy",
+    },
   },
   hooks: {
     close: (nuxt) => {
