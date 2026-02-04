@@ -1,4 +1,4 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   hooks: {
@@ -8,10 +8,63 @@ export default defineNuxtConfig({
   },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
-    // Mengurangi beban CPU server drastis karena server hanya kirim JSON API
     "/dashboard/**": { ssr: false },
     "/profile/**": { ssr: false },
     "/administrator/**": { ssr: false },
+    "/api/news": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/news/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/agenda": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/agenda/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/admin/achievement": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/admin/achievement/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/project": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/project/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
+    "/api/config": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
 
     // 2.2 Security Rate Limiting (Nuxt Security)
     "/api/signin": {
@@ -43,7 +96,6 @@ export default defineNuxtConfig({
     },
 
     // 3. Halaman yang tidak pernah berubah (Static)
-    // Dibuat saat 'npm run build', 0ms loading time di server
     "/login": { prerender: true },
     "/register": { prerender: true },
     "/forgot-password": { prerender: true },
@@ -70,8 +122,6 @@ export default defineNuxtConfig({
     dbName: process.env.DBNAME,
     vercelBlobToken: process.env.BLOB_READ_WRITE_TOKEN,
     storageDir: process.env.BLOB_URI,
-    // mailtrap_token: process.env.MAILTRAP_TOKEN,
-    // mailtrap_domain: process.env.MAILTRAP_DOMAIN,
     resend_api_key: process.env.RESEND_API_KEY,
     resend_from: process.env.RESEND_FROM,
     recaptcha_site_key: process.env.RECAPTCHA_SITE_KEY,
@@ -177,12 +227,17 @@ export default defineNuxtConfig({
         'img-src': ['self', 'data:', 'blob:', 'https:', 'http:',  process.env.PUBLIC_URI || 'http://localhost:3000'],
        }
     },
+    requestSizeLimiter: {
+        maxRequestSizeInBytes: 10 * 1024 * 1024, // 10MB
+    },
     rateLimiter: {
         driver: {
             name: 'lruCache'
         }
-    }
+    },
+    
   },
+
   css: ["./app/assets/css/main.css"],
   colorMode: {
     preference: "system",

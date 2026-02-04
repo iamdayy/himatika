@@ -17,8 +17,16 @@ export default defineEventHandler(async (event): Promise<IAnswersResponse> => {
       });
     }
     const questions =
-      (agenda.configuration.committee.questions as IQuestion[] | undefined) ||
-      [];
+      (agenda.configuration.committee.questions as IQuestion[] | undefined);
+    if (!questions || questions.length === 0) {
+      throw createError({
+        statusCode: 200,
+        statusMessage: "Question not found",
+        data: {
+          answers: [],
+        },
+      });
+    }
     const answers = await AnswerModel.find({
       answerer: registeredId,
     });

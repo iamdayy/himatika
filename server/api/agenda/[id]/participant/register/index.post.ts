@@ -163,6 +163,7 @@ export default defineEventHandler(
         },
       };
     } catch (error: any) {
+      console.log(error);
       throw createError({
         statusCode: error.statusCode || 500,
         statusMessage:

@@ -46,7 +46,7 @@ export async function sendBulkEmail(
     // Actually Resend batch API is `resend.batch.send` (POST /emails/batch).
     // Let's implement batch sending.
 
-    const batch = recipients.map((recipient) => ({
+    const batch = recipients.filter((recipient) => recipient.email).map((recipient) => ({
       from: `${sender.name} <${config.resend_from}>`,
       to: [recipient.email],
       subject,

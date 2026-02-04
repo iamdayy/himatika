@@ -159,8 +159,8 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
              await sendBulkEmail(
                sender,
                emails,
-               emailBody.render(),
                t('emails.agenda.subject'),
+               emailBody.render(),
                t('emails.agenda.category'),
                agenda.id
              );

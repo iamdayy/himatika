@@ -101,7 +101,6 @@ export const checkSession = async (payload: string) => {
       member: user.member ? user.member : null,
     };
   } catch (error: any) {
-    console.log(error);
     // Jika error dari JWT (expired), kita lempar 401
     if (
       error.name === "TokenExpiredError" ||
