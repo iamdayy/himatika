@@ -244,11 +244,16 @@ const nextToAnswerQuestion = async () => {
 
 const register = async (): Promise<boolean | FormError> => {
     try {
+        // let body;
+        // if (!user.value) {
+        //     body = {
+        //         guest: formRegistration
+        //     }
+        // }
         const { data, statusCode, statusMessage } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register`, {
             method: 'POST',
             body: {
-                id,
-                guest: formRegistration,
+                guest: formRegistration
             }
         });
         if (statusCode === 200 && data) {
@@ -272,8 +277,17 @@ const register = async (): Promise<boolean | FormError> => {
     }
 }
 const payment = async (): Promise<boolean | FormError> => {
+    const RegistrationId = participant.value._id || registrationId.value || '';
+    if (!RegistrationId) {
+        toast.add({
+            title: $ts('failed'),
+            description: $ts('failed_to_register_payment'),
+            color: 'error',
+        })
+        return false;
+    }
     try {
-        const { data, statusCode } = await $fetch<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${registrationId.value}/payment`, {
+        const { data, statusCode } = await $fetch<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${RegistrationId}/payment`, {
             method: 'POST',
             body: {
                 payment_method: formPayment.method,

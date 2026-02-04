@@ -516,19 +516,15 @@ async function onSubmit() {
                     date: format(new Date(), 'd MMM yyy')
                 }), color: 'success'
             });
-            if (enableFormCommittee.value || enableFormParticipant.value) {
-                if (enableFormCommittee.value) {
-                    window.open(`/agendas/${response.data}/committee/form`, '_blank');
-                }
-                if (enableFormParticipant.value) {
-                    window.open(`/agendas/${response.data}/participant/form`, '_blank');
-                }
-            } else {
-                setTimeout(() => {
-                    router.push(`/agendas/${response.data}`);
-                }, 3000);
-
+            if (enableFormCommittee.value) {
+                window.open(`/administrator/agendas/${response.data}/committee/form`, '_blank');
             }
+            if (enableFormParticipant.value) {
+                window.open(`/administrator/agendas/${response.data}/participant/form`, '_blank');
+            }
+            setTimeout(() => {
+                router.push(`/administrator/agendas/${response.data}`);
+            }, 3000);
         } else {
             toast.add({
                 title: $ts('failed'), description: $ts('failed_to_add_agenda', {

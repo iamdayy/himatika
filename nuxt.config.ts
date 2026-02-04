@@ -23,37 +23,37 @@ export default defineNuxtConfig({
         csrf: false,
       },
     },
-    "/api/agendas": {
+    "/api/agenda": {
       security: {
         xssValidator: false,
         csrf: false,
       },
     },
-    "/api/agendas/**": {
+    "/api/agenda/**": {
       security: {
         xssValidator: false,
         csrf: false,
       },
     },
-    "/api/achievements": {
+    "/api/admin/achievement": {
       security: {
         xssValidator: false,
         csrf: false,
       },
     },
-    "/api/achievements/**": {
+    "/api/admin/achievement/**": {
       security: {
         xssValidator: false,
         csrf: false,
       },
     },
-    "/api/projects": {
+    "/api/project": {
       security: {
         xssValidator: false,
         csrf: false,
       },
     },
-    "/api/projects/**": {
+    "/api/project/**": {
       security: {
         xssValidator: false,
         csrf: false,

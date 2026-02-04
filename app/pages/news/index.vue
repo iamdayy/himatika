@@ -1,6 +1,6 @@
 <template>
     <div class="items-center justify-center mb-2">
-        <UBreadcrumb :links="links" />
+        <UBreadcrumb :items="links" />
         <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
             <template #header>
                 <h1 class="text-2xl font-bold text-gray-600 dark:text-white md:text-3xl">{{ $ts('news') }}</h1>

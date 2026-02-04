@@ -166,8 +166,8 @@ export default defineEventHandler(
              await sendBulkEmail(
                sender,
                emails,
-               emailBody.render(),
                t('emails.agenda.subject'),
+               emailBody.render(),
                t('emails.agenda.category'),
                newAgenda.id
              );
