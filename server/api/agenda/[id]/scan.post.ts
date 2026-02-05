@@ -22,10 +22,12 @@ export default defineEventHandler(async (event) => {
   let participant: IParticipant | ICommittee | undefined =
     agenda.participants?.find((p) => p._id?.toString() === code);
   let role = "Participant";
+  console.log(participant);
 
   // Jika tidak ketemu, cari di array committees
   if (!participant) {
     participant = agenda.committees?.find((c) => c._id?.toString() === code);
+    console.log(participant);
     role = "Committee";
   }
 

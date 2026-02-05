@@ -18,7 +18,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     const { id } = event.context.params as { id: string };
     const body = await readBody<{
-      member: number;
+      member: string;
       job: string;
     }>(event);
 
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
     agenda.committees?.push({
-      member: await findMemberByNim(body.member as number),
+      member: body.member,
       job: body.job,
       approved: true,
     });

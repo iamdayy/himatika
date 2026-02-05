@@ -28,9 +28,7 @@ const pdf = ref<string>('');
 const doc = ref<IDoc | null>(null);
 const error = ref<string | null>(null);
 
-const cameraOn = () => {
-    ready.value = true
-}
+
 const findDocBySignature = async (signature: string): Promise<IDoc | undefined> => {
     loading.value = true;
     error.value = null;
@@ -63,27 +61,10 @@ const findDocBySignature = async (signature: string): Promise<IDoc | undefined> 
         loading.value = false;
     }
 };
-const onDetect = (result: any[]) => {
-    findDocBySignature(result[0].rawValue)
+const onDetect = (result: string) => {
+    findDocBySignature(result)
     // Handle the decoded result here, e.g., navigate to another page or show a message
 };
-function paintOutline(detectedCodes: any[], ctx: CanvasRenderingContext2D) {
-    for (const detectedCode of detectedCodes) {
-        const [firstPoint, ...otherPoints] = detectedCode.cornerPoints
-
-        ctx.strokeStyle = 'red'
-        ctx.lineWidth = 2
-
-        ctx.beginPath()
-        ctx.moveTo(firstPoint.x, firstPoint.y)
-        for (const { x, y } of otherPoints) {
-            ctx.lineTo(x, y)
-        }
-        ctx.lineTo(firstPoint.x, firstPoint.y)
-        ctx.closePath()
-        ctx.stroke()
-    }
-}
 const onLoad = async (docProxy: PDFDocumentProxy | null) => {
     const totalPages = docProxy?.numPages || 1;
     if (!docProxy) return;
@@ -259,28 +240,7 @@ const tabs = computed(() => {
                         <p class="text-sm text-gray-500 dark:text-gray-200">{{ item.description }}</p>
                     </template>
                     <div class="flex flex-col items-center justify-center gap-2">
-                        <QrcodeStream v-show="ready" @camera-on="cameraOn" @detect="onDetect" :track="paintOutline"
-                            :formats="['qr_code']" class="max-w-lg mx-auto aspect-square">
-                            <div class="relative w-full h-full bg-black/60 mix-blend-hard-light">
-                                <div class="absolute left-0 right-0 px-4 py-2 text-sm text-center text-white">
-                                    Scan QR code in the digital viewfinder to get the result.
-                                </div>
-                                <div
-                                    class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-gray-500 flex items-center justify-center">
-                                    <div class="absolute top-0 left-0 right-0 h-0.5 bg-cyan-400 animate-scan"></div>
-                                    <div class="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-white"></div>
-                                    <div class="absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-white">
-                                    </div>
-                                    <div class="absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 border-white">
-                                    </div>
-                                    <div class="absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 border-white">
-                                    </div>
-                                </div>
-                            </div>
-                        </QrcodeStream>
-                        <div class="flex flex-row gap-2 w-full justify-center" v-if="!ready">
-                            <USkeleton class="w-full max-w-lg aspect-square h-full" />
-                        </div>
+                        <ScannerWrapper @result="onDetect" class="max-w-lg mx-auto aspect-square" />
                     </div>
                 </UCard>
             </template>
@@ -327,7 +287,7 @@ const tabs = computed(() => {
                             <div class="flex flex-col">
                                 <span class="text-lg font-semibold text-gray-800 dark:text-gray-300">{{ (sign.user as
                                     IMember).fullName
-                                    }}</span>
+                                }}</span>
                                 <span class="text-sm text-gray-500 dark:text-gray-400">{{ sign.as }}</span>
                                 <UIcon name="i-heroicons-check-circle" v-if="sign.signed"
                                     class="text-green-500 dark:text-green-400" />
@@ -348,7 +308,7 @@ const tabs = computed(() => {
                             <div class="flex flex-col">
                                 <span class="text-lg font-semibold text-gray-800 dark:text-gray-300">{{ (trail.user as
                                     IMember).fullName
-                                    }}</span>
+                                }}</span>
                                 <span class="text-sm text-gray-500 dark:text-gray-400">{{ trail.action }}</span>
                             </div>
                         </div>
@@ -358,22 +318,3 @@ const tabs = computed(() => {
         </UCard>
     </div>
 </template>
-<style scoped>
-.animate-scan {
-    animation: scan 5s infinite;
-}
-
-@keyframes scan {
-    0% {
-        top: 0;
-    }
-
-    50% {
-        top: 100%;
-    }
-
-    100% {
-        top: 0;
-    }
-}
-</style>

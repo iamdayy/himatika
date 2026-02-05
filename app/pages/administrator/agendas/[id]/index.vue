@@ -1,5 +1,7 @@
 <script setup lang='ts'>
 import { ModalsConfirmation, ModalsReqruitmentAdd, ModalsReqruitmentEdit } from '#components';
+import type { TabsItem } from '@nuxt/ui';
+import QRCode from 'qrcode';
 import type { ICategory, IReqruitment } from '~~/types';
 import type { IAgendaResponse } from '~~/types/IResponse';
 
@@ -13,6 +15,7 @@ const id = route.params.id as string;
 const { $api, $ts } = useNuxtApp();
 const overlay = useOverlay();
 const toast = useToast();
+const qrCodeUrl = ref('');
 
 // --- DATA FETCHING ---
 const { data: agenda, pending, refresh } = await useAsyncData('admin-agenda-detail',
@@ -104,8 +107,28 @@ const shortcuts = [
     }
 ];
 
+const tabs = [
+    {
+        label: 'Peserta',
+        icon: 'i-heroicons-users',
+        slot: 'participant' as string
+    },
+    {
+        label: 'Panitia',
+        icon: 'i-heroicons-briefcase',
+        slot: 'committee' as string
+    }
+] satisfies TabsItem[];
+
 // State Lokal untuk Edit Cepat (agar tidak langsung kirim API saat ngetik)
-const configState = reactive({
+const participantConfigState = reactive({
+    canRegister: 'None',
+    pay: false,
+    amount: 0,
+    reqruitments: [] as IReqruitment[]
+});
+
+const committeeConfigState = reactive({
     canRegister: 'None',
     pay: false,
     amount: 0,
@@ -113,13 +136,20 @@ const configState = reactive({
 });
 
 // Sync data dari server ke local state saat load
-watch(agenda, (newVal) => {
+watch(agenda, async (newVal) => {
     if (newVal) {
-        configState.canRegister = newVal.configuration.participant.canRegister || 'None';
-        configState.pay = newVal.configuration.participant.pay || false;
-        configState.amount = newVal.configuration.participant.amount || 0;
+        participantConfigState.canRegister = newVal.configuration.participant.canRegister || 'None';
+        participantConfigState.pay = newVal.configuration.participant.pay || false;
+        participantConfigState.amount = newVal.configuration.participant.amount || 0;
         // Clone array agar tidak reaktif langsung ke agenda.value sebelum disimpan
-        configState.reqruitments = JSON.parse(JSON.stringify(newVal.configuration.participant.reqruitments || []));
+        participantConfigState.reqruitments = JSON.parse(JSON.stringify(newVal.configuration.participant.reqruitments || []));
+
+        committeeConfigState.canRegister = newVal.configuration.committee.canRegister || 'None';
+        committeeConfigState.pay = newVal.configuration.committee.pay || false;
+        committeeConfigState.amount = newVal.configuration.committee.amount || 0;
+        // Clone array agar tidak reaktif langsung ke agenda.value sebelum disimpan
+        committeeConfigState.reqruitments = JSON.parse(JSON.stringify(newVal.configuration.committee.reqruitments || []));
+        qrCodeUrl.value = await QRCode.toDataURL(id, { width: 300, margin: 2 })
     }
 }, { immediate: true });
 
@@ -129,21 +159,31 @@ const EditReqruitmentModal = overlay.create(ModalsReqruitmentEdit);
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 // Actions Manajemen Syarat
-const addRequirement = () => {
+const addRequirementParticipant = () => {
     AddReqruitmentModal.open({
         onSubmit: (req: IReqruitment) => {
-            configState.reqruitments.push({ label: req.label, description: req.description });
+            participantConfigState.reqruitments.push({ label: req.label, description: req.description });
             AddReqruitmentModal.close();
             saveConfig(); // Auto-save untuk UX yang lebih cepat
         }
     });
 };
 
-const editRequirement = (req: IReqruitment, index: number) => {
+const addRequirementCommittee = () => {
+    AddReqruitmentModal.open({
+        onSubmit: (req: IReqruitment) => {
+            committeeConfigState.reqruitments.push({ label: req.label, description: req.description });
+            AddReqruitmentModal.close();
+            saveConfig(); // Auto-save untuk UX yang lebih cepat
+        }
+    });
+};
+
+const editRequirementParticipant = (req: IReqruitment, index: number) => {
     EditReqruitmentModal.open({
         reqruitment: req,
         onSubmit: (newReq: IReqruitment) => {
-            configState.reqruitments[index] = { label: newReq.label, description: newReq.description };
+            participantConfigState.reqruitments[index] = { label: newReq.label, description: newReq.description };
             EditReqruitmentModal.close();
             saveConfig();
         },
@@ -151,12 +191,37 @@ const editRequirement = (req: IReqruitment, index: number) => {
     });
 };
 
-const deleteRequirement = (index: number) => {
+const editRequirementCommittee = (req: IReqruitment, index: number) => {
+    EditReqruitmentModal.open({
+        reqruitment: req,
+        onSubmit: (newReq: IReqruitment) => {
+            committeeConfigState.reqruitments[index] = { label: newReq.label, description: newReq.description };
+            EditReqruitmentModal.close();
+            saveConfig();
+        },
+        onClose: () => EditReqruitmentModal.close()
+    });
+};
+
+const deleteRequirementParticipant = (index: number) => {
     ConfirmationModal.open({
         title: 'Hapus Syarat',
-        body: `Yakin ingin menghapus syarat "${configState.reqruitments[index]!.label}"?`,
+        body: `Yakin ingin menghapus syarat "${participantConfigState.reqruitments[index]!.label}"?`,
         onConfirm: () => {
-            configState.reqruitments.splice(index, 1);
+            participantConfigState.reqruitments.splice(index, 1);
+            ConfirmationModal.close();
+            saveConfig();
+        },
+        onClose: () => ConfirmationModal.close()
+    });
+};
+
+const deleteRequirementCommittee = (index: number) => {
+    ConfirmationModal.open({
+        title: 'Hapus Syarat',
+        body: `Yakin ingin menghapus syarat "${committeeConfigState.reqruitments[index]!.label}"?`,
+        onConfirm: () => {
+            committeeConfigState.reqruitments.splice(index, 1);
             ConfirmationModal.close();
             saveConfig();
         },
@@ -178,10 +243,17 @@ const saveConfig = async () => {
                 ...agenda.value.configuration,
                 participant: {
                     ...agenda.value.configuration.participant,
-                    canRegister: configState.canRegister,
-                    pay: configState.pay,
-                    amount: configState.amount,
-                    reqruitments: configState.reqruitments
+                    canRegister: participantConfigState.canRegister,
+                    pay: participantConfigState.pay,
+                    amount: participantConfigState.amount,
+                    reqruitments: participantConfigState.reqruitments
+                },
+                committee: {
+                    ...agenda.value.configuration.committee,
+                    canRegister: committeeConfigState.canRegister,
+                    pay: committeeConfigState.pay,
+                    amount: committeeConfigState.amount,
+                    reqruitments: committeeConfigState.reqruitments
                 }
             },
             // Mapping committees agar sesuai schema API
@@ -209,23 +281,7 @@ const saveConfig = async () => {
     }
 };
 const cetakQrCode = () => {
-    if (!agenda.value) return;
-
-    // 1. Cari elemen SVG di dalam container
-    const svgElement = document.querySelector('#qr-container svg');
-
-    if (!svgElement) {
-        useToast().add({ title: 'Gagal memuat QR Code', color: 'error' });
-        return;
-    }
-
-    // 2. Serialisasi SVG (Ubah elemen DOM SVG menjadi string XML)
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svgElement);
-
-    // 3. Buat Blob Object URL (Lebih aman & cepat daripada base64 untuk SVG)
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const qrUrl = URL.createObjectURL(svgBlob);
+    if (!agenda.value || !qrCodeUrl.value) return;
 
     // 4. Buka jendela baru
     const win = window.open('', '_blank', 'height=600,width=500');
@@ -273,7 +329,7 @@ const cetakQrCode = () => {
             <p>${new Date(agenda.value.date.start).toLocaleDateString('id-ID', { dateStyle: 'full' })}</p>
             <p>${agenda.value?.at}</p>
             
-            <img id="qr-img" src="${qrUrl}" alt="QR Code" />
+            <img id="qr-img" src="${qrCodeUrl.value}" alt="QR Code" />
             
             <p><strong>SCAN UNTUK PRESENSI</strong></p>
         </div>
@@ -288,8 +344,6 @@ const cetakQrCode = () => {
         imgElement.onload = () => {
             setTimeout(() => {
                 win.print();
-                // Bersihkan memory URL setelah print dialog muncul
-                URL.revokeObjectURL(qrUrl);
             }, 500);
         };
     }
@@ -379,93 +433,208 @@ const cetakQrCode = () => {
                             </NuxtLink>
                         </div>
                     </div>
-                    <UCard>
-                        <template #header>
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-semibold flex items-center gap-2 text-lg">
-                                    <UIcon name="i-heroicons-cog-6-tooth" /> Konfigurasi Pendaftaran
-                                </h3>
-                                <UButton v-if="!saving" size="xs" variant="ghost" icon="i-heroicons-check"
-                                    @click="saveConfig">
-                                    Simpan Perubahan
-                                </UButton>
-                                <UIcon v-else name="i-heroicons-arrow-path" class="animate-spin text-primary" />
-                            </div>
+                    <UTabs :items="tabs" class="w-full">
+                        <template #participant>
+                            <UCard>
+                                <template #header>
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="font-semibold flex items-center gap-2 text-lg">
+                                            <UIcon name="i-heroicons-cog-6-tooth" /> Konfigurasi Pendaftaran Peserta
+                                        </h3>
+                                        <UButton v-if="!saving" size="xs" variant="ghost" icon="i-heroicons-check"
+                                            @click="saveConfig">
+                                            Simpan Perubahan
+                                        </UButton>
+                                        <UIcon v-else name="i-heroicons-arrow-path" class="animate-spin text-primary" />
+                                    </div>
+                                </template>
+
+                                <div class="space-y-6">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <UFormField label="Status Pendaftaran">
+                                            <USelectMenu v-model="participantConfigState.canRegister"
+                                                :items="accessOptions" value-key="value" label-key="label"
+                                                @change="saveConfig">
+                                            </USelectMenu>
+                                        </UFormField>
+
+                                        <UFormField label="Mode Pembayaran">
+                                            <div class="flex items-center gap-3 h-9">
+                                                <USwitch v-model="participantConfigState.pay" @change="saveConfig" />
+                                                <span class="text-sm">{{ participantConfigState.pay ? 'Berbayar' :
+                                                    'Gratis'
+                                                    }}</span>
+                                            </div>
+                                        </UFormField>
+                                    </div>
+
+                                    <div v-if="participantConfigState.pay"
+                                        class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                                        <UFormField label="Nominal Biaya Pendaftaran">
+                                            <UInputNumber v-model="participantConfigState.amount"
+                                                icon="i-heroicons-banknotes" :format-options="{
+                                                    style: 'currency',
+                                                    currency: 'IDR',
+                                                    minimumFractionDigits: 0,
+                                                    maximumFractionDigits: 0
+                                                }" :increment="false" :decrement="false">
+                                            </UInputNumber>
+                                        </UFormField>
+                                    </div>
+
+                                    <USeparator />
+
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <h4 class="font-medium text-sm text-gray-700 dark:text-gray-200">
+                                                Syarat / Ketentuan Pendaftaran
+                                            </h4>
+                                            <UButton size="xs" icon="i-heroicons-plus" variant="soft"
+                                                @click="addRequirementParticipant">
+                                                Tambah
+                                            </UButton>
+                                        </div>
+
+                                        <div v-if="participantConfigState.reqruitments.length === 0"
+                                            class="text-center py-4 text-sm text-gray-400 border border-dashed rounded-lg">
+                                            Belum ada syarat yang ditambahkan
+                                        </div>
+
+                                        <div v-else class="space-y-2">
+                                            <div v-for="(req, idx) in participantConfigState.reqruitments" :key="idx"
+                                                class="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg group">
+                                                <div>
+                                                    <p class="font-medium text-sm">{{ req.label }}</p>
+                                                    <p class="text-xs text-gray-500 line-clamp-1">{{ req.description }}
+                                                    </p>
+                                                </div>
+                                                <div
+                                                    class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <UButton icon="i-heroicons-pencil" color="neutral" variant="ghost"
+                                                        size="xs" @click="editRequirementParticipant(req, idx)" />
+                                                    <UButton icon="i-heroicons-trash" color="error" variant="ghost"
+                                                        size="xs" @click="deleteRequirementParticipant(idx)" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <USeparator />
+
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <UButton :to="`/administrator/agendas/${id}/participant/form`" block
+                                            icon="i-heroicons-list-bullet" color="primary" variant="soft">
+                                            Edit Pertanyaan Form Peserta
+                                        </UButton>
+                                        <UButton :to="`/administrator/agendas/${id}/committee/form`" block
+                                            icon="i-heroicons-list-bullet" color="neutral" variant="soft">
+                                            Edit Form Panitia
+                                        </UButton>
+                                    </div>
+                                </div>
+                            </UCard>
                         </template>
-
-                        <div class="space-y-6">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <UFormField label="Status Pendaftaran">
-                                    <USelectMenu v-model="configState.canRegister" :items="accessOptions"
-                                        value-key="value" label-key="label" @change="saveConfig">
-                                    </USelectMenu>
-                                </UFormField>
-
-                                <UFormField label="Mode Pembayaran">
-                                    <div class="flex items-center gap-3 h-9">
-                                        <USwitch v-model="configState.pay" @change="saveConfig" />
-                                        <span class="text-sm">{{ configState.pay ? 'Berbayar' : 'Gratis' }}</span>
+                        <template #committee>
+                            <UCard>
+                                <template #header>
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="font-semibold flex items-center gap-2 text-lg">
+                                            <UIcon name="i-heroicons-cog-6-tooth" /> Konfigurasi Pendaftaran Panitia
+                                        </h3>
+                                        <UButton v-if="!saving" size="xs" variant="ghost" icon="i-heroicons-check"
+                                            @click="saveConfig">
+                                            Simpan Perubahan
+                                        </UButton>
+                                        <UIcon v-else name="i-heroicons-arrow-path" class="animate-spin text-primary" />
                                     </div>
-                                </UFormField>
-                            </div>
+                                </template>
 
-                            <div v-if="configState.pay" class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                                <UFormField label="Nominal Biaya Pendaftaran">
-                                    <UInput type="number" v-model="configState.amount" icon="i-heroicons-banknotes"
-                                        @blur="saveConfig">
-                                        <template #leading>Rp</template>
-                                    </UInput>
-                                </UFormField>
-                            </div>
+                                <div class="space-y-6">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <UFormField label="Status Pendaftaran">
+                                            <USelectMenu v-model="committeeConfigState.canRegister"
+                                                :items="accessOptions" value-key="value" label-key="label"
+                                                @change="saveConfig">
+                                            </USelectMenu>
+                                        </UFormField>
 
-                            <USeparator />
+                                        <UFormField label="Mode Pembayaran">
+                                            <div class="flex items-center gap-3 h-9">
+                                                <USwitch v-model="committeeConfigState.pay" @change="saveConfig" />
+                                                <span class="text-sm">{{ committeeConfigState.pay ? 'Berbayar' :
+                                                    'Gratis'
+                                                    }}</span>
+                                            </div>
+                                        </UFormField>
+                                    </div>
 
-                            <div>
-                                <div class="flex justify-between items-center mb-3">
-                                    <h4 class="font-medium text-sm text-gray-700 dark:text-gray-200">
-                                        Syarat / Ketentuan Pendaftaran
-                                    </h4>
-                                    <UButton size="xs" icon="i-heroicons-plus" variant="soft" @click="addRequirement">
-                                        Tambah
-                                    </UButton>
-                                </div>
+                                    <div v-if="committeeConfigState.pay"
+                                        class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                                        <UFormField label="Nominal Biaya Pendaftaran">
+                                            <UInputNumber v-model="committeeConfigState.amount"
+                                                icon="i-heroicons-banknotes" :format-options="{
+                                                    style: 'currency',
+                                                    currency: 'IDR',
+                                                    minimumFractionDigits: 0,
+                                                    maximumFractionDigits: 0
+                                                }" :increment="false" :decrement="false">
+                                            </UInputNumber>
+                                        </UFormField>
+                                    </div>
 
-                                <div v-if="configState.reqruitments.length === 0"
-                                    class="text-center py-4 text-sm text-gray-400 border border-dashed rounded-lg">
-                                    Belum ada syarat yang ditambahkan
-                                </div>
+                                    <USeparator />
 
-                                <div v-else class="space-y-2">
-                                    <div v-for="(req, idx) in configState.reqruitments" :key="idx"
-                                        class="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg group">
-                                        <div>
-                                            <p class="font-medium text-sm">{{ req.label }}</p>
-                                            <p class="text-xs text-gray-500 line-clamp-1">{{ req.description }}</p>
+                                    <div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <h4 class="font-medium text-sm text-gray-700 dark:text-gray-200">
+                                                Syarat / Ketentuan Pendaftaran
+                                            </h4>
+                                            <UButton size="xs" icon="i-heroicons-plus" variant="soft"
+                                                @click="addRequirementCommittee">
+                                                Tambah
+                                            </UButton>
                                         </div>
-                                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <UButton icon="i-heroicons-pencil" color="neutral" variant="ghost" size="xs"
-                                                @click="editRequirement(req, idx)" />
-                                            <UButton icon="i-heroicons-trash" color="error" variant="ghost" size="xs"
-                                                @click="deleteRequirement(idx)" />
+
+                                        <div v-if="committeeConfigState.reqruitments.length === 0"
+                                            class="text-center py-4 text-sm text-gray-400 border border-dashed rounded-lg">
+                                            Belum ada syarat yang ditambahkan
+                                        </div>
+
+                                        <div v-else class="space-y-2">
+                                            <div v-for="(req, idx) in committeeConfigState.reqruitments" :key="idx"
+                                                class="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg group">
+                                                <div>
+                                                    <p class="font-medium text-sm">{{ req.label }}</p>
+                                                    <p class="text-xs text-gray-500 line-clamp-1">{{ req.description }}
+                                                    </p>
+                                                </div>
+                                                <div
+                                                    class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <UButton icon="i-heroicons-pencil" color="neutral" variant="ghost"
+                                                        size="xs" @click="editRequirementCommittee(req, idx)" />
+                                                    <UButton icon="i-heroicons-trash" color="error" variant="ghost"
+                                                        size="xs" @click="deleteRequirementCommittee(idx)" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <USeparator />
+
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <UButton :to="`/administrator/agendas/${id}/participant/form`" block
+                                            icon="i-heroicons-list-bullet" color="primary" variant="soft">
+                                            Edit Pertanyaan Form Peserta
+                                        </UButton>
+                                        <UButton :to="`/administrator/agendas/${id}/committee/form`" block
+                                            icon="i-heroicons-list-bullet" color="neutral" variant="soft">
+                                            Edit Form Panitia
+                                        </UButton>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <USeparator />
-
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <UButton :to="`/administrator/agendas/${id}/participant/form`" block
-                                    icon="i-heroicons-list-bullet" color="primary" variant="soft">
-                                    Edit Pertanyaan Form Peserta
-                                </UButton>
-                                <UButton :to="`/administrator/agendas/${id}/committee/form`" block
-                                    icon="i-heroicons-list-bullet" color="neutral" variant="soft">
-                                    Edit Form Panitia
-                                </UButton>
-                            </div>
-                        </div>
-                    </UCard>
+                            </UCard>
+                        </template>
+                    </UTabs>
                 </div>
 
                 <div class="space-y-6 h-full lg:col-span-1">
@@ -476,7 +645,9 @@ const cetakQrCode = () => {
                             </h3>
                         </template>
                         <div id="qr-container" class="flex flex-col items-center justify-center py-4">
-                            <Qrcode :value="id" :size="200" level="H" class="bg-white p-2 rounded-lg" />
+                            <img :src="qrCodeUrl" class="bg-white p-2 rounded-lg w-[200px] h-[200px]"
+                                v-if="qrCodeUrl" />
+                            <USkeleton class="w-[200px] h-[200px]" v-else />
                             <p class="text-sm text-gray-500 mt-4 text-center max-w-xs">
                                 Gunakan QR ini untuk presensi peserta.
                             </p>

@@ -16,6 +16,11 @@ const scanHistory = ref<any[]>([]);
 const audioSuccess = ref<HTMLAudioElement | null>(null);
 const audioError = ref<HTMLAudioElement | null>(null);
 
+type ScanResult = {
+    a: string;
+    c: string;
+}
+
 onMounted(() => {
     // Preload sounds
     audioSuccess.value = new Audio('/sound/success.mp3'); // Pastikan file ini ada atau ganti URL
@@ -30,6 +35,7 @@ const handleScan = async (code: string) => {
     processing.value = true;
 
     try {
+        console.log(code)
         // Panggil API Check-in
         const res = await $api<any>(`/api/agenda/${id}/scan`, {
             method: 'POST',

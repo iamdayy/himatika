@@ -10,7 +10,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     };
     let meIsCommittee = false;
     const user = event.context.user;
-    if (!user) {
+    const organizer = event.context.organizer;
+    if (!user && !organizer) {
       return {
         statusCode: 401,
         statusMessage: "Unauthorized",
@@ -43,7 +44,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const isCommittee = agenda.committees?.some(
       (c) => (c.member as IMember).NIM === user.member.NIM
     );
-    if (!isCommittee && !meIsCommittee) {
+    if (!isCommittee && !meIsCommittee && !organizer) {
       return {
         statusCode: 401,
         statusMessage: "Cannot delete other's committee or not a committee",
