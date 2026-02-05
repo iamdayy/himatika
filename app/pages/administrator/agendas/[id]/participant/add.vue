@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TabsItem } from '@nuxt/ui';
-import type { IAgendaResponse } from '~~/types/IResponse';
+import type { IAgendaResponse, IMemberResponse } from '~~/types/IResponse';
 
 definePageMeta({
     layout: 'dashboard',
@@ -56,7 +56,7 @@ const mode = ref<'member' | 'guest'>('member'); // Toggle Member vs Guest
 // --- MODE MEMBER (SEARCH) ---
 const selectedMember = ref<string | undefined>(undefined);
 const memberSearchTerm = ref('');
-const { data: members, pending } = useAsyncData('members-list', () => $api('/api/member/public', {
+const { data: members, pending } = useAsyncData('members-list', () => $api<IMemberResponse>('/api/member/public', {
     query: {
         search: memberSearchTerm.value,
     }
@@ -159,7 +159,7 @@ const submit = async () => {
                                             <span class="truncate font-medium">{{ item.fullName }}</span>
                                             <span class="text-xs text-gray-500">{{ item.NIM }} • {{ item.class ||
                                                 'Unknown'
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
                                 </template>

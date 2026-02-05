@@ -231,8 +231,8 @@ const links = computed(() => [{
 
                 <div class="flex justify-between pt-4">
                     <UButton variant="ghost" to="../participant">Batal</UButton>
-                    <UButton :loading="loading" :disabled="parsedData.length === 0" @click="submitImport"
-                        color="primary" size="lg">
+                    <UButton :loading="loading" :disabled="parsedData.length === 0 || selectedMembers.length === 0"
+                        @click="submitImport" color="primary" size="lg">
                         Mulai Import Data
                     </UButton>
                 </div>

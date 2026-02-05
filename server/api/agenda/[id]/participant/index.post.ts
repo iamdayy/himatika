@@ -36,7 +36,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
     agenda.participants?.push({
-      member: await findMemberByNim(body.member as number),
+      member: body.member,
     });
     await agenda.save();
 
