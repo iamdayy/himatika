@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { CoreStepper, ModalsCategoryAdd, ModalsConfirmation, ModalsJobAdd, ModalsJobEdit, ModalsReqruitmentAdd, ModalsReqruitmentEdit } from '#components';
+import { CoreStepper, ModalsActions, ModalsCategoryAdd, ModalsConfirmation, ModalsJobAdd, ModalsJobEdit, ModalsReqruitmentAdd, ModalsReqruitmentEdit } from '#components';
+import type { ButtonProps } from '@nuxt/ui';
 import { format } from 'date-fns';
 import type { IAgenda, IAgendaConfiguration, ICommittee, IJob, IReqruitment } from '~~/types';
 import type { FieldValidationRules, Step } from '~~/types/component/stepper';
@@ -22,6 +23,7 @@ const AddReqruitmentModal = overlay.create(ModalsReqruitmentAdd);
 const EditJobModal = overlay.create(ModalsJobEdit);
 const EditReqruitmentModal = overlay.create(ModalsReqruitmentEdit);
 const ConfirmationModal = overlay.create(ModalsConfirmation);
+const ActionsModal = overlay.create(ModalsActions);
 
 
 /**
@@ -516,15 +518,53 @@ async function onSubmit() {
                     date: format(new Date(), 'd MMM yyy')
                 }), color: 'success'
             });
+            const actions: ButtonProps[] = [
+                {
+                    label: $ts('open'),
+                    color: 'primary',
+                    variant: 'outline',
+                    to: `/administrator/agendas/${response.data}`,
+                    icon: 'i-heroicons-calendar-check'
+                },
+                {
+                    label: $ts('close'),
+                    color: 'error',
+                    variant: 'ghost',
+                    onClick: () => {
+                        ActionsModal.close();
+                    }
+                }
+            ];
             if (enableFormCommittee.value) {
-                window.open(`/administrator/agendas/${response.data}/committee/form`, '_blank');
+                actions.unshift({
+                    label: 'Form Panita',
+                    color: 'primary',
+                    variant: 'outline',
+                    to: `/administrator/agendas/${response.data}/committee/form`,
+                    icon: 'i-heroicons-document-text',
+                    target: '_blank',
+                    class: 'flex-1'
+                })
             }
             if (enableFormParticipant.value) {
-                window.open(`/administrator/agendas/${response.data}/participant/form`, '_blank');
+                actions.unshift({
+                    label: 'Form Peserta',
+                    color: 'primary',
+                    variant: 'outline',
+                    to: `/administrator/agendas/${response.data}/participant/form`,
+                    icon: 'i-heroicons-document-text',
+                    target: '_blank',
+                    class: 'flex-1'
+                })
             }
-            setTimeout(() => {
-                router.push(`/administrator/agendas/${response.data}`);
-            }, 3000);
+            ActionsModal.open({
+                title: $ts('success'),
+                body: $ts('success_to_add_agenda', {
+                    title: state.title,
+                    date: format(new Date(), 'd MMM yyy')
+                }),
+                actions: actions
+            });
         } else {
             toast.add({
                 title: $ts('failed'), description: $ts('failed_to_add_agenda', {

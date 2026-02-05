@@ -97,11 +97,11 @@ const formatTime = (dateString: string) => {
 
 // --- ACTIONS ---
 const doPayment = () => {
-    navigateTo(`/agendas/${agendaId}/participant/payment/${me.value?._id}`);
+    navigateTo(`/agendas/${agendaId}/participant/${me.value?._id}/register?tab=payment&participantId=${me.value?._id}`);
 };
 
 const doAnswer = () => {
-    navigateTo(`/agendas/${agendaId}/participant/questions`);
+    navigateTo(`/agendas/${agendaId}/participant/${me.value?._id}/register?tab=answer_question&participantId=${me.value?._id}`);
 };
 
 const isGeneratingPdf = ref(false);
