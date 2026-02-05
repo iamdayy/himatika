@@ -107,7 +107,6 @@ export default defineNuxtConfig({
         "Access-Control-Allow-Origin": process.env.PUBLIC_URI,
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization, content-length",
-        "Permission-Policy": "camera=(self)"
       },
     },
   },
@@ -226,6 +225,9 @@ export default defineNuxtConfig({
        crossOriginEmbedderPolicy: 'unsafe-none',
        contentSecurityPolicy: {
         'img-src': ['self', 'data:', 'blob:', 'https:', 'http:',  process.env.PUBLIC_URI || 'http://localhost:3000'],
+       },
+       permissionsPolicy: {
+        camera: ["self"],
        }
     },
     requestSizeLimiter: {
