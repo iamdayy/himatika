@@ -1,14 +1,6 @@
 <script setup lang='ts'>
+import type { ButtonProps } from '@nuxt/ui';
 import { useWindowSize } from '@vueuse/core';
-
-type Action = {
-    label: string;
-    color: "primary" | "secondary" | "error" | "success" | "warning" | "info";
-    variant: "solid" | "outline" | "ghost" | "subtle" | "link";
-    onClick?: () => void;
-    to?: string;
-};
-
 /**
  * Props definition for the component
  */
@@ -25,7 +17,7 @@ defineProps({
      * The actions to be displayed in the modal
      */
     actions: {
-        type: Array<Action>,
+        type: Array<ButtonProps>,
         required: false
     }
 });
@@ -70,7 +62,7 @@ const responsiveClasses = computed(() => ({
         <template #footer>
             <div :class="['w-full flex gap-3 justify-between', responsiveClasses.buttonContainer]">
                 <UButton v-for="btn, i in actions" :key="i" :label="btn.label" :color="btn.color" :variant="btn.variant"
-                    @click="btn.onClick" :to="btn.to"></UButton>
+                    @click="btn.onClick" :to="btn.to" :icon="btn.icon" :target="btn.target"></UButton>
                 <slot name="actions">
                 </slot>
             </div>

@@ -132,7 +132,7 @@ export default defineEventHandler(
         time: new Date(payment.transaction_time),
         bank: payment.va_numbers?.[0]?.bank || body.bank_transfer || "midtrans",
         va_number: payment.va_numbers?.[0]?.va_number || "",
-        qris_png: payment.actions[1].url,
+        qris_png: payment.actions?.[1]?.url,
       };
 
       await agenda.save();

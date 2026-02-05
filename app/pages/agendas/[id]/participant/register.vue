@@ -244,12 +244,6 @@ const nextToAnswerQuestion = async () => {
 
 const register = async (): Promise<boolean | FormError> => {
     try {
-        // let body;
-        // if (!user.value) {
-        //     body = {
-        //         guest: formRegistration
-        //     }
-        // }
         const { data, statusCode, statusMessage } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register`, {
             method: 'POST',
             body: {
