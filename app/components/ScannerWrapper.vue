@@ -1,53 +1,70 @@
 <script setup lang="ts">
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
+
 const emit = defineEmits(['result', 'error']);
 
-interface IDetectedCode {
-    boundingBox: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
-    };
-    rawValue: string;
-    format: string;
-    cornerPoints: { x: number; y: number }[];
-}
+const scannerId = 'reader';
+let html5QrCode: Html5Qrcode | null = null;
 
-const onDetect = (detectedCodes: IDetectedCode[]) => {
-    if (detectedCodes && detectedCodes.length > 0) {
-        const result = detectedCodes[0]?.rawValue;
-        if (result) {
-            emit('result', result);
-        }
+onMounted(async () => {
+    // Tunggu DOM benar-benar siap
+    await nextTick();
+
+    try {
+        // 1. Inisialisasi Instance
+        html5QrCode = new Html5Qrcode(scannerId, {
+            verbose: false,
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] // PENTING: Fokus QR saja biar cepat
+        });
+
+        // 2. Konfigurasi Cerdas
+        const config = {
+            fps: 10, // Scan 10x per detik
+            // qrbox dinamis: Ambil 70% dari sisi terpendek layar
+            qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+                const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                return {
+                    width: Math.floor(minEdge * 0.75),
+                    height: Math.floor(minEdge * 0.75),
+                };
+            },
+            aspectRatio: undefined, // Biarkan library menyesuaikan rasio kamera HP (PENTING)
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true // Gunakan Chip native HP jika ada (Super Cepat)
+            }
+        };
+
+        // 3. Start Kamera Belakang
+        await html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            (decodedText) => {
+                // Success Callback
+                emit('result', decodedText);
+            },
+            (errorMessage) => {
+                // Error callback per frame (diabaikan biar gak spam console)
+            }
+        );
+
+    } catch (err) {
+        console.error("Scanner Init Error:", err);
+        emit('error', 'Gagal akses kamera. Pastikan izin diberikan dan menggunakan HTTPS.');
     }
-};
+});
 
-const onError = (err: any) => {
-    console.error("Scanner Error:", err);
-    // Filter error yang tidak perlu ditampilkan ke user jika perlu
-    if (err.name === 'NotAllowedError') {
-        emit('error', 'Izin kamera ditolak. Mohon izinkan akses kamera.');
-    } else if (err.name === 'NotFoundError') {
-        emit('error', 'Tidak ada kamera yang ditemukan.');
-    } else {
-        emit('error', 'Terjadi kesalahan pada scanner: ' + (err.message || err));
+onBeforeUnmount(async () => {
+    if (html5QrCode && html5QrCode.isScanning) {
+        await html5QrCode.stop();
+        html5QrCode.clear();
     }
-};
-
-// Track camera init state if needed mostly handled by component
+});
 </script>
 
 <template>
     <div class="relative w-full bg-black rounded-2xl overflow-hidden shadow-2xl">
 
-        <!-- QrcodeStream Component from nuxt-qrcode -->
-        <div class="w-full h-full min-h-[350px]">
-            <QrcodeStream @detect="onDetect" @error="onError" />
-        </div>
+        <div :id="scannerId" class="w-full h-full min-h-[350px]"></div>
 
         <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
             <div class="absolute inset-0 bg-black/40 mask-hole"></div>
@@ -105,5 +122,15 @@ const onError = (err: any) => {
 /* Membuat efek "bolong" di tengah overlay gelap */
 .mask-hole {
     -webkit-mask-image: radial-gradient(square, transparent 40%, black 41%);
+    /* Fallback sederhana jika mask-image tidak support sempurna di beberapa browser,
+       biasanya overlay div di atas sudah cukup */
+}
+
+/* CSS Hack untuk memastikan video memenuhi container */
+:deep(#reader video) {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 1rem;
 }
 </style>

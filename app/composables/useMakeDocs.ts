@@ -1215,12 +1215,7 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
 
       // 4. QR Code (Right Side)
       const QRCode = (await import('qrcode')).default;
-      const qrData = JSON.stringify({
-        a: agenda._id,
-        c: role === 'committee' ? participant._id : undefined,
-        p: role === 'participant' ? participant._id : undefined,
-        t: role === 'committee' ? 'c' : 'p'
-      });
+      const qrData = participant._id as string;
       
       const qrDataUrl = await QRCode.toDataURL(qrData, { margin: 0 });
       const qrImageBytes = await fetch(qrDataUrl).then(res => res.arrayBuffer());

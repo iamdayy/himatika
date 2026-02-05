@@ -155,7 +155,10 @@ const handleFileUpload = async () => {
 };
 
 const submitImport = async () => {
-    if (selectedMembers.value.length === 0) return;
+    if (selectedMembers.value.length === 0) {
+        toast.add({ title: 'Pilih panitia terlebih dahulu', color: 'warning' });
+        return;
+    }
     loading.value = true;
     try {
         await $api(`/api/agenda/${id}/committee/batch`, {
