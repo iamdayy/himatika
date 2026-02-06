@@ -4,14 +4,13 @@ import EncryptionModel from "~~/server/models/EncryptionModel";
 import SignModel from "~~/server/models/SignModel";
 import { decrypt } from "~~/server/utils/encrypt";
 import { signData } from "~~/server/utils/encryption";
-import { overlayQRAndSavePdf } from "~~/server/utils/pdfProcessor";
 import { IMember, IRequestSign, ISign, ITrail } from "~~/types";
 import { IReqSignDocument } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse & { data?: string }> => {
      try {
-        const { encryption, docId, data, coordinates } = await readBody<IReqSignDocument>(event);
+        const { encryption, docId, data } = await readBody<IReqSignDocument>(event);
         const user = event.context.user;
         if (!user) {
           return {
@@ -102,25 +101,11 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
         as: doc.signs[indexSign].as,
         user: new Types.ObjectId(sign.user as unknown as string),
         signed: true,
-        sign: new Types.ObjectId(sign._id as string),
+        sign: new Types.ObjectId(sign._id),
         signedAt: new Date(),
         signedIp: "",
+        location: doc.signs[indexSign].location
       };
-
-      // const cordinates = await findTextCoordinates(
-      //   (doc.doc as string),
-      //   `/${member.NIM}signature/`
-      // );
-      // if (!cordinates) {
-      //   return {
-      //     statusCode: 404,
-      //     statusMessage: "Coordinates of Signature not found",
-      //   };
-      // }
-      const BASE_DOC_FOLDER = `/uploads/docs/${doc.label.replace(
-        /\s+/g,
-        "_"
-      )}/`;
       const newTrail: ITrail = {
         action: "SIGN",
         user: new Types.ObjectId(id),
@@ -130,12 +115,29 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
       };
       doc.trails = doc.trails || [];
       doc.trails.push(newTrail);
-      doc.doc = await overlayQRAndSavePdf(
-        doc.doc as string,
-        `${BASE_DOC_FOLDER}${hashText(doc.label)}.pdf`,
-        sign.signature,
-        coordinates
-      );
+      if (!doc.signs[indexSign].location) {
+        return {
+          statusCode: 404,
+          statusMessage: "Location not found",
+        };
+      }
+
+      // Use Worker for PDF Overlay
+      const signedDocUrl = await himatikaPdfWorker.processSignOverlay({
+          pdf: doc.doc as string,
+          outputBlobPath: new URL(doc.doc as string).pathname.split(".").shift() + "_signed_" + new Date().toISOString() + ".pdf", // get documents without domain & add number
+          qrValue: sign.signature as string,
+          locations: [doc.signs[indexSign].location]
+      });
+
+      if (!signedDocUrl) {
+        return {
+          statusCode: 500,
+          statusMessage: "Failed to process PDF",
+        };
+      }
+
+      doc.doc = signedDocUrl;
       await doc.save();
       return {
         statusCode: 200,

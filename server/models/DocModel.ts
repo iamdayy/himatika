@@ -2,9 +2,9 @@ import { model, Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IDoc } from "~~/types";
 import type {
-    IDocSchema,
-    IRequestSignSchema,
-    ITrailSchema,
+  IDocSchema,
+  IRequestSignSchema,
+  ITrailSchema,
 } from "~~/types/ISchemas";
 import SignModel from "./SignModel";
 
@@ -38,6 +38,16 @@ const requestsSignSchema = new Schema<IRequestSignSchema>({
   signedIp: {
     type: String,
     default: null,
+  },
+  location: {
+    type: {
+      page: { type: Number, required: true },
+      x: { type: Number, required: true },
+      y: { type: Number, required: true },
+      width: { type: Number, required: true },
+      height: { type: Number, required: true },
+    },
+    required: false,
   },
 });
 const trailSchema = new Schema<ITrailSchema>(

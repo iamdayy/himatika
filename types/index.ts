@@ -442,6 +442,7 @@ export interface IRequestSign {
   signedIp?: string;
   as: string;
   sign?: ISign | Types.ObjectId | string;
+  location?: SignatureBox;
 }
 export const enum Action {
   SIGN = "SIGN",
@@ -639,4 +640,12 @@ export interface IAuditLog {
   details?: any;
   target?: string; // e.g., "Agenda: 12345" or "Document: abcde"
   createdAt?: Date;
+}
+
+export interface SignatureBox {
+  page: number;
+  x: number; // PDF Coordinate (Points)
+  y: number; // PDF Coordinate (Points)
+  width: number;
+  height: number;
 }

@@ -134,6 +134,7 @@ export default defineNuxtConfig({
     r2_secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
     r2_bucket_name: process.env.R2_BUCKET_NAME,
     r2_public_domain: process.env.R2_PUBLIC_DOMAIN,
+    pdf_worker_api_url: process.env.PDF_WORKER_API_URL,
     public: {
       appname: process.env.APPNAME,
       api_uri: process.env.PUBLIC_URI_API,
