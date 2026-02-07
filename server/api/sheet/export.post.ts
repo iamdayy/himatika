@@ -1,43 +1,8 @@
-import ExcelJS from "exceljs";
 
 const config = useRuntimeConfig();
 
 interface DataRow {
   [key: string]: string | number | boolean | object | null;
-}
-
-/**
- * Flattens a nested JSON object into a single-level object.
- * @param {Record<string, any>} obj - The object to flatten.
- * @param {string} prefix - The prefix to use for nested keys (default: "").
- * @returns {Record<string, any>} A flattened object.
- */
-function flattenObject(
-  obj: Record<string, any>,
-  prefix = ""
-): Record<string, any> {
-  const result: Record<string, any> = {};
-  for (const key in obj) {
-    const value = obj[key];
-    const keyNotAllow = ["_id", "id", "__v", "createdAt", "updatedAt"];
-    if (keyNotAllow.includes(key)) {
-      continue;
-    }
-
-    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-      Object.assign(result, flattenObject(value));
-    } else {
-      result[key] = value;
-    }
-  }
-  return result;
-}
-
-function toTitleCase(str: string): string {
-  return str.replace(
-    /\w\S*/g,
-    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-  );
 }
 
 /**
@@ -48,44 +13,28 @@ function toTitleCase(str: string): string {
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const complexData: DataRow[] = body.data;
+    
+    // Call Worker
+    const response = await fetch(`${config.pdf_worker_api_url}/sheet/export`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(body.title);
-
-    // Get all possible headers from the data
-
-    if (body.headers) {
-      worksheet.columns = body.headers;
-      complexData.forEach((item) => {
-        const flattenedItem = flattenObject(item);
-        worksheet.addRow(flattenedItem);
-      });
-    } else {
-      let allHeaders = new Set<string>();
-      complexData.forEach((item) => {
-        Object.keys(flattenObject(item)).forEach((header) =>
-          allHeaders.add(header)
-        );
-      });
-      // Add column headers
-      worksheet.addRow(Array.from(allHeaders));
-      // Add data rows
-      complexData.forEach((item) => {
-        const flattenedItem = flattenObject(item);
-        const rowValues = Array.from(allHeaders).map(
-          (header) => flattenedItem[header] ?? ""
-        );
-        worksheet.addRow(rowValues);
-      });
+    if (!response.ok) {
+        throw new Error(`Worker Error: ${response.statusText}`);
     }
+
+    const blob = await response.blob();
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     const title = `${body.title}-${new Date()
       .toString()
       .replace(/:/g, "-")
       .replace(/ /g, "-")}.xlsx`;
-    // Generate Excel file buffer
-    const buffer = await workbook.xlsx.writeBuffer();
 
     setResponseHeaders(event, {
       "Content-Type":
@@ -95,7 +44,7 @@ export default defineEventHandler(async (event) => {
       )}`,
     });
 
-    event.node.res.end(Buffer.from(buffer));
+    event.node.res.end(buffer);
   } catch (error) {
     console.error("Error exporting to Excel:", error);
     setResponseStatus(event, 500); // Internal Server Error

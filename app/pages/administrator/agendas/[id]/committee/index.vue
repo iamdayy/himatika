@@ -3,7 +3,7 @@ import { ModalsConfirmation, UCheckbox, UIcon } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, ICommittee, IMember } from '~~/types';
-import type { IAgendaCommitteeResponse, IExportSheetResponse } from '~~/types/IResponse';
+import type { IAgendaCommitteeResponse } from '~~/types/IResponse';
 
 definePageMeta({
     layout: 'client',
@@ -362,19 +362,23 @@ const generateXlsx = async () => {
             { header: "Status Pembayaran", key: "status" }, // dari flatten payment.status
         ];
 
-        const response = await $fetch<IExportSheetResponse>('/api/sheet/export', {
+        const response = await $fetch<Blob>('/api/sheet/export', {
             method: "post",
+            responseType: 'blob',
             body: { title: "Committee-Data", headers, data: flatData }
         });
 
-        if (!response.data) throw new Error('No data returned');
+        if (!response) throw new Error('No data returned');
 
+        const blob = response;
         const link = document.createElement('a');
-        link.href = response.data?.url || '';
+        const url = window.URL.createObjectURL(blob);
+        link.href = url;
         link.setAttribute('download', `Committee-${new Date().toISOString()}.xlsx`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
         toast.add({ title: 'Export Berhasil', color: 'success' });
     } catch (error: any) {
         toast.add({ title: 'Export Gagal', description: error.message, color: 'error' });

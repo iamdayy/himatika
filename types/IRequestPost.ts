@@ -8,11 +8,10 @@ import type {
   IMember,
   IMessage,
   INews,
-  IOverlayLocation,
   IPaymentMethod,
   IPhoto,
   IVideo,
-  TAction,
+  TAction
 } from ".";
 
 /**
@@ -386,5 +385,4 @@ export interface IReqSignDocument {
   encryption: string;
   docId: string;
   data: string;
-  coordinates: IOverlayLocation[];
 }

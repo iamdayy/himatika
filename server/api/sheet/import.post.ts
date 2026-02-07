@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+
 import { ParsedFile } from "~~/server/utils/customReadMultipartFormData";
 const config = useRuntimeConfig();
 /**
@@ -32,50 +32,28 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Harap lampirkan berkas dalam formulir",
       });
     }
-    // Read the Excel workbook
-    const workbook = new ExcelJS.Workbook();
 
-    await workbook.xlsx.load((file as ParsedFile).data as any);
-    const worksheet = workbook.getWorksheet("template");
+    // Call Worker
+    const formData = new FormData();
+    const uploadedFile = file as ParsedFile;
+    const blob = new Blob([new Uint8Array(uploadedFile.data)], { type: uploadedFile.type });
+    formData.append('file', blob, uploadedFile.name);
 
-    const jsonData: DataRow[] = [];
-    const headers: string[] = [];
-
-    // Extract column headers
-    worksheet?.getRow(1).eachCell((cell) => {
-      headers.push(cell.value as string);
+    const response = await fetch(`${config.pdf_worker_api_url}/sheet/import`, {
+        method: 'POST',
+        body: formData
     });
 
-    // Process each row of data
-    worksheet?.eachRow({ includeEmpty: false }, (row, rowNumber) => {
-      if (rowNumber > 1) {
-        // Skip the header row
-        const rowData: any = {};
-        row.eachCell((cell, colNumber) => {
-          const header = headers[colNumber - 1];
-          const nestedKeys = header.split(".");
-          let currentObject = rowData;
+    if (!response.ok) {
+         throw new Error(`Worker Error: ${response.statusText}`);
+    }
 
-          // Handle nested headers
-          for (let i = 0; i < nestedKeys.length - 1; i++) {
-            const key = nestedKeys[i];
-            if (!currentObject[key]) {
-              currentObject[key] = {};
-            }
-            currentObject = currentObject[key];
-          }
-
-          // Set the value for the deepest nested key
-          currentObject[nestedKeys[nestedKeys.length - 1]] = cell.value;
-        });
-        jsonData.push(rowData as DataRow);
-      }
-    });
+    const result = await response.json();
 
     return {
       statusCode: 200,
       statusMessage: "Data berhasil diimpor",
-      data: jsonData,
+      data: result.data,
     };
   } catch (error) {
     return error;

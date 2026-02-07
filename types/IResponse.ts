@@ -1,25 +1,25 @@
 import type {
-  IAgenda,
-  IAspiration,
-  ICategory,
-  ICommittee,
-  IConfig,
-  IDoc,
-  IDocGrouped,
-  IEncryption,
-  ILeaderboard,
-  IMember,
-  IMessage,
-  INews,
-  IOrganizer,
-  IParticipant,
-  IPayment,
-  IPhoto,
-  IPhotoGrouped,
-  IProject,
-  IQuestion,
-  IUser,
-  IVideoGrouped,
+    IAgenda,
+    IAspiration,
+    ICategory,
+    ICommittee,
+    IConfig,
+    IDoc,
+    IDocGrouped,
+    IEncryption,
+    ILeaderboard,
+    IMember,
+    IMessage,
+    INews,
+    IOrganizer,
+    IParticipant,
+    IPayment,
+    IPhoto,
+    IPhotoGrouped,
+    IProject,
+    IQuestion,
+    IUser,
+    IVideoGrouped,
 } from ".";
 
 export interface IResponse {
@@ -266,12 +266,7 @@ export interface IMessageResponse extends IResponse {
   };
 }
 
-export interface IExportSheetResponse extends IResponse {
-  data?: {
-    url: string;
-    title: string;
-  };
-}
+
 
 export interface IGenerateOTPResponse extends IResponse {
   data?: {
