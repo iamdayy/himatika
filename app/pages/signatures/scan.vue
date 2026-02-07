@@ -1,8 +1,6 @@
 <script setup lang='ts'>
 import { UFileUpload } from "#components";
 import type { TabsItem } from "@nuxt/ui";
-import jsQR, { type Options, type QRCode } from "jsqr";
-import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 import type { IDoc, IMember } from '~~/types';
 
 definePageMeta({
@@ -62,145 +60,51 @@ const findDocBySignature = async (signature: string): Promise<IDoc | undefined> 
     }
 };
 const onDetect = (result: string) => {
-    findDocBySignature(result)
-    // Handle the decoded result here, e.g., navigate to another page or show a message
-};
-const onLoad = async (docProxy: PDFDocumentProxy | null) => {
-    const totalPages = docProxy?.numPages || 1;
-    if (!docProxy) return;
-    const detectionResults: CodeOfQRDetect[] = [];
-    error.value = null;
-    doc.value = null;
-
-    for (let i = 1; i <= totalPages; i++) {
-        const page = await docProxy.getPage(i);
-        if (!page) continue;
-        const viewport = page.getViewport({ scale: 1.5 });
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const context = canvas.getContext('2d');
-        if (context) {
-            await page.render({ canvasContext: context, viewport, canvas }).promise;
-            const result = await detectQRCode(canvas, context);
-            detectionResults.push(result);
-            if (result === 'found') {
-                break;
-            }
-        }
-    }
-
-    if (!detectionResults.includes('found')) {
-        if (detectionResults.includes('not_signed')) {
-            error.value = $ts('verify_doc_qr_code_failed');
-        } else if (detectionResults.includes('error')) {
-            error.value = $ts('verify_doc_qr_code_error');
-        } else {
-            error.value = $ts('verify_doc_qr_code_not_found');
-        }
-
-        if (error.value) {
-            toast.add({
-                title: $ts('failed'),
-                description: error.value,
-                color: 'error'
-            });
-        }
-    } else {
-        error.value = null;
-    }
+    findDocBySignature(result);
 };
 
-const detectQRCode = async (
-    canvas: HTMLCanvasElement,
-    context: CanvasRenderingContext2D
-): Promise<CodeOfQRDetect> => {
-    const codes: string[] = [];
-
-    if (!context) {
-        return 'error';
-    }
-
-    // --- Grayscale pada tempCanvas ---
-    let imageData = context.getImageData(0, 0, canvas.width / 2, canvas.height);
-
-    const options: Options = { inversionAttempts: "dontInvert" };
-
-    // jsQR sekarang akan memproses imageData yang sudah digrayscale
-    let code: QRCode | null = jsQR(
-        imageData.data,
-        imageData.width,
-        imageData.height,
-        options
-    );
-    if (!code) {
-        imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        code = jsQR(imageData.data, imageData.width, imageData.height, options);
-    }
-
-    while (code) {
-        codes.push(code.data);
-
-        // Gambar persegi panjang putih di atas area kode QR
-        const { topLeftCorner, bottomRightCorner } = code.location;
-        context.fillStyle = "white";
-        context.fillRect(
-            topLeftCorner.x,
-            topLeftCorner.y,
-            bottomRightCorner.x - topLeftCorner.x,
-            bottomRightCorner.y - topLeftCorner.y
-        );
-
-        // Ambil ulang imageData setelah menggambar persegi panjang putih
-        const updatedImageData = context.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-        code = jsQR(
-            updatedImageData.data,
-            updatedImageData.width,
-            updatedImageData.height,
-            options
-        );
-    }
-
-    if (codes.length > 0) {
-        let hasUnsigned = false;
-        for (const qrCode of codes) {
-            try {
-                const foundDoc = await findDocBySignature(qrCode);
-                if (foundDoc) {
-                    if (foundDoc.signs?.some((sign) => !sign.signed)) {
-                        hasUnsigned = true;
-                    } else {
-                        pdf.value = foundDoc.doc as string;
-                        return 'found';
-                    }
-                }
-            } catch (err) {
-                return 'error';
-            }
-        }
-
-        if (hasUnsigned) {
-            return 'not_signed';
-        }
-
-        return 'not_found';
-    } else {
-        return 'not_found';
-    }
-};
 watch(pdfs, async (file) => {
     if (file) {
         doc.value = null;
         error.value = null;
         loading.value = true;
+
+        // Display PDF
         const fileBytes = await file.arrayBuffer();
         const url = URL.createObjectURL(new Blob([fileBytes], { type: file.type }));
         pdf.value = url;
+
+        // Scan for QR
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const { data: scanResult } = await useFetch<{ statusCode: number, data: { status: string, data?: string } }>('/api/pdf/scan', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (scanResult.value?.data?.status === 'found' && scanResult.value.data.data) {
+                await findDocBySignature(scanResult.value.data.data);
+            } else {
+                error.value = $ts('verify_doc_qr_code_not_found');
+                toast.add({
+                    title: $ts('failed'),
+                    description: $ts('verify_doc_qr_code_not_found'),
+                    color: 'error'
+                });
+            }
+        } catch (err) {
+            console.error("Scan error:", err);
+            error.value = $ts('verify_doc_qr_code_error');
+            toast.add({
+                title: $ts('failed'),
+                description: $ts('verify_doc_qr_code_error'),
+                color: 'error'
+            });
+        } finally {
+            loading.value = false;
+        }
     }
 });
 const links = computed(() => {
@@ -265,7 +169,7 @@ const tabs = computed(() => {
                 <UAlert v-else color="success" :title="$ts('document_verified')"
                     :description="$ts('document_verified_description')" />
             </template>
-            <PDFViewer :pdfUrl="pdf" :label="'Label'" @load="onLoad" />
+            <PDFViewer :pdfUrl="pdf" :label="'Label'" />
             <template #footer v-if="doc && !loading">
                 <div class="my-4 text-2xl font-bold text-gray-800 dark:text-gray-200">Data</div>
 

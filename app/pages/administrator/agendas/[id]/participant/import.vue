@@ -100,17 +100,18 @@ const downloadTemplate = async () => {
     // Panggil endpoint export (reuse yang ada)
     const response = await $api<Blob>('/api/sheet/export', {
         method: "post",
-        headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+        responseType: 'blob',
         body: { data: templateData, title: 'template' }
     });
 
-    const url = window.URL.createObjectURL(response);
+    const url = window.URL.createObjectURL(response as Blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `template-peserta.xlsx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
 };
 
 // 2. Upload & Preview (Parse Excel di Server sementara / Client)

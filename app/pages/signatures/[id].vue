@@ -3,14 +3,14 @@ import { ModalsConfirmation } from '#components';
 import type { AccordionItem } from '@nuxt/ui';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { PDFDocument } from 'pdf-lib';
-import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+
+
 import PDFViewer from '~/components/PDFViewer.vue';
-import type { IConfig, IDoc, IMember, IOverlayLocation } from '~~/types';
+import type { IConfig, IDoc, IMember } from '~~/types';
 import type { IReqSignDocument } from '~~/types/IRequestPost';
 import type { IConfigResponse, IDocResponse } from '~~/types/IResponse';
 
-pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.149/pdf.worker.min.mjs";
+const configPublic = useRuntimeConfig().public;
 
 
 const { $api } = useNuxtApp();
@@ -31,7 +31,7 @@ const ConfirmationModal = overlay.create(ModalsConfirmation);
 const doc = computed<IDoc>(() => data.value?.data?.doc as IDoc || {});
 const config = computed<IConfig>(() => configData.value?.data as IConfig);
 const pdf = ref<string>('');
-const pdfDocument = ref<PDFDocument>();
+const pdfBuffer = ref<Uint8Array>();
 const loading = ref<boolean>(false);
 const docFullSigned = computed(() => {
     if (!doc.value.signs) return false;
@@ -51,65 +51,13 @@ const trails = computed<AccordionItem[]>(() => {
     }));
 });
 
-const getDocumentHash = async (pdfDoc: PDFDocument): Promise<string> => {
-    const pdfBytes = await pdfDoc.save();
-    const hash = await crypto.subtle.digest('SHA-256', pdfBytes as Uint8Array<ArrayBuffer>);
+const getDocumentHash = async (buffer: Uint8Array): Promise<string> => {
+    const hash = await crypto.subtle.digest('SHA-256', buffer as unknown as BufferSource);
     return Array.from(new Uint8Array(hash))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('').slice(0, 8);
 };
 
-async function findTextCoordinates(
-    searchText: string
-): Promise<IOverlayLocation[]> {
-    const matchingLocations: IOverlayLocation[] = [];
-    try {
-
-        // Memuat dokumen PDF dari buffer
-        const loadingTask = pdfjs.getDocument({ url: doc.value.doc as string });
-        const pdfDocument = await loadingTask.promise;
-
-        // Iterasi melalui setiap halaman PDF
-        for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-            const page = await pdfDocument.getPage(pageNum);
-            const textContent = await page.getTextContent();
-
-            // Iterasi melalui setiap item teks di halaman
-            for (const item of textContent.items) {
-                // Konversi item.item ke any untuk menghindari error tipe jika item.str bukan string
-                const textItem = item as any; // Cast ke any untuk akses str dan transform
-
-                if (textItem.str && textItem.str.includes(searchText)) {
-                    // Mendapatkan transformasi matriks untuk posisi teks
-                    const transform = textItem.transform;
-
-                    // Koordinat (x, y) dari teks item berada di transform [4] dan [5]
-                    // PDF.js menggunakan sistem koordinat di mana Y=0 adalah di bagian bawah halaman.
-                    // Jika Anda butuh Y dari atas, Anda perlu menguranginya dari tinggi halaman.
-                    const viewport = page.getViewport({ scale: 1 }); // Skala 1 untuk koordinat asli PDF
-
-                    const x = transform[4];
-                    const y = viewport.height - transform[5]; // Konversi Y dari bawah ke atas
-
-                    matchingLocations.push({
-                        text: textItem.str,
-                        page: pageNum,
-                        x: x,
-                        y: y,
-                        width: textItem.width,
-                        height: textItem.height,
-                    });
-                }
-            }
-            page.cleanup(true); // Penting untuk membebaskan memori
-        }
-
-        return matchingLocations;
-    } catch (error) {
-        console.error("Error finding text coordinates in PDF:", error);
-        throw new Error("Failed to process PDF for text coordinates.");
-    }
-}
 
 const signDocument = () => {
     ConfirmationModal.open({
@@ -119,19 +67,17 @@ const signDocument = () => {
             try {
                 ConfirmationModal.close();
                 loading.value = true;
-                const pdfDoc = pdfDocument.value;
-                if (!pdfDoc) {
+                const buffer = pdfBuffer.value;
+                if (!buffer) {
                     toast.add({ title: $ts("error"), description: $ts("pdf_not_loaded"), color: 'error' });
                     return;
                 }
-                const coordinates = await findTextCoordinates(`/${user.value?.member.NIM}signature/`);
                 await $api<{ data: string }>('api/sign', {
                     method: 'POST',
                     body: {
                         encryption: config.value.enscriptActivinessLetter,
                         docId: doc.value._id,
-                        data: await getDocumentHash(pdfDoc),
-                        coordinates
+                        data: await getDocumentHash(buffer),
                     } as IReqSignDocument,
                 });
                 toast.add({ title: $ts("success"), description: $ts("success_to_sign_document"), color: 'success' });
@@ -158,8 +104,7 @@ watch(doc, async (value) => {
     if (value.doc) {
         const response = await fetch(value.doc as string);
         const data = await response.arrayBuffer();
-        const pdfDoc = await PDFDocument.load(data);
-        pdfDocument.value = pdfDoc;
+        pdfBuffer.value = new Uint8Array(data);
         pdf.value = value.doc as string;
     }
 });

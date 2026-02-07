@@ -30,7 +30,7 @@ A comprehensive web application built with **Nuxt 3** for managing the Himatika 
 - **Authentication**: [@sidebase/nuxt-auth](https://sidebase.io/nuxt-auth)
 - **File Storage**: AWS S3 / Cloudflare R2 / Vercel Blob
 - **Utilities**:
-  - `pdf-lib` / `pdf-parse` for PDF handling
+  - `pdf-lib` for PDF handling
   - `sheetjs` (exceljs) for data export
   - `nuxt-i18n-micro` for internationalization
 

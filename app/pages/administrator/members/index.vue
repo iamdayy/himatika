@@ -3,7 +3,7 @@ import { ModalsConfirmation, ModalsMemberAdd, ModalsMemberEdit, UBadge, UButton,
 import type { TableColumn } from '@nuxt/ui';
 import type { Column } from '@tanstack/vue-table';
 import type { IMember } from '~~/types';
-import type { IExportSheetResponse, IMemberResponse } from '~~/types/IResponse';
+import type { IMemberResponse } from '~~/types/IResponse';
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 const NuxtImg = resolveComponent('NuxtImg');
 /**
@@ -378,24 +378,26 @@ const generateXlsx = async () => {
         if (selectedMember.value.length == 0) {
             toExcel = (await $api<IMemberResponse>('/api/member')).data?.members as IMember[];
         }
-        const response = await $api<IExportSheetResponse>('/api/member/sheet/export', {
+        const response = await $api('/api/member/sheet/export', {
             method: "post",
-            headers: {
-                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            },
+            responseType: 'blob',
             body: {
                 data: toExcel.map(member => member.NIM)
             }
         });
-        if (!response.data) {
-            throw new Error('No data returned from API');
-        }
+
+        // download file
+        const blob = new Blob([response as BlobPart], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = response.data.url;
-        link.setAttribute('download', response.data.title);
+        link.href = url;
+        link.setAttribute('download', 'members.xlsx');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
     } catch (error) {
 
         console.error('Error generating Excel file:', error);

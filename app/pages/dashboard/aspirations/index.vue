@@ -2,7 +2,7 @@
 import { ModalsConfirmation, UBadge, UButton, UCheckbox, VideoPlayer } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { IAspiration, IDoc, IMember, IPhoto, IVideo, IVote } from '~~/types';
-import type { IAspirationResponse, IExportSheetResponse } from '~~/types/IResponse';
+import type { IAspirationResponse } from '~~/types/IResponse';
 
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 /**
@@ -302,11 +302,9 @@ const generateXlsx = async () => {
             const data = (await $api<IAspirationResponse>('/api/aspiration')).data?.aspirations || [];
             toExcel = data;
         }
-        const response = await $fetch<IExportSheetResponse>('/api/sheet/export', {
+        const response = await $fetch<Blob>('/api/sheet/export', {
             method: "post",
-            headers: {
-                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            },
+            responseType: 'blob',
             body: {
                 title: "exported-" + toExcel.length,
                 data: toExcel.map((row: IAspiration) => {
@@ -324,11 +322,17 @@ const generateXlsx = async () => {
                 })
             }
         });
+        const blob = response;
+        if (!blob) return;
+
         const link = document.createElement('a');
-        link.href = response.data?.url || '';
-        link.download = response.data?.title || 'exported.xlsx';
+        const url = window.URL.createObjectURL(blob);
+        link.href = url;
+        link.download = `exported-${toExcel.length}-${new Date().toISOString()}.xlsx`;
         document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Error generating Excel file:', error);
     }

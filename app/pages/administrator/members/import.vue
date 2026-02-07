@@ -1,10 +1,11 @@
 <script setup lang='ts'>
-import { ModalsMemberEdit, NuxtImg, UButton, UCheckbox } from '#components';
+import { ModalsMemberEdit, UButton, UCheckbox } from '#components';
 import type { TableColumn } from '@nuxt/ui';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { IMember } from '~~/types';
 import type { IResponse } from '~~/types/IResponse';
 const UDropdownMenu = resolveComponent('UDropdownMenu');
+const NuxtImg = resolveComponent('NuxtImg');
 // Define page metadata
 definePageMeta({
     layout: 'dashboard',
@@ -198,16 +199,14 @@ const downloadTemplate = async () => {
     }
     const response = await $api<Blob>('/api/sheet/export', {
         method: "post",
-        headers: {
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        },
+        responseType: 'blob',
         body: {
             data: [member],
             title: 'template'
         }
     });
     const title = `template-${new Date()}`;
-    const url = window.URL.createObjectURL(response);
+    const url = window.URL.createObjectURL(response as Blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `${title}.xlsx`;

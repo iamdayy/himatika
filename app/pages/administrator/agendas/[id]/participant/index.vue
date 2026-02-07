@@ -3,7 +3,7 @@ import { ModalsConfirmation, UCheckbox } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Row } from '@tanstack/vue-table';
 import type { IAgenda, IGuest, IMember, IParticipant, IQuestion } from '~~/types';
-import type { IAgendaParticipantResponse, IExportSheetResponse, IResponse } from '~~/types/IResponse';
+import type { IAgendaParticipantResponse, IResponse } from '~~/types/IResponse';
 
 definePageMeta({
     layout: 'client',
@@ -468,28 +468,30 @@ const generateXlsx = async () => {
                 ...answers,
             }
         })
-        const response = await $fetch<IExportSheetResponse>('/api/sheet/export', {
+        const response = await $fetch<Blob>('/api/sheet/export', {
             method: "post",
-            headers: {
-                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            },
+            responseType: 'blob',
             body: {
                 title: "Participant-User",
                 headers,
                 data: complexData,
             }
         });
-        if (!response.data) {
-            throw new Error('No data returned');
-        }
-        const title = response.data?.title || 'Participant-User';
+
+        const blob = response;
+        if (!blob) throw new Error('No data returned');
+
+        const title = 'Participant-User';
         const link = document.createElement('a');
-        link.href = response.data?.url || '';
+        const url = window.URL.createObjectURL(blob);
+        link.href = url;
         link.setAttribute('download',
             `${title}-${new Date()}.xlsx`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
         toast.add({
             title: 'Success',
             description: 'Exported successfully',

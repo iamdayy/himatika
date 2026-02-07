@@ -125,13 +125,14 @@ const downloadTemplate = async () => {
     ];
     const response = await $api<Blob>('/api/sheet/export', {
         method: "post",
-        headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+        responseType: 'blob',
         body: { data: templateData, title: 'template' }
     });
-    const url = window.URL.createObjectURL(response);
+    const url = window.URL.createObjectURL(response as Blob);
     const a = document.createElement('a');
     a.href = url; a.download = `template-panitia.xlsx`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
 };
 
 const handleFileUpload = async () => {
