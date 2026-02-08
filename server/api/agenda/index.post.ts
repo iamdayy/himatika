@@ -4,7 +4,6 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { logAction } from "~~/server/utils/logger";
 import { sendBulkEmail } from "~~/server/utils/mailer";
 import Email from "~~/server/utils/mailTemplate";
-import { broadcast } from "~~/server/utils/sse";
 import { IReqAgenda } from "~~/types/IRequestPost";
 import { IError, IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -181,17 +180,6 @@ export default defineEventHandler(
              // catch error to prevent unhandled rejection crashing process
              emailPromise.catch(console.error);
         }
-      }
-      
-      // Broadcast notification
-      if (!body.isDraft) {
-        broadcast('notification', {
-          title: 'Agenda Baru',
-          message: `${savedAgenda.title} telah berhasil dibuat.`,
-          type: 'info',
-          icon: 'i-heroicons-calendar',
-          link: `/agendas`
-        });
       }
 
       // Audit Log

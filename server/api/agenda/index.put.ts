@@ -5,7 +5,6 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { logAction } from "~~/server/utils/logger";
 import { sendBulkEmail } from "~~/server/utils/mailer";
 import Email from "~~/server/utils/mailTemplate";
-import { broadcast } from "~~/server/utils/sse";
 import { IAgenda, ICommittee, IQuestion } from "~~/types";
 import { IError, IResponse } from "~~/types/IResponse";
 /**
@@ -176,13 +175,6 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
         }
       }
 
-      broadcast('notification', {
-        title: 'Agenda Baru',
-        message: `${agenda.title} telah dibuat.`,
-        type: 'info',
-        icon: 'i-heroicons-calendar',
-        link: `/agendas`
-      });
       
       // Audit Log
       logAction({

@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { Analytics } from '@vercel/analytics/nuxt';
 import 'driver.js/dist/driver.css';
-import { useNotificationStore } from '~~/app/stores/useNotificationStore';
 const { x, y } = useMouse();
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
@@ -27,13 +25,8 @@ const
 setTimeout(() => {
   isLoading.value = false;
 }, 1500);
-
-// Connect to Real-time Notifications
-const notificationStore = useNotificationStore();
-notificationStore.connect();
 </script>
 <template>
-  <Analytics />
   <UApp>
     <div class="light-container" @mousemove="isActive = true" @mouseleave="isActive = false">
       <!-- Light effect -->

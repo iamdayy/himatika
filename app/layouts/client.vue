@@ -1,5 +1,4 @@
 <script setup lang='ts'>
-import { SpeedInsights } from '@vercel/speed-insights/vue';
 // Import necessary types
 import type { DropdownMenuItem, NavigationMenuItem } from "#ui/types";
 import type { IConfigResponse } from "~~/types/IResponse";
@@ -124,7 +123,6 @@ useHead({
 </script>
 <template>
     <div class="min-h-full">
-        <SpeedInsights />
         <nav
             class="fixed z-30 w-full border-gray-200 md:border-none bg-secondary-light/60 dark:bg-secondary-dark/20 backdrop-blur-sm">
             <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
