@@ -6,11 +6,7 @@ export default defineNuxtConfig({
       if (!nuxt.options._prepare) process.exit();
     },
   },
-  nitro: {
-    preset: "aws-amplify",
-  },
   routeRules: {
-    "/_locales/**": { cors: true, headers: { "Cache-Control": "no-cache" } },
     // 1. Dashboard & Profile: Render di browser saja (SPA)
     "/dashboard/**": { ssr: false },
     "/profile/**": { ssr: false },
