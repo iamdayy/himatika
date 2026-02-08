@@ -3,8 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
-    "generate": "nuxt generate",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=3072 nuxt build",
+    "generate": "cross-env NODE_OPTIONS=--max-old-space-size=3072 nuxt generate",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
