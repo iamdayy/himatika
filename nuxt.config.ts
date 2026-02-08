@@ -1,4 +1,4 @@
-
+import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   hooks: {
@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    preset: 'node-server'
+    preset: 'deno'
   },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
@@ -364,5 +364,10 @@ export default defineNuxtConfig({
     sessionRefresh: {
       enableOnWindowFocus: false,
     },
+  },
+  vite: {
+    plugins: [
+      tailwindcss() as any,
+    ],
   },
 });
