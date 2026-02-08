@@ -96,11 +96,11 @@ export default defineNuxtConfig({
     },
 
     // 3. Halaman yang tidak pernah berubah (Static)
-    "/login": { prerender: true },
-    "/register": { prerender: true },
-    "/forgot-password": { prerender: true },
-    "/change-password": { prerender: true },
-    "/change-email": { prerender: true },
+    "/login": { ssr: false },
+    "/register": { ssr: false },
+    "/forgot-password": { ssr: false },
+    "/change-password": { ssr: false },
+    "/change-email": { ssr: false },
     "/api/*": {
       cors: true,
       headers: {
