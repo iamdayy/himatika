@@ -11,6 +11,9 @@ export default defineNuxtConfig({
       autoSubfolderIndex: false
     }
   },
+  build: {
+    transpile: ["@react-email/render"]
+  },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
     "/dashboard/**": { ssr: false },
