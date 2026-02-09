@@ -63,11 +63,6 @@ const {
     }
 );
 // const { agendas, pendingAgendas, refreshAgendas, page, perPage, upcomingOnly, sort, order } = useAgendas();
-
-const { $ts } = useI18n();
-
-
-
 /**
  * Use VueUse's useWindowSize composable for responsive design
  */
@@ -93,17 +88,17 @@ const dropdownOptions = (agenda: IAgenda) => {
     const options = [
         [
             {
-                label: $ts('view'),
+                label: 'Lihat',
                 icon: 'i-heroicons-eye',
                 click: () => router.push(`/agendas/${agenda?._id}`)
             },
             {
-                label: $ts('copy_link'),
+                label: 'Salin Tautan',
                 icon: 'i-heroicons-clipboard',
                 click: () => navigator.clipboard.writeText(`${window.location.origin}/agendas/${agenda?._id}`),
             },
             {
-                label: $ts('share'),
+                label: 'Bagikan',
                 icon: 'i-heroicons-share',
                 click: () => navigator.share({
                     title: agenda?.title,
@@ -156,10 +151,10 @@ const responsiveUISizes = useResponsiveUiSizes();
     <UCard>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 :class="['font-extrabold dark:text-white', responsiveClasses.cardHeader]">{{ $ts('agenda') }}</h2>
+                <h2 :class="['font-extrabold dark:text-white', responsiveClasses.cardHeader]">{{ 'Agenda' }}</h2>
 
                 <USwitch @change="() => viewMode = viewMode === 'grid' ? 'list' : 'grid'" color="primary" size="xl"
-                    checked-icon="i-lucide-list" unchecked-icon="i-lucide-layout-grid" :label="$ts('view')" />
+                    checked-icon="i-lucide-list" unchecked-icon="i-lucide-layout-grid" :label="'Lihat'" />
             </div>
         </template>
         <div v-if="pendingAgendas || !agendas" class="flex items-center justify-center">
@@ -182,7 +177,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                                         {{ (agenda.category as ICategory).title }}
                                     </UBadge>
                                     <UBadge v-if="isRegistrationOpen(agenda)" color="success" variant="soft" size="xs">
-                                        {{ $ts('open') }}
+                                        {{ 'Buka' }}
                                     </UBadge>
                                 </div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-200 line-clamp-2">{{
@@ -230,8 +225,8 @@ const responsiveUISizes = useResponsiveUiSizes();
                         <!-- Stats -->
                         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
                             <div class="flex items-center gap-4">
-                                <span>{{ agenda.committees?.length || 0 }} {{ $ts('committee') }}</span>
-                                <span>{{ agenda.participants?.length || 0 }} {{ $ts('participant') }}</span>
+                                <span>{{ agenda.committees?.length || 0 }} {{ 'Panitia' }}</span>
+                                <span>{{ agenda.participants?.length || 0 }} {{ 'Peserta' }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <UBadge v-if="agenda.configuration.participant.pay" color="error" variant="soft"
@@ -239,7 +234,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                                     {{ formatCurrency(agenda.configuration.participant.amount) }}
                                 </UBadge>
                                 <UBadge v-else color="success" variant="soft" size="xs">
-                                    {{ $ts('free') }}
+                                    {{ 'Gratis' }}
                                 </UBadge>
                             </div>
                         </div>
@@ -248,7 +243,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                     <template #footer>
                         <div class="flex items-center justify-between">
                             <UButton :to="`/agendas/${agenda._id}`" variant="link" size="sm">
-                                {{ $ts('see_more') }}
+                                {{ 'Lihat Selengkapnya' }}
                             </UButton>
                             <UDropdownMenu :items="dropdownOptions(agenda)" :ui="{
                                 content: 'w-48'
@@ -277,14 +272,14 @@ const responsiveUISizes = useResponsiveUiSizes();
                                                 </UBadge>
                                                 <UBadge v-if="isRegistrationOpen(agenda)" color="success" variant="soft"
                                                     size="xs">
-                                                    {{ $ts('open') }}
+                                                    {{ 'Buka' }}
                                                 </UBadge>
                                                 <UBadge v-if="agenda.configuration.participant.pay" color="error"
                                                     variant="soft" size="xs">
                                                     {{ formatCurrency(agenda.configuration.participant.amount) }}
                                                 </UBadge>
                                                 <UBadge v-else color="success" variant="soft" size="xs">
-                                                    {{ $ts('free') }}
+                                                    {{ 'Gratis' }}
                                                 </UBadge>
                                             </div>
 
@@ -331,11 +326,11 @@ const responsiveUISizes = useResponsiveUiSizes();
                                     <div class="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-300">
                                         <div class="flex items-center gap-1">
                                             <UIcon name="i-heroicons-users" class="w-4 h-4" />
-                                            <span>{{ agenda.committees?.length || 0 }} {{ $ts('committee') }}</span>
+                                            <span>{{ agenda.committees?.length || 0 }} {{ 'Panitia' }}</span>
                                         </div>
                                         <div class="flex items-center gap-1">
                                             <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
-                                            <span>{{ agenda.participants?.length || 0 }} {{ $ts('participant')
+                                            <span>{{ agenda.participants?.length || 0 }} {{ 'Peserta'
                                                 }}</span>
                                         </div>
                                     </div>
@@ -350,7 +345,7 @@ const responsiveUISizes = useResponsiveUiSizes();
             <div class="flex justify-center mt-6">
                 <UButton to="/agendas" color="neutral" variant="link" size="sm">
                     <UIcon name="i-heroicons-arrow-right" class="w-5 h-5" />
-                    {{ $ts('see_more') }}
+                    {{ 'Lihat Selengkapnya' }}
                 </UButton>
             </div>
         </template>

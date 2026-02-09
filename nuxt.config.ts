@@ -6,9 +6,6 @@ export default defineNuxtConfig({
       if (!nuxt.options._prepare) process.exit();
     },
   },
-  nitro: {
-    preset: 'deno_deploy'
-  },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
     "/dashboard/**": { ssr: false },
@@ -153,7 +150,6 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxt/ui",
     "@sidebase/nuxt-auth",
-    "nuxt-i18n-micro",
     "nuxt-qrcode",
     "@vueuse/nuxt",
     "@pinia/nuxt",
@@ -250,18 +246,7 @@ export default defineNuxtConfig({
     preference: "system",
     fallback: "light",
   },
-  i18n: {
-    strategy: "no_prefix",
-    locales: [
-      { code: "en", iso: "en-US", dir: "ltr" },
-      { code: "id", iso: "id-ID", dir: "ltr" },
-      { code: "ar", iso: "ar-SA", dir: "rtl" },
-    ],
-    defaultLocale: "id",
-    translationDir: "locales",
-    meta: true,
-    autoDetectPath: "*",
-  },
+
   qrcode: {
     options: {
       variant: {

@@ -25,8 +25,6 @@ type responsive = {
 }
 
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
-
 /**
  * Modal and toast hooks
  */
@@ -152,7 +150,7 @@ const columns = computed<TableColumn<IMessage>[]>(() => [
     },
     {
         accessorKey: 'subject',
-        header: $ts('subject'),
+        header: 'Subjek',
         size: 200,
         cell: ({ row }) => {
             return row.getValue('subject') || 'No Subject';
@@ -160,7 +158,7 @@ const columns = computed<TableColumn<IMessage>[]>(() => [
     },
     {
         accessorKey: 'from',
-        header: $ts('from'),
+        header: 'dari',
         size: 200,
         cell: ({ row }) => {
             return `${row.original.name.first} ${row.original.name.last}` || 'Anonymous';
@@ -168,7 +166,7 @@ const columns = computed<TableColumn<IMessage>[]>(() => [
     },
     {
         accessorKey: 'status',
-        header: $ts('status'),
+        header: 'Status',
         size: 100,
         cell: ({ row }) => {
             return row.getValue('status') || 'Unknown';
@@ -176,7 +174,7 @@ const columns = computed<TableColumn<IMessage>[]>(() => [
     },
     {
         id: 'actions',
-        header: $ts('actions'),
+        header: 'Actions',
         size: 100,
         cell: ({ row }) => {
             return h(UDropdownMenu)
@@ -265,9 +263,9 @@ watch([search, filter], () => {
  */
 const deleteModal = (id: string) => {
     ConfirmationModal.open({
-        title: $ts('delete_message'),
+        title: 'Delete Message',
 
-        body: $ts('delete_message_confirmation', { id }),
+        body: 'Delete Message Confirmation' /* params: { id } */,
         onConfirm() {
             deleteMessage(id).then(() => { ConfirmationModal.close(); refresh(); });
         }
@@ -277,8 +275,8 @@ const deleteModal = (id: string) => {
 
 const archiveModal = (id: string) => {
     ConfirmationModal.open({
-        title: $ts('archive_message'),
-        body: $ts('archive_message_confirmation', { id }),
+        title: 'Archive Message',
+        body: 'Archive Message Confirmation' /* params: { id } */,
         onConfirm() {
             archiveMessage(id).then(() => { ConfirmationModal.close(); refresh(); });
         }
@@ -294,13 +292,13 @@ const archiveModal = (id: string) => {
 const items = (row: any) => [
     [
         {
-            label: $ts('delete'),
+            label: 'Hapus',
             icon: 'i-heroicons-trash-20-solid',
             disabled: row.status == 'deleted',
             click: () => deleteModal(row._id)
         },
         {
-            label: $ts('archive'),
+            label: 'Arsipkan',
             icon: 'i-heroicons-archive-box-x-mark-20-solid',
             click: () => archiveModal(row._id)
         }
@@ -308,11 +306,11 @@ const items = (row: any) => [
 
 ];
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('message'),
+    label: 'Pesan',
     icon: 'i-heroicons-archive-box',
 }]);
 </script>
@@ -388,13 +386,13 @@ const links = computed(() => [{
             <template #footer>
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
-                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
+                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ 'Baris per Halaman'
                         }}</span>
                         <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
+                            {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end: pageTo, total: pageTotal } */ }}
                         </span>
                     </div>
 

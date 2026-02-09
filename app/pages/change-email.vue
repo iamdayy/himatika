@@ -6,9 +6,6 @@ import type { ChangeEmailSchema } from "~~/types/schemas/auth";
 const toast = useToast();
 const route = useRoute();
 const router = useRouter();
-const { $ts } = useI18n();
-
-
 const state = reactive<ChangeEmailSchema>({
     email: route.query.email as string || "",
     NIM: Number(route.query.NIM as string),
@@ -31,7 +28,7 @@ const onSubmit = async (event: FormSubmitEvent<ChangeEmailSchema>) => {
         });
         if (response.statusCode == 200) {
             navigateTo(link);
-            toast.add({ title: $ts('otp_success') });
+            toast.add({ title: 'Otp Success' });
         }
     } catch (error: any) {
         toast.add({ title: error.message });
@@ -87,7 +84,7 @@ useHead({
                     loading="lazy" />
             </div>
             <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
-                $ts('change_email') }}
+                'Ubah Email' }}
             </h4>
             <div class="pb-8 mt-2 sm:mx-auto sm:w-full sm:max-w-sm max-h-96">
                 <UForm ref="form" :state="state" @submit="onSubmit" class="space-y-2">
@@ -98,7 +95,7 @@ useHead({
                         <UInput type="email" color="neutral" variant="outline" required v-model="state.email" />
                     </UFormGroup>
                     <div>
-                        <UButton type="submit" block :loading="loading">{{ $ts('send') }}</UButton>
+                        <UButton type="submit" block :loading="loading">{{ 'Kirim' }}</UButton>
                     </div>
                 </UForm>
             </div>

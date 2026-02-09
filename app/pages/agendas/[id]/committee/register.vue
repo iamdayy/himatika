@@ -29,7 +29,6 @@ const { id } = route.params as { id: string; };
 const { tab } = route.query as { tab: string; };
 const { $api } = useNuxtApp();
 const { width } = useWindowSize();
-const { $ts } = useI18n();
 const { data: user } = useAuth();
 
 // --- STATE ---
@@ -83,10 +82,10 @@ const { data: questions } = useAsyncData(() => $api<IAnswersResponse>(`/api/agen
 
 // --- BREADCRUMBS ---
 const links = computed(() => [
-    { label: $ts('home'), to: '/' },
-    { label: $ts('agenda'), to: '/agendas' },
+    { label: 'Beranda', to: '/' },
+    { label: 'Agenda', to: '/agendas' },
     { label: agenda.value?.title || '', to: `/agendas/${id}` },
-    { label: $ts('register') }
+    { label: 'Daftar' }
 ]);
 
 // --- STEPS CONFIGURATION ---
@@ -94,39 +93,39 @@ const steps = computed<Step[]>(() => {
     const stepsList: Step[] = [
         {
             id: 'registration',
-            label: $ts('register'),
-            title: $ts('register'),
+            label: 'Daftar',
+            title: 'Daftar',
             formData: formRegistration,
             validationRules: validationRuleRegistration,
             onNext: committee.value?._id ? refreshCommittee : register
         },
         {
             id: 'answer_question',
-            label: $ts('answer_question'),
-            title: $ts('answer_question'),
+            label: 'Answer Question',
+            title: 'Answer Question',
             formData: {},
             validationRules: {},
             onNext: undefined
         },
         {
             id: 'select_payment',
-            label: $ts('select_payment'),
-            title: $ts('select_payment'),
+            label: 'Select Payment',
+            title: 'Select Payment',
             formData: formPayment,
             validationRules: validationRulePayment,
             onNext: formPayment.method !== 'cash' ? payment : undefined
         },
         {
             id: 'payment',
-            label: $ts('payment'),
-            title: $ts('payment'),
+            label: 'Pembayaran',
+            title: 'Pembayaran',
             formData: {}, // No form validation needed here, just viewing details
             validationRules: {}
         },
         {
             id: 'success',
-            label: $ts('success'),
-            title: $ts('success'),
+            label: 'Berhasil!',
+            title: 'Berhasil!',
             formData: {}
         }
     ];
@@ -175,9 +174,9 @@ const formPayment = reactiveComputed(() => ({
 
 // --- CONSTANTS & OPTIONS ---
 const paymentMethods = ref<{ label: string; value: IPaymentMethod; icon: string; }[]>([
-    { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
-    { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
-    { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
+    { label: 'Tunai', value: 'cash', icon: 'i-heroicons-banknotes' },
+    { label: 'Transfer', value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
+    { label: 'Qris', value: 'qris', icon: 'i-heroicons-qr-code' }
 ]);
 const vaBanks = [
     { label: 'BCA', value: 'bca' },
@@ -255,7 +254,7 @@ const payment = async (): Promise<boolean | FormError> => {
         return false;
     } catch (error) {
         console.error(error);
-        toast.add({ title: $ts('error'), description: 'Failed to create payment', color: 'error' });
+        toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Failed to create payment', color: 'error' });
         return false;
     }
 }
@@ -267,11 +266,11 @@ const onCancelPayment = async () => {
 
 // --- VALIDATION RULES ---
 const validationRuleRegistration: FieldValidationRules<IFormRegistration> = reactiveComputed(() => ({
-    job: (value: string) => value ? null : { message: $ts('job_required'), path: 'job' },
+    job: (value: string) => value ? null : { message: 'Job Required', path: 'job' },
 }));
 
 const validationRulePayment: FieldValidationRules = reactiveComputed(() => ({
-    method: (value: string) => value ? null : { message: $ts('payment_method_required'), path: 'method' },
+    method: (value: string) => value ? null : { message: 'Payment Method Required', path: 'method' },
     // Custom validation logic if needed
 }));
 
@@ -307,18 +306,18 @@ onMounted(() => {
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :links="links" />
         <CoreStepper :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
-            :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
+            :prev-button-text="'Sebelumnya'" :next-button-text="'Selanjutnya'" :complete-button-text="'Selesai'">
 
             <template #default="{ step, errors }">
 
                 <div v-if="step?.id === 'registration'">
-                    <UAlert v-if="committee?._id" color="success" :title="$ts('already_committee')"
-                        :description="$ts('already_committee_desc')" class="mb-4"></UAlert>
+                    <UAlert v-if="committee?._id" color="success" :title="'Already Committee'"
+                        :description="'Already Committee Desc'" class="mb-4"></UAlert>
                     <Useparator class="my-4" />
                     <div class="text-start">
                         <div class="space-y-4">
                             <div :class="['grid gap-2 px-4', isMobile ? 'grid-cols-1' : 'grid-cols-6']">
-                                <UFormField class="col-span-full" :label="$ts('job')" :error="errors.job?.message">
+                                <UFormField class="col-span-full" :label="'Jabatan'" :error="errors.job?.message">
                                     <URadioGroup v-model="formRegistration.job" :items="jobAvailablesItems" />
                                 </UFormField>
                             </div>
@@ -335,7 +334,7 @@ onMounted(() => {
 
                 <div v-else-if="step?.id === 'select_payment'">
                     <div class="p-3 md:p-4">
-                        <h3 class="text-lg font-semibold mb-4">{{ $ts('select_payment_method') }}</h3>
+                        <h3 class="text-lg font-semibold mb-4">{{ 'Select Payment Method' }}</h3>
 
                         <div class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -397,8 +396,8 @@ onMounted(() => {
                             :amount="agenda?.configuration.committee.amount" :payment="formPayment"
                             @cancel="onCancelPayment" @success="refreshCommittee" />
                         <div v-else>
-                            <UAlert color="success" :title="$ts('cash_payment')"
-                                :description="$ts('cash_payment_desc')" />
+                            <UAlert color="success" :title="'Cash Payment'"
+                                :description="'Cash Payment Desc'" />
                         </div>
                     </div>
                     <div v-else class="text-center py-8">
@@ -408,8 +407,8 @@ onMounted(() => {
                 </div>
 
                 <div v-else-if="step?.id === 'success'">
-                    <UAlert color="success" :title="$ts('registration_success')"
-                        :description="$ts('registration_success_desc')" />
+                    <UAlert color="success" :title="'Registration Success'"
+                        :description="'Registration Success Desc'" />
                     <CoreContent class="my-4" :content="agenda?.configuration.messageAfterRegister || ''" />
                 </div>
 

@@ -32,9 +32,6 @@ const responsiveUISizes = computed<{ [key: string]: 'sm' | 'md' }>(() => ({
     button: isMobile.value ? 'sm' : 'md',
     select: isMobile.value ? 'sm' : 'md',
 }));
-
-const { $ts } = useI18n();
-
 const searchQuery = ref('');
 const selectedTags = ref([]);
 const sort = ref('');
@@ -102,9 +99,9 @@ const getImageStyles = (index: number, groupSize: number) => {
     <UCard class="mt-2">
         <template #header>
             <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                {{ $ts('photo') }}
+                {{ 'Foto' }}
             </h1>
-            <p>{{ $ts('gallery_photo_description') }}</p>
+            <p>{{ 'Gallery Photo Description' }}</p>
         </template>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-4" v-if="pending">

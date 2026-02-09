@@ -15,8 +15,6 @@ definePageMeta({
 });
 // Authentication composable
 const { signIn } = useAuth();
-const { $ts } = useI18n();
-
 // Toast notification composable
 const toast = useToast();
 const { $pageGuide } = useNuxtApp();
@@ -75,7 +73,7 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
     } catch (error: any) {
         form.value?.setErrors([error.data.data]);
         toast.add({
-            title: $ts('login_failed'),
+            title: 'Login Failed',
             description: error.data.data.message,
             color: 'error'
         });
@@ -100,24 +98,24 @@ onMounted(() => {
         {
             element: '#username-login',
             popover: {
-                title: $ts('username'),
-                description: $ts('username_desc'),
+                title: 'Nama Pengguna',
+                description: 'Username Desc',
                 side: 'right'
             }
         },
         {
             element: '#password-login',
             popover: {
-                title: $ts('password'),
-                description: $ts('password_desc'),
+                title: 'Kata Sandi',
+                description: 'Password Desc',
                 side: 'right'
             }
         },
         {
             element: '#signin',
             popover: {
-                title: $ts('login'),
-                description: $ts('login_desc'),
+                title: 'Masuk',
+                description: 'Login Desc',
                 side: 'right'
             }
         }
@@ -138,19 +136,19 @@ onMounted(() => {
                     loading="lazy" />
             </div>
             <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
-                $ts('login') }}</h4>
+                'Masuk' }}</h4>
 
             <UForm ref="form" :state="state" @submit="onSubmit"
                 class="px-2 mt-6 space-y-6 overflow-y-scroll no-scrollbar max-h-96">
                 <!-- Username input -->
-                <UFormField id="username-login" :label="`${$ts('username')} / NIM`" name="username">
+                <UFormField id="username-login" :label="`${'Nama Pengguna'} / NIM`" name="username">
                     <UInput color="neutral" variant="outline" :size="responsiveUISizes.input" type="text"
-                        :placeholder="$ts('username_desc')" required v-model="state.username" />
+                        :placeholder="'Username Desc'" required v-model="state.username" />
                 </UFormField>
-                <UFormField id="password-login" :label="$ts('password')" name="password">
+                <UFormField id="password-login" :label="'Kata Sandi'" name="password">
                     <div class="flex w-full gap-1 mt-2">
                         <UInput color="neutral" variant="outline" :size="responsiveUISizes.input"
-                            :type="showPassword ? 'text' : 'password'" :placeholder="$ts('password_desc')" required
+                            :type="showPassword ? 'text' : 'password'" :placeholder="'Password Desc'" required
                             v-model="state.password" class="flex-1" />
                         <UButton variant="link" color="neutral" :size="responsiveUISizes.button"
                             @click="showPassword = !showPassword"
@@ -160,14 +158,14 @@ onMounted(() => {
 
                 <div class="text-sm text-end">
                     <NuxtLink to="/forgot-password" class="font-semibold text-indigo-400 hover:text-indigo-500">
-                        {{ $ts('forgot_password') }}?</NuxtLink>
+                        {{ 'Lupa Kata Sandi' }}?</NuxtLink>
                 </div>
 
                 <!-- Login button -->
                 <div>
                     <UButton id="signin" type="submit" variant="solid" :size="responsiveUISizes.button" block
                         :loading="loading">
-                        {{ $ts('login') }}
+                        {{ 'Masuk' }}
                     </UButton>
                 </div>
             </UForm>

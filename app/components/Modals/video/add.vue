@@ -107,7 +107,7 @@ const videoOptions = (file: File) => {
 
 </script>
 <template>
-    <UModal :fullscreen="isMobile" :title="$ts('add_video')">
+    <UModal :fullscreen="isMobile" :title="'Add Video'">
         <template #body>
             <div :class="['space-y-6 text-start', responsiveClasses.container]">
                 <div :class="responsiveClasses.grid">
@@ -126,7 +126,7 @@ const videoOptions = (file: File) => {
                     </div>
 
                     <!-- Tags input -->
-                    <UFormField :class="responsiveClasses.halfSpan" :label="$ts('tags')">
+                    <UFormField :class="responsiveClasses.halfSpan" :label="'Tag'">
                         <USelectMenu v-model="tags" :items="tagsOptions" multiple create-item @create="addNewTag"
                             name="tag" placeholder="Select Tags" />
                     </UFormField>

@@ -17,7 +17,6 @@ useHead({
     title: "Import"
 })
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 // Responsive design
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 640);
@@ -61,7 +60,7 @@ const columns = computed<TableColumn<IMember>[]>(() => [
     },
     {
         accessorKey: 'fullName',
-        header: $ts('name'),
+        header: 'Nama Lengkap',
         size: 150,
         cell: ({ row }) => {
             return h('div', {
@@ -89,12 +88,12 @@ const columns = computed<TableColumn<IMember>[]>(() => [
     },
     {
         accessorKey: 'class',
-        header: $ts('class'),
+        header: 'Kelas',
         size: 100,
     },
     {
         accessorKey: 'semester',
-        header: $ts('semester'),
+        header: 'Semester',
         size: 100,
     },
     {
@@ -140,7 +139,7 @@ const selectedCollegers = computed<IMember[]>(() => {
 const onChangeXlsx = async (file?: File | null) => {
     loading.value = true;
     if (!file) {
-        toast.add({ title: $ts('file_not_found') });
+        toast.add({ title: 'File Not Found' });
         loading.value = false;
         return;
     }
@@ -158,7 +157,7 @@ const onChangeXlsx = async (file?: File | null) => {
         loading.value = false;
         toast.add({ title: uploaded.statusMessage });
     } catch (error) {
-        toast.add({ title: $ts('file_not_found') });
+        toast.add({ title: 'File Not Found' });
         loading.value = false;
     }
 }
@@ -178,9 +177,9 @@ const addCollegers = async () => {
             DataFromCSV.value = added.data?.failedMembers;
             failedUpload.value = added.data?.failedMembers.length > 0;
         }
-        toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers', { success: added.data?.savedCount, failed: added.data?.failedCount }) });
+        toast.add({ title: 'Berhasil!', description: 'Success To Add Collegers' /* params: { success: added.data?.savedCount, failed: added.data?.failedCount } */ });
     } catch (error) {
-        toast.add({ title: $ts('failed'), description: $ts('failed_to_add_collegers') });
+        toast.add({ title: 'Failed', description: 'Failed To Add Collegers' });
     }
 }
 
@@ -262,25 +261,25 @@ const editModal = (Member: IMember) => {
  */
 const items = (row: any) => [
     [{
-        label: $ts('edit'),
+        label: 'Edit',
         icon: 'i-heroicons-pencil-square-20-solid',
         click: () => editModal(row)
     }],
     [{
-        label: $ts('delete'),
+        label: 'Hapus',
         icon: 'i-heroicons-trash-20-solid'
     }]
 ]
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('member'),
+    label: 'Anggota',
     icon: 'i-heroicons-users',
     to: '/administrator/members'
 }, {
-    label: $ts('import'),
+    label: 'Impor',
     icon: 'i-heroicons-arrow-up-on-square'
 }
 ]);
@@ -292,24 +291,24 @@ const links = computed(() => [{
             <template #header>
                 <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                        {{ $ts('import') }}
+                        {{ 'Impor' }}
                     </h1>
                 </div>
             </template>
             <div class="px-2 py-6 md:py-12 md:px-8">
-                <UFileUpload @update:model-value="onChangeXlsx" :label="$ts('drop_zone')"
-                    :description="$ts('drop_zone_hint', { count: 1, format: '.xlsx', size: '5MB' })" layout="list"
+                <UFileUpload @update:model-value="onChangeXlsx" :label="'Seret dan lepas file di sini atau klik untuk mengunggah'"
+                    :description="'Maksimal {size} per file, maksimal {count} file. Format yang didukung: {format}.' /* params: { count: 1, format: '.xlsx', size: '5MB' } */" layout="list"
                     position="inside" :max-file-size="5 * 1024 * 1024"
                     accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx">
                     <template #actions="{ open }">
-                        <UButton :label="$ts('select')" icon="i-lucide-upload" color="neutral" variant="outline"
+                        <UButton :label="'Pilih'" icon="i-lucide-upload" color="neutral" variant="outline"
                             @click="open()" />
                     </template>
                 </UFileUpload>
                 <div class="w-full p-2 mx-auto my-3 text-center">
                     <UButton variant="subtle" @click="downloadTemplate" :size="responsiveUISizes.button"
                         icon="i-heroicons-arrow-down-on-square">
-                        {{ $ts('download_template') }}
+                        {{ 'Download Template' }}
                     </UButton>
                 </div>
             </div>
@@ -317,39 +316,39 @@ const links = computed(() => [{
             <div class="flex justify-between p-2 md:p-4 items-center">
                 <div class="flex flex-col">
                     <h2 class="text-md font-semibold text-gray-600 md:text-lg md:font-bold dark:text-gray-200">
-                        {{ $ts('preview_data') }}
+                        {{ 'Preview Data' }}
                     </h2>
                     <p class="text-sm font-light text-gray-600 dark:text-gray-300">
-                        {{ $ts('preview_data_hint') }}
+                        {{ 'Preview Data Hint' }}
                     </p>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <span class="text-sm font-light text-gray-600 dark:text-gray-300">
-                        {{ selectedCollegers.length }} {{ $ts('selected') }}
+                        {{ selectedCollegers.length }} {{ 'Selected' }}
                     </span>
                     <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
                         :disabled="DataFromCSV.length <= 0"
-                        :label="$ts('add_member', { count: selectedCollegers.length })" variant="solid"
+                        :label="'Add Member' /* params: { count: selectedCollegers.length } */" variant="solid"
                         color="primary" />
                     <UButton v-if="failedUpload" @click="downloadFailedMembers" :size="responsiveUISizes.button"
                         icon="i-heroicons-arrow-down-on-square" variant="outline" :loading="loading"
-                        :disabled="DataFromCSV.length <= 0" :label="$ts('download_failed_member')" color="error" />
+                        :disabled="DataFromCSV.length <= 0" :label="'Download Failed Member'" color="error" />
                 </div>
             </div>
-            <UAlert v-if="DataFromCSV.length > 0" class="mx-2 mb-4" color="warning" close :title="$ts('warning')"
-                :description="$ts('import_warning_hint')" />
-            <UAlert v-if="DataFromCSV.length == 0" class="mx-2 mb-4" color="info" close :title="$ts('info')"
-                :description="$ts('no_data_hint')" />
-            <UAlert v-if="failedUpload" class="mx-2 mb-4" color="error" close :title="$ts('error_upload')"
-                :description="$ts('some_members_failed_to_upload')" />
+            <UAlert v-if="DataFromCSV.length > 0" class="mx-2 mb-4" color="warning" close :title="'Warning'"
+                :description="'Import Warning Hint'" />
+            <UAlert v-if="DataFromCSV.length == 0" class="mx-2 mb-4" color="info" close :title="'Info'"
+                :description="'No Data Hint'" />
+            <UAlert v-if="failedUpload" class="mx-2 mb-4" color="error" close :title="'Error Upload'"
+                :description="'Some Members Failed To Upload'" />
             <USeparator class="my-2 md:my-4" />
             <!-- Table -->
             <UTable v-model:row-selection="selectedRows" :data="DataFromCSV" :columns="columns" :loading="loading">
             </UTable>
             <template #footer>
                 <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
-                    :disabled="DataFromCSV.length <= 0" :label="$ts('add_member', { count: selectedCollegers.length })"
+                    :disabled="DataFromCSV.length <= 0" :label="'Add Member' /* params: { count: selectedCollegers.length } */"
                     variant="solid" color="primary" block />
             </template>
         </UCard>

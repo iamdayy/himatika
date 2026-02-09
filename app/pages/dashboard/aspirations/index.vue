@@ -36,8 +36,6 @@ type responsive = {
 }
 
 const { $api, $router } = useNuxtApp();
-const { $ts } = useI18n();
-
 /**
  * User role and department hooks
  */
@@ -114,35 +112,35 @@ const columns = computed<TableColumn<IAspiration>[]>(() => [
     },
     {
         accessorKey: 'subject',
-        header: $ts('subject'),
+        header: 'Subjek',
         cell: ({ row }) => {
             return row.getValue('subject') || 'N/A';
         },
     },
     {
         accessorKey: 'from',
-        header: $ts('from'),
+        header: 'dari',
         cell: ({ row }) => {
             return (row.getValue('from') as IMember)?.fullName || 'Anonymous';
         },
     },
     {
         accessorKey: 'upVotes',
-        header: $ts('up_vote'),
+        header: 'Dukungan',
         cell: ({ row }) => {
             return row.original.votes?.filter((vote: IVote) => vote.voteType == 'upvote').length || 0;
         },
     },
     {
         accessorKey: 'downVotes',
-        header: $ts('down_vote'),
+        header: 'Penolakan',
         cell: ({ row }) => {
             return row.original.votes?.filter((vote: IVote) => vote.voteType == 'downvote').length || 0;
         },
     },
     {
         accessorKey: 'status',
-        header: $ts('status'),
+        header: 'Status',
         cell: ({ row }) => {
             const status = row.original.deleted ? 'deleted' : row.original.archived ? 'archived' : row.original.read ? 'read' : 'unread';
             const color = status == 'deleted' ? 'error' : status == 'archived' ? 'info' : status == 'read' ? 'success' : 'secondary';
@@ -399,11 +397,11 @@ const items = (row: IAspiration): DropdownMenuItem[][] => [
 
 ];
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('aspiration'),
+    label: 'Aspirasi',
     icon: 'i-heroicons-clipboard-document-list',
 }]);
 </script>
@@ -414,11 +412,11 @@ const links = computed(() => [{
             <template #header>
                 <div class="flex items-center w-full gap-3 p-1 my-4 md:p-2 md:justify-between">
                     <h2 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                        {{ $ts('aspiration') }}
+                        {{ 'Aspirasi' }}
                     </h2>
                     <UButton icon="i-heroicons-plus" color="success" v-if="isOrganizer" :size="responsiveUISizes.button"
                         to="/dashboard/aspirations/create">
-                        {{ $ts('create_aspiration') }}
+                        {{ 'Create Aspiration' }}
                     </UButton>
                 </div>
             </template>
@@ -461,7 +459,7 @@ const links = computed(() => [{
                         </UButton>
                         <div class="flex flex-col items-center gap-2">
                             <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">{{
-                                $ts('show_deleted')
+                                'Tampilkan yang Dihapus'
                             }}</label>
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </div>
@@ -510,12 +508,12 @@ const links = computed(() => [{
             <template #footer>
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
-                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page') }}</span>
+                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ 'Baris per Halaman' }}</span>
                         <USelect v-model="pagination.pageSize" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
+                            {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end: pageTo, total: pageTotal } */ }}
                         </span>
                     </div>
                     <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"

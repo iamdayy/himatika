@@ -10,8 +10,6 @@ const { data: dataConfig } = useFetch<IConfigResponse>('/api/config', {
     server: true,
 });
 const toast = useToast();
-const { $ts } = useI18n();
-
 const config = computed(() => dataConfig.value?.data);
 
 const { data: tagsData } = useAsyncData('tags', () => $fetch<ITagsResponse>('/api/message/tags'));
@@ -36,10 +34,10 @@ const sendMessage = async () => {
 
         });
         if (response.data.value?.statusCode === 200) {
-            toast.add({ title: $ts('success'), description: $ts('contact_message_success'), color: "success" });
+            toast.add({ title: 'Berhasil!', description: 'Contact Message Success', color: "success" });
         }
     } catch (error) {
-        toast.add({ title: $ts('failed'), description: $ts('contact_message_failed'), color: "warning" })
+        toast.add({ title: 'Failed', description: 'Contact Message Failed', color: "warning" })
     }
 }
 const tagsOptions = computed({
@@ -98,12 +96,12 @@ const responsiveUISizes = computed<{ [key: string]: 'lg' | 'md' }>(() => ({
     <div class="flex items-center justify-center">
         <div class="text-center">
             <h1 class="mb-8 text-2xl font-semibold text-gray-800 md:text-4xl md:font-bold dark:text-gray-200">
-                {{ $ts('contact_message') }}
+                {{ 'Contact Message' }}
             </h1>
             <div class="space-x-4">
                 <UButton variant="solid" :size="responsiveUISizes.button" icon="i-heroicons-envelope" target="_blank"
                     :to="`mailto:${config?.contact.email}`">
-                    {{ $ts('email_me') }}
+                    {{ 'Email Me' }}
                 </UButton>
                 <UButton color="neutral" variant="outline" :size="responsiveUISizes.button" icon="i-heroicons-phone"
                     target="_blank" :to="`https://wa.me/${config?.contact.phone}`">
@@ -112,7 +110,7 @@ const responsiveUISizes = computed<{ [key: string]: 'lg' | 'md' }>(() => ({
             </div>
         </div>
     </div>
-    <USeparator :label="$ts('or')" class="my-8" :ui="{ label: 'text-lg' }" />
+    <USeparator :label="'atau'" class="my-8" :ui="{ label: 'text-lg' }" />
     <UCard>
         <UForm :state="form" @submit="sendMessage">
             <div class="grid grid-cols-2 gap-2 mb-2 md:gap-4 md:mb-4">
@@ -171,7 +169,7 @@ const responsiveUISizes = computed<{ [key: string]: 'lg' | 'md' }>(() => ({
 
             <UButton type="submit" block class="my-4" :size="responsiveUISizes.button">
 
-                {{ $ts('send_message') }}
+                {{ 'Send Message' }}
             </UButton>
         </UForm>
     </UCard>

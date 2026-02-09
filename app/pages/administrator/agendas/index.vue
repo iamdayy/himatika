@@ -33,7 +33,7 @@ const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
-const { $api, $pageGuide, $ts } = useNuxtApp();
+const { $api, $pageGuide } = useNuxtApp();
 const page = ref(0);
 const perPage = ref(0);
 const upcomingOnly = ref(false);
@@ -199,29 +199,29 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
     input: isMobile.value ? 'xs' : 'md',
 }));
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 },
 {
-    label: $ts('administrator'),
+    label: 'Administrator',
     icon: 'i-heroicons-shield-check',
 },
 {
-    label: $ts('agendas'),
+    label: 'Agendas',
     icon: 'i-heroicons-calendar',
 }]);
 const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
     const options: DropdownMenuItem[][] = [
         [
             {
-                label: $ts('open'),
+                label: 'Buka',
                 icon: 'i-heroicons-eye',
                 to: `/administrator/agendas/${agenda.value?._id}`,
                 target: '_blank'
             },
             {
-                label: $ts('copy-link'),
+                label: 'Copy-Link',
                 icon: 'i-heroicons-clipboard',
                 onSelect: () => {
                     navigator.clipboard.writeText(`${window.location.origin}/agendas/${agenda.value?._id}`);
@@ -232,7 +232,7 @@ const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
                 },
             },
             {
-                label: $ts('share'),
+                label: 'Bagikan',
                 icon: 'i-heroicons-share',
                 onSelect: () => navigator.share({
                     title: agenda.value?.title,
@@ -243,13 +243,13 @@ const dropdownOptions = computed<DropdownMenuItem[][]>(() => {
         ]]
     if (isOrganizer) {
         options[0]!.push({
-            label: $ts('edit'),
+            label: 'Edit',
             icon: 'i-heroicons-pencil',
             to: `/administrator/agendas/${agenda.value?._id}/edit`,
         });
         options.push([
             {
-                label: $ts('delete'),
+                label: 'Hapus',
                 icon: 'i-heroicons-trash',
                 onSelect: async () => deleteModal()
             }
@@ -316,7 +316,7 @@ const selectDate = (date: Date) => {
             <template #header>
                 <div class="flex flex-row items-center justify-between gap-2 p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">{{
-                        $ts('agenda') }}
+                        'Agenda' }}
                     </h1>
                     <div class="min-w-24">
                         <UButton label="New" id="add-agenda" :size="responsiveUISizes.button"
@@ -369,7 +369,7 @@ const selectDate = (date: Date) => {
                     :class="['px-4 py-4 border-gray-400 w-full', responsiveClasses.eventDetailsWrapper]">
                     <h5 v-if="!agenda"
                         class="my-12 mb-4 text-2xl font-semibold text-center text-yellow-300 dark:text-yellow-200">
-                        {{ $ts('noAgendaSelected') }}
+                        {{ 'NoAgendaSelected' }}
                     </h5>
                     <div v-else>
                         <div class="flex items-center justify-between">
@@ -421,7 +421,7 @@ const selectDate = (date: Date) => {
                                 <UButton color="neutral" variant="link" :size="responsiveUISizes.button"
                                     icon="i-heroicons-arrow-long-right" :to="`/administrator/agendas/${agenda._id}`"
                                     trailing>
-                                    {{ $ts('seeMore') }}
+                                    {{ 'SeeMore' }}
                                 </UButton>
                             </li>
                         </ul>

@@ -16,7 +16,7 @@
                                 <Icon
                                     :name="aspiration.archived ? 'i-heroicons-archive-box' : 'i-heroicons-archive-box-arrow-down'" />
                             </template>
-                            {{ aspiration.archived ? $ts('unarchive') : $ts('archive') }}
+                            {{ aspiration.archived ? 'Batalkan Arsip' : 'Arsipkan' }}
                         </UButton>
                         <UButton color="error" variant="outline" @click="deleteAspiration"
                             :disabled="!isMine || !isOrganizer">
@@ -24,7 +24,7 @@
                                 <Icon
                                     :name="aspiration.deleted ? 'i-heroicons-arrow-uturn-left' : 'i-heroicons-trash'" />
                             </template>
-                            {{ aspiration.deleted ? $ts('restore') : $ts('delete') }}
+                            {{ aspiration.deleted ? 'Pulihkan' : 'Hapus' }}
                         </UButton>
                     </div>
                 </div>
@@ -38,9 +38,9 @@
                 <USeparator />
 
                 <div>
-                    <h2 class="mb-2 text-xl font-semibold">{{ $ts('from') }}</h2>
+                    <h2 class="mb-2 text-xl font-semibold">{{ 'dari' }}</h2>
                     <div v-if="aspiration.anonymous">
-                        <UBadge color="neutral">{{ $ts('anonymous') }}</UBadge>
+                        <UBadge color="neutral">{{ 'Anonim' }}</UBadge>
                     </div>
                     <div v-else-if="typeof aspiration.from === 'object' && aspiration.from !== null">
                         <p><strong>Name:</strong> {{ (aspiration.from as IMember).fullName }}</p>
@@ -72,18 +72,19 @@
                     <div class="flex items-center justify-between w-full gap-3">
                         <UButton class="flex-1" v-if="isMine" color="secondary" block variant="solid"
                             :size="responsiveUISizes.button" icon="i-heroicons-photo" @click="addPhoto">{{
-                                $ts('add', { key: $ts('photo') }) }}
+                                'Tambah' /* params: { key: 'Foto' } */ }}
                         </UButton>
                         <UButton class="flex-1" v-if="isMine" color="secondary" block variant="solid"
                             :size="responsiveUISizes.button" icon="i-heroicons-film" @click="addVideo">{{
-                                $ts('add', { key: $ts('video') }) }}
+                                'Tambah' /* params: { key: 'Video' } */ }}
                         </UButton>
                     </div>
                     <UButton class="flex-1" v-if="isMine" color="neutral" block variant="solid"
-                        :size="responsiveUISizes.button" icon="i-heroicons-document" @click="addDoc">{{ $ts('add', {
-                            key:
-                                $ts('document')
-                        }) }}
+                        :size="responsiveUISizes.button" icon="i-heroicons-document" @click="addDoc">{{ 'Tambah' /*
+                        params: {
+                        key:
+                        'Dokumen'
+                        } */ }}
                     </UButton>
                 </div>
             </template>
@@ -93,7 +94,7 @@
             <template #header>
                 <h2
                     :class="['font-normal leading-tight text-gray-800 dark:text-gray-200 ms-2', responsiveClasses.listTitle]">
-                    {{ $ts('proof') }}
+                    {{ 'Bukti' }}
                 </h2>
             </template>
             <UTabs :items="items" class="w-full">
@@ -101,7 +102,7 @@
                     <div v-if="item.key === 'photos'">
                         <div class="flex flex-col gap-2 mt-4" v-if="photos">
                             <div v-if="!photos.length" class="flex items-center justify-center">
-                                <span>{{ $ts('no_available', { key: $ts('photo') }) }}</span>
+                                <span>{{ 'No Available' /* params: { key: 'Foto' } */ }}</span>
                             </div>
                             <div v-else>
                                 <div class="flex flex-wrap gap-4">
@@ -152,7 +153,7 @@
                     <div v-if="item.key === 'videos'">
                         <div class="flex flex-col gap-2 mt-4">
                             <div v-if="!groupedVideos" class="flex items-center justify-center">
-                                <span>{{ $ts('no_available', { key: $ts('video') }) }}</span>
+                                <span>{{ 'No Available' /* params: { key: 'Video' } */ }}</span>
                             </div>
                             <div v-else>
                                 <div class="flex flex-wrap gap-3">
@@ -202,7 +203,7 @@
                     <div v-if="item.key === 'docs'">
                         <div class="flex flex-col gap-2 mt-4">
                             <div v-if="!docs" class="flex items-center justify-center">
-                                <span>{{ $ts('no_available', { key: $ts('docs') }) }}</span>
+                                <span>{{ 'No Available' }}</span>
                             </div>
                             <div v-else>
                                 <div v-if="docs.length">
@@ -300,7 +301,6 @@ const items = computed(() => [
     }
 ]);
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const { data, refresh } = useLazyAsyncData<IAspirationResponse>('aspiration', () => $api(`api/aspiration`, {
     query: { id },
 }));
@@ -362,15 +362,15 @@ const vote = async (voteType: 'upvote' | 'downvote') => {
 
 const archiveAspiration = async () => {
     ConfirmationModal.open({
-        title: aspiration.value.archived ? $ts('unarchive') : $ts('archive'),
-        body: aspiration.value.archived ? $ts('unarchive_aspiration_description') : $ts('archive_aspiration_description'),
+        title: aspiration.value.archived ? 'Batalkan Arsip' : 'Arsipkan',
+        body: aspiration.value.archived ? 'Unarchive Aspiration Description' : 'Archive Aspiration Description',
         onConfirm: async () => {
             try {
                 const response = await $api<IResponse>(`/api/aspiration/${id}/archive`, {
                     method: 'GET',
                 });
                 toast.add({
-                    title: $ts(aspiration.value.archived ? 'aspiration_unarchived' : 'aspiration_archived'),
+                    title: aspiration.value.archived ? 'Aspirasi berhasil dipulihkan' : 'Aspirasi berhasil diarsipkan',
                     color: 'success',
                 });
             } catch (error: any) {
@@ -389,8 +389,8 @@ const archiveAspiration = async () => {
 
 const deleteAspiration = () => {
     ConfirmationModal.open({
-        title: aspiration.value.deleted ? $ts('restore') : $ts('delete'),
-        body: aspiration.value.deleted ? $ts('restore_aspiration_description') : $ts('delete_aspiration_description'),
+        title: aspiration.value.deleted ? 'Pulihkan' : 'Hapus',
+        body: aspiration.value.deleted ? 'Restore Aspiration Description' : 'Delete Aspiration Description',
         onConfirm: async () => {
             try {
                 const response = await $api<IResponse>(`/api/aspiration`, {
@@ -398,7 +398,7 @@ const deleteAspiration = () => {
                     query: { id },
                 });
                 toast.add({
-                    title: $ts(aspiration.value.deleted ? 'aspiration_restored' : 'aspiration_deleted'),
+                    title: aspiration.value.deleted ? 'Aspirasi berhasil dipulihkan' : 'Aspirasi berhasil dihapus',
                     color: 'success',
                 });
             } catch (error: any) {
@@ -480,8 +480,8 @@ const videoOptions = (url: string) => ({
 
 const deletePhoto = (id: string) => {
     ConfirmationModal.open({
-        title: $ts('delete', { key: $ts('photo') }),
-        body: $ts('delete_confirmation', { key: $ts('photo') }),
+        title: 'Hapus' /* params: { key: 'Foto' } */,
+        body: 'Apakah Anda yakin ingin menghapus {key} ini?' /* params: { key: 'Foto' } */,
         onConfirm: () => {
             $api<IResponse>(`/api/photo`, {
                 method: 'delete',
@@ -510,8 +510,8 @@ const deletePhoto = (id: string) => {
 
 const deleteVideo = (id: string) => {
     ConfirmationModal.open({
-        title: $ts('delete', { key: $ts('video') }),
-        body: $ts('delete_confirmation', { key: $ts('video') }),
+        title: 'Hapus' /* params: { key: 'Video' } */,
+        body: 'Apakah Anda yakin ingin menghapus {key} ini?' /* params: { key: 'Video' } */,
         onConfirm: () => {
             $api<IResponse>(`/api/video`, {
                 method: 'delete',
@@ -552,8 +552,8 @@ const download = (title: string, file: string) => {
 };
 const deleteDoc = async (id: string) => {
     ConfirmationModal.open({
-        title: $ts('delete', { key: $ts('document') }),
-        body: $ts('delete_confirmation', { key: $ts('document') }),
+        title: 'Hapus' /* params: { key: 'Dokumen' } */,
+        body: 'Apakah Anda yakin ingin menghapus {key} ini?' /* params: { key: 'Dokumen' } */,
         onConfirm: async () => {
             try {
                 const deleted = await $api<IResponse>(`/api/doc`, {
@@ -641,8 +641,8 @@ const openImageModal = (photo: IPhoto) => {
         onRemove() {
             photoId.value = photo._id as string;
             ConfirmationModal.open({
-                title: $ts('delete', { key: $ts('photo') }),
-                body: $ts('delete_confirmation', { key: $ts('photo') }),
+                title: 'Hapus' /* params: { key: 'Foto' } */,
+                body: 'Apakah Anda yakin ingin menghapus {key} ini?' /* params: { key: 'Foto' } */,
                 onConfirm: () => {
                     $api<IResponse>(`/api/photo`, {
                         method: 'delete',
@@ -676,12 +676,12 @@ const openImageModal = (photo: IPhoto) => {
 
 const photosDropdownItems = (photo: IPhoto) => [[
     {
-        label: $ts('view'),
+        label: 'Lihat',
         icon: 'i-heroicons-eye',
         click: () => openImageModal(photo)
     },
     {
-        label: $ts('delete'),
+        label: 'Hapus',
         icon: 'i-heroicons-trash',
         disabled: !isMine.value,
         click: () => deletePhoto(photo._id as string)
@@ -694,7 +694,7 @@ const videosDropdownItems = (video: IVideo) => [[
     //     click: () => openImageModal(photo)
     // },
     {
-        label: $ts('delete'),
+        label: 'Hapus',
         icon: 'i-heroicons-trash',
         disabled: !isMine.value,
         click: () => deleteVideo(video._id as string)
@@ -702,12 +702,12 @@ const videosDropdownItems = (video: IVideo) => [[
 ]]
 const docsDropdownItems = (doc: IDoc) => [[
     {
-        label: $ts('download'),
+        label: 'Unduh',
         icon: 'i-heroicons-arrow-down-tray',
         onSelect: () => download(doc.label, doc.doc as string)
     },
     {
-        label: $ts('delete'),
+        label: 'Hapus',
         icon: 'i-heroicons-trash',
         disabled: !isMine.value,
         onSelect: () => deleteDoc(doc._id as string)

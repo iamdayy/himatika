@@ -4,7 +4,7 @@ import type { ITagsResponse } from '~~/types/IResponse';
 /**
  * Composables
  */
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const toast = useToast();
 
 const { data } = useAsyncData(() => $api<ITagsResponse>("/api/doc/tags"));
@@ -50,7 +50,7 @@ const doc = ref<IDoc>({
 const addDoc = async () => {
     if (!file.value) {
         toast.add({
-            title: $ts('file_required'),
+            title: 'File Required',
             color: 'error'
         });
     }
@@ -107,7 +107,7 @@ const uiSize = computed(() => isMobile.value ? 'sm' : isTablet.value ? 'md' : 'l
 
 </script>
 <template>
-    <UModal :fullscreen="isMobile" :title="$ts('add_doc')">
+    <UModal :fullscreen="isMobile" :title="'Add Doc'">
         <template #body>
 
             <div :class="['space-y-6 text-start', responsiveClasses.container]">
@@ -131,7 +131,7 @@ const uiSize = computed(() => isMobile.value ? 'sm' : isTablet.value ? 'md' : 'l
                     </div>
 
                     <!-- Tags input -->
-                    <UFormField :class="responsiveClasses.halfSpan" :label="$ts('tags')">
+                    <UFormField :class="responsiveClasses.halfSpan" :label="'Tag'">
                         <USelectMenu v-model="tags" :items="tagsOptions" multiple create-item @create="addNewTag"
                             name="tag" placeholder="Select Tags" />
                     </UFormField>

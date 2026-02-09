@@ -3,23 +3,23 @@
         <UBreadcrumb :items="links" />
         <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
             <template #header>
-                <h1 class="text-2xl font-bold text-gray-600 dark:text-white md:text-3xl">{{ $ts('news') }}</h1>
+                <h1 class="text-2xl font-bold text-gray-600 dark:text-white md:text-3xl">{{ 'Berita' }}</h1>
                 <div class="my-4">
                     <UInput v-model="searchQuery" icon="i-heroicons-magnifying-glass" :size="responsiveUISizes.input"
-                        :placeholder="$ts('search')" class="mb-4 sm:mb-0 sm:w-64" />
+                        :placeholder="'Cari...'" class="mb-4 sm:mb-0 sm:w-64" />
                     <div class="flex flex-col gap-2 mt-4 md:items-center md:justify-between md:flex-row">
                         <div class="flex flex-row gap-2">
-                            <USelect v-model="sort" :items="sortOptions" label="sort" :placeholder="$ts('search')" />
+                            <USelect v-model="sort" :items="sortOptions" label="sort" :placeholder="'Cari...'" />
                             <UButton :size="responsiveUISizes.button" variant="ghost"
                                 :icon="order == 'asc' ? 'i-heroicons-arrow-up' : order == 'desc' ? 'i-heroicons-arrow-down' : 'i-heroicons-arrows-up-down'"
                                 @click="order = order == '' ? 'asc' : order == 'asc' ? 'desc' : ''" />
                         </div>
                         <div class="flex flex-col gap-2 md:flex-row">
                             <USelectMenu v-model="selectedTags" :size="responsiveUISizes.select" :items="tags" multiple
-                                :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full md:w-48" />
+                                :placeholder="'Filter berdasarkan {key}' /* params: { key: 'tags' } */" class="w-full md:w-48" />
                             <USelectMenu v-model="selectedCategory" :size="responsiveUISizes.select"
                                 :items="categoryOptions" option-attribute="title" by="title"
-                                :placeholder="$ts('filter_by', { key: 'category' })" multiple class="w-full md:w-48" />
+                                :placeholder="'Filter berdasarkan {key}' /* params: { key: 'category' } */" multiple class="w-full md:w-48" />
                             <UButton color="primary" variant="ghost" icon="i-heroicons-arrow-path" @click="refresh()">
                             </UButton>
                         </div>
@@ -47,7 +47,7 @@
                             <h1 class="mb-2 text-3xl font-bold text-gray-600 dark:text-gray-200">{{
                                 mainArticle.title }}</h1>
                             <div class="flex items-center gap-2 px-2 md:px-4">
-                                <span class="font-semibold text-gray-600 dark:text-gray-300">{{ $ts('by') }}</span>
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">{{ 'oleh' }}</span>
                                 <UAvatarGroup size="2xs" :max="3">
                                     <UAvatar v-for="member in mainArticle.authors" :key="(member as IMember).NIM"
                                         :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
@@ -79,11 +79,11 @@
                                     </div>
                                     <span class="mx-2">•</span>
                                     <ClientOnly>
-                                        <span>{{ calculateReadingTime(mainArticle.body) }} {{ $ts('min_read') }}</span>
+                                        <span>{{ calculateReadingTime(mainArticle.body) }} {{ 'Menit Baca' }}</span>
                                     </ClientOnly>
                                 </div>
                                 <UButton color="neutral" variant="subtle" :to="`/news/${mainArticle.slug}`">
-                                    {{ $ts('read_more') }}
+                                    {{ 'Baca Selengkapnya' }}
                                 </UButton>
                             </div>
                         </div>
@@ -104,7 +104,7 @@
                             <NuxtLink :to="`/news/${news.slug}`" class="mb-2 text-lg font-semibold">{{ news.title }}
                             </NuxtLink>
                             <div class="flex items-center gap-2 px-2 md:px-4">
-                                <span class="text-xs text-gray-700 dark:text-gray-300">{{ $ts('by') }}</span>
+                                <span class="text-xs text-gray-700 dark:text-gray-300">{{ 'oleh' }}</span>
                                 <UAvatarGroup size="3xs" :max="3">
                                     <UAvatar v-for="member in news.authors" :key="(member as IMember).NIM"
                                         :src="(member as IMember).avatar" :alt="(member as IMember).fullName"
@@ -134,7 +134,7 @@
                             <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
                                 <div>
                                     <h1 class="font-medium">
-                                        {{ $ts('published_at') }}: </h1>
+                                        {{ 'Dipublikasikan pada' }}: </h1>
                                     <h1 class="font-light">
                                         {{
                                             news.published ?
@@ -145,7 +145,7 @@
                                         }}</h1>
                                 </div>
                                 <ClientOnly>
-                                    <h2>{{ calculateReadingTime(news.body) }} {{ $ts('min_read') }}</h2>
+                                    <h2>{{ calculateReadingTime(news.body) }} {{ 'Menit Baca' }}</h2>
                                 </ClientOnly>
                             </div>
                         </template>
@@ -210,7 +210,6 @@ const selectedTags = ref([]);
 const sort = ref('publishedAt');
 const order = ref('');
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const toast = useToast();
 
 const { data: dataTags } = useAsyncData('tags', () => $fetch<ITagsResponse>('/api/news/tags'));
@@ -233,8 +232,8 @@ const ip = await $fetch('/api/ip');
 
 
 const sortOptions = [
-    { label: $ts('date'), value: 'publishedAt' },
-    { label: $ts('title'), value: 'title' },
+    { label: 'Tanggal', value: 'publishedAt' },
+    { label: 'Judul', value: 'title' },
 ]
 
 
@@ -324,11 +323,11 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
     prose: isMobile.value ? 'xs' : 'md',
 }));
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('news'),
+    label: 'Berita',
     icon: 'i-heroicons-clipboard-document-list',
 }]);
 </script>

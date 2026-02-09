@@ -18,9 +18,6 @@ const sort = ref('');
 const order = ref('');
 
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
-
-
 const page = ref(1);
 const perPage = ref(9);
 
@@ -75,9 +72,9 @@ const editOptions = (doc: IDoc) => [
     <UCard class="mt-2">
         <template #header>
             <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                {{ $ts('document') }}
+                {{ 'Dokumen' }}
             </h1>
-            <p>{{ $ts('gallery_document_description') }}</p>
+            <p>{{ 'Gallery Document Description' }}</p>
         </template>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-4" v-if="pending">

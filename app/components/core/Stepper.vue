@@ -46,7 +46,7 @@
                 <!-- Validation warning message -->
                 <UAlert v-if="showValidationAlert" color="error" class="mb-4">
                     <template #title>
-                        {{ $ts('failed') }}
+                        {{ 'Failed' }}
                     </template>
                     <template #description>
                         <div class="flex items-center">

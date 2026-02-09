@@ -4,7 +4,7 @@ import type { SelectItem } from '@nuxt/ui';
 
 
 definePageMeta({ layout: 'dashboard', middleware: ['sidebase-auth', 'organizer'] });
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const toast = useToast();
 const overlay = useOverlay();
 
@@ -21,9 +21,9 @@ const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.val
 const pageCountOptions = computed(() => [10, 20, 50, 100, 200, pageTotal.value || 0]);
 const status = ref<'pending' | 'approved' | 'rejected'>();
 const statusOptions = computed<SelectItem[]>(() => [
-    { label: $ts('pending'), value: 'pending' },
-    { label: $ts('approved'), value: 'approved' },
-    { label: $ts('rejected'), value: 'rejected' }
+    { label: 'Pending', value: 'pending' },
+    { label: 'Disetujui', value: 'approved' },
+    { label: 'Rejected', value: 'rejected' }
 ]);
 
 // Fetch Pending Requests
@@ -98,7 +98,7 @@ const decide = async (action: 'approve' | 'reject') => {
 };
 
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
@@ -115,7 +115,7 @@ const links = computed(() => [{
                 <div class="flex items-center justify-between">
                     <h1 class="text-2xl font-bold">Validasi Prestasi Masuk</h1>
                     <div class="flex items-center gap-2">
-                        <USelect v-model="status" :items="statusOptions" :placeholder="$ts('status')" />
+                        <USelect v-model="status" :items="statusOptions" :placeholder="'Status'" />
                         <UButton variant="ghost" @click="openAddAchievementModal">
                             Tambah Prestasi Baru
                         </UButton>

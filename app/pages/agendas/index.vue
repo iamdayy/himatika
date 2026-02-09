@@ -16,7 +16,6 @@ type groupedAgendas = {
 
 const { width } = useWindowSize();
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
@@ -103,8 +102,8 @@ const pageFrom = computed(() => (page.value! - 1) * perPage.value! + 1)
 const pageTo = computed(() => Math.min(page.value! * perPage.value!, pageTotal.value || 0))
 
 const sortOptions = [
-    { label: $ts('date'), value: 'date' },
-    { label: $ts('title'), value: 'title' },
+    { label: 'Tanggal', value: 'date' },
+    { label: 'Judul', value: 'title' },
 ];
 
 const changeOrder = () => {
@@ -134,17 +133,17 @@ const dropdownOptions = (agenda: IAgenda) => {
     const options = [
         [
             {
-                label: $ts('view'),
+                label: 'Lihat',
                 icon: 'i-heroicons-eye',
                 click: () => router.push(`/agendas/${agenda?._id}`)
             },
             {
-                label: $ts('copy_link'),
+                label: 'Salin Tautan',
                 icon: 'i-heroicons-clipboard',
                 click: () => navigator.clipboard.writeText(`${window.location.origin}/agendas/${agenda?._id}`),
             },
             {
-                label: $ts('share'),
+                label: 'Bagikan',
                 icon: 'i-heroicons-share',
                 click: () => navigator.share({
                     title: agenda?.title,
@@ -157,7 +156,7 @@ const dropdownOptions = (agenda: IAgenda) => {
 };
 const dropdownFilterOptions = computed(() => [
     {
-        label: $ts('only_open_registration'),
+        label: 'Only Open Registration',
         icon: 'i-heroicons-check',
         type: 'checkbox' as const,
         checked: upcomingOnly.value,
@@ -167,7 +166,7 @@ const dropdownFilterOptions = computed(() => [
         }
     },
     {
-        label: $ts('only_paid'),
+        label: 'Only Paid',
         icon: 'i-heroicons-credit-card',
         type: 'checkbox' as const,
         checked: showPaidOnly.value,
@@ -177,7 +176,7 @@ const dropdownFilterOptions = computed(() => [
         }
     },
     {
-        label: $ts('only_free'),
+        label: 'Only Free',
         icon: 'i-heroicons-cash',
         type: 'checkbox' as const,
         checked: showFreeOnly.value,
@@ -187,7 +186,7 @@ const dropdownFilterOptions = computed(() => [
         }
     },
     {
-        label: $ts('reset_filter'),
+        label: 'Reset Filter',
         icon: 'i-heroicons-x-mark',
         type: 'link' as const,
         click: () => {
@@ -201,7 +200,7 @@ const dropdownFilterOptions = computed(() => [
         }
     },
     {
-        label: $ts('refresh'),
+        label: 'Refresh',
         icon: 'i-heroicons-arrow-path',
         type: 'link' as const,
         click: () => refreshAgendas()
@@ -241,11 +240,11 @@ function formatCurrency(amount: number): string {
     }).format(amount)
 };
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
 }]);
 </script>
@@ -289,24 +288,24 @@ const links = computed(() => [{
                             <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                                 <USelectMenu v-model="selectedCategory" :size="responsiveUISizes.select"
                                     :items="categoryOptions" value-key="value" label-key="title"
-                                    :placeholder="$ts('filter_by', { key: 'category' })" class="min-w-[150px]"
+                                    :placeholder="'Filter berdasarkan {key}' /* params: { key: 'category' } */" class="min-w-[150px]"
                                     icon="i-heroicons-tag" />
                                 <USelectMenu v-model="selectedTags" :size="responsiveUISizes.select" :items="tags"
-                                    multiple :placeholder="$ts('filter_by', { key: 'tags' })" class="min-w-[150px]"
+                                    multiple :placeholder="'Filter berdasarkan {key}' /* params: { key: 'tags' } */" class="min-w-[150px]"
                                     icon="i-heroicons-hashtag" />
                                 <UPopover :popper="{ placement: 'bottom-start' }">
                                     <UButton icon="i-heroicons-adjustments-horizontal" color="neutral" variant="soft"
-                                        :label="$ts('filter') || 'Filter'" />
+                                        :label="'Filter' || 'Filter'" />
                                     <template #content>
                                         <div class="p-4 space-y-3 min-w-[200px]">
                                             <h4 class="font-semibold text-sm mb-2 text-gray-900 dark:text-white">Status
                                             </h4>
                                             <div class="space-y-2">
-                                                <UCheckbox v-model="upcomingOnly" :label="$ts('only_open_registration')"
+                                                <UCheckbox v-model="upcomingOnly" :label="'Only Open Registration'"
                                                     color="primary" />
-                                                <UCheckbox v-model="showPaidOnly" :label="$ts('only_paid')"
+                                                <UCheckbox v-model="showPaidOnly" :label="'Only Paid'"
                                                     color="primary" />
-                                                <UCheckbox v-model="showFreeOnly" :label="$ts('only_free')"
+                                                <UCheckbox v-model="showFreeOnly" :label="'Only Free'"
                                                     color="primary" />
                                             </div>
                                             <USeparator class="my-2" />
@@ -327,7 +326,7 @@ const links = computed(() => [{
                                         showFreeOnly = false;
                                         refreshAgendas();
                                     }">
-                                    {{ $ts('reset_filter') }}
+                                    {{ 'Reset Filter' }}
                                 </UButton>
                             </div>
 
@@ -398,7 +397,7 @@ const links = computed(() => [{
                                                 </UBadge>
                                                 <UBadge v-if="isRegistrationOpen(agenda)" color="primary"
                                                     variant="solid" size="xs" class="shadow-sm">
-                                                    {{ $ts('open') }}
+                                                    {{ 'Buka' }}
                                                 </UBadge>
                                             </div>
 
@@ -410,7 +409,7 @@ const links = computed(() => [{
                                                 </div>
                                                 <div v-else
                                                     class="bg-green-500/90 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md border border-white/20 shadow-sm">
-                                                    {{ $ts('free') }}
+                                                    {{ 'Gratis' }}
                                                 </div>
                                             </div>
                                         </div>
@@ -448,19 +447,19 @@ const links = computed(() => [{
                                         <template #footer>
                                             <div class="flex items-center justify-between text-xs text-gray-500">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="flex items-center gap-1" :title="$ts('participant')"
+                                                    <div class="flex items-center gap-1" :title="'Peserta'"
                                                         v-if="agenda.participants">
                                                         <UIcon name="i-heroicons-user-group" class="w-3.5 h-3.5" />
                                                         {{ agenda.participants.length }}
                                                     </div>
-                                                    <div class="flex items-center gap-1" :title="$ts('committee')"
+                                                    <div class="flex items-center gap-1" :title="'Panitia'"
                                                         v-if="agenda.committees">
                                                         <UIcon name="i-heroicons-users" class="w-3.5 h-3.5" />
                                                         {{ agenda.committees.length }}
                                                     </div>
                                                 </div>
                                                 <div class="text-primary-500 font-medium group-hover:underline">
-                                                    {{ $ts('see_more') }} &rarr;
+                                                    {{ 'Lihat Selengkapnya' }} &rarr;
                                                 </div>
                                             </div>
                                         </template>
@@ -503,7 +502,7 @@ const links = computed(() => [{
                                                         </h3>
                                                         <UBadge v-if="isRegistrationOpen(agenda)" color="primary"
                                                             variant="subtle" size="xs">
-                                                            {{ $ts('open') }}
+                                                            {{ 'Buka' }}
                                                         </UBadge>
                                                     </div>
 
@@ -538,13 +537,13 @@ const links = computed(() => [{
                                                         </span>
                                                         <span v-else
                                                             class="font-bold text-green-600 dark:text-green-400">
-                                                            {{ $ts('free') }}
+                                                            {{ 'Gratis' }}
                                                         </span>
                                                     </div>
                                                     <UButton variant="ghost" color="neutral"
                                                         icon="i-heroicons-arrow-right" trailing
                                                         class="group-hover:translate-x-1 transition-transform">
-                                                        {{ $ts('details') }}
+                                                        {{ 'Details' }}
                                                     </UButton>
                                                 </div>
                                             </div>

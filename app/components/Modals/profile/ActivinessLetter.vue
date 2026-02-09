@@ -21,10 +21,6 @@ const { data: ActivinessLetters, refresh: refreshActivinessLetterData, pending: 
 });
 
 const { makeActivinessLetter } = useMakeDocs();
-
-const { $ts } = useI18n();
-
-
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 const { data: fullProfile } = await useAsyncData('fullProfile', () => $api<IMeResponse>('/api/me'), {
@@ -48,22 +44,22 @@ const points = computed<IPointWithDisabledAndDoc[]>(() => {
 
 const generate = async (point: IPointWithDisabledAndDoc) => {
     if (point.disabled) {
-        toast.add({ title: $ts('activity_letter_already_generated'), color: 'warning' });
+        toast.add({ title: 'Activity Letter Already Generated', color: 'warning' });
         return;
     }
     ConfirmationModal.open({
-        title: $ts('generate_activiness_letter'),
-        body: $ts('generate_activiness_letter_confirm'),
+        title: 'Generate Activiness Letter',
+        body: 'Generate Activiness Letter Confirm',
         onConfirm: async () => {
             ConfirmationModal.close();
             loading.value = true;
             try {
                 await makeActivinessLetter(point);
                 refreshActivinessLetterData();
-                toast.add({ title: $ts('generate_activiness_letter_success'), color: 'success' });
+                toast.add({ title: 'Generate Activiness Letter Success', color: 'success' });
             } catch (error) {
                 console.error(error);
-                toast.add({ title: $ts('generate_activiness_letter_failed'), color: 'error' });
+                toast.add({ title: 'Generate Activiness Letter Failed', color: 'error' });
             } finally {
                 loading.value = false;
             }
@@ -82,30 +78,30 @@ const canDownload = (point: IPointWithDisabledAndDoc) => {
 const downloadActivinessLetter = (point: IPointWithDisabledAndDoc) => {
     const ActivinessLetter = ActivinessLetters.value?.find(doc => doc.tags.includes(`Semester ${point.semester}`));
     if (!ActivinessLetter) {
-        toast.add({ title: $ts('activity_letter_not_found'), color: 'error' });
+        toast.add({ title: 'Activity Letter Not Found', color: 'error' });
         return false;
     }
     if (ActivinessLetter.signs?.some(sign => !sign.signed)) {
-        toast.add({ title: $ts('document_not_signed'), color: 'error' });
+        toast.add({ title: 'Document Not Signed', color: 'error' });
         return;
     }
     const link = document.createElement('a');
     link.href = ActivinessLetter.doc as string;
     link.download = ActivinessLetter.label + '.pdf';
     link.click();
-    toast.add({ title: $ts('download_success', { document: ActivinessLetter.label }), color: 'success' });
+    toast.add({ title: 'Download Success' /* params: { document: ActivinessLetter.label } */, color: 'success' });
 }
 </script>
 <template>
-    <UModal :title="$ts('generate_activiness_letter')" @close="$emit('refreshTrigger')">
+    <UModal :title="'Generate Activiness Letter'" @close="$emit('refreshTrigger')">
         <template #body="{ close }">
             <div class="flex flex-col gap-4 px-4 py-2">
                 <div class="flex flex-col gap-2">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ $ts('activiness_letter_desc') }}
+                        {{ 'Activiness Letter Desc' }}
                     </p>
                     <p class="text-sm text-red-500 dark:text-red-400">
-                        *{{ $ts('generate_activiness_letter_info', { point: config?.minPoint || 0 }) }}*
+                        *{{ 'Generate Activiness Letter Info' /* params: { point: config?.minPoint || 0 } */ }}*
                     </p>
                 </div>
                 <div class="flex flex-col gap-2" v-if="loadingActivinessLetter || loading">
@@ -121,14 +117,14 @@ const downloadActivinessLetter = (point: IPointWithDisabledAndDoc) => {
                         <div class="flex items-center gap-2">
                             <UButton class="!px-4 !py-2" :loading="loading" variant="outline" v-if="!point.disabled"
                                 @click="generate(point)">{{
-                                    $ts('generate') }}</UButton>
+                                    'Generate' }}</UButton>
                             <UButton class="!px-4 !py-2" :loading="loading" variant="subtle" v-else
                                 :to="`/signatures/${point.doc}`" @click="close">{{
-                                    $ts('view') }}</UButton>
+                                    'Lihat' }}</UButton>
                             <UButton class="!px-4 !py-2" v-if="canDownload(point)" variant="solid"
                                 :disabled="!canDownload(point)" :loading="loading"
                                 @click="downloadActivinessLetter(point)">{{
-                                    $ts('download') }}</UButton>
+                                    'Unduh' }}</UButton>
 
                         </div>
                     </div>

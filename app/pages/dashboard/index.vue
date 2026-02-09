@@ -15,7 +15,6 @@ interface IPoint {
     point?: { point: number }[]; // Ensure point is an array of objects with a 'point' property
     no: number;
 }
-const { $ts, $switchLocale, $getLocale } = useI18n();
 const router = useRouter();
 /**
  * Set page metadata
@@ -29,7 +28,7 @@ definePageMeta({
  * Set page title
  */
 useHead({
-    title: 'Home | Himatika ' + $ts('dashboard')
+    title: 'Home | Himatika ' + 'Dasbor'
 })
 
 /**
@@ -55,7 +54,7 @@ const rankIcon = (rank: number, userNIM: number) => {
 const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
     {
         accessorKey: 'no',
-        header: $ts('rank'),
+        header: 'Rank',
         cell: ({ row }) => {
             return h('span', undefined, [
                 rankIcon(row.index, row.original.nim)
@@ -64,7 +63,7 @@ const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
     },
     {
         accessorKey: 'fullName',
-        header: $ts('fullName'),
+        header: 'FullName',
         cell: ({ row }) => {
             return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.nim}` }, [
                 h(NuxtImg, { src: row.original.avatar || '/img/profile-blank.png', size: 'sm', provider: 'localProvider', class: "object-cover rounded-full max-w-8 aspect-square", loading: 'lazy', alt: row.original.fullName }),
@@ -77,7 +76,7 @@ const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
     },
     {
         accessorKey: 'points',
-        header: $ts('point'),
+        header: 'Poin',
         cell: ({ row }) => {
             if (!row.original.points || row.original.points === 0) {
                 return h('span', {
@@ -91,7 +90,7 @@ const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
     },
     {
         accessorKey: 'badges',
-        header: $ts('badges'),
+        header: 'Badges',
         cell: ({ row }) => {
             return h('div', undefined, [
                 row.original.badges.length > 0
@@ -236,7 +235,7 @@ const color = computed(() => {
                 <div class="flex flex-col w-full gap-2 lg:flex-row">
                     <UCard class="w-full lg:w-1/3" id="card-agendas">
                         <template #header>
-                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('agenda') }}</h2>
+                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ 'Agenda' }}</h2>
                         </template>
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
@@ -249,7 +248,7 @@ const color = computed(() => {
                     </UCard>
                     <UCard class="w-full lg:w-1/3" id="card-projects">
                         <template #header>
-                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('project') }}</h2>
+                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ 'Proyek' }}</h2>
                         </template>
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
@@ -262,7 +261,7 @@ const color = computed(() => {
                     </UCard>
                     <UCard class="w-full lg:w-1/3" id="card-projects">
                         <template #header>
-                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('aspiration') }}</h2>
+                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ 'Aspirasi' }}</h2>
                         </template>
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
@@ -277,7 +276,7 @@ const color = computed(() => {
                 <UCard class="w-full" id="card-point">
                     <template #header>
                         <div class="flex justify-between w-full">
-                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('point') }}</h2>
+                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ 'Poin' }}</h2>
                             <UButton variant="solid" :size="responsiveUISizes.button" color="secondary"
                                 @click="openModelActions">
                                 Add Point
@@ -305,9 +304,9 @@ const color = computed(() => {
         <UCard class="w-full mt-8" id="card-agendas">
             <template #header>
                 <div class="flex justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('agenda') }}</h2>
+                    <h2 class="text-xl font-semibold dark:text-gray-200">{{ 'Agenda' }}</h2>
                     <NuxtLink to="/dashboard/agendas">
-                        {{ $ts('see_more') }}...
+                        {{ 'Lihat Selengkapnya' }}...
                     </NuxtLink>
                 </div>
             </template>
@@ -368,9 +367,9 @@ const color = computed(() => {
         <UCard class="w-full mt-8" id="card-projects">
             <template #header>
                 <div class="flex justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('project') }}</h2>
+                    <h2 class="text-xl font-semibold dark:text-gray-200">{{ 'Proyek' }}</h2>
                     <NuxtLink to="/dashboard/projects">
-                        {{ $ts('see_more') }}...
+                        {{ 'Lihat Selengkapnya' }}...
                     </NuxtLink>
                 </div>
             </template>

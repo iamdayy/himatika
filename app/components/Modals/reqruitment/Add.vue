@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IReqruitment } from '~/types';
+import type { IReqruitment } from '~~/types';
 
 
 // Define emits for parent component communication
@@ -52,11 +52,11 @@ const inputSize = computed(() => {
             <UForm :state="stateReqruitment" @submit="(value) => emit('submit', value.data)">
                 <div class="space-y-6 text-start">
                     <div :class="['grid', 'gap-2', layoutClass]">
-                        <UFormField class="col-span-full" :label="$ts('label')">
+                        <UFormField class="col-span-full" :label="'Label'">
                             <UInput type="text" name="Label" id="Label" placeholder="Reqruitment 1"
                                 v-model="stateReqruitment.label" required class="w-full" :size="inputSize" />
                         </UFormField>
-                        <UFormField class="col-span-full" :label="$ts('description')">
+                        <UFormField class="col-span-full" :label="'Deskripsi'">
                             <UTextarea name="Description" id="Description" placeholder="Description"
                                 v-model="stateReqruitment.description" required class="w-full" :size="inputSize" />
                         </UFormField>
@@ -67,7 +67,7 @@ const inputSize = computed(() => {
 
         <template #footer>
             <div class="flex items-center justify-between w-full">
-                <UButton @click="emit('close')" label="Close" icon="i-heroicons-x-mark" variant="ghost" color="error"
+                <UButton @click="$emit('close')" label="Close" icon="i-heroicons-x-mark" variant="ghost" color="error"
                     :size="buttonSize" />
                 <UButton type="submit" @click="emit('submit', stateReqruitment)" label="Save"
                     icon="i-heroicons-clipboard" trailing :size="buttonSize" />

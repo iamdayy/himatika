@@ -12,7 +12,7 @@ definePageMeta({
 
 const route = useRoute();
 const id = route.params.id as string;
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const toast = useToast();
 const sizes = useResponsiveUiSizes();
 
@@ -60,12 +60,12 @@ const columns = computed<TableColumn<IMember>[]>(() => [
     },
     {
         accessorKey: 'NIM',
-        header: $ts('NIM'),
+        header: 'NIM',
         size: 150,
     },
     {
         accessorKey: 'Name',
-        header: $ts('Nama (Preview)'),
+        header: 'Nama (Preview)',
         size: 100,
     },
     {
@@ -176,11 +176,11 @@ const { data: agenda } = await useAsyncData('admin-agenda-detail',
 
 // Navigation Links
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
     to: '/administrator/agendas'
 },
@@ -190,12 +190,12 @@ const links = computed(() => [{
     to: `/administrator/agendas/${id}`
 },
 {
-    label: $ts('participant'),
+    label: 'Peserta',
     to: `/administrator/agendas/${id}/participant`,
     icon: 'i-heroicons-link'
 },
 {
-    label: $ts('import-participant'),
+    label: 'Import-Participant',
     icon: 'i-heroicons-user-plus',
 }
 ]);
@@ -220,9 +220,10 @@ const links = computed(() => [{
                         Sistem akan otomatis mencocokkan NIM dengan database Member.
                     </template>
                 </UAlert>
-                <UFileUpload @change="handleFileUpload" :label="$ts('drop_zone')"
-                    :description="$ts('drop_zone_hint', { count: 1, format: '.xlsx', size: '5MB' })" layout="list"
-                    position="inside" :max-file-size="5 * 1024 * 1024"
+                <UFileUpload @change="handleFileUpload"
+                    :label="'Seret dan lepas file di sini atau klik untuk mengunggah'"
+                    :description="'Maksimal {size} per file, maksimal {count} file. Format yang didukung: {format}.' /* params: { count: 1, format: '.xlsx', size: '5MB' } */"
+                    layout="list" position="inside" :max-file-size="5 * 1024 * 1024"
                     accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" v-model="file">
                 </UFileUpload>
 

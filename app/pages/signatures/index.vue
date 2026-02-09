@@ -6,7 +6,6 @@ import type { IDocResponse, IResponse } from '~~/types/IResponse';
 const { data: user } = useAuth();
 
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const router = useRouter();
 const { width } = useWindowSize();
 const overlay = useOverlay();
@@ -53,8 +52,8 @@ const viewDoc = (doc: IDoc) => {
 };
 const removeDoc = async (doc: IDoc) => {
     ConfirmationModal.open({
-        title: $ts('remove_doc'),
-        body: $ts('remove_doc_confirmation', { name: doc.label }),
+        title: 'Remove Doc',
+        body: 'Remove Doc Confirmation' /* params: { name: doc.label } */,
         onConfirm: async () => {
             try {
                 const response = await $api<IResponse>('/api/doc', {
@@ -64,12 +63,12 @@ const removeDoc = async (doc: IDoc) => {
                     }
                 });
                 if (response.statusCode === 200) {
-                    toast.add({ title: $ts('success'), description: $ts('success_to_delete_document') });
+                    toast.add({ title: 'Berhasil!', description: 'Success To Delete Document' });
                 } else {
-                    toast.add({ title: $ts('error'), description: $ts('error_to_delete_document'), color: 'error' });
+                    toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Error To Delete Document', color: 'error' });
                 }
             } catch (error) {
-                toast.add({ title: $ts('error'), description: $ts('error_to_delete_document'), color: 'error' });
+                toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Error To Delete Document', color: 'error' });
             } finally {
                 await refresh();
                 ConfirmationModal.close();
@@ -80,44 +79,44 @@ const removeDoc = async (doc: IDoc) => {
 const items = (doc: IDoc): DropdownMenuItem[][] => [
     [
         {
-            label: $ts('view'),
+            label: 'Lihat',
             icon: 'i-heroicons-eye',
             onSelect: () => viewDoc(doc)
         },
         {
-            label: $ts('sign'),
+            label: 'Tandatangani',
             icon: 'i-heroicons-finger-print',
             onSelect: () => router.push(`/signatures/${doc._id}`)
         },
         {
-            label: $ts('download'),
+            label: 'Unduh',
             icon: 'i-heroicons-arrow-down-tray',
             onSelect: () => downloadDoc(doc)
         },
         {
-            label: $ts('delete'),
+            label: 'Hapus',
             icon: 'i-heroicons-trash',
             onSelect: () => removeDoc(doc)
         }
     ]
 ]
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('signature'),
+    label: 'Tanda Tangan',
     icon: 'i-heroicons-finger-print',
 }]);
 const tabs = computed(() => [
     {
-        label: $ts('unsigned'),
-        description: $ts('unsigned_description'),
+        label: 'Unsigned',
+        description: 'Unsigned Description',
         key: 'unsigned'
     },
     {
-        label: $ts('signed'),
-        description: $ts('signed_description'),
+        label: 'Signed',
+        description: 'Signed Description',
         key: 'signed'
     }
 ]);
@@ -155,7 +154,7 @@ definePageMeta({
     layout: 'dashboard',
 });
 useHead({
-    title: () => $ts('signature'),
+    title: () => 'Tanda Tangan',
     meta: [
         {
             name: 'description',
@@ -188,7 +187,7 @@ useSeoMeta({
                             <h1 class="text-red-500 text-2xl text-center">{{ error.message }}</h1>
                         </div>
                         <div v-else-if="documents.length === 0">
-                            <h1 class="text-2xl text-center">{{ $ts('no_data') }}</h1>
+                            <h1 class="text-2xl text-center">{{ 'Tidak ada data yang tersedia.' }}</h1>
                         </div>
                         <li v-for="doc, i in documents" :key="(doc._id as string)"
                             class="rounded-lg cursor-pointer bg-secondary-light/15 dark:bg-secondary-dark/15" v-else>
@@ -219,13 +218,13 @@ useSeoMeta({
                     <template #footer>
                         <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                             <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
-                                <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
+                                <span class="text-xs leading-none md:text-sm md:leading-5">{{ 'Baris per Halaman'
                                     }}</span>
                                 <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                             </div>
                             <div class="mb-2 sm:mb-0">
                                 <span class="text-xs leading-none md:text-sm md:leading-5">
-                                    {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
+                                    {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end: pageTo, total: pageTotal } */ }}
                                 </span>
                             </div>
                             <UPagination v-model:page="page" :items-per-page="perPage" :total="pageTotal"
@@ -267,13 +266,13 @@ useSeoMeta({
                     <template #footer>
                         <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                             <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
-                                <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
+                                <span class="text-xs leading-none md:text-sm md:leading-5">{{ 'Baris per Halaman'
                                     }}</span>
                                 <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                             </div>
                             <div class="mb-2 sm:mb-0">
                                 <span class="text-xs leading-none md:text-sm md:leading-5">
-                                    {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
+                                    {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end: pageTo, total: pageTotal } */ }}
                                 </span>
                             </div>
 

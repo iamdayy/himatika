@@ -22,7 +22,6 @@ const pagination = ref({
 })
 
 const route = useRoute();
-const { $ts, $tn } = useI18n();
 const { $api } = useNuxtApp()
 const overlay = useOverlay();
 
@@ -178,7 +177,7 @@ const bulkActions = computed<DropdownMenuItem[][]>(() => [
         disabled: true
     }],
     [{
-        label: $ts('export_data'),
+        label: 'Export Data',
         icon: 'i-heroicons-document-arrow-down',
         onSelect: generateXlsx
     }, {
@@ -187,12 +186,12 @@ const bulkActions = computed<DropdownMenuItem[][]>(() => [
         onSelect: printIdCards
     }],
     [{
-        label: $ts('set_visit_status'),
+        label: 'Set Visit Status',
         icon: 'i-heroicons-check-circle',
         disabled: selectedCommittee.value.length === 0,
         onSelect: () => setBatch('visiting')
     }, {
-        label: $ts('set_payment_status'),
+        label: 'Atur Status Pembayaran',
         icon: 'i-heroicons-banknotes',
         disabled: selectedCommittee.value.length === 0,
         onSelect: () => setBatch('payment')
@@ -218,7 +217,7 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
         },
         {
             accessorKey: 'fullName',
-            header: $ts('name'),
+            header: 'Nama Lengkap',
             size: 200,
             cell: ({ row }) => {
                 return h('div', { class: 'flex flex-row items-center gap-3' }, [
@@ -238,17 +237,17 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
         },
         {
             accessorKey: 'job',
-            header: $ts('job'),
+            header: 'Jabatan',
             cell: ({ row }) => h(UBadge, { color: 'primary', variant: 'subtle', size: 'xs' }, () => row.original.job || '-')
         },
         {
             accessorKey: 'status',
-            header: $ts('status'),
+            header: 'Status',
             cell: ({ row }) => {
                 return h(UBadge, {
                     color: row.original.approved ? 'success' : 'orange',
                     variant: row.original.approved ? 'soft' : 'outline',
-                    label: row.original.approved ? $ts('approved') : 'Pending'
+                    label: row.original.approved ? 'Disetujui' : 'Pending'
                 })
             }
         },
@@ -393,15 +392,15 @@ const perPageOptions = [5, 10, 20, 50, 100];
 
 const deleteCommittee = async (committeeId: string) => {
     ConfirmationModal.open({
-        title: $ts('delete_committee'),
-        body: $ts('delete_committee_confirmation'),
+        title: 'Delete Committee',
+        body: 'Delete Committee Confirmation',
         onConfirm: async () => {
             try {
                 await $api(`/api/agenda/${id}/committee/register/${committeeId}`, { method: "DELETE" });
-                toast.add({ title: $ts('success'), description: $ts('success_to_delete_committee') });
+                toast.add({ title: 'Berhasil!', description: 'Success To Delete Committee' });
                 refresh();
             } catch (error) {
-                toast.add({ title: $ts('failed'), color: 'error' });
+                toast.add({ title: 'Failed', color: 'error' });
             } finally {
                 ConfirmationModal.close();
             }
@@ -473,14 +472,14 @@ const setBatch = async (field: 'payment' | 'visiting') => {
 }
 
 const links = computed(() => [
-    { label: $ts('dashboard'), icon: 'i-heroicons-home', to: '/dashboard' },
-    { label: $ts('agenda'), icon: 'i-heroicons-calendar', to: '/administrator/agendas' },
+    { label: 'Dasbor', icon: 'i-heroicons-home', to: '/dashboard' },
+    { label: 'Agenda', icon: 'i-heroicons-calendar', to: '/administrator/agendas' },
     { label: agenda.value?.title || 'Agenda', to: `/administrator/agendas/${id}` },
-    { label: $ts('committee'), icon: 'i-heroicons-briefcase' }
+    { label: 'Panitia', icon: 'i-heroicons-briefcase' }
 ]);
 
 useHead({
-    title: () => `${$ts('committee')} - ${agenda.value?.title}`,
+    title: () => `${'Panitia'} - ${agenda.value?.title}`,
 });
 </script>
 
@@ -493,7 +492,7 @@ useHead({
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            {{ $ts('committee') }}
+                            {{ 'Panitia' }}
                             <UBadge color="gray" variant="subtle" size="xs">{{ pageTotal }} Org</UBadge>
                         </h2>
                         <p class="text-sm text-gray-500 dark:text-gray-300 mt-1">Kelola data panitia dan volunteer event

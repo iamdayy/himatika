@@ -20,7 +20,6 @@ const overlay = useOverlay();
 const AddModalComp = overlay.create(ModalsProjectAdd)
 const { status } = useAuth();
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const { width } = useWindowSize();
 const search = ref<string>("");
 const selectedTags = ref<string[]>([]);
@@ -128,11 +127,11 @@ const responsiveUISizes = computed<{ [key: string]: 'sm' | 'xs' }>(() => ({
     input: isMobile.value ? 'xs' : 'sm',
 }));
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('project'),
+    label: 'Proyek',
     icon: 'i-heroicons-code-bracket',
 }]);
 </script>
@@ -141,11 +140,11 @@ const links = computed(() => [{
         <UBreadcrumb :links="links" />
         <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
             <template #header>
-                <h1 class="text-2xl font-bold text-gray-600 dark:text-white md:text-3xl">{{ $ts('showcase') }}</h1>
+                <h1 class="text-2xl font-bold text-gray-600 dark:text-white md:text-3xl">{{ 'Pameran' }}</h1>
                 <UAlert v-if="!closeAlert && status == 'authenticated'" variant="outline" class="my-4">
                     <template #title>
                         <div class="flex justify-between w-full">
-                            <h3 class="font-semibold text-md md:text-lg">{{ $ts('register_project') }}</h3>
+                            <h3 class="font-semibold text-md md:text-lg">{{ 'Register Project' }}</h3>
                             <UButton icon="i-heroicons-x-mark" :size="responsiveUISizes.button" :padded="false"
                                 variant="link" color="neutral" @click="closeAlert = true" />
                         </div>
@@ -157,12 +156,12 @@ const links = computed(() => [{
                                     alt="Project registration illustration" class="w-12 h-12 md:w-48 md:h-48" /> -->
 
                                 <p class="text-xs text-gray-800 dark:text-gray-400 md:text-center md:text-md">
-                                    {{ $ts('register_project_message') }}
+                                    {{ 'Register Project Message' }}
                                 </p>
                             </div>
                             <UButton color="primary" @click="AddModal" :disabled="status != 'authenticated'"
                                 class="mx-auto">
-                                {{ $ts('register_project_button') }}
+                                {{ 'Register Project Button' }}
                             </UButton>
                         </div>
                     </template>
@@ -171,7 +170,7 @@ const links = computed(() => [{
                     </template>
                 </UAlert>
                 <UInput v-model="search" :size="responsiveUISizes.input" icon="i-heroicons-magnifying-glass"
-                    :placeholder="$ts('search')" class="mt-2 mb-4 sm:mb-0 sm:w-64" />
+                    :placeholder="'Cari...'" class="mt-2 mb-4 sm:mb-0 sm:w-64" />
                 <div class="flex flex-col gap-2 mt-4 mb-8 md:items-center md:justify-between sm:flex-row">
                     <div class="flex items-center gap-2">
                         <USelect v-model="sortBy" :items="sortOptions" placeholder="Sort by" />
@@ -181,9 +180,9 @@ const links = computed(() => [{
                     </div>
                     <div class="flex flex-col gap-2 md:items-center md:flex-row">
                         <USelectMenu v-model="selectedTags" :items="tags" multiple
-                            :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full sm:w-44" />
+                            :placeholder="'Filter berdasarkan {key}' /* params: { key: 'tags' } */" class="w-full sm:w-44" />
                         <USelectMenu v-model="selectedCategory" :items="categoryOptions" label-key="title"
-                            value-key="value" :placeholder="$ts('filter_by', { key: 'category' })"
+                            value-key="value" :placeholder="'Filter berdasarkan {key}' /* params: { key: 'category' } */"
                             class="w-full sm:w-44" />
                         <UButton :size="responsiveUISizes.button" color="primary" variant="ghost"
                             icon="i-heroicons-arrow-path" @click="refreshProjects()">
@@ -199,12 +198,12 @@ const links = computed(() => [{
                                 <UBadge :label="(project.category as ICategory).title" color="secondary"
                                     variant="solid" />
                                 <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
-                                    {{ $ts('complete') }}
+                                    {{ 'Selesai' }}
                                 </UBadge>
                                 <UBadge v-else-if="project.progress === 0" color="neutral" variant="subtle" size="xs">
-                                    {{ $ts('not_started') }}
+                                    {{ 'Belum Dimulai' }}
                                 </UBadge>
-                                <UBadge v-else color="secondary" variant="subtle" size="xs">{{ $ts('on_progress') }}
+                                <UBadge v-else color="secondary" variant="subtle" size="xs">{{ 'Sedang Berlangsung' }}
                                 </UBadge>
                             </div>
                             <UButton variant="link" :size="responsiveUISizes.button" color="neutral" :to="project.url"
@@ -234,7 +233,7 @@ const links = computed(() => [{
                         <div class="flex items-center justify-between text-xs text-gray-500">
                             <div>
                                 <h1 class="text-sm font-medium text-gray-600 dark:text-gray-300">
-                                    {{ $ts('published_at') }}: </h1>
+                                    {{ 'Dipublikasikan pada' }}: </h1>
                                 <h1 class="text-xs font-medium text-gray-600 dark:text-gray-300">
                                     {{
                                         project.published ?

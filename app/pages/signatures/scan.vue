@@ -18,7 +18,6 @@ type CodeOfQRDetect = 'not_found' | 'found' | 'not_signed' | 'error';
 
 const { $api } = useNuxtApp();
 const toast = useToast();
-const { $ts } = useI18n();
 const ready = ref(false);
 const loading = ref(false);
 const pdfs = ref<File | undefined>(undefined);
@@ -38,21 +37,21 @@ const findDocBySignature = async (signature: string): Promise<IDoc | undefined> 
         if (response.status === 200) {
             doc.value = response.data
             toast.add({
-                title: $ts('success'),
-                description: $ts('verify_doc_success')
+                title: 'Berhasil!',
+                description: 'Verify Doc Success'
             })
             return response.data;
         } else {
             toast.add({
-                title: $ts('failed'),
-                description: $ts('verify_doc_failed'),
+                title: 'Failed',
+                description: 'Verify Doc Failed',
                 color: 'error'
             })
         }
     } catch (error) {
         toast.add({
-            title: $ts('failed'),
-            description: $ts('verify_doc_error'),
+            title: 'Failed',
+            description: 'Verify Doc Error',
             color: 'error'
         })
     } finally {
@@ -87,19 +86,19 @@ watch(pdfs, async (file) => {
             if (scanResult.value?.data?.status === 'found' && scanResult.value.data.data) {
                 await findDocBySignature(scanResult.value.data.data);
             } else {
-                error.value = $ts('verify_doc_qr_code_not_found');
+                error.value = 'Verify Doc Qr Code Not Found';
                 toast.add({
-                    title: $ts('failed'),
-                    description: $ts('verify_doc_qr_code_not_found'),
+                    title: 'Failed',
+                    description: 'Verify Doc Qr Code Not Found',
                     color: 'error'
                 });
             }
         } catch (err) {
             console.error("Scan error:", err);
-            error.value = $ts('verify_doc_qr_code_error');
+            error.value = 'Verify Doc Qr Code Error';
             toast.add({
-                title: $ts('failed'),
-                description: $ts('verify_doc_qr_code_error'),
+                title: 'Failed',
+                description: 'Verify Doc Qr Code Error',
                 color: 'error'
             });
         } finally {
@@ -109,23 +108,23 @@ watch(pdfs, async (file) => {
 });
 const links = computed(() => {
     const items = [
-        { label: $ts('home'), to: '/', icon: 'i-heroicons-home' },
-        { label: $ts('signature'), to: '/signatures', icon: 'i-heroicons-finger-print' },
-        { label: $ts('check'), icon: 'i-heroicons-check-circle' }
+        { label: 'Beranda', to: '/', icon: 'i-heroicons-home' },
+        { label: 'Tanda Tangan', to: '/signatures', icon: 'i-heroicons-finger-print' },
+        { label: 'Check', icon: 'i-heroicons-check-circle' }
     ];
     return items;
 });
 const tabs = computed(() => {
     const items = [
         {
-            label: $ts('upload'),
-            description: $ts('upload_pdf_description'),
+            label: 'Unggah',
+            description: 'Upload Pdf Description',
             icon: 'i-heroicons-arrow-up-tray',
             slot: 'upload' as const,
         },
         {
-            label: $ts('scan'),
-            description: $ts('scan_pdf_description'),
+            label: 'Pindai',
+            description: 'Scan Pdf Description',
             icon: 'i-heroicons-qr-code',
             slot: 'scan' as const,
         },
@@ -156,7 +155,7 @@ const tabs = computed(() => {
                     </template>
                     <div class="flex flex-col items-center justify-center gap-2">
                         <UFileUpload accept="pdf" format="pdf" v-model="pdfs" icon="i-heroicons-document"
-                            :label="$ts('drag_or_drop_file')" description="PDF (Max. 2MB)" layout="list"
+                            :label="'Drag Or Drop File'" description="PDF (Max. 2MB)" layout="list"
                             class="w-full" />
                     </div>
                 </UCard>
@@ -166,8 +165,8 @@ const tabs = computed(() => {
             <template #header>
                 <USkeleton class="w-full" v-if="loading" />
                 <UAlert v-else-if="error" :title="error" color="error" :description="error" class="w-full" />
-                <UAlert v-else color="success" :title="$ts('document_verified')"
-                    :description="$ts('document_verified_description')" />
+                <UAlert v-else color="success" :title="'Document Verified'"
+                    :description="'Document Verified Description'" />
             </template>
             <PDFViewer :pdfUrl="pdf" :label="'Label'" />
             <template #footer v-if="doc && !loading">
@@ -175,12 +174,12 @@ const tabs = computed(() => {
 
                 <!-- Data -->
                 <div class="px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">
-                    {{ $ts('document_number') }} :
+                    {{ 'Nomor Dokumen' }} :
                 </div>
                 <span class="px-6 text-xl font-bold text-gray-500 underline dark:text-gray-400">{{ doc.no }}</span>
                 <!-- Data -->
                 <div class="px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">
-                    {{ $ts('signed_by') }} :
+                    {{ 'Ditandatangani oleh' }} :
                 </div>
                 <div class="flex flex-col gap-2">
                     <div class="flex items-center justify-between" v-for="sign, i in doc.signs" :key="i">
@@ -201,7 +200,7 @@ const tabs = computed(() => {
                     </div>
                 </div>
                 <div class="px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">
-                    {{ $ts('trails') }} :
+                    {{ 'Jejak' }} :
                 </div>
                 <div class="flex flex-col gap-2">
                     <div class="flex items-center justify-between" v-for="trail, i in doc.trails" :key="i">

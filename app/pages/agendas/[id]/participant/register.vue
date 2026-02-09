@@ -125,21 +125,19 @@ const { data: questions, refresh: refreshQuestions } = useAsyncData(() => $api<I
     default: () => [],
     watch: [registrationId],
 });
-
-const { $ts } = useI18n();
 const links = computed(() => [
-    { label: $ts('home'), to: '/' },
-    { label: $ts('agenda'), to: '/agendas' },
+    { label: 'Beranda', to: '/' },
+    { label: 'Agenda', to: '/agendas' },
     { label: agenda.value?.title || '', to: `/agendas/${id}` },
-    { label: $ts('register') }
+    { label: 'Daftar' }
 ]);
 const steps = computed<Step[]>(() => {
     const steps: Step[] = [
-        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value._id ? nextToAnswerQuestion : register },
-        { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
-        { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method !== 'cash' ? payment : undefined },
-        { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
-        { id: 'success', label: $ts('success'), title: $ts('success'), formData: {} }
+        { id: 'registration', label: 'Daftar', title: 'Daftar', formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value._id ? nextToAnswerQuestion : register },
+        { id: 'answer_question', label: 'Answer Question', title: 'Answer Question', formData: {}, validationRules: {}, onNext: handleAnswer },
+        { id: 'select_payment', label: 'Select Payment', title: 'Select Payment', formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method !== 'cash' ? payment : undefined },
+        { id: 'payment', label: 'Pembayaran', title: 'Pembayaran', formData: formConfirmation, validationRules: validationRuleConfirmation },
+        { id: 'success', label: 'Berhasil!', title: 'Berhasil!', formData: {} }
     ];
     return steps.filter(step => {
         if (step.id === 'answer_question') {
@@ -187,14 +185,14 @@ const checkIfProdiIsInformatics = computed(() => {
     return ['informatics', 'informatika', 'computerscience', 'cs', 'it', 'informationtechnology'].includes(prodi);
 });
 const registerAsOptions = ref([
-    { label: $ts('student'), value: 'student' },
-    { label: $ts('non_student'), value: 'non-student' },
-    { label: $ts('student_guest'), value: 'student-guest' },
+    { label: 'Mahasiswa', value: 'student' },
+    { label: 'Non-Mahasiswa', value: 'non-student' },
+    { label: 'Tamu Mahasiswa', value: 'student-guest' },
 ]);
 const paymentMethods = ref<{ label: string; value: IPaymentMethod; icon: string; }[]>([
-    { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
-    { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
-    { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
+    { label: 'Tunai', value: 'cash', icon: 'i-heroicons-banknotes' },
+    { label: 'Transfer', value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
+    { label: 'Qris', value: 'qris', icon: 'i-heroicons-qr-code' }
 ]);
 const vaBanks = ref([
     { label: 'BCA', value: 'bca' },
@@ -255,16 +253,16 @@ const register = async (): Promise<boolean | FormError> => {
             return true;
         } else {
             toast.add({
-                title: $ts('failed'),
-                description: statusMessage || $ts('failed_to_register'),
+                title: 'Failed',
+                description: statusMessage || 'Failed To Register',
                 color: 'error',
             })
             return false;
         }
     } catch (error) {
         toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_register'),
+            title: 'Failed',
+            description: 'Failed To Register',
             color: 'error',
         })
         return false;
@@ -274,8 +272,8 @@ const payment = async (): Promise<boolean | FormError> => {
     const RegistrationId = participant.value._id || registrationId.value || '';
     if (!RegistrationId) {
         toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_register_payment'),
+            title: 'Failed',
+            description: 'Failed To Register Payment',
             color: 'error',
         })
         return false;
@@ -293,16 +291,16 @@ const payment = async (): Promise<boolean | FormError> => {
             return true;
         } else {
             toast.add({
-                title: $ts('failed'),
-                description: $ts('failed_to_register_payment'),
+                title: 'Failed',
+                description: 'Failed To Register Payment',
                 color: 'error',
             })
             return false;
         }
     } catch (error) {
         toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_register_payment'),
+            title: 'Failed',
+            description: 'Failed To Register Payment',
             color: 'error',
         })
         return false;
@@ -330,29 +328,29 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
 }));
 
 const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => ({
-    registerAs: (value: string) => value ? null : { message: $ts('register_as_required'), path: 'registerAs' },
+    registerAs: (value: string) => value ? null : { message: 'Register As Required', path: 'registerAs' },
     fullName: (value: string) => {
         if (user.value) return null;
         if (participant.value) return null;
-        return value ? null : { message: $ts('name_required'), path: 'fullName' };
+        return value ? null : { message: 'Name Required', path: 'fullName' };
     },
     email: (value: string) => {
         if (user.value) return null;
         if (participant.value) return null;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return value && emailRegex.test(value) ? null : { message: $ts('valid_email'), path: 'email' };
+        return value && emailRegex.test(value) ? null : { message: 'Valid Email', path: 'email' };
     },
     phone: (value: string) => {
         if (user.value) return null;
         if (participant.value) return null;
         const phoneRegex = /^\d{10,15}$/;
-        return value && phoneRegex.test(value.replace(/\D/g, '')) ? null : { message: $ts('valid_phone'), path: 'phone' };
+        return value && phoneRegex.test(value.replace(/\D/g, '')) ? null : { message: 'Valid Phone', path: 'phone' };
     },
     NIM: (value: number) => {
         if (user.value) return null;
         if (participant.value) return null;
         if (registerAs.value === 'student' || registerAs.value === 'student-guest') {
-            return value > 0 ? null : { message: $ts('NIM_required'), path: 'NIM' };
+            return value > 0 ? null : { message: 'NIM Required', path: 'NIM' };
         }
         return null;
     },
@@ -360,7 +358,7 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         if (user.value) return null;
         if (participant.value) return null;
         if (registerAs.value === 'student' || registerAs.value === 'student-guest') {
-            return value ? null : { message: $ts('class_required'), path: 'class' };
+            return value ? null : { message: 'Class Required', path: 'class' };
         }
         return null;
     },
@@ -368,7 +366,7 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         if (user.value) return null;
         if (participant.value) return null;
         if (registerAs.value === 'student' || registerAs.value === 'student-guest') {
-            return value > 0 ? null : { message: $ts('semester_required'), path: 'semester' };
+            return value > 0 ? null : { message: 'Semester Required', path: 'semester' };
         }
         return null;
     },
@@ -376,7 +374,7 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         if (user.value) return null;
         if (participant.value) return null;
         if (registerAs.value === 'student' || registerAs.value === 'student-guest') {
-            return value ? null : { message: $ts('prodi_required'), path: 'prodi' };
+            return value ? null : { message: 'Prodi Required', path: 'prodi' };
         }
         return null;
     },
@@ -384,18 +382,18 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         if (user.value) return null;
         if (participant.value) return null;
         if (registerAs.value === 'student-guest' || registerAs.value === 'non-student') {
-            return value ? null : { message: $ts('instance_required'), path: 'instance' };
+            return value ? null : { message: 'Instance Required', path: 'instance' };
         }
         return null;
     },
 }));
 const validationRulePayment: FieldValidationRules = reactiveComputed(() => ({
-    method: (value: string) => value ? null : { message: $ts('payment_method_required'), path: 'method' },
-    bank: (value: string) => value ? null : { message: $ts('bank_required'), path: 'bank' },
+    method: (value: string) => value ? null : { message: 'Payment Method Required', path: 'method' },
+    bank: (value: string) => value ? null : { message: 'Bank Required', path: 'bank' },
 }));
 const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => ({
-    status: (value: string) => formPayment.method !== 'cash' ? (value ? null : { message: $ts('confirmation_required'), path: 'status' }) : null,
-    // confirmation: (value: string) => value ? null : $ts('confirmation_required'),
+    status: (value: string) => formPayment.method !== 'cash' ? (value ? null : { message: 'Confirmation Required', path: 'status' }) : null,
+    // confirmation: (value: string) => value ? null : 'Confirmation Required',
 }));
 const onCompleted = async () => {
     // TODO: CREATE TICKET PAGE
@@ -418,13 +416,13 @@ async function handleAnswer() {
             body: formData,
         });
         if (response.statusCode !== 200) {
-            toast.add({ title: $ts('failed'), description: $ts('failed_to_answer_question'), color: 'error' });
+            toast.add({ title: 'Failed', description: 'Failed To Answer Question', color: 'error' });
             return false;
         }
-        toast.add({ title: $ts('success'), description: $ts('success_to_answer_question'), color: 'success' });
+        toast.add({ title: 'Berhasil!', description: 'Success To Answer Question', color: 'success' });
         return true;
     } catch (error) {
-        toast.add({ title: $ts('success'), description: $ts('failed_to_answer_question'), color: 'error' });
+        toast.add({ title: 'Berhasil!', description: 'Failed To Answer Question', color: 'error' });
         return false;
     }
 }
@@ -460,8 +458,8 @@ watch(participant, (newValue) => {
             participantId: '',
         }
         toast.add({
-            title: $ts('failed'),
-            description: $ts('participant_not_found'),
+            title: 'Failed',
+            description: 'Participant Not Found',
             color: 'error',
         })
     }
@@ -471,13 +469,13 @@ watch(participant, (newValue) => {
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :items="links" />
         <CoreStepper :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
-            :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
+            :prev-button-text="'Sebelumnya'" :next-button-text="'Selanjutnya'" :complete-button-text="'Selesai'">
             <template #default="{ step, errors }">
                 <div v-if="step?.id === 'registration'">
-                    <UAlert v-if="participant._id" color="success" :title="$ts('already_participant')"
-                        :description="$ts('already_participant_desc')" class="mb-4"></UAlert>
+                    <UAlert v-if="participant._id" color="success" :title="'Already Participant'"
+                        :description="'Already Participant Desc'" class="mb-4"></UAlert>
                     <div class="flex space-x-4">
-                        <UFormField :label="$ts('register_as')" class="col-span-6 px-4"
+                        <UFormField :label="'Register As'" class="col-span-6 px-4"
                             :error="errors.registerAs?.message">
                             <URadioGroup v-model="registerAs" :items="registerAsOptions"
                                 :disabled="user ? true : false" />
@@ -487,39 +485,39 @@ watch(participant, (newValue) => {
                     <div class="text-start">
                         <div class="space-y-4" v-if="registerAs">
                             <div :class="['grid gap-2 px-4', responsiveClasses.gridCols]">
-                                <UFormField class="col-span-6" :label="$ts('NIM')" v-if="registerAs !== 'non-student'"
+                                <UFormField class="col-span-6" :label="'NIM'" v-if="registerAs !== 'non-student'"
                                     :error="errors.NIM?.message">
                                     <UInput v-model="formRegistration.NIM" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('name')" :error="errors.fullName?.message">
+                                <UFormField class="col-span-6" :label="'Nama Lengkap'" :error="errors.fullName?.message">
                                     <UInput v-model="formRegistration.fullName" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('email')" :error="errors.email?.message">
+                                <UFormField class="col-span-6" :label="'Email'" :error="errors.email?.message">
                                     <UInput v-model="formRegistration.email" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('phone')" :error="errors.phone?.message">
+                                <UFormField class="col-span-6" :label="'Nomor Telepon'" :error="errors.phone?.message">
                                     <UInput v-model="formRegistration.phone" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('class')" v-if="registerAs !== 'non-student'"
+                                <UFormField class="col-span-6" :label="'Kelas'" v-if="registerAs !== 'non-student'"
                                     :error="errors.class?.message">
                                     <UInput v-model="formRegistration.class" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('semester')"
+                                <UFormField class="col-span-6" :label="'Semester'"
                                     v-if="registerAs !== 'non-student'" :error="errors.semester?.message">
                                     <UInput v-model="formRegistration.semester" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('prodi')"
+                                <UFormField class="col-span-6" :label="'Prodi'"
                                     v-if="registerAs !== 'non-student' && !user" :error="errors.prodi?.message">
                                     <UInput v-model="formRegistration.prodi" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('instance')"
+                                <UFormField class="col-span-6" :label="'Instansi'"
                                     v-if="registerAs === 'non-student' || registerAs === 'student-guest'"
                                     :error="errors.instance?.message">
                                     <UInput v-model="formRegistration.instance" :size="responsiveUISizes.input"
@@ -527,9 +525,9 @@ watch(participant, (newValue) => {
                                 </UFormField>
                                 <p v-if="checkIfProdiIsInformatics" class="col-span-6 text-red-500 dark:text-red-400">**
                                     {{
-                                        $ts('is_informatics_message') }} <ULink to="/register"
+                                        'Is Informatics Message' }} <ULink to="/register"
                                         class="text-blue-500 underline">{{
-                                            $ts('here')
+                                            'di sini'
                                         }}</ULink>
                                 </p>
                             </div>
@@ -544,7 +542,7 @@ watch(participant, (newValue) => {
                 </div>
                 <div v-else-if="step?.id === 'select_payment'">
                     <div class="p-3 md:p-4">
-                        <h3 class="text-lg font-semibold mb-4">{{ $ts('select_payment_method') }}</h3>
+                        <h3 class="text-lg font-semibold mb-4">{{ 'Select Payment Method' }}</h3>
 
                         <div class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -604,8 +602,8 @@ watch(participant, (newValue) => {
                         @cancel="onCancelPayment" />
                 </div>
                 <div v-else-if="step?.id === 'success'">
-                    <UAlert color="success" :title="$ts('registration_success')"
-                        :description="$ts('registration_success_desc')" />
+                    <UAlert color="success" :title="'Registration Success'"
+                        :description="'Registration Success Desc'" />
                     <CoreContent class="my-4" :content="agenda?.configuration.messageAfterRegister || ''" />
                 </div>
             </template>

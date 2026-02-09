@@ -25,7 +25,6 @@ const config = computed(() => dataConfig.value?.data);
  *  Composables and utilities
  */
 const { public: publicConfig } = useRuntimeConfig();
-const { $ts } = useI18n();
 const responsiveUISizes = useResponsiveUiSizes();
 
 /**
@@ -71,12 +70,12 @@ useSeoMeta({
         </section>
         <section class="py-8 md:py-12" id="about">
             <div class="grid grid-cols-1 gap-6 px-24 pt-2 md:grid-cols-3">
-                <StatCard v-if="statsData?.data?.members" :title="$ts('member')" :value="statsData?.data?.members"
-                    suffix="+" :description="$ts('and_many_more')" />
-                <StatCard v-if="statsData?.data?.agenda" :title="$ts('agenda')" :value="statsData?.data?.agenda"
-                    suffix="+" :description="$ts('and_many_more')" />
-                <StatCard v-if="statsData?.data?.projects" :title="$ts('project')" :value="statsData?.data?.projects"
-                    suffix="+" :description="$ts('and_many_more')" />
+                <StatCard v-if="statsData?.data?.members" :title="'Anggota'" :value="statsData?.data?.members"
+                    suffix="+" :description="'dan masih banyak lagi...'" />
+                <StatCard v-if="statsData?.data?.agenda" :title="'Agenda'" :value="statsData?.data?.agenda"
+                    suffix="+" :description="'dan masih banyak lagi...'" />
+                <StatCard v-if="statsData?.data?.projects" :title="'Proyek'" :value="statsData?.data?.projects"
+                    suffix="+" :description="'dan masih banyak lagi...'" />
 
             </div>
         </section>
@@ -114,7 +113,7 @@ useSeoMeta({
         <section class="py-8 md:py-12 about" id="about">
             <About />
         </section>
-        <USeparator :label="$ts('news')" class="mt-8" />
+        <USeparator :label="'Berita'" class="mt-8" />
         <!-- News Section -->
         <section class="pb-8 md:pb-12 about" id="news">
             <News />
@@ -129,7 +128,7 @@ useSeoMeta({
         <section class="py-8 md:py-12" id="projects" data-aos="zoom-in-up">
             <Projects />
         </section>
-        <USeparator :label="$ts('contact')" class="my-8" />
+        <USeparator :label="'Hubungi Kami'" class="my-8" />
         <!-- Contacts Sections -->
         <section class="py-8 md:py-12" id="contacts" data-aos="zoom-in-up">
             <Contacts />

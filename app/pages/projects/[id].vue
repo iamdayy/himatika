@@ -12,7 +12,6 @@ const route = useRoute()
 const { width } = useWindowSize();
 const { data: user } = useAuth();
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const toast = useToast();
 
 const overlay = useOverlay();
@@ -70,13 +69,13 @@ const deletePhoto = (id: string) => {
     }).then((response) => {
         refresh();
         toast.add({
-            title: $ts('success'),
+            title: 'Berhasil!',
             description: response.statusMessage,
             color: 'success',
         });
     }).catch((error) => {
         toast.add({
-            title: $ts('failed'),
+            title: 'Failed',
             description: error.data.statusMessage,
             color: 'error',
         });
@@ -136,11 +135,11 @@ watch(data, () => {
     });
 });
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('project'),
+    label: 'Proyek',
     icon: 'i-heroicons-code-bracket',
     to: '/projects'
 }, {
@@ -165,12 +164,12 @@ const links = computed(() => [{
                         <div v-if="project?.publishedAt"
                             class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                             <span>
-                                {{ $ts('published_at') }} {{ new Date(project?.publishedAt!).toLocaleDateString('id-ID',
+                                {{ 'Dipublikasikan pada' }} {{ new Date(project?.publishedAt!).toLocaleDateString('id-ID',
                                     {
                                         dateStyle:
                                             'long'
                                     }) }}
-                                {{ $ts('by') }}</span>
+                                {{ 'oleh' }}</span>
                             <UAvatarGroup :max="3">
                                 <UAvatar v-for="member, i in project?.members" :key="i"
                                     :src="(member as IMember).avatar" :alt="(member as IMember).NIM.toString()"
@@ -178,11 +177,11 @@ const links = computed(() => [{
                             </UAvatarGroup>
                         </div>
                         <span v-else class="text-gray-500 dark:text-gray-400">
-                            {{ $ts('draft') }}
+                            {{ 'Draf' }}
                         </span>
                     </div>
                     <div v-if="project?.category" class="mt-2">
-                        <span class="text-gray-500">{{ $ts('category') }} : </span>
+                        <span class="text-gray-500">{{ 'Kategori' }} : </span>
                         <UBadge>{{
                             (project?.category as ICategory)?.title }}</UBadge>
                     </div>
@@ -190,7 +189,7 @@ const links = computed(() => [{
                     <div class="mt-2">
                         <div class="flex items-center gap-2">
                             <UIcon name="i-heroicons-hashtag" size="24" />
-                            <h2 class="mb-2 text-xl font-semibold">{{ $ts('tag') }}</h2>
+                            <h2 class="mb-2 text-xl font-semibold">{{ 'Tag' }}</h2>
                         </div>
                         <div class="flex items-center gap-2">
                             <UBadge v-for="(tag, index) in project.tags" :key="index" color="secondary" size="lg">{{ tag
@@ -201,7 +200,7 @@ const links = computed(() => [{
                     <div class="mt-2">
                         <div class="flex items-center gap-2">
                             <UIcon name="i-heroicons-calendar" size="24" />
-                            <h2 class="mb-2 text-xl font-semibold">{{ $ts('date') }}</h2>
+                            <h2 class="mb-2 text-xl font-semibold">{{ 'Tanggal' }}</h2>
                         </div>
                         <p class="my-2 ms-2">{{ new Date(project.date).toLocaleDateString('id-ID', {
                             dateStyle: 'long'
@@ -210,7 +209,7 @@ const links = computed(() => [{
                     <div class="mt-2">
                         <div class="flex items-center gap-2">
                             <UIcon name="i-heroicons-arrow-trending-up" size="24" />
-                            <h2 class="mb-2 text-xl font-semibold">{{ $ts('progress') }}</h2>
+                            <h2 class="mb-2 text-xl font-semibold">{{ 'Progres' }}</h2>
                         </div>
                         <UProgress class="my-2" :model-value="Math.ceil(project.progress / 20)"
                             :color="project.progress === 100 ? 'success' : 'secondary'" status
@@ -219,17 +218,17 @@ const links = computed(() => [{
                     <div class="mt-2">
                         <div class="flex items-center gap-2">
                             <UIcon name="i-heroicons-link" size="24" />
-                            <h2 class="mb-2 text-xl font-semibold">{{ $ts('link') }}</h2>
+                            <h2 class="mb-2 text-xl font-semibold">{{ 'Tautan' }}</h2>
                         </div>
                         <UButton class="my-2" v-if="project.url" :to="project.url" target="_blank"
                             rel="noopener noreferrer" color="neutral">
-                            {{ $ts('open') }}
+                            {{ 'Buka' }}
                         </UButton>
                     </div>
                     <div class="mt-2">
                         <div class="flex items-center gap-2">
                             <UIcon name="i-heroicons-user" size="24" />
-                            <h2 class="mb-2 text-xl font-semibold">{{ $ts('member') }}</h2>
+                            <h2 class="mb-2 text-xl font-semibold">{{ 'Anggota' }}</h2>
                         </div>
                         <UAvatarGroup size="md" :max="5" class="my-2 ms-2">
                             <UTooltip v-for="member in project.members" :key="(member as IMember).NIM"
@@ -242,7 +241,7 @@ const links = computed(() => [{
             </UCard>
             <UCard class="mt-4">
                 <template #header>
-                    <h2 class="mb-2 text-xl font-semibold">{{ $ts('gallery') }}</h2>
+                    <h2 class="mb-2 text-xl font-semibold">{{ 'Galeri' }}</h2>
                 </template>
                 <div v-if="!groupedPhotos?.length" class="flex items-center justify-center">
                     <span>No photos available</span>

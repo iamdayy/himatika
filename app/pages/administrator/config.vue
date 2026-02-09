@@ -13,7 +13,6 @@ useHead({
     title: 'Config'
 });
 const searchQuery = ref('');
-const { $ts } = useI18n();
 const { token } = useAuth();
 const { data, refresh } = await useAsyncData(() => $fetch<IConfigResponse>("/api/config"));
 const { data: enscriptions, refresh: refreshEncriptions } = await useAsyncData(() => $fetch<IEncryptionsResponse>('/api/enscryption', {
@@ -156,7 +155,7 @@ const addPhoto = async () => {
                     body: body.getFormData()
                 });
                 if (response.statusCode == 200 && response.data) {
-                    toast.add({ title: $ts('success'), description: $ts('success_to_add_carrousel') });
+                    toast.add({ title: 'Berhasil!', description: 'Success To Add Carrousel' });
                     const newCarousel: ICarousel = {
                         ...carousel,
                         image: response.data
@@ -164,7 +163,7 @@ const addPhoto = async () => {
                     Config.value.carousels?.push(newCarousel);
                 }
             } catch (error: any) {
-                toast.add({ title: $ts('failed'), description: $ts('failed_to_add_carrousel'), color: "error" })
+                toast.add({ title: 'Failed', description: 'Failed To Add Carrousel', color: "error" })
             }
         }
     })
@@ -181,11 +180,11 @@ const deletePhoto = async (index: number, id: string) => {
             }
         });
         if (response.statusCode == 200) {
-            toast.add({ title: $ts('success'), description: $ts('success_to_delete_carrousel') });
+            toast.add({ title: 'Berhasil!', description: 'Success To Delete Carrousel' });
             Config.value.carousels?.splice(index, 1);
         }
     } catch (error: any) {
-        toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_carrousel'), color: "error" });
+        toast.add({ title: 'Failed', description: 'Failed To Delete Carrousel', color: "error" });
     }
 
 }
@@ -200,8 +199,8 @@ const createNewEncription = async (title: string) => {
         });
         if (response.statusCode == 200) {
             toast.add({
-                title: $ts('success'),
-                description: $ts('success_to_create_new_encription'),
+                title: 'Berhasil!',
+                description: 'Success To Create New Encription',
                 icon: 'i-heroicons-check-circle',
                 color: 'success'
             });
@@ -209,8 +208,8 @@ const createNewEncription = async (title: string) => {
         }
     } catch (error) {
         toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_create_new_encription'),
+            title: 'Failed',
+            description: 'Failed To Create New Encription',
             icon: 'i-heroicons-x-circle',
             color: 'error'
         });
@@ -233,15 +232,15 @@ const onSubmit = async () => {
             }
         });
         toast.add({
-            title: $ts('success'),
-            description: $ts('success_to_update_config'),
+            title: 'Berhasil!',
+            description: 'Success To Update Config',
             icon: 'i-heroicons-check-circle',
             color: 'success'
         });
     } catch (error) {
         toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_update_config'),
+            title: 'Failed',
+            description: 'Failed To Update Config',
             icon: 'i-heroicons-x-circle',
             color: 'error'
         });
@@ -257,11 +256,11 @@ const responsiveUISizes = computed<{ [key: string]: "xs" | "md" }>(() => ({
     form: ismobile.value ? 'xs' : 'md',
 }));
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('config'),
+    label: 'Config',
     icon: 'i-heroicons-cog',
 }]);
 // const debouncedSave = useDebounceFn(async () => {
@@ -278,15 +277,15 @@ const links = computed(() => [{
 //         });
 //         refresh();
 //         toast.add({
-//             title: $ts('success'),
-//             description: $ts('success_to_update_config'),
+//             title: 'Berhasil!',
+//             description: 'Success To Update Config',
 //             icon: 'i-heroicons-check-circle',
 //             color: 'success'
 //         });
 //     } catch (error) {
 //         toast.add({
-//             title: $ts('failed'),
-//             description: $ts('failed_to_update_config'),
+//             title: 'Failed',
+//             description: 'Failed To Update Config',
 //             icon: 'i-heroicons-x-circle',
 //             color: 'error'
 //         });
@@ -308,31 +307,31 @@ const links = computed(() => [{
             <template #header>
                 <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                     <h2 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                        {{ $ts('config') }}
+                        {{ 'Config' }}
                     </h2>
                     <UButton icon="i-heroicons-pencil" @click="notEditMode = !notEditMode"
                         :size="responsiveUISizes.button" />
                 </div>
                 <div v-if="!notEditMode" class="flex flex-row items-center gap-2 text-gray-500">
                     <UIcon name="i-heroicons-inbox-arrow-down" />
-                    {{ $ts('auto_save_enabled') }}
+                    {{ 'Auto Save Enabled' }}
                 </div>
             </template>
             <div class="px-2 py-6 space-y-2 md:py-12 md:px-8">
-                <UFormField :label="$ts('name')">
+                <UFormField :label="'Nama Lengkap'">
                     <UInput name="name" v-model="Config.name" :size="responsiveUISizes.input"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />
                 </UFormField>
-                <UFormField :label="$ts('description')">
+                <UFormField :label="'Deskripsi'">
                     <div class="px-2 md:px-4">
                         <CoreTiptap v-model="Config.description" :disabled="notEditMode" />
                     </div>
                 </UFormField>
-                <UFormField :label="$ts('vision')">
+                <UFormField :label="'Visi'">
                     <UTextarea name="vision" :size="responsiveUISizes.input" v-model="Config.vision"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />
                 </UFormField>
-                <UFormField :label="$ts('mission')">
+                <UFormField :label="'Misi'">
                     <div class="flex items-center gap-2 px-2 md:px-4">
                         <UTextarea name="mission" :size="responsiveUISizes.input" v-model="newMission"
                             :disabled="notEditMode && !isSaving" class="flex-1" />
@@ -351,17 +350,17 @@ const links = computed(() => [{
                         </li>
                     </ul>
                 </UFormField>
-                <UFormField :label="$ts('address')">
+                <UFormField :label="'Alamat'">
                     <UTextarea name="address" :size="responsiveUISizes.input" :rows="4" v-model="Config.address"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />
                 </UFormField>
-                <UFormField :label="$ts('contact')">
+                <UFormField :label="'Hubungi Kami'">
                     <div class="grid grid-cols-2 gap-2 px-2 md:px-4">
-                        <UFormField :label="$ts('email')">
+                        <UFormField :label="'Email'">
                             <UInput name="contact.email" :size="responsiveUISizes.input"
                                 :disabled="notEditMode && !isSaving" v-model="Config.contact.email" />
                         </UFormField>
-                        <UFormField :label="$ts('phone')">
+                        <UFormField :label="'Nomor Telepon'">
                             <UInput name="contact.phone" :size="responsiveUISizes.input"
                                 :disabled="notEditMode && !isSaving" v-model="Config.contact.phone" />
                         </UFormField>
@@ -369,16 +368,16 @@ const links = computed(() => [{
                     </div>
 
                 </UFormField>
-                <UFormField :label="$ts('social_media')">
+                <UFormField :label="'Media Sosial'">
                     <div class="flex flex-col gap-2 px-2 md:px-4">
                         <div class="flex flex-col w-full gap-2">
                             <div class="flex w-full gap-2">
-                                <UFormField :label="$ts('label')" class="flex-1">
+                                <UFormField :label="'Label'" class="flex-1">
                                     <UInput name="socialMedia.name" v-model="newSocialMedia.name"
                                         :disabled="notEditMode && !isSaving" :size="responsiveUISizes.input" />
                                 </UFormField>
                                 <div class="flex items-end flex-1 gap-2">
-                                    <UFormField :label="$ts('url')" class="flex-1">
+                                    <UFormField :label="'Tautan'" class="flex-1">
                                         <UInput name="socialMedia.url" v-model="newSocialMedia.url"
                                             :disabled="notEditMode && !isSaving" :size="responsiveUISizes.input" />
                                     </UFormField>
@@ -388,12 +387,12 @@ const links = computed(() => [{
                                 </div>
                             </div>
                             <div class="flex w-full gap-2" v-for="socialMedia, i in Config.socialMedia" :key="i">
-                                <UFormField :label="$ts('label')" class="flex-1">
+                                <UFormField :label="'Label'" class="flex-1">
                                     <UInput name="socialMedia.name" v-model="Config.socialMedia[i]!.name"
                                         :disabled="notEditMode && !isSaving" :size="responsiveUISizes.input" />
                                 </UFormField>
                                 <div class="flex items-end flex-1 gap-2">
-                                    <UFormField :label="$ts('url')" class="flex-1">
+                                    <UFormField :label="'Tautan'" class="flex-1">
                                         <UInput name="socialMedia.url" v-model="Config.socialMedia[i]!.url"
                                             :disabled="notEditMode && !isSaving" :size="responsiveUISizes.input" />
                                     </UFormField>
@@ -406,10 +405,10 @@ const links = computed(() => [{
                         </div>
                     </div>
                 </UFormField>
-                <UFormField :label="$ts('daily_manager')">
+                <UFormField :label="'Pengurus Harian'">
                     <div class="flex flex-col gap-2 px-2 md:px-4">
                         <div class="flex items-end gap-2">
-                            <UFormField :label="$ts('label')" class="flex-1">
+                            <UFormField :label="'Label'" class="flex-1">
                                 <UInput name="dailyManagement" v-model="newDailyManagement"
                                     :disabled="notEditMode && !isSaving" :size="responsiveUISizes.input" />
                             </UFormField>
@@ -428,10 +427,10 @@ const links = computed(() => [{
                         </div>
                     </div>
                 </UFormField>
-                <UFormField :label="$ts('department')">
+                <UFormField :label="'Departemen'">
                     <div class="flex flex-col gap-2 px-2 md:px-4">
                         <div class="flex items-end gap-2">
-                            <UFormField :label="$ts('label')" class="flex-1">
+                            <UFormField :label="'Label'" class="flex-1">
                                 <UInput name="department" v-model="newDepartment" :size="responsiveUISizes.input"
                                     :disabled="notEditMode && !isSaving" />
                             </UFormField>
@@ -449,25 +448,25 @@ const links = computed(() => [{
                         </div>
                     </div>
                 </UFormField>
-                <UFormField :label="$ts('enscript_activiness_letter')">
+                <UFormField :label="'Enskripsi surat keaktifan'">
                     <USelectMenu v-model="(Config.enscriptActivinessLetter as string)" v-model:search-term="searchQuery"
                         :size="responsiveUISizes.select" :disabled="notEditMode && !isSaving" class="px-2 md:px-4"
                         :items="enscriptions" value-key="value" searchable v-model:query="searchQuery" create-item
                         @create="createNewEncription">
                     </USelectMenu>
                 </UFormField>
-                <UFormField :label="$ts('min_point')">
+                <UFormField :label="'Minimal Poin'">
                     <UInput name="minPoint" v-model="Config.minPoint" :size="responsiveUISizes.input"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />
                 </UFormField>
-                <UFormField :label="$ts('carousel')">
+                <UFormField :label="'Carousel'">
                     <div class="flex flex-col gap-2 px-2 md:gap-4 md:px-8">
                         <UFileUpload v-model="file" accept="image/*" :disabled="notEditMode && !isSaving"
                             @update:model-value="onChangeImage">
                         </UFileUpload>
                         <UButton block @click="addPhoto" :disabled="notEditMode && !isSaving"
                             :size="responsiveUISizes.button">
-                            {{ $ts('upload') }}</UButton>
+                            {{ 'Unggah' }}</UButton>
                     </div>
                     <div class="flex flex-wrap gap-2 my-2 md:my-4">
                         <div class="relative inline-block max-w-[240px]" v-for="img, i in Config.carousels" :key="i">
@@ -484,7 +483,7 @@ const links = computed(() => [{
             </div>
 
             <template #footer>
-                <UButton @click="onSubmit" :label="$ts('save')" :loading="loading" variant="solid" block
+                <UButton @click="onSubmit" :label="'Simpan'" :loading="loading" variant="solid" block
                     :size="responsiveUISizes.button"
                     :v-if="organizer?.role.includes('Ketua') || organizer?.role.includes('Chairman')" />
             </template>

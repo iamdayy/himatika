@@ -4,34 +4,33 @@ definePageMeta({
     layout: 'client',
     auth: false
 });
-const { $ts } = useI18n();
 useHead({
-    title: $ts('gallery'),
+    title: 'Galeri',
 });
 
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('gallery'),
+    label: 'Galeri',
     icon: 'i-heroicons-photo',
 }]);
 const items = [
     {
-        label: $ts('photo'),
+        label: 'Foto',
         icon: 'i-heroicons-photo',
         key: 'photos',
         description: 'This is the photos grouped by agenda/project',
     },
     {
-        label: $ts('video'),
+        label: 'Video',
         icon: 'i-heroicons-information-circle',
         key: 'videos',
         description: 'This is the videos grouped by agenda/project',
     },
     {
-        label: $ts('document'),
+        label: 'Dokumen',
         icon: 'i-heroicons-information-circle',
         key: 'documents',
         description: 'This is the documents grouped by agenda/project',

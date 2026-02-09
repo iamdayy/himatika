@@ -1,7 +1,6 @@
 <script setup lang='ts'>
 import { ModalsConfirmation, ModalsReqruitmentAdd, ModalsReqruitmentEdit } from '#components';
 import type { TabsItem } from '@nuxt/ui';
-import QRCode from 'qrcode';
 import type { ICategory, IReqruitment } from '~~/types';
 import type { IAgendaResponse } from '~~/types/IResponse';
 
@@ -12,7 +11,7 @@ definePageMeta({
 
 const route = useRoute();
 const id = route.params.id as string;
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const overlay = useOverlay();
 const toast = useToast();
 const qrCodeUrl = ref('');
@@ -50,8 +49,8 @@ const stats = computed(() => {
 
 // --- NAVIGATION & UTILS ---
 const links = computed(() => [
-    { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
-    { label: $ts('administrator'), icon: 'i-heroicons-shield-check' },
+    { label: 'Dasbor', to: '/dashboard', icon: 'i-heroicons-home' },
+    { label: 'Administrator', icon: 'i-heroicons-shield-check' },
     { label: 'Agendas', to: '/administrator/agendas', icon: 'i-heroicons-calendar' },
     { label: agenda.value?.title || 'Detail', icon: 'i-heroicons-document-text' }
 ]);
@@ -149,7 +148,19 @@ watch(agenda, async (newVal) => {
         committeeConfigState.amount = newVal.configuration.committee.amount || 0;
         // Clone array agar tidak reaktif langsung ke agenda.value sebelum disimpan
         committeeConfigState.reqruitments = JSON.parse(JSON.stringify(newVal.configuration.committee.reqruitments || []));
-        qrCodeUrl.value = await QRCode.toDataURL(id, { width: 300, margin: 2 })
+        // qrCodeUrl.value = await QRCode.toDataURL(id, { width: 300, margin: 2 })
+        try {
+            const { data } = await $api<{ success: boolean, dataUrl: string }>('/api/tool/qr', {
+                method: 'POST',
+                body: { text: id }
+            });
+            if (data?.dataUrl) {
+                qrCodeUrl.value = data.dataUrl;
+            }
+        } catch (e) {
+            console.error('Failed to generate QR', e);
+        }
+
     }
 }, { immediate: true });
 
@@ -463,7 +474,7 @@ const cetakQrCode = () => {
                                                 <USwitch v-model="participantConfigState.pay" @change="saveConfig" />
                                                 <span class="text-sm">{{ participantConfigState.pay ? 'Berbayar' :
                                                     'Gratis'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </UFormField>
                                     </div>
@@ -563,7 +574,7 @@ const cetakQrCode = () => {
                                                 <USwitch v-model="committeeConfigState.pay" @change="saveConfig" />
                                                 <span class="text-sm">{{ committeeConfigState.pay ? 'Berbayar' :
                                                     'Gratis'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </UFormField>
                                     </div>

@@ -4,7 +4,6 @@ import type { DropdownMenuItem, NavigationMenuItem } from "#ui/types";
 import type { IConfigResponse } from "~~/types/IResponse";
 // Set up authentication
 const { status, data: user, signOut } = useAuth();
-const { $switchLocale, $getLocale, $ts } = useI18n();
 const { data: dataConfig } = useFetch<IConfigResponse>('/api/config', {
     key: 'config-state',
     lazy: false,
@@ -26,15 +25,15 @@ const isOpen = ref<boolean>(false);
 
 // Navigation links
 const navigation = computed<NavigationMenuItem[]>(() => [
-    { label: $ts('home'), to: '/' },
-    { label: $ts('agenda'), to: '/agendas' },
-    { label: $ts('project'), to: '/projects' },
-    { label: $ts('news'), to: '/news' },
-    { label: $ts('gallery'), to: '/gallery' },
+    { label: 'Beranda', to: '/' },
+    { label: 'Agenda', to: '/agendas' },
+    { label: 'Proyek', to: '/projects' },
+    { label: 'Berita', to: '/news' },
+    { label: 'Galeri', to: '/gallery' },
     {
-        label: $ts('signature'), children: [
-            { label: $ts('scan'), to: '/signatures/scan' },
-            { label: $ts('signature'), to: '/signatures' },
+        label: 'Tanda Tangan', children: [
+            { label: 'Pindai', to: '/signatures/scan' },
+            { label: 'Tanda Tangan', to: '/signatures' },
         ]
     }
 ])
@@ -51,30 +50,30 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
         disabled: true
     }],
     [{
-        label: $ts('profile'),
+        label: 'Profil',
         icon: 'i-heroicons-user',
         to: '/profile'
     }],
     [{
-        label: $ts('dashboard'),
+        label: 'Dasbor',
         icon: 'i-heroicons-rectangle-group',
         to: '/dashboard'
     }, {
-        label: $ts('agenda'),
+        label: 'Agenda',
         icon: 'i-heroicons-calendar',
         to: '/dashboard/agendas'
     }, {
-        label: $ts('project'),
+        label: 'Proyek',
         icon: 'i-heroicons-code-bracket',
         to: '/dashboard/projects'
     },
     {
-        label: $ts('aspiration'),
+        label: 'Aspirasi',
         icon: 'i-heroicons-clipboard-document-list',
         to: '/dashboard/aspirations'
     }],
     [{
-        label: $ts('logout'),
+        label: 'Keluar',
         color: 'error',
         onSelect: () => signOut({ callbackUrl: '/login' }),
         icon: 'i-heroicons-arrow-right-start-on-rectangle'
@@ -85,32 +84,17 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
 const itemsNotLogged = computed<DropdownMenuItem[][]>(() => [
     [
         {
-            label: $ts('login'),
+            label: 'Masuk',
             to: '/login'
         },
         {
-            label: $ts('register'),
+            label: 'Daftar',
             to: '/register'
         }
     ]
 ]) satisfies ComputedRef<DropdownMenuItem[][]>;
 
-const languages = computed<DropdownMenuItem[][]>(() => [
-    [
-        {
-            label: 'English',
-            icon: 'i-heroicons-globe',
-            disabled: $getLocale() === 'en',
-            onSelect: () => $switchLocale('en')
-        },
-        {
-            label: 'Indonesia',
-            icon: 'i-heroicons-globe',
-            disabled: $getLocale() === 'id',
-            onSelect: () => $switchLocale('id')
-        }
-    ]
-])
+
 
 // Computed property to determine which items to show based on login status
 const items = computed(() => isLoggedIn.value ? itemsIsLogged.value : itemsNotLogged.value) satisfies ComputedRef<DropdownMenuItem[][]>;
@@ -152,10 +136,7 @@ useHead({
 
                 <!-- User menu and theme toggle -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
-                    <!-- Language Dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
-                        <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
-                    </UDropdownMenu>
+
                     <!-- Theme toggle -->
                     <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
                         :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
@@ -171,7 +152,7 @@ useHead({
                         <template #account="{ item }">
                             <div class="text-left">
                                 <p>
-                                    {{ $ts('signed_as') }}
+                                    {{ 'Masuk Sebagai' }}
                                 </p>
                                 <p class="font-medium text-gray-900 truncate dark:text-white">
                                     {{ (item as any).label }}

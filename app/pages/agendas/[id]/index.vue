@@ -11,7 +11,7 @@ definePageMeta({
 // Routing & Utils
 const route = useRoute();
 const id = route.params.id as string;
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const router = useRouter();
 
 // Data Fetching
@@ -123,11 +123,11 @@ const navigateToRegisterCommittee = () => {
 
 const links = computed(() => [
     {
-        label: $ts('home'),
+        label: 'Beranda',
         to: '/'
     },
     {
-        label: $ts('agenda'),
+        label: 'Agenda',
         to: '/agendas'
     },
     {
@@ -442,7 +442,7 @@ function formatCurrency(amount: number): string {
                                     </div>
                                     <div v-else
                                         class="bg-green-500/90 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md border border-white/20 shadow-sm">
-                                        {{ $ts('free') }}
+                                        {{ 'Gratis' }}
                                     </div>
                                 </div>
                             </div>

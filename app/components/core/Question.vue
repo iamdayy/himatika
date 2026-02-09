@@ -6,7 +6,6 @@ import type { IResponse } from '~~/types/IResponse';
 
 const { convert } = useImageToBase64()
 const overlay = useOverlay();
-const { $ts } = useI18n();
 const { $api } = useNuxtApp();
 const toast = useToast();
 const route = useRoute();
@@ -45,16 +44,16 @@ const questionData = computed({
 })
 const fileInput = ref<File | undefined>(undefined);
 const questionTypes = computed(() => [
-    { label: $ts('text'), value: 'text' },
-    { label: $ts('email'), value: 'email' },
-    { label: $ts('long_text'), value: 'LongText' },
-    { label: $ts('radio'), value: 'radio' },
-    { label: $ts('checkbox'), value: 'checkbox' },
-    { label: $ts('select'), value: 'select' },
-    { label: $ts('rating'), value: 'rating' },
-    { label: $ts('slider'), value: 'slider' },
-    { label: $ts('date'), value: 'date' },
-    { label: $ts('file'), value: 'file' }
+    { label: 'Text', value: 'text' },
+    { label: 'Email', value: 'email' },
+    { label: 'Long Text', value: 'LongText' },
+    { label: 'Radio', value: 'radio' },
+    { label: 'Checkbox', value: 'checkbox' },
+    { label: 'Pilih', value: 'select' },
+    { label: 'Rating', value: 'rating' },
+    { label: 'Slider', value: 'slider' },
+    { label: 'Tanggal', value: 'date' },
+    { label: 'File', value: 'file' }
 ])
 const editQuestion = async ({ question, type, required, min, max, maxFileSize, acceptedFileTypes }: IQuestion) => {
     try {
@@ -71,34 +70,34 @@ const editQuestion = async ({ question, type, required, min, max, maxFileSize, a
             },
         });
         if (response.statusCode !== 200) {
-            toast.add({ title: $ts('failed'), description: $ts('failed_to_edit_question'), color: 'error' });
+            toast.add({ title: 'Failed', description: 'Failed To Edit Question', color: 'error' });
             return;
         }
-        toast.add({ title: $ts('success'), description: $ts('success_to_edit_question'), color: 'success' });
+        toast.add({ title: 'Berhasil!', description: 'Success To Edit Question', color: 'success' });
         emit('update');
     } catch (error) {
-        toast.add({ title: $ts('failed'), description: $ts('failed_to_edit_question'), color: 'error' });
+        toast.add({ title: 'Failed', description: 'Failed To Edit Question', color: 'error' });
     }
 }
 const deleteQuestion = async () => {
     ConfirmationModal.open({
-        title: $ts('delete_question'),
-        body: $ts('delete_question_confirmation', {
-            question: props.question.question,
-        }),
+        title: 'Delete Question',
+        body: 'Delete Question Confirmation' /* params: {
+             question: props.question.question,
+         } */,
         onConfirm: async () => {
             try {
                 const response = await $api<IResponse>(`api/agenda/${id}/${props.type}/question/${props.question._id}`, {
                     method: 'DELETE',
                 });
                 if (response.statusCode === 200) {
-                    toast.add({ title: $ts('success'), description: $ts('success_to_delete_question'), color: 'success' });
+                    toast.add({ title: 'Berhasil!', description: 'Success To Delete Question', color: 'success' });
                     emit('update');
                 } else {
-                    toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_question'), color: 'error' });
+                    toast.add({ title: 'Failed', description: 'Failed To Delete Question', color: 'error' });
                 }
             } catch (error) {
-                toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_question'), color: 'error' });
+                toast.add({ title: 'Failed', description: 'Failed To Delete Question', color: 'error' });
             }
             ConfirmationModal.close();
         },
@@ -126,13 +125,13 @@ async function handleOptionChange(optionId: string, value: string) {
                 },
             });
             if (response.statusCode === 200) {
-                toast.add({ title: $ts('success'), description: $ts('success_to_edit_option'), color: 'success' });
+                toast.add({ title: 'Berhasil!', description: 'Success To Edit Option', color: 'success' });
                 emit('update');
             } else {
-                toast.add({ title: $ts('failed'), description: $ts('failed_to_edit_option'), color: 'error' })
+                toast.add({ title: 'Failed', description: 'Failed To Edit Option', color: 'error' })
             }
         } catch (error) {
-            toast.add({ title: $ts('failed'), description: $ts('failed_to_edit_option'), color: 'error' })
+            toast.add({ title: 'Failed', description: 'Failed To Edit Option', color: 'error' })
         }
     }
 }
@@ -144,13 +143,13 @@ async function addOption() {
                 method: 'POST',
             });
             if (response.statusCode === 200) {
-                toast.add({ title: $ts('success'), description: $ts('success_to_add_option'), color: 'success' });
+                toast.add({ title: 'Berhasil!', description: 'Success To Add Option', color: 'success' });
                 emit('update');
             } else {
-                toast.add({ title: $ts('failed'), description: $ts('failed_to_add_option'), color: 'error' })
+                toast.add({ title: 'Failed', description: 'Failed To Add Option', color: 'error' })
             }
         } catch (error) {
-            toast.add({ title: $ts('failed'), description: $ts('failed_to_add_option'), color: 'error' })
+            toast.add({ title: 'Failed', description: 'Failed To Add Option', color: 'error' })
         }
     }
 }
@@ -158,23 +157,23 @@ async function addOption() {
 async function deleteOption(optionId: string) {
     if (props.isEditing) {
         ConfirmationModal.open({
-            title: $ts('delete_option'),
-            body: $ts('delete_option_confirmation', {
-                question: props.question.question,
-            }),
+            title: 'Delete Option',
+            body: 'Delete Option Confirmation' /* params: {
+                 question: props.question.question,
+             } */,
             onConfirm: async () => {
                 try {
                     const response = await $api<IResponse>(`api/agenda/${id}/${props.type}/question/${editedQuestion.value._id}/option/${optionId}`, {
                         method: 'DELETE',
                     });
                     if (response.statusCode === 200) {
-                        toast.add({ title: $ts('success'), description: $ts('success_to_delete_option'), color: 'success' });
+                        toast.add({ title: 'Berhasil!', description: 'Success To Delete Option', color: 'success' });
                         emit('update');
                     } else {
-                        toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_option'), color: 'error' })
+                        toast.add({ title: 'Failed', description: 'Failed To Delete Option', color: 'error' })
                     }
                 } catch (error) {
-                    toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_option'), color: 'error' })
+                    toast.add({ title: 'Failed', description: 'Failed To Delete Option', color: 'error' })
                 }
                 ConfirmationModal.close();
             },
@@ -291,7 +290,7 @@ const AcceptedFileTypesOptions = computed(() => [
 
         <div class="flex items-center space-x-2">
             <UCheckbox :id="`required-${question._id}`" v-model="questionData.required"
-                @update:model-value="value => toggleRequired(value)" :label="$ts('required')" />
+                @update:model-value="value => toggleRequired(value)" :label="'Wajib diisi'" />
         </div>
     </div>
 

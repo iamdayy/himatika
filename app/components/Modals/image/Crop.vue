@@ -95,7 +95,7 @@ const responsiveClasses = computed(() => ({
 </script>
 
 <template>
-    <UModal :ui="{ wrapper: 'relative z-[60]' }" v-model="model" title="Adjust image" @close="emits('close')">
+    <UModal :ui="{ wrapper: 'relative z-[60]' }" v-model="model" title="Adjust image" @close="$emit('close')">
         <template #body>
             <div :class="responsiveClasses.container">
                 <Cropper :src="img" :auto-zoom="true" :stencil-props="stencil" ref="cropper" class="mb-4" />

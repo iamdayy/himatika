@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useQRCode } from '@vueuse/integrations/useQRCode';
 import type { ICategory, IMember } from '~~/types';
 import { type IAgendaResponse, type IParticipantResponse } from '~~/types/IResponse';
 
 const route = useRoute();
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const agendaId = route.params.id as string;
 const { makeTicket } = useMakeDocs();
 
@@ -68,15 +67,22 @@ const qrContent = computed(() => {
     });
 });
 
-const qrCode = useQRCode(qrContent, {
-    errorCorrectionLevel: 'H',
-    margin: 2,
-    scale: 10,
-    color: {
-        dark: '#000000',
-        light: '#ffffff',
-    },
-});
+const qrCode = ref('');
+watch(qrContent, async (newContent) => {
+    if (!newContent) return;
+    try {
+        const { data } = await $api<{ success: boolean, dataUrl: string }>('/api/tool/qr', {
+            method: 'POST',
+            body: { text: newContent }
+        });
+        if (data?.dataUrl) {
+            qrCode.value = data.dataUrl;
+        }
+    } catch (e) {
+        console.error('Failed to generate QR', e);
+    }
+}, { immediate: true });
+
 
 // Helper untuk format tanggal
 const formatDate = (dateString: string) => {
@@ -121,11 +127,11 @@ const downloadTicket = async () => {
     }
 };
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
     to: '/agendas'
 }, {
@@ -137,7 +143,7 @@ const links = computed(() => [{
     icon: 'i-heroicons-document-text',
     to: `/agendas/${agendaId}`
 }, {
-    label: $ts('registered'),
+    label: 'Terdaftar',
     icon: 'i-heroicons-user',
 }]);
 

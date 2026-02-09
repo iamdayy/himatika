@@ -16,7 +16,6 @@ const configPublic = useRuntimeConfig().public;
 const { $api } = useNuxtApp();
 const { data: user } = useAuth();
 const overlay = useOverlay();
-const { $ts } = useI18n();
 const route = useRoute();
 const toast = useToast();
 const { data, refresh } = useLazyAsyncData('docData', () => $api<IDocResponse>(`/api/doc`, {
@@ -40,13 +39,23 @@ const docFullSigned = computed(() => {
 
 const trails = computed<AccordionItem[]>(() => {
     const trails = doc.value.trails || [];
+    const actions = (action: string, user: string, date: string) => {
+        switch (action) {
+            case 'create':
+                return 'Dibuat oleh ' + user + ' pada ' + date;
+            case 'sign':
+                return 'Ditandatangani oleh ' + user + ' pada ' + date;
+            case 'reject':
+                return 'Ditolak oleh ' + user + ' pada ' + date;
+            default:
+                return 'Unknown';
+        }
+    }
     return trails.map((trail) => ({
         label: (trail.user as IMember)?.fullName || 'Unknown',
-        content: $ts(trail.action, {
-            user: (trail.user as IMember)?.fullName || 'Unknown', date: format(new Date(trail.actionAt), 'EEEE dd MMMM yyyy HH:mm:ss', {
-                locale: id,
-            })
-        }),
+        content: actions(trail.action, (trail.user as IMember)?.fullName || 'Unknown', format(new Date(trail.actionAt), 'EEEE dd MMMM yyyy HH:mm:ss', {
+            locale: id,
+        })),
         icon: (trail.user as IMember)?.avatar || '/img/profile-blank.png',
     }));
 });
@@ -61,15 +70,15 @@ const getDocumentHash = async (buffer: Uint8Array): Promise<string> => {
 
 const signDocument = () => {
     ConfirmationModal.open({
-        title: $ts('sign_document'),
-        body: $ts('sign_document_confirmation'),
+        title: 'Sign Document',
+        body: 'Sign Document Confirmation',
         onConfirm: async () => {
             try {
                 ConfirmationModal.close();
                 loading.value = true;
                 const buffer = pdfBuffer.value;
                 if (!buffer) {
-                    toast.add({ title: $ts("error"), description: $ts("pdf_not_loaded"), color: 'error' });
+                    toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Pdf Not Loaded', color: 'error' });
                     return;
                 }
                 await $api<{ data: string }>('api/sign', {
@@ -80,9 +89,9 @@ const signDocument = () => {
                         data: await getDocumentHash(buffer),
                     } as IReqSignDocument,
                 });
-                toast.add({ title: $ts("success"), description: $ts("success_to_sign_document"), color: 'success' });
+                toast.add({ title: 'Berhasil!', description: 'Success To Sign Document', color: 'success' });
             } catch (error) {
-                toast.add({ title: $ts("error"), description: $ts("failed_to_sign_document"), color: 'error' });
+                toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Failed To Sign Document', color: 'error' });
             } finally {
                 refresh();
                 loading.value = false;
@@ -112,11 +121,11 @@ definePageMeta({
     layout: 'dashboard',
 });
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('signature'),
+    label: 'Tanda Tangan',
     icon: 'i-heroicons-finger-print',
     to: '/signatures'
 }, {
@@ -138,12 +147,12 @@ const links = computed(() => [{
                 <PDFViewer :pdfUrl="pdf" :label="doc.label" :canDownload="false" :canPrint="false" />
             </div>
             <UCollapsible class="w-full flex flex-col mt-4">
-                <UButton :label="$ts('data')" color="neutral" variant="subtle" trailing-icon="i-heroicons-chevron-down"
-                    block size="xl" />
+                <UButton :label="'Data'" color="neutral" variant="subtle" trailing-icon="i-heroicons-chevron-down" block
+                    size="xl" />
                 <template #content>
                     <!-- Data -->
                     <div class="md:px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">
-                        {{ $ts('document_number') }} :
+                        {{ 'Nomor Dokumen' }} :
                     </div>
                     <span
                         class="px-4 md:px-6 text-lg md:text-xl font-bold text-gray-700 underline dark:text-gray-300">{{
@@ -151,7 +160,7 @@ const links = computed(() => [{
                         }}</span>
                     <!-- Data -->
                     <div class="px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">
-                        {{ $ts('signed_by') }} :
+                        {{ 'Ditandatangani oleh' }} :
                     </div>
                     <div
                         class="flex flex-col gap-2 ms-2 md:ms-6 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
@@ -167,14 +176,13 @@ const links = computed(() => [{
                                     }}</span>
                                     <span class="text-sm text-gray-500 dark:text-gray-400">{{ sign.as }}</span>
                                     <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Ditandatangani pada :
                                         {{
-                                            $ts('signed_at', {
-                                                date: sign.signedAt ?
-                                                    format(new Date(sign.signedAt!), 'EEEE dd MMMM yyyy HH:mm: ss', {
-                                                        locale: id,
-                                                    }) :
-                                                    '-',
-                                            })
+                                            sign.signedAt ?
+                                                format(new Date(sign.signedAt!), 'EEEE dd MMMM yyyy HH:mm: ss', {
+                                                    locale: id,
+                                                })
+                                                : '-'
                                         }}
                                     </span>
                                 </div>
@@ -185,7 +193,7 @@ const links = computed(() => [{
                         </div>
                     </div>
                     <div class="md:px-4 my-3 text-xl font-semibold text-gray-800 dark:text-gray-300">
-                        {{ $ts('trails') }} :
+                        {{ 'Jejak' }} :
                     </div>
                     <div class="ms-2 md:ms-6 px-2 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
                         <UAccordion :items="trails">
@@ -200,9 +208,9 @@ const links = computed(() => [{
 
 
             <template #footer>
-                <UButton :label="$ts('sign')" @click="signDocument" block :loading="loading"
+                <UButton :label="'Tandatangani'" @click="signDocument" block :loading="loading"
                     v-if="data?.data?.signedByMe === false" />
-                <UButton :label="$ts('download')" block @click="download" :loading="loading"
+                <UButton :label="'Unduh'" block @click="download" :loading="loading"
                     v-else-if="user?.member.NIM == (doc.uploader as IMember | undefined)?.NIM"
                     :disabled="docFullSigned === false" />
             </template>

@@ -11,7 +11,6 @@ const { width } = useWindowSize()
 const isMobile = computed(() => width.value < 768)
 const overlay = useOverlay();
 const toast = useToast();
-const { $ts } = useI18n();
 const { $api } = useNuxtApp();
 
 const ConfirmationModal = overlay.create(ModalsConfirmation);
@@ -57,21 +56,21 @@ const columns = computed<TableColumn<IDoc>[]>(() => [
     },
     {
         accessorKey: 'label',
-        header: $ts('label'),
+        header: 'Label',
         cell: ({ row }) => {
             return row.getValue('label') || '-';
         }
     },
     {
         accessorKey: 'tags',
-        header: $ts('tags'),
+        header: 'Tag',
         cell: ({ row }) => {
             return row.original.tags?.map((tag: string) => tag).join(', ') || '-';
         }
     },
     {
         accessorKey: 'trails',
-        header: $ts('last_trail'),
+        header: 'Jejak Terakhir',
         cell: ({ row }) => {
             const lastTrail = row.original.trails?.[row.original.trails.length - 1];
             return lastTrail?.action || '-';
@@ -113,18 +112,18 @@ const perPageOptions = computed(() => {
 });
 const deleteModal = (id: string) => {
     ConfirmationModal.open({
-        title: $ts('delete_document'),
-        body: $ts('delete_document_confirmation'),
+        title: 'Delete Document',
+        body: 'Delete Document Confirmation',
         onConfirm: async () => {
             try {
                 await $api(`/api/doc`, {
                     method: 'DELETE',
                     query: { id }
                 });
-                toast.add({ title: $ts('success'), description: $ts('success_to_delete_document') });
+                toast.add({ title: 'Berhasil!', description: 'Success To Delete Document' });
                 refresh();
             } catch (error: any) {
-                toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_document'), color: 'error' });
+                toast.add({ title: 'Failed', description: 'Failed To Delete Document', color: 'error' });
             } finally {
                 ConfirmationModal.close();
             }
@@ -146,17 +145,17 @@ const download = (doc: IDoc) => {
 const items = (row: any) => [
     [
         {
-            label: $ts('view'),
+            label: 'Lihat',
             icon: 'i-heroicons-eye-20-solid',
             click: () => PDFModal.open({ doc: row })
         },
         {
-            label: $ts('download'),
+            label: 'Unduh',
             icon: 'i-heroicons-arrow-down-tray-20-solid',
             click: () => download(row)
         }],
     [{
-        label: $ts('delete'),
+        label: 'Hapus',
         icon: 'i-heroicons-trash-20-solid',
         disabled: row.status == 'deleted',
         click: () => deleteModal(row._id)
@@ -171,7 +170,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
     button: isMobile.value ? 'xs' : 'md',
     select: isMobile.value ? 'xs' : 'md',
 }));
-const links = [{ label: $ts('profile'), icon: 'i-heroicons-user', to: '/profile' }, { label: $ts('document'), icon: 'i-heroicons-archive-box' }]
+const links = [{ label: 'Profil', icon: 'i-heroicons-user', to: '/profile' }, { label: 'Dokumen', icon: 'i-heroicons-archive-box' }]
 </script>
 <template>
     <UBreadcrumb :items="links" />
@@ -179,7 +178,7 @@ const links = [{ label: $ts('profile'), icon: 'i-heroicons-user', to: '/profile'
         <template #header>
             <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                 <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">{{
-                    $t('document') }}
+                    'Dokumen' }}
                 </h1>
             </div>
             <!-- Filters -->
@@ -242,7 +241,7 @@ const links = [{ label: $ts('profile'), icon: 'i-heroicons-user', to: '/profile'
                     <template #empty>
                         <div class="flex flex-col items-center justify-center w-full h-full p-4 text-center">
                             <UIcon name="i-heroicons-document-text" size="lg" class="text-gray-400" />
-                            <p class="mt-2 text-sm font-medium text-gray-500">{{ $ts('no_documents_found') }}</p>
+                            <p class="mt-2 text-sm font-medium text-gray-500">{{ 'No Documents Found' }}</p>
                         </div>
                     </template>
                 </UTable>
@@ -252,12 +251,12 @@ const links = [{ label: $ts('profile'), icon: 'i-heroicons-user', to: '/profile'
         <template #footer>
             <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                 <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
-                    <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page') }}</span>
+                    <span class="text-xs leading-none md:text-sm md:leading-5">{{ 'Baris per Halaman' }}</span>
                     <USelect v-model="pagination.pageSize" :items="perPageOptions" class="w-20 me-2" size="xs" />
                 </div>
                 <div class="mb-2 sm:mb-0">
                     <span class="text-xs leading-none md:text-sm md:leading-5">
-                        {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
+                        {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end: pageTo, total: pageTotal } */ }}
                     </span>
                 </div>
                 <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"

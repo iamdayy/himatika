@@ -14,8 +14,6 @@ import type {
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
-const { $ts } = useI18n();
-
 const query = route.query as {
     NIM?: string;
     email?: string;
@@ -68,12 +66,12 @@ const verifyOTP = async (): Promise<boolean> => {
             },
         });
         if (response.statusCode == 200) {
-            toast.add({ title: $ts("otp_verified"), color: "success" });
+            toast.add({ title: 'Kode OTP berhasil diverifikasi. Anda sekarang dapat melanjutkan.', color: "success" });
 
             stateOTP.token = response.data?.token || "";
             return true;
         } else {
-            toast.add({ title: $ts("otp_failed"), color: "error" });
+            toast.add({ title: 'Otp Failed', color: "error" });
             return false;
         }
     } catch (error: any) {
@@ -98,11 +96,11 @@ const SendOTPCode = async () => {
         });
         if (response.statusCode == 200) {
             stateOTP.expiresAt = response.data?.expiresAt || "";
-            toast.add({ title: $ts("otp_send_success"), color: "success" });
+            toast.add({ title: 'Kode OTP berhasil dikirimkan ke email Anda. Silakan cek email Anda untuk melanjutkan.', color: "success" });
             return true;
         }
     } catch (error: any) {
-        toast.add({ title: $ts("otp_send_failed"), color: "error" });
+        toast.add({ title: 'Kode OTP gagal dikirimkan ke email Anda. Silakan coba lagi nanti.', color: "error" });
         return false;
     }
 };
@@ -164,36 +162,36 @@ useHead({
 const steps = computed<Step[]>(() => [
     {
         id: "account",
-        label: $ts("account"),
-        title: $ts("account"),
-        description: $ts("account_description"),
+        label: 'Akun',
+        title: 'Akun',
+        description: 'Account Description',
         formData: stateAccount,
         validationRules: {},
         onNext: SendOTPCode,
     },
     {
         id: "otp",
-        label: $ts("otp"),
-        title: $ts("otp"),
-        description: $ts("otp_description"),
+        label: 'Kode OTP',
+        title: 'Kode OTP',
+        description: 'Otp Description',
         formData: stateOTP,
         validationRules: {},
         onNext: verifyOTP,
     },
     {
         id: "reset-password",
-        label: $ts("reset_password"),
-        title: $ts("reset_password"),
-        description: $ts("reset_password_description"),
+        label: 'Reset Kata Sandi',
+        title: 'Reset Kata Sandi',
+        description: 'Reset Password Description',
         formData: statePassword,
         validationRules: {},
         onNext: resetPassword,
     },
     {
         id: "complete",
-        label: $ts("complete"),
-        title: $ts("complete"),
-        description: $ts("complete_description"),
+        label: 'Selesai',
+        title: 'Selesai',
+        description: 'Complete Description',
         formData: {},
         validationRules: {},
     },
@@ -248,7 +246,7 @@ onBeforeUnmount(() => {
                     alt="Himatika" />
             </div>
             <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">
-                {{ $ts("forgot_password") }}
+                {{ 'Lupa Kata Sandi' }}
             </h4>
             <CoreStepper :steps="steps" v-model="activeStep" @complete="onComplete" :target-step="targetStep"
                 :skip-validation="hasVerificationParams" :ui="{
@@ -275,13 +273,13 @@ onBeforeUnmount(() => {
                             </p>
                             <UButton @click="SendOTPCode()" :disabled="remainingTime > 0" block :loading="loading"
                                 color="primary" variant="solid">
-                                {{ $ts("resend_otp") }}
+                                {{ 'Kirim Ulang OTP' }}
                             </UButton>
                         </div>
                     </div>
                     <div v-if="step?.id === 'reset-password'" class="px-2">
                         <CorePasswordInput v-model="statePassword.password" />
-                        <UFormField :label="$ts('password_confirmation')" id="password-retype" name="password-retype"
+                        <UFormField :label="'Konfirmasi Kata Sandi'" id="password-retype" name="password-retype"
                             :error="errors.password_confirmation?.message">
                             <div class="flex w-full gap-1 mt-2">
                                 <UInput color="neutral" variant="outline"

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import type { IVideoGrouped } from '~/types';
-import type { ITagsResponse, IVideoResponse } from '~/types/IResponse';
+import type { IVideoGrouped } from '~~/types';
+import type { ITagsResponse, IVideoResponse } from '~~/types/IResponse';
 
 const { width } = useWindowSize();
 
@@ -18,9 +18,6 @@ const sort = ref('');
 const order = ref('');
 
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
-
-
 const page = ref(1);
 const perPage = ref(9);
 
@@ -135,10 +132,10 @@ watch(
 <template>
     <UCard class="mt-2">
         <template #header>
-            <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">{{ $ts('video')
-            }}
+            <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">{{ 'Video'
+                }}
             </h1>
-            <p>{{ $ts('gallery_video_description') }}</p>
+            <p>{{ 'Gallery Video Description' }}</p>
         </template>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-4" v-if="pending">

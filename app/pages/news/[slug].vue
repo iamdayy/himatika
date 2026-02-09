@@ -9,7 +9,6 @@ definePageMeta({
 });
 const route = useRoute();
 const toast = useToast();
-const { $ts } = useI18n();
 const newComment = ref('');
 const anonymous = ref(false);
 const isSubmitting = ref(false);
@@ -28,11 +27,11 @@ watch(data, () => {
     });
 });
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('news'),
+    label: 'Berita',
     icon: 'i-heroicons-clipboard-document-list',
     to: '/news'
 }, {
@@ -117,7 +116,7 @@ const submitLikeComment = async (id?: string) => {
 
                     </span>
                     <div v-if="news?.category" class="ms-2">
-                        <span class="text-gray-500 dark:text-gray-300">{{ $ts('category') }} : </span>
+                        <span class="text-gray-500 dark:text-gray-300">{{ 'Kategori' }} : </span>
                         <UBadge variant="outline" size="sm" color="neutral">{{
                             (news?.category as ICategory)?.title }}</UBadge>
                     </div>
@@ -131,14 +130,14 @@ const submitLikeComment = async (id?: string) => {
                 <CoreContent :content="news?.body!" />
             </div>
             <div class="flex flex-col gap-2 py-6 border-t border-dashed dark:border-gray-600">
-                <label class="text-gray-600 dark:text-gray-300">{{ $ts('category') }} :</label>
+                <label class="text-gray-600 dark:text-gray-300">{{ 'Kategori' }} :</label>
                 <div class="flex flex-wrap gap-2 ">
                     <UBadge v-for="tag, i in news?.tags" :key="i">{{ tag }}</UBadge>
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <span class="text-gray-600 dark:text-gray-300">
-                    {{ $ts('author') }} :
+                    {{ 'Penulis' }} :
                 </span>
                 <span class="text-gray-500 dark:text-gray-400">
                     <span v-for="(author, i) in news.authors" :key="i">
@@ -163,7 +162,7 @@ const submitLikeComment = async (id?: string) => {
             <template #footer>
                 <div class="mt-6">
                     <div class="space-y-2">
-                        <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ $ts('news_interested') }}
+                        <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ 'News Interested' }}
                         </h4>
                         <ul
                             class="ml-4 space-y-1 text-gray-800 list-disc list-inside text-md md:text-lg dark:text-gray-400">
@@ -179,15 +178,15 @@ const submitLikeComment = async (id?: string) => {
             </template>
         </UCard>
         <UCard class="mt-8">
-            <h3 class="mb-4 text-lg font-semibold">{{ $ts('your_comment') }}</h3>
-            <TipTapEditor v-model="newComment" rows="6" :placeholder="$ts('write_comment')" />
+            <h3 class="mb-4 text-lg font-semibold">{{ 'Your Comment' }}</h3>
+            <TipTapEditor v-model="newComment" rows="6" :placeholder="'Write Comment'" />
             <div class="flex items-center justify-between space-x-4">
                 <UButton class="mt-4" @click="submitComment" :loading="isSubmitting" :disabled="isSubmitting">
-                    {{ $ts('post_your_comment') }}
+                    {{ 'Post Your Comment' }}
                 </UButton>
                 <div class="flex items-center">
                     <UToggle v-model="anonymous" size="lg" variant="primary" />
-                    <span class="ml-2">{{ $ts('anonymous') }}</span>
+                    <span class="ml-2">{{ 'Anonim' }}</span>
                 </div>
             </div>
         </UCard>
@@ -198,10 +197,10 @@ const submitLikeComment = async (id?: string) => {
                     <div class="flex items-center mt-4 text-sm text-gray-500">
                         <NuxtImg class="w-6 h-6 mr-2 rounded-full" provider="localProvider"
                             :src="comment.author ? (comment.author as IMember).avatar : '/img/profile-blank.png'"
-                            :alt="comment.author ? (comment.author as IMember).fullName : $ts('anonymous')"
+                            :alt="comment.author ? (comment.author as IMember).fullName : 'Anonim'"
                             loading="lazy" />
 
-                        <span>{{ comment.author ? (comment.author as IMember).fullName : $ts('anonymous') }}</span>
+                        <span>{{ comment.author ? (comment.author as IMember).fullName : 'Anonim' }}</span>
                         <span class="mx-2">•</span>
                         <span>
                             {{ new Date(comment.createdAt).toLocaleDateString('id-Id', { dateStyle: 'long' }) }}

@@ -30,7 +30,6 @@ const { status } = useAuth();
 const overlay = useOverlay();
 // Responsive design: track window width using VueUse
 const { width: windowWidth } = useWindowSize();
-const { $ts } = useI18n();
 // Compute if the screen is mobile
 const isMobile = computed(() => windowWidth.value < 768);
 page.value = 1;
@@ -61,7 +60,7 @@ const AddModal = () => {
     <UCard>
         <!-- Card header with responsive title -->
         <template #header>
-            <h2 class="text-2xl font-extrabold text-center md:text-4xl dark:text-white md:text-start">{{ $ts('showcase')
+            <h2 class="text-2xl font-extrabold text-center md:text-4xl dark:text-white md:text-start">{{ 'Pameran'
             }}</h2>
         </template>
         <UAlert v-if="!closeAlert && status == 'authenticated'" variant="outline" class="mb-4">
@@ -71,7 +70,7 @@ const AddModal = () => {
                         color="neutral" @click="closeAlert = true" />
                 </div>
                 <div class="flex justify-center w-full">
-                    <h3 class="font-semibold text-md md:text-lg">{{ $ts('register_project') }}</h3>
+                    <h3 class="font-semibold text-md md:text-lg">{{ 'Register Project' }}</h3>
                 </div>
             </template>
             <template #description>
@@ -79,11 +78,11 @@ const AddModal = () => {
                     <div class="flex flex-row items-center space-x-2 md:space-y-4 md:flex-col">
 
                         <p class="text-xs text-neutral-800 dark:text-neutral-400 md:text-center md:text-md">
-                            {{ $ts('register_project_message') }}
+                            {{ 'Register Project Message' }}
                         </p>
                     </div>
                     <UButton color="primary" @click="AddModal" :disabled="status != 'authenticated'" class="mx-auto">
-                        {{ $ts('register_project_button') }}
+                        {{ 'Register Project Button' }}
                     </UButton>
                 </div>
             </template>
@@ -101,12 +100,12 @@ const AddModal = () => {
                                 <UBadge :label="(project.category as ICategory).title" color="secondary"
                                     variant="solid" />
                                 <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
-                                    {{ $ts('complete') }}
+                                    {{ 'Selesai' }}
                                 </UBadge>
                                 <UBadge v-else-if="project.progress === 0" color="warning" variant="subtle" size="xs">
-                                    {{ $ts('not_started') }}
+                                    {{ 'Belum Dimulai' }}
                                 </UBadge>
-                                <UBadge v-else color="secondary" variant="subtle" size="xs">{{ $ts('on_progress') }}
+                                <UBadge v-else color="secondary" variant="subtle" size="xs">{{ 'Sedang Berlangsung' }}
                                 </UBadge>
                             </div>
                             <UButton variant="link" :size="responsiveUISizes.button" color="neutral" :to="project.url"
@@ -135,7 +134,7 @@ const AddModal = () => {
                     <div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-200">
                         <div class="space-y-2 ">
                             <h1 class="text-sm font-medium text-neutral-600 dark:text-neutral-300">
-                                {{ $ts('published_at') }}: {{
+                                {{ 'Dipublikasikan pada' }}: {{
                                     new Date(project.publishedAt!).toLocaleDateString('id-ID', { dateStyle: 'long' })
                                 }}</h1>
                             <UAvatarGroup size="sm" :max="3">
@@ -149,7 +148,7 @@ const AddModal = () => {
         </div>
         <template #footer>
             <UButton to="/projects" variant="ghost" color="neutral" :size="responsiveUISizes.button"
-                icon="i-heroicons-arrow-long-right" :label="$ts('see_more')" block></UButton>
+                icon="i-heroicons-arrow-long-right" :label="'Lihat Selengkapnya'" block></UButton>
         </template>
 
     </UCard>

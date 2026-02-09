@@ -2,7 +2,7 @@
 import type { ICategory, IMember, INews } from '~~/types';
 import type { INewsResponse, IResponse } from '~~/types/IResponse';
 
-const { $tc, $ts } = useI18n();
+
 const { data, refresh } = useFetch<INewsResponse>('/api/news', {
     query: {
         perPage: 5,
@@ -25,17 +25,17 @@ const timeAgo = (date: Date) => {
     const hours = Math.floor(minutes / 60);
 
     if (minutes < 60) {
-        return $tc('minute', minutes);
+        return minutes === 0 ? 'baru saja' : `${minutes} menit yang lalu`;
     } else if (hours < 24) {
-        return $tc('hours', hours);
+        return `${hours} jam yang lalu`;
     } else if (hours < 24 && hours > 168) {
-        return $tc('day', Math.floor(hours / 24));
+        return `${Math.floor(hours / 24)} hari yang lalu`;
     } else if (hours > 168 && hours < 720) {
-        return $tc('week', Math.floor(hours / 168));
+        return `${Math.floor(hours / 168)} minggu yang lalu`;
     } else if (hours > 720) {
-        return $tc('month', Math.floor(hours / 720));
+        return `${Math.floor(hours / 720)} bulan yang lalu`;
     } else if (hours > 8760) {
-        return $tc('year', Math.floor(hours / 8760));
+        return `${Math.floor(hours / 8760)} tahun yang lalu`;
     }
 }
 // Fungsi untuk menghapus tag html
@@ -86,7 +86,7 @@ const submitLike = async (id: string) => {
                         <h3 class="mb-2 text-sm font-semibold text-ellipsis md:font-bold md:text-2xl">{{
                             featuredNews.title }}</h3>
                         <div class="flex flex-wrap items-center gap-2 px-2 md:px-4">
-                            <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $ts('by') }}</span>
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">{{ 'oleh' }}</span>
                             <UAvatarGroup size="3xs" :max="3">
                                 <UAvatar v-for="member in featuredNews.authors" :key="(member as IMember).NIM"
                                     :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
@@ -114,7 +114,7 @@ const submitLike = async (id: string) => {
                             <UIcon name="i-heroicons-chat-bubble-left-ellipsis" :size="responsiveUISizes.icon" />
                         </div>
                         <span class="mx-2">•</span>
-                        <span>{{ calculateReadingTime(featuredNews.body) }} {{ $ts('min_read') }}</span>
+                        <span>{{ calculateReadingTime(featuredNews.body) }} {{ 'Menit Baca' }}</span>
                     </div>
 
                 </div>
@@ -123,9 +123,9 @@ const submitLike = async (id: string) => {
 
         <div class="mb-6">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-bold">{{ $ts('new') }}</h3>
+                <h3 class="text-xl font-bold">{{ 'Terbaru' }}</h3>
                 <NuxtLink to="/news" class="flex items-center text-gray-700 dark:text-gray-300">
-                    <span>{{ $ts('see_more') }}
+                    <span>{{ 'Lihat Selengkapnya' }}
 
                     </span>
                     <UIcon name="i-heroicons-chevron-right" />

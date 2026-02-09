@@ -18,7 +18,7 @@ definePageMeta({
  * Set page title
  */
 useHead({
-    title: () => `${useI18n().t('member')}`
+    title: () => 'Anggota'
 });
 
 const { $api } = useNuxtApp();
@@ -34,8 +34,6 @@ const { isOrganizer } = storeToRefs(organizerStore);
  */
 const overlay = useOverlay();
 const toast = useToast();
-const { $ts } = useI18n();
-
 const ConfirmationModal = overlay.create(ModalsConfirmation);
 const AddMemberModal = overlay.create(ModalsMemberAdd);
 const EditMemberModal = overlay.create(ModalsMemberEdit);
@@ -126,7 +124,7 @@ const columns = computed<TableColumn<IMember>[]>(() => [
     },
     {
         accessorKey: 'fullName',
-        header: ({ column }) => addPinButton(column, $ts('name'), 'left'),
+        header: ({ column }) => addPinButton(column, 'Nama Lengkap', 'left'),
         size: 150,
         cell: ({ row }) => {
             return h('div', {
@@ -154,17 +152,17 @@ const columns = computed<TableColumn<IMember>[]>(() => [
     },
     {
         accessorKey: 'class',
-        header: ({ column }) => addSortButton(column, $ts('class')),
+        header: ({ column }) => addSortButton(column, 'Kelas'),
         size: 100,
     },
     {
         accessorKey: 'semester',
-        header: ({ column }) => addSortButton(column, $ts('semester')),
+        header: ({ column }) => addSortButton(column, 'Semester'),
         size: 100,
     },
     {
         accessorKey: 'position',
-        header: $ts('job'),
+        header: 'Jabatan',
         size: 100,
         cell: ({ row }) => {
             return h('div', {
@@ -185,14 +183,14 @@ const columns = computed<TableColumn<IMember>[]>(() => [
                     color: 'neutral',
                     size: responsiveUISizes.value.badge,
                     variant: 'solid',
-                    label: $ts('member')
+                    label: 'Anggota'
                 })
             ]);
         }
     },
     {
         accessorKey: 'point',
-        header: ({ column }) => addSortButton(column, $ts('point')),
+        header: ({ column }) => addSortButton(column, 'Poin'),
         size: 100,
         cell: ({ row }) => {
             if (!row.original.point || row.original.point.length === 0) {
@@ -209,12 +207,12 @@ const columns = computed<TableColumn<IMember>[]>(() => [
     },
     {
         accessorKey: 'enteredYear',
-        header: ({ column }) => addSortButton(column, $ts('generation')),
+        header: ({ column }) => addSortButton(column, 'Angkatan'),
         size: 100,
     },
     {
         accessorKey: 'status',
-        header: $ts('status'),
+        header: 'Status',
         size: 100,
         cell: ({ row }) => {
             if (!row.original.status) {
@@ -274,9 +272,9 @@ const selectedMember = computed(() => {
  * Filterable options for the table
  */
 const filterable = [
-    { key: 'class', label: $ts('class'), value: "class" },
-    { key: 'semester', label: $ts('semester'), value: "semester" },
-    { key: 'status', label: $ts('status'), value: "status" },
+    { key: 'class', label: 'Kelas', value: "class" },
+    { key: 'semester', label: 'Semester', value: "semester" },
+    { key: 'status', label: 'Status', value: "status" },
 ];
 
 /**
@@ -363,9 +361,9 @@ const deleteMember = async (NIM: number) => {
             method: 'delete',
             query: { NIM }
         });
-        toast.add({ title: $ts('success'), description: $ts('success_to_delete_member'), color: 'success' });
+        toast.add({ title: 'Berhasil!', description: 'Success To Delete Member', color: 'success' });
     } catch (error: any) {
-        toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_member'), color: 'error' });
+        toast.add({ title: 'Failed', description: 'Failed To Delete Member', color: 'error' });
     }
 };
 
@@ -406,8 +404,8 @@ const generateXlsx = async () => {
 
 const updateSemester = async () => {
     ConfirmationModal.open({
-        title: $ts('confirmation'),
-        body: $ts('confirmation_update_semester'),
+        title: 'Confirmation',
+        body: 'Confirmation Update Semester',
         async onConfirm() {
             try {
                 const response = await $api('/api/member/semester', {
@@ -453,8 +451,8 @@ const editModal = (NIM: number) => {
  */
 const deleteModal = (NIM: number) => {
     ConfirmationModal.open({
-        title: $ts('confirmation'),
-        body: $ts('confirmation_delete_member', { NIM }),
+        title: 'Confirmation',
+        body: 'Confirmation Delete Member' /* params: { NIM } */,
         onConfirm() {
             deleteMember(NIM).then(() => { ConfirmationModal.close(); refresh(); });
         }
@@ -468,18 +466,18 @@ const deleteModal = (NIM: number) => {
  */
 const items = (row: any) => [
     [{
-        label: $ts('edit'),
+        label: 'Edit',
         icon: 'i-heroicons-pencil-square-20-solid',
         onSelect: () => editModal(row.NIM)
     },
     {
-        label: $ts('open'),
+        label: 'Buka',
         icon: 'i-heroicons-eye-20-solid',
         onSelect: () => router.push(`/profile/${row.NIM}`),
     }
     ],
     [{
-        label: $ts('delete'),
+        label: 'Hapus',
         icon: 'i-heroicons-trash-20-solid',
         disabled: row.status == 'deleted',
         onSelect: () => deleteModal(row.NIM)
@@ -501,16 +499,16 @@ const colorbadge = (status: "active" | "inactive" | "free" | "deleted"): "succes
     }
 };
 const fieldsToUpdate = computed(() => [
-    { label: $ts('status'), value: 'status' },
-    { label: $ts('class'), value: 'class' },
-    { label: $ts('semester'), value: 'semester' },
-    { label: $ts('generation'), value: 'enteredYear' }
+    { label: 'Status', value: 'status' },
+    { label: 'Kelas', value: 'class' },
+    { label: 'Semester', value: 'semester' },
+    { label: 'Angkatan', value: 'enteredYear' }
 ]);
 const selectedFieldToUpdate = ref<string>('status');
 const valueToUpdate = ref<string | number>('');
 const batchUpdate = async () => {
     if (selectedMember.value.length === 0) {
-        toast.add({ title: $ts('no_member_selected'), color: 'warning' });
+        toast.add({ title: 'No Member Selected', color: 'warning' });
         return;
     }
     const field = selectedFieldToUpdate.value;
@@ -526,18 +524,18 @@ const batchUpdate = async () => {
                 value
             }
         });
-        toast.add({ title: $ts('success'), description: $ts('success_to_update_member'), color: 'success' });
+        toast.add({ title: 'Berhasil!', description: 'Success To Update Member', color: 'success' });
         refresh();
     } catch (error: any) {
-        toast.add({ title: $ts('failed'), description: error.statusMessage, color: 'error' });
+        toast.add({ title: 'Failed', description: error.statusMessage, color: 'error' });
     }
 };
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('member'),
+    label: 'Anggota',
     icon: 'i-heroicons-users',
 }]);
 </script>
@@ -548,21 +546,21 @@ const links = computed(() => [{
             <template #header>
                 <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">{{
-                        $ts('member') }} </h1>
+                        'Anggota' }} </h1>
                     <h1 class="text-sm font-light text-gray-500 md:text-base dark:text-gray-400">
-                        {{ $ts('total_members', { count: pageTotal }) }}
+                        {{ 'Total Members' /* params: { count: pageTotal } */ }}
                     </h1>
                     <div class="flex flex-row items-center gap-2">
-                        <UButton :label="$ts('add')" :size="responsiveUISizes.button" v-if="isOrganizer"
+                        <UButton :label="'Tambah'" :size="responsiveUISizes.button" v-if="isOrganizer"
                             class="mx-auto my-3" @click="addModal" />
-                        <UButton :label="$ts('import')" :size="responsiveUISizes.button" class="mx-auto my-3"
+                        <UButton :label="'Impor'" :size="responsiveUISizes.button" class="mx-auto my-3"
                             v-if="isOrganizer" to="/administrator/members/import" />
                     </div>
                 </div>
                 <!-- Filters -->
                 <div class="flex flex-col items-center justify-between gap-3 px-2 md:px-4 md:flex-row">
                     <div class="flex flex-row items-center gap-3">
-                        <UInput v-model="NIM" :placeholder="$ts('search_placeholder', { key: 'NIM' })"
+                        <UInput v-model="NIM" :placeholder="'Cari {key}...' /* params: { key: 'NIM' } */"
                             @keyup.enter="refresh()" :loading="pending" :size="responsiveUISizes.input"
                             class="hidden w-full md:w-auto md:block">
                             <template #trailing>
@@ -575,10 +573,10 @@ const links = computed(() => [{
                             :size="responsiveUISizes.input" class="w-full md:w-auto" />
                     </div>
                     <div class="flex flex-row w-full gap-2 md:w-auto">
-                        <USelectMenu v-model="filterBy" :items="filterable" :placeholder="$ts('filter_by')"
+                        <USelectMenu v-model="filterBy" :items="filterable" :placeholder="'Filter berdasarkan {key}'"
                             :loading="pending" :size="responsiveUISizes.select" class="w-full md:w-40" value-key="value"
                             label-key="label" />
-                        <USelectMenu v-model="filter" :items="filters" multiple :placeholder="$ts('filter')"
+                        <USelectMenu v-model="filter" :items="filters" multiple :placeholder="'Filter'"
                             :loading="pending" :disabled="!filterBy" :size="responsiveUISizes.select"
                             class="w-full md:w-40" />
 
@@ -597,15 +595,15 @@ const links = computed(() => [{
                     <div class="flex items-center gap-1.5">
                         <UButton icon="i-heroicons-chevron-double-up" trailing color="neutral" variant="outline"
                             :size="responsiveUISizes.button" @click="updateSemester" v-if="isOrganizer">
-                            {{ $ts('update_semester') }}
+                            {{ 'Update Semester' }}
                         </UButton>
                         <UButton v-if="selectedMember.length > 1" icon="i-heroicons-arrow-down-tray" trailing
                             variant="outline" color="neutral" :size="responsiveUISizes.button" @click="generateXlsx">
-                            {{ $ts('export_selected') }}
+                            {{ 'Ekspor yang Dipilih' }}
                         </UButton>
                         <UButton v-else icon="i-heroicons-arrow-down-tray" trailing color="neutral" variant="outline"
                             :size="responsiveUISizes.button" @click="generateXlsx">
-                            {{ $ts('export_all') }}
+                            {{ 'Ekspor Semua' }}
                         </UButton>
                     </div>
 
@@ -625,10 +623,11 @@ const links = computed(() => [{
                                 }
                             }))
                             " :content="{ align: 'end' }">
-                            <UButton :label="$ts('column')" color="neutral" variant="outline"
+                            <UButton :label="'Kolom'" color="neutral" variant="outline"
                                 trailing-icon="i-lucide-chevron-down" />
                         </UDropdownMenu>
-                        <UFormField class="flex flex-col items-center gap-2" :label="$ts('show_deleted')" size="xs">
+                        <UFormField class="flex flex-col items-center gap-2" :label="'Tampilkan yang Dihapus'"
+                            size="xs">
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </UFormField>
                         <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"
@@ -642,14 +641,14 @@ const links = computed(() => [{
                     v-if="isOrganizer && selectedMember.length > 0">
                     <div class="flex flex-col items-start gap-2 md:flex-row w-full md:w-auto">
                         <USelect v-model="selectedFieldToUpdate" :items="fieldsToUpdate"
-                            :placeholder="$ts('select_field')" :size="responsiveUISizes.select"
+                            :placeholder="'Select Field'" :size="responsiveUISizes.select"
                             class="w-full md:w-40" />
-                        <UInput v-model="valueToUpdate" :placeholder="$ts('enter_value')"
+                        <UInput v-model="valueToUpdate" :placeholder="'Enter Value'"
                             :size="responsiveUISizes.input" class="w-full md:w-40" />
                     </div>
                     <UButton icon="i-heroicons-pencil-square-20-solid" color="neutral" variant="outline"
                         :size="responsiveUISizes.button" @click="batchUpdate">
-                        {{ $ts('update_selected', { count: selectedMember.length }) }}
+                        {{ 'Update Selected' /* params: { count: selectedMember.length } */ }}
                     </UButton>
                 </div>
 
@@ -666,12 +665,12 @@ const links = computed(() => [{
             <template #footer>
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
-                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page') }}</span>
+                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ 'Baris per Halaman' }}</span>
                         <USelect v-model="pagination.pageSize" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
+                            {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end: pageTo, total: pageTotal } */ }}
                         </span>
                     </div>
                     <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"

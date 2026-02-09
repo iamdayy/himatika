@@ -46,17 +46,17 @@ const inputSize = computed(() => {
 </script>
 
 <template>
-    <UModal :fullscreen="windowSize.width.value < 640" :title="$ts('add_carousel')" @close="emit('close')">
+    <UModal :fullscreen="windowSize.width.value < 640" :title="'Add Carousel'" @close="emit('close')">
         <template #body>
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
-                    <UFormField :label="$ts('title')">
+                    <UFormField :label="'Judul'">
                         <UInput v-model="carousel.title" :size="inputSize" placeholder="Title" class="w-full" />
                     </UFormField>
-                    <UFormField :label="$ts('date')">
+                    <UFormField :label="'Tanggal'">
                         <DatePicker v-model="carousel.date" />
                     </UFormField>
-                    <UFormField :label="$ts('description')">
+                    <UFormField :label="'Deskripsi'">
                         <UTextarea v-model="carousel.description" :size="inputSize" placeholder="Description"
                             class="w-full">
                         </UTextarea>
@@ -68,10 +68,10 @@ const inputSize = computed(() => {
         <template #footer>
             <div class="flex justify-between w-full">
                 <UButton :size="buttonSize" variant="ghost" @click="emit('close')">
-                    {{ $ts('cancel') }}
+                    {{ 'Batal' }}
                 </UButton>
                 <UButton :size="buttonSize" @click="addCarousel">
-                    {{ $ts('save') }}
+                    {{ 'Simpan' }}
                 </UButton>
             </div>
         </template>

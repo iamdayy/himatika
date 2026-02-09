@@ -17,7 +17,6 @@ const {
 );
 const { data } = useFetch<IConfigResponse>('/api/config');
 const config = computed(() => data.value?.data);
-const { $ts } = useI18n();
 const organizer = computed(() => {
     if (organizers.value) {
         // return organizers.value[0];
@@ -39,17 +38,17 @@ const selectedPeriod = ref<string>(periods.value[0] || '');
  */
 const tabItems = [
     {
-        label: $ts('vision'),
+        label: 'Visi',
         key: 'visi',
         description: ''
     },
     {
-        label: $ts('mission'),
+        label: 'Misi',
         key: 'misi',
         description: ''
     },
     {
-        label: $ts('organizer'),
+        label: 'pengurus',
         key: 'organizer',
         description: ''
     },
@@ -57,12 +56,12 @@ const tabItems = [
 
 const items = [
     {
-        label: $ts('daily_manager'),
+        label: 'Pengurus Harian',
         slot: 'dailyManager',
         description: ''
     },
     {
-        label: $ts('department'),
+        label: 'Departemen',
         slot: 'departments',
         description: ''
     },
@@ -114,7 +113,7 @@ const cardDimensions = computed(() => ({
 <template>
     <UCard>
         <template #header>
-            <h2 :class="['font-extrabold dark:text-200', responsiveClasses.headerText]">{{ $ts('about') }}</h2>
+            <h2 :class="['font-extrabold dark:text-200', responsiveClasses.headerText]">{{ 'Tentang Kami' }}</h2>
         </template>
         <div class="flex flex-col-reverse items-center gap-2 px-3 py-8 lg:flex-row">
             <div class="w-full dark:text-white md:px-2" data-aos="fade-right" data-aos-easing="ease-in-out"
@@ -156,7 +155,7 @@ const cardDimensions = computed(() => ({
                                 <div>
                                     <h1
                                         class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-3xl dark:text-white">
-                                        {{ $ts('council') }}
+                                        {{ 'Dewan Institut' }}
                                     </h1>
                                     <div class="grid grid-cols-1 gap-4 py-3 md:grid-cols-2">
                                         <div class="mx-auto wrapper" :style="wrapperDimensions"
@@ -184,7 +183,7 @@ const cardDimensions = computed(() => ({
                                 <div>
                                     <h1
                                         class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-3xl dark:text-white">
-                                        {{ $ts('advisor') }}
+                                        {{ 'Pembina' }}
                                     </h1>
                                     <div class="mx-auto wrapper" :style="wrapperDimensions">
                                         <div class="card" :style="{ height: cardDimensions.height }">
@@ -210,12 +209,12 @@ const cardDimensions = computed(() => ({
                                 <div>
                                     <h1
                                         class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-3xl dark:text-white">
-                                        {{ $ts('considers') }}
+                                        {{ 'Dewan Pertimbangan' }}
                                     </h1>
                                     <div
                                         :class="`grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-${organizer?.considerationBoard.length}`">
                                         <ProfileCard v-for="considerationBoard in organizer?.considerationBoard"
-                                            :member="(considerationBoard as IMember)" :subtitle="$ts('considers')" />
+                                            :member="(considerationBoard as IMember)" :subtitle="'Dewan Pertimbangan'" />
                                     </div>
                                 </div>
                                 <UTabs :items="items">

@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IJob } from '~/types';
+import type { IJob } from '~~/types';
 
 
 // Define emits for parent component communication
@@ -52,11 +52,11 @@ const inputSize = computed(() => {
             <UForm :state="stateJob" @submit="(value) => emit('submit', value.data)">
                 <div class="space-y-6 text-start">
                     <div :class="['grid', 'gap-2', layoutClass]">
-                        <UFormField class="col-span-full" :label="$ts('label')">
+                        <UFormField class="col-span-full" :label="'Label'">
                             <UInput type="text" name="Label" id="Label" placeholder="Job 1" v-model="stateJob.label"
                                 required class="w-full" :size="inputSize" />
                         </UFormField>
-                        <UFormField class="col-span-full" :label="$ts('count')">
+                        <UFormField class="col-span-full" :label="'Count'">
                             <UInput type="number" name="Count" id="Count" placeholder="1" v-model="stateJob.count"
                                 required class="w-full" :size="inputSize" />
                         </UFormField>

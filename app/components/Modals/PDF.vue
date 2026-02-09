@@ -15,7 +15,7 @@ const props = defineProps({
 const emit = defineEmits(['remove', 'download', 'close']);
 </script>
 <template>
-    <UModal :title="doc.label" @close="$emit('close')">
+    <UModal :title="doc.label" @close="emit('close')">
         <template #body>
             <div class="w-full rounded-lg shadow-xl">
                 <client-only>

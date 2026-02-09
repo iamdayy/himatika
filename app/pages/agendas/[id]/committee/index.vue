@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useQRCode } from '@vueuse/integrations/useQRCode';
 import type { ICategory, IMember } from '~~/types';
 import { type IAgendaResponse, type ICommitteeResponse } from '~~/types/IResponse';
 
 const route = useRoute();
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const agendaId = route.params.id as string;
 const { makeTicket } = useMakeDocs();
 
@@ -69,15 +68,22 @@ const qrContent = computed(() => {
     });
 });
 
-const qrCode = useQRCode(qrContent, {
-    errorCorrectionLevel: 'H',
-    margin: 2,
-    scale: 10,
-    color: {
-        dark: '#000000',
-        light: '#ffffff',
-    },
-});
+const qrCode = ref('');
+watch(qrContent, async (newContent) => {
+    if (!newContent) return;
+    try {
+        const data = await $api<{ success: boolean, dataUrl: string }>('/api/tool/qr', {
+            method: 'POST',
+            body: { text: newContent }
+        });
+        if (data?.dataUrl) {
+            qrCode.value = data.dataUrl;
+        }
+    } catch (e) {
+        console.error('Failed to generate QR', e);
+    }
+}, { immediate: true });
+
 
 // Helper untuk format tanggal
 const formatDate = (dateString: string) => {
@@ -122,11 +128,11 @@ const downloadTicket = async () => {
 };
 
 const links = computed(() => [{
-    label: $ts('home'),
+    label: 'Beranda',
     icon: 'i-heroicons-home',
     to: '/'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
     to: '/agendas'
 }, {
@@ -214,15 +220,15 @@ definePageMeta({
                 <!-- Ticket Card -->
                 <div v-else class="relative group">
                     <!-- Clean design without glow effects -->
-                    <div class="relative bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl overflow-hidden">
+                    <div class="relative bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
 
                         <!-- Top Section: Visual & Header -->
                         <div class="h-64 relative bg-gray-900">
                             <NuxtImg provider="localProvider" :src="bannerImage"
                                 class="w-full h-full object-cover opacity-80 mix-blend-overlay" alt="Banner" />
-                            <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/60 to-transparent">
+                            <div class="absolute inset-x-0 top-0 h-32 bg-linear-to-b from-black/60 to-transparent">
                             </div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent">
+                            <div class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/40 to-transparent">
                             </div>
 
                             <!-- Event Info Overlay -->
@@ -282,7 +288,7 @@ definePageMeta({
                                         </p>
                                         <div class="flex items-center gap-3">
                                             <div
-                                                class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                                                class="w-8 h-8 rounded-full bg-linear-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
                                                 {{ (me?.member as IMember)?.fullName?.charAt(0) || 'C' }}
                                             </div>
                                             <div>

@@ -1,9 +1,6 @@
 <script setup lang='ts'>
 import type { IQuestion } from '~~/types';
 import type { IAgendaResponse, IResponse } from '~~/types/IResponse';
-
-
-const { $ts } = useI18n();
 const { id } = useRoute().params as { id: string };
 const { $api } = useNuxtApp();
 const toast = useToast();
@@ -46,22 +43,22 @@ const addNewQuestion = async () => {
             method: 'POST',
         });
         if (response.statusCode === 200) {
-            toast.add({ title: $ts('success'), description: $ts('success_to_add_question'), color: 'success' });
+            toast.add({ title: 'Berhasil!', description: 'Success To Add Question', color: 'success' });
             refresh();
         } else {
-            toast.add({ title: $ts('success'), description: $ts('failed_to_add_question'), color: 'error' });
+            toast.add({ title: 'Berhasil!', description: 'Failed To Add Question', color: 'error' });
         }
     } catch (error) {
-        toast.add({ title: $ts('success'), description: $ts('failed_to_add_question'), color: 'error' });
+        toast.add({ title: 'Berhasil!', description: 'Failed To Add Question', color: 'error' });
     }
 }
 
 const links = computed(() => [
-    { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
-    { label: $ts('administrator'), icon: 'i-heroicons-user' },
-    { label: $ts('agenda'), to: '/administrator/agendas', icon: 'i-heroicons-clipboard-document-list' },
+    { label: 'Dasbor', to: '/dashboard', icon: 'i-heroicons-home' },
+    { label: 'Administrator', icon: 'i-heroicons-user' },
+    { label: 'Agenda', to: '/administrator/agendas', icon: 'i-heroicons-clipboard-document-list' },
     { label: agenda.value?.title || '', to: `/administrator/agendas/${id}`, icon: 'i-heroicons-document' },
-    { label: $ts('questions'), icon: 'i-heroicons-document' },
+    { label: 'Pertanyaan', icon: 'i-heroicons-document' },
 ]);
 definePageMeta({
     layout: 'client',
@@ -75,10 +72,10 @@ definePageMeta({
             <template #header>
                 <div class="flex flex-col justify-between gap-2 p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                        {{ $ts('agenda_question') }}
+                        {{ 'Agenda Question' }}
                     </h1>
                     <p>
-                        {{ $ts('agenda_question_desc') }}
+                        {{ 'Agenda Question Desc' }}
                     </p>
                 </div>
             </template>

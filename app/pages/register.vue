@@ -6,7 +6,6 @@ import type { IGenerateOTPResponse, IResponse, IVerifyOTPResponse } from "~~/typ
 import type { RegisterSchema, VerifyNIMSchema } from "~~/types/schemas/auth";
 
 const { $pageGuide } = useNuxtApp();
-const { $ts } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const responsiveUISizes = useResponsiveUiSizes();
@@ -67,10 +66,10 @@ const SendOTPCode = async () => {
         });
         if (response.statusCode == 200) {
             OTPForm.expiresAt = response.data?.expiresAt || "";
-            toast.add({ title: $ts("otp_send_success"), color: "success" });
+            toast.add({ title: 'Kode OTP berhasil dikirimkan ke email Anda. Silakan cek email Anda untuk melanjutkan.', color: "success" });
         }
     } catch (error: any) {
-        toast.add({ title: $ts("otp_send_failed"), color: "error" });
+        toast.add({ title: 'Kode OTP gagal dikirimkan ke email Anda. Silakan coba lagi nanti.', color: "error" });
     }
 };
 const finish = async () => {
@@ -83,10 +82,10 @@ const finish = async () => {
             },
         });
         if (response.statusCode == 200) {
-            toast.add({ title: $ts("account_verified"), description: $ts('account_verified_desc'), color: "success" });
+            toast.add({ title: 'Account Verified', description: 'Account Verified Desc', color: "success" });
             router.push("/login");
         } else {
-            toast.add({ title: $ts("account_not_verified"), description: response.statusMessage, color: "error" });
+            toast.add({ title: 'Account Not Verified', description: response.statusMessage, color: "error" });
         }
     } catch (error: any) {
         toast.add({ title: error.statusMessage, color: "error" });
@@ -101,11 +100,11 @@ const register = async (): Promise<boolean | FormError> => {
             body: { ...stateForm, NIM: stateVerifyNIM.NIM },
         });
         if (registered.statusCode == 200) {
-            toast.add({ title: $ts("register_success"), description: $ts('register_success_desc'), color: "success" });
+            toast.add({ title: 'Register Success', description: 'Register Success Desc', color: "success" });
             SendOTPCode();
             return true;
         } else {
-            toast.add({ title: $ts("register_failed"), description: $ts('register_failed_desc'), color: "error" });
+            toast.add({ title: 'Register Failed', description: 'Register Failed Desc', color: "error" });
             return false;
         }
     } catch (error: any) {
@@ -126,48 +125,48 @@ const verifyNIM = async (): Promise<true | FormError> => {
         );
         if (verified.statusCode == 200) {
             toast.add({
-                title: $ts("verification_nim_success"),
-                description: $ts("verification_nim_success_desc"),
+                title: 'Verification Nim Success',
+                description: 'Verification Nim Success Desc',
                 color: "success",
             });
             const steps: DriveStep[] = [
                 {
                     element: "#username-register",
                     popover: {
-                        title: $ts("username"),
-                        description: $ts("username_desc"),
+                        title: 'Nama Pengguna',
+                        description: 'Username Desc',
                         side: "right",
                     },
                 },
                 {
                     element: "#email-register",
                     popover: {
-                        title: $ts("email"),
-                        description: $ts("email_desc"),
+                        title: 'Email',
+                        description: 'Email Desc',
                         side: "right",
                     },
                 },
                 {
                     element: "#password",
                     popover: {
-                        title: $ts("password"),
-                        description: $ts("password_desc"),
+                        title: 'Kata Sandi',
+                        description: 'Password Desc',
                         side: "right",
                     },
                 },
                 {
                     element: "#password-retype",
                     popover: {
-                        title: $ts("password_confirmation"),
-                        description: $ts("password_confirmation_desc"),
+                        title: 'Konfirmasi Kata Sandi',
+                        description: 'Password Confirmation Desc',
                         side: "right",
                     },
                 },
                 {
                     element: "#register",
                     popover: {
-                        title: $ts("register"),
-                        description: $ts("register_desc"),
+                        title: 'Daftar',
+                        description: 'Register Desc',
                         side: "right",
                     },
                 },
@@ -178,50 +177,50 @@ const verifyNIM = async (): Promise<true | FormError> => {
             });
             return true;
         } else {
-            toast.add({ title: $ts("verification_nim_failed"), description: $ts('verification_nim_failed_desc'), color: "error" });
+            toast.add({ title: 'Verification Nim Failed', description: 'Verification Nim Failed Desc', color: "error" });
             return { path: "NIM", message: verified.statusMessage };
         }
     } catch (error: any) {
-        toast.add({ title: $ts("verification_nim_failed"), description: $ts('verification_nim_failed_desc'), color: "error" });
+        toast.add({ title: 'Verification Nim Failed', description: 'Verification Nim Failed Desc', color: "error" });
         return { path: error.data.data.path, message: error.data.data.message };
     }
 };
 const verifyNIMFormRules = reactiveComputed<FieldValidationRules>(() => ({
     NIM: async (value: string | number) => {
-        !value ? { path: "NIM", message: $ts("nim_required") } : null;
+        !value ? { path: "NIM", message: 'Nim Required' } : null;
         const isValid = await verifyNIM();
         return isValid === true ? null : isValid;
     },
 }));
 const accountFormRules = reactiveComputed<FieldValidationRules>(() => ({
     username: (value: string) => {
-        return value ? null : { path: "username", message: $ts("username_required") };
+        return value ? null : { path: "username", message: 'Username Required' };
     },
     email: (value: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!value) return { path: "email", message: $ts("email_required") };
-        if (!emailRegex.test(value)) return { path: "email", message: $ts("email_invalid") };
+        if (!value) return { path: "email", message: 'Email Required' };
+        if (!emailRegex.test(value)) return { path: "email", message: 'Email Invalid' };
         return null;
     },
     password: (value: string) => {
-        if (!value) return { path: "password", message: $ts("password_required") };
+        if (!value) return { path: "password", message: 'Password Required' };
         if (value.length < 8) {
-            return { path: "password", message: $ts("password_min_length") }; // Minimum eight characters
+            return { path: "password", message: 'Password Min Length' }; // Minimum eight characters
         }
         if (!/[a-z]/.test(value)) {
-            return { path: "password", message: $ts("password_lowercase_required") }; // At least one lowercase letter
+            return { path: "password", message: 'Password Lowercase Required' }; // At least one lowercase letter
         }
         if (!/[A-Z]/.test(value)) {
-            return { path: "password", message: $ts("password_uppercase_required") }; // At least one uppercase letter
+            return { path: "password", message: 'Password Uppercase Required' }; // At least one uppercase letter
         }
         if (!/\d/.test(value)) {
-            return { path: "password", message: $ts("password_number_required") }; // At least one number
+            return { path: "password", message: 'Password Number Required' }; // At least one number
         }
         return null;
     },
     password_confirmation: (value: string) => {
-        if (!value) return { path: "password_confirmation", message: $ts("password_confirmation_required") };
-        if (value !== stateForm.password) return { path: "password_confirmation", message: $ts("password_confirmation_not_match") };
+        if (!value) return { path: "password_confirmation", message: 'Password Confirmation Required' };
+        if (value !== stateForm.password) return { path: "password_confirmation", message: 'Password Confirmation Not Match' };
         return null;
     },
 }));
@@ -238,13 +237,13 @@ const verifyOTP = async (): Promise<boolean> => {
             },
         });
         if (response.statusCode == 200) {
-            toast.add({ title: $ts("otp_verified"), color: "success" });
+            toast.add({ title: 'Kode OTP berhasil diverifikasi. Anda sekarang dapat melanjutkan.', color: "success" });
             console.log(response.data);
 
             OTPForm.token = response.data?.token || "";
             return true;
         } else {
-            toast.add({ title: $ts("otp_failed"), color: "error" });
+            toast.add({ title: 'Otp Failed', color: "error" });
             return false;
         }
     } catch (error: any) {
@@ -258,34 +257,34 @@ const verifyOTP = async (): Promise<boolean> => {
 const items = computed<Step[]>(() => [
     {
         id: "verifyNIM",
-        label: $ts("verification_nim"),
-        title: $ts("verification_nim"),
-        description: $ts("verification_nim_desc"),
+        label: 'Verification Nim',
+        title: 'Verification Nim',
+        description: 'Verification Nim Desc',
         formData: stateVerifyNIM,
         validationRules: verifyNIMFormRules,
     },
     {
         id: "account",
-        label: $ts("account"),
-        title: $ts("account"),
-        description: $ts("account_desc", { name: fullName.value }),
+        label: 'Akun',
+        title: 'Akun',
+        description: 'Account Desc' /* params: { name: fullName.value } */,
         formData: stateForm,
         validationRules: accountFormRules,
         onNext: register,
     },
     {
         id: "verification",
-        label: $ts("verification"),
-        title: $ts("verification"),
-        description: $ts("verification_desc"),
+        label: 'Verifikasi',
+        title: 'Verifikasi',
+        description: 'Verification Desc',
         formData: OTPForm,
         onNext: verifyOTP,
     },
     {
         id: "finish",
-        label: $ts("finish"),
-        title: $ts("finish"),
-        description: $ts("finish_desc", { name: fullName.value }),
+        label: 'Finish',
+        title: 'Finish',
+        description: 'Finish Desc' /* params: { name: fullName.value } */,
         formData: {},
     }
 ]);
@@ -335,15 +334,15 @@ onMounted(() => {
             element: "#NIM",
             popover: {
                 title: "NIM",
-                description: $ts("nim_desc"),
+                description: 'Nim Desc',
                 side: "right",
             },
         },
         {
             element: "#verify-nim",
             popover: {
-                title: $ts("verification_nim"),
-                description: $ts("verification_nim_btn_desc"),
+                title: 'Verification Nim',
+                description: 'Verification Nim Btn Desc',
                 side: "right",
             },
         },
@@ -380,7 +379,7 @@ onBeforeUnmount(() => {
                     loading="lazy" />
             </div>
             <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">
-                {{ $ts("register") }}
+                {{ 'Daftar' }}
             </h4>
             <CoreStepper :steps="items" v-model="activeTab" @complete="finish" :target-step="targetStep"
                 :skip-validation="hasVerificationParams"
@@ -397,22 +396,22 @@ onBeforeUnmount(() => {
 
                     <div v-if="step?.id === 'account'" class="space-y-3">
                         <div class="px-1 space-y-6 overflow-y-scroll no-scrollbar">
-                            <UFormField :label="$ts('NIM')" id="NIM" name="NIM" :error="errors.NIM?.message">
+                            <UFormField :label="'NIM'" id="NIM" name="NIM" :error="errors.NIM?.message">
                                 <UInput type="number" :size="responsiveUISizes.input" disabled required
                                     v-model="stateVerifyNIM.NIM" color="neutral" variant="outline" />
                             </UFormField>
-                            <UFormField :label="$ts('username')" id="username" name="username"
+                            <UFormField :label="'Nama Pengguna'" id="username" name="username"
                                 :error="errors.username?.message">
                                 <UInput type="text" autocomplete="username" :size="responsiveUISizes.input" required
                                     v-model="stateForm.username" color="neutral" variant="outline" />
                             </UFormField>
-                            <UFormField :label="$ts('email')" id="email-register" name="email"
+                            <UFormField :label="'Email'" id="email-register" name="email"
                                 :error="errors.email?.message">
                                 <UInput type="email" autocomplete="email" :size="responsiveUISizes.input" required
                                     v-model="stateForm.email" color="neutral" variant="outline" />
                             </UFormField>
                             <CorePasswordInput v-model="stateForm.password" />
-                            <UFormField :label="$ts('password_confirmation')" id="password-retype"
+                            <UFormField :label="'Konfirmasi Kata Sandi'" id="password-retype"
                                 name="password-retype" :error="errors.password_confirmation?.message">
                                 <div class="flex w-full gap-1 mt-2">
                                     <UInput color="neutral" variant="outline" :size="responsiveUISizes.input"
@@ -440,7 +439,7 @@ onBeforeUnmount(() => {
                             </p>
                             <UButton @click="SendOTPCode" :disabled="remainingTime > 0" block :loading="loading"
                                 :size="responsiveUISizes.button" color="primary" variant="solid">
-                                {{ $ts("resend_otp") }}
+                                {{ 'Kirim Ulang OTP' }}
                             </UButton>
                         </div>
                     </div>

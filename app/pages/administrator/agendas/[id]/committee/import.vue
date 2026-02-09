@@ -7,7 +7,7 @@ import type { IAgendaResponse } from '~~/types/IResponse';
 definePageMeta({ layout: 'dashboard', middleware: ['sidebase-auth', 'organizer'] });
 const route = useRoute();
 const id = route.params.id as string;
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const toast = useToast();
 const sizes = useResponsiveUiSizes();
 
@@ -18,11 +18,11 @@ const { data: agenda } = await useAsyncData('admin-agenda-detail',
 
 // Navigation Links
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
     to: '/administrator/agendas'
 },
@@ -32,12 +32,12 @@ const links = computed(() => [{
     to: `/administrator/agendas/${id}`
 },
 {
-    label: $ts('committee'),
+    label: 'Panitia',
     to: `/administrator/agendas/${id}/committee`,
     icon: 'i-heroicons-link'
 },
 {
-    label: $ts('import-committee'),
+    label: 'Import-Committee',
     icon: 'i-heroicons-user-group',
 }
 ]);
@@ -85,17 +85,17 @@ const columns = computed<TableColumn<IMember>[]>(() => [
     },
     {
         accessorKey: 'nim',
-        header: $ts('NIM'),
+        header: 'NIM',
         size: 150,
     },
     {
         accessorKey: 'job',
-        header: $ts('Jabatan'),
+        header: 'Jabatan',
         size: 100,
     },
     {
         accessorKey: 'namePreview',
-        header: $ts('Nama (Preview)'),
+        header: 'Nama (Preview)',
         size: 100,
     },
     {
@@ -192,9 +192,10 @@ const submitImport = async () => {
                 <UAlert title="Format Excel" description="Pastikan kolom: NIM dan Jabatan" color="primary"
                     variant="subtle" />
 
-                <UFileUpload @change="handleFileUpload" :label="$ts('drop_zone')"
-                    :description="$ts('drop_zone_hint', { count: 1, format: '.xlsx', size: '5MB' })" layout="list"
-                    position="inside" :max-file-size="5 * 1024 * 1024"
+                <UFileUpload @change="handleFileUpload"
+                    :label="'Seret dan lepas file di sini atau klik untuk mengunggah'"
+                    :description="'Maksimal {size} per file, maksimal {count} file. Format yang didukung: {format}.' /* params: { count: 1, format: '.xlsx', size: '5MB' } */"
+                    layout="list" position="inside" :max-file-size="5 * 1024 * 1024"
                     accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" v-model="file">
                 </UFileUpload>
                 <USeparator class="my-2 md:my-4" />

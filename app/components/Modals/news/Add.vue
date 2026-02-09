@@ -10,7 +10,6 @@ import type { ICategoriesResponse, IMemberResponse, IResponse, ITagsResponse } f
  * Composables
  */
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const toast = useToast();
 const overlay = useOverlay();
 const config = useRuntimeConfig();
@@ -82,7 +81,7 @@ const news = ref<INews>({
  */
 const addNews = async () => {
     if (!file.value) {
-        toast.add({ title: $ts("error"), description: $ts("please_select_image") });
+        toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Please Select Image' });
         return;
     }
     loading.value = true;
@@ -104,10 +103,10 @@ const addNews = async () => {
                 statusMessage: added.statusMessage
             });
         }
-        toast.add({ title: $ts("success"), description: $ts("success_to_add_news") });
+        toast.add({ title: 'Berhasil!', description: 'Success To Add News' });
         emit("triggerRefresh");
     } catch (error: any) {
-        toast.add({ title: $ts("failed"), description: error.statusMessage });
+        toast.add({ title: 'Failed', description: error.statusMessage });
     } finally {
         loading.value = false;
     }
@@ -180,43 +179,42 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
 }));
 </script>
 <template>
-    <UModal :title="$ts('add_news')">
+    <UModal :title="'Add News'">
         <template #body>
             <div class="grid grid-cols-1 space-y-4 md:space-y-6 text-start">
                 <!-- Title input -->
-                <UFormField :label="$ts('title')">
+                <UFormField :label="'Judul'">
                     <UInput type="text" name="Title" id="Title" placeholder="News 1" :size="responsiveUISizes.input"
                         v-model="news.title" required />
                 </UFormField>
                 <!-- Categories input -->
-                <UFormField :label="$ts('category')">
+                <UFormField :label="'Kategori'">
                     <USelectMenu v-model="(news.category as string)" :items="categoryOptions" create-item
                         :size="responsiveUISizes.select" value-key="value" class="w-full"
-                        :placeholder="$ts('select_category')" @create="addNewCategory">
+                        :placeholder="'Pilih Kategori'" @create="addNewCategory">
                     </USelectMenu>
                 </UFormField>
 
                 <!-- Tags input -->
-                <UFormField :label="$ts('tag')">
+                <UFormField :label="'Tag'">
                     <USelectMenu v-model="news.tags" :items="tagsOptions" multiple create-item
-                        :size="responsiveUISizes.select" :placeholder="$ts('select_tag')" @create="addNewTag"
-                        class="w-full">
+                        :size="responsiveUISizes.select" :placeholder="'Pilih Tag'" @create="addNewTag" class="w-full">
                     </USelectMenu>
                 </UFormField>
                 <!-- Image upload -->
-                <UFormField :label="$ts('image')">
+                <UFormField :label="'Gambar'">
                     <UFileUpload :size="responsiveUISizes.input" accept="image/*" v-model="file"
                         @update:model-value="onChangeImage">
                     </UFileUpload>
                 </UFormField>
                 <!-- Description input -->
-                <UFormField :label="$ts('description')">
+                <UFormField :label="'Deskripsi'">
                     <CoreTiptap id="description" v-model="news.body" />
                 </UFormField>
                 <!-- Authors Input -->
-                <UFormField class="col-span-full" :label="$ts('author')">
+                <UFormField class="col-span-full" :label="'Penulis'">
                     <USelectMenu :items="members" :loading="status === 'pending'" :filter-fields="['label', 'email']"
-                        icon="i-lucide-user" :placeholder="$ts('search')" v-model="news.authors as number[]" multiple
+                        icon="i-lucide-user" :placeholder="'Cari...'" v-model="news.authors as number[]" multiple
                         v-model:search-term="searchMember" value-key="value" class="w-full"
                         :size="responsiveUISizes.select">
                         <template #item-label="{ item }">
@@ -233,10 +231,10 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
         </template>
         <template #footer>
             <div class="flex flex-row justify-between w-full gap-2">
-                <UButton @click="$emit('close')" :label="$ts('cancel')" :size="responsiveUISizes.button"
-                    :loading="loading" :disabled="loading" />
+                <UButton @click="$emit('close')" :label="'Batal'" :size="responsiveUISizes.button" :loading="loading"
+                    :disabled="loading" />
                 <!-- Submit button -->
-                <UButton @click="addNews" :label="$ts('save')" :size="responsiveUISizes.button" :loading="loading"
+                <UButton @click="addNews" :label="'Simpan'" :size="responsiveUISizes.button" :loading="loading"
                     :disabled="loading" />
             </div>
         </template>

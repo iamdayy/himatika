@@ -9,7 +9,6 @@ const { $api } = useNuxtApp();
 const overlay = useOverlay();
 const toast = useToast();
 const config = useRuntimeConfig();
-const { $ts } = useI18n();
 const { convert } = useImageToBase64();
 const items = [
     { slot: 'dailyManager', label: 'Daily Manager' },
@@ -178,12 +177,12 @@ const editOrganizer = async () => {
             }
         });
         if (response.statusCode !== 200) {
-            toast.add({ title: $ts('failed'), color: 'error', description: $ts('edit_organizer_failed') });
+            toast.add({ title: 'Failed', color: 'error', description: 'Edit Organizer Failed' });
         }
-        toast.add({ title: $ts('success'), color: 'success', description: $ts('edit_organizer_success') });
+        toast.add({ title: 'Berhasil!', color: 'success', description: 'Edit Organizer Success' });
         emits("refreshTrigger");
     } catch (error) {
-        toast.add({ title: $ts('failed'), color: 'error', description: $ts('edit_organizer_failed') });
+        toast.add({ title: 'Failed', color: 'error', description: 'Edit Organizer Failed' });
     }
 }
 const addNewConsideration = () => {
@@ -251,7 +250,7 @@ onMounted(() => {
 </script>
 <template>
     <UModal :fullscreen="true"
-        :title="$ts('edit_organizer', { count: `${new Date(organizer.period.start).getFullYear()} - ${new Date(organizer.period.end).getFullYear()}` })">
+        :title="'Edit Organizer' /* params: { count: `${new Date(organizer.period.start).getFullYear()} - ${new Date(organizer.period.end).getFullYear()}` } */">
         <template #body>
             <div class="mb-6 ms-3">
                 <label for="Title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Period</label>
@@ -259,20 +258,20 @@ onMounted(() => {
             </div>
             <div class="my-4">
                 <label for="council" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
-                    $ts('council')
+                    'Dewan Institut'
                     }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
                     <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
-                        <UFormField class="col-span-12" :label="$ts('name')" required>
-                            <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
+                        <UFormField class="col-span-12" :label="'Nama Lengkap'" required>
+                            <UInput type="text" name="Name" id="Name" :placeholder="'Nama Lengkap'" required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.name" class="w-full" />
                         </UFormField>
-                        <UFormField class="col-span-12" :label="$ts('position')" required>
+                        <UFormField class="col-span-12" :label="'Jabatan'" required>
                             <UInput type="text" name="Position" id="Position" placeholder="Rector, etc." required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.position"
                                 class="w-full" />
                         </UFormField>
-                        <UFormField class="col-span-12" :label="$ts('image')" required>
+                        <UFormField class="col-span-12" :label="'Gambar'" required>
                             TODO: FIX THIS
                             <DropFile :identifier="i" @change="v => onChangeImages(v, i)" accept="image/*">
                                 <div v-if="filesToCropped[i]!.blob">
@@ -291,18 +290,18 @@ onMounted(() => {
             </div>
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
-                    $ts('advisor')
+                    'Pembina'
                 }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="advisor">
-                    <UFormField class="col-span-12" :label="$ts('name')" required>
-                        <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
+                    <UFormField class="col-span-12" :label="'Nama Lengkap'" required>
+                        <UInput type="text" name="Name" id="Name" :placeholder="'Nama Lengkap'" required
                             :size="responsiveUISizes.input" v-model="organizer.advisor.name" class="w-full" />
                     </UFormField>
-                    <UFormField class="col-span-12" :label="$ts('position')" required>
+                    <UFormField class="col-span-12" :label="'Jabatan'" required>
                         <UInput type="text" name="Position" id="Position" placeholder="Advisor, etc." required
                             :size="responsiveUISizes.input" v-model="organizer.advisor.position" class="w-full" />
                     </UFormField>
-                    <UFormField class="col-span-12" :label="$ts('image')" required>
+                    <UFormField class="col-span-12" :label="'Gambar'" required>
                         <DropFile :identifier="organizer.council.length"
                             @change="v => onChangeImages(v, organizer.council.length)" accept="image/*">
                             <div v-if="filesToCropped[organizer.council.length]!.blob">
@@ -321,11 +320,11 @@ onMounted(() => {
             <div class="my-4">
                 <label for="ConsiderationBoard"
                     class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
-                        $ts('considers') }}</label>
+                        'Dewan Pertimbangan' }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4">
                     <div class="col-span-6" v-for="(consideration, i) in organizer.considerationBoard" :key="i">
                         <USelectMenu :items="members" :loading="status === 'pending'" v-model:search-term="searchMember"
-                            :filter-fields="['label', 'email']" icon="i-lucide-user" :placeholder="$ts('search')"
+                            :filter-fields="['label', 'email']" icon="i-lucide-user" :placeholder="'Cari...'"
                             v-model="(organizer.considerationBoard[i] as number)" value-key="value" class="w-full">
 
                             <template #item-label="{ item }">
@@ -345,15 +344,15 @@ onMounted(() => {
                 <template #dailyManager="{ item }">
                     <UCard>
                         <div class="grid grid-cols-12 gap-2" v-for="(member, i) in organizer.dailyManagement" :key="i">
-                            <UFormField class="col-span-6" :label="$ts('position')" required>
+                            <UFormField class="col-span-6" :label="'Jabatan'" required>
                                 <UInput type="text" name="Position" id="Position" placeholder="Leader, Secretary, etc."
                                     :size="responsiveUISizes.input" required
                                     v-model="organizer.dailyManagement[i]!.position" disabled class="w-full" />
                             </UFormField>
-                            <UFormField class="col-span-6" :label="$ts('member')" required>
+                            <UFormField class="col-span-6" :label="'Anggota'" required>
                                 <USelectMenu :items="members" :loading="status === 'pending'"
                                     :filter-fields="['label', 'email']" icon="i-lucide-user"
-                                    :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                    :placeholder="'Cari...'" v-model:search-term="searchMember"
                                     v-model="(organizer.dailyManagement[i]!.member as number)" value-key="value"
                                     class="w-full">
                                     <template #item-label="{ item }">
@@ -372,15 +371,15 @@ onMounted(() => {
                         <UTabs :items="departementsTabs">
                             <template #departement="{ item, index }">
                                 <div class="grid grid-cols-12 gap-2 my-2">
-                                    <UFormField class="col-span-12" :label="$ts('departement')" required>
+                                    <UFormField class="col-span-12" :label="'Departement'" required>
                                         <UInput type="text" name="Position" id="Position"
                                             :size="responsiveUISizes.input" placeholder="Name of Departement" required
                                             v-model="organizer.department[index]!.name" class="w-full" />
                                     </UFormField>
-                                    <UFormField class="col-span-12 px-2 md:px-4" :label="$ts('coordinator')" required>
+                                    <UFormField class="col-span-12 px-2 md:px-4" :label="'Coordinator'" required>
                                         <USelectMenu :items="members" :loading="status === 'pending'"
                                             :filter-fields="['label', 'email']" icon="i-lucide-user"
-                                            :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                            :placeholder="'Cari...'" v-model:search-term="searchMember"
                                             v-model="(organizer.department[index]!.coordinator as number)"
                                             value-key="value" class="w-full">
 
@@ -393,10 +392,10 @@ onMounted(() => {
                                             </template>
                                         </USelectMenu>
                                     </UFormField>
-                                    <UFormField class="col-span-12" :label="$ts('member')" required>
+                                    <UFormField class="col-span-12" :label="'Anggota'" required>
                                         <USelectMenu :items="members" :loading="status === 'pending'"
                                             :filter-fields="['label', 'email']" icon="i-lucide-user"
-                                            :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                            :placeholder="'Cari...'" v-model:search-term="searchMember"
                                             v-model="organizer.department[index]!.members as number[]" multiple
                                             value-key="value" class="w-full">
 

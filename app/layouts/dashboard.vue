@@ -20,7 +20,6 @@ const isDarkMode = useDark({
     valueLight: 'light',
 });
 const { links } = useDashboardNavigation();
-const { $ts, $switchLocale, $getLocale } = useI18n();
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 /**
@@ -35,30 +34,30 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
         disabled: true
     }],
     [{
-        label: $ts('profile'),
+        label: 'Profil',
         icon: 'i-heroicons-user',
         to: '/profile'
     }],
     [{
-        label: $ts('dashboard'),
+        label: 'Dasbor',
         icon: 'i-heroicons-rectangle-group',
         to: '/dashboard'
     }, {
-        label: $ts('agenda'),
+        label: 'Agenda',
         icon: 'i-heroicons-calendar',
         to: '/dashboard/agendas'
     }, {
-        label: $ts('project'),
+        label: 'Proyek',
         icon: 'i-heroicons-code-bracket',
         to: '/dashboard/projects'
     },
     {
-        label: $ts('aspiration'),
+        label: 'Aspirasi',
         icon: 'i-heroicons-clipboard-document-list',
         to: '/dashboard/aspirations'
     }],
     [{
-        label: $ts('logout'),
+        label: 'Keluar',
         class: 'hover:bg-red-50 hover:dark:bg-red-500',
         onSelect: () => signOut({ callbackUrl: '/login' }),
         icon: 'i-heroicons-arrow-right-start-on-rectangle'
@@ -69,32 +68,17 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
 const itemsNotLogged = computed<DropdownMenuItem[][]>(() => [
     [
         {
-            label: $ts('login'),
+            label: 'Masuk',
             to: '/login'
         },
         {
-            label: $ts('register'),
+            label: 'Daftar',
             to: '/register'
         }
     ]
 ])
 
-const languages = computed<DropdownMenuItem[][]>(() => [
-    [
-        {
-            label: 'English',
-            icon: 'i-heroicons-globe',
-            disabled: $getLocale() === 'en',
-            onSelect: () => $switchLocale('en')
-        },
-        {
-            label: 'Indonesia',
-            icon: 'i-heroicons-globe',
-            disabled: $getLocale() === 'id',
-            onSelect: () => $switchLocale('id')
-        }
-    ]
-])
+
 
 // Computed property to determine which items to show based on login status
 const items = computed(() => (isLoggedIn.value ? itemsIsLogged.value : itemsNotLogged.value) satisfies DropdownMenuItem[][]);
@@ -143,7 +127,7 @@ const openSlideOver = ref<boolean>(false);
                                         <div class="overflow-ellipsis">
                                             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                 user?.username
-                                            }}
+                                                }}
                                             </h2>
                                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                 user?.member.NIM }}
@@ -162,10 +146,6 @@ const openSlideOver = ref<boolean>(false);
                 <!-- Mobile menu button -->
                 <!-- User actions -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
-                    <!-- Language dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
-                        <UButton icon="i-heroicons-language" variant="link" color="neutral" />
-                    </UDropdownMenu>
                     <!-- Dark mode toggle -->
                     <button id="theme-toggle" type="button" @click="isDarkMode = !isDarkMode"
                         class="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-100 focus:outline-none rounded-lg text-sm p-2.5">
@@ -191,7 +171,7 @@ const openSlideOver = ref<boolean>(false);
                         <template #account="{ item }">
                             <div class="text-left">
                                 <p>
-                                    {{ $ts('signed_as') }}
+                                    {{ 'Masuk Sebagai' }}
                                 </p>
                                 <p class="font-medium text-gray-900 truncate dark:text-white">
                                     {{ (item as any).label }}

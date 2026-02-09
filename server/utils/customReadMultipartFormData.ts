@@ -5,7 +5,6 @@ import {
   getRequestHeader,
   readMultipartFormData,
 } from "h3";
-import sharp from "sharp";
 
 /**
  * Mendefinisikan struktur objek file yang akan kita buat.
@@ -102,38 +101,39 @@ export async function customReadMultipartFormData<T>(
           // C. Kompresi Gambar (Jika options.compress ada & file adalah gambar)
           if (options.compress && fileType && fileType.startsWith("image/")) {
             try {
-              // Inisialisasi Sharp
-              let pipeline = sharp(fileData);
-
-              // 1. Resize (Jika diminta)
-              if (options.compress.maxWidth || options.compress.maxHeight) {
-                pipeline = pipeline.resize({
-                  width: options.compress.maxWidth,
-                  height: options.compress.maxHeight,
-                  fit: "inside", // Mempertahankan aspek rasio
-                  withoutEnlargement: true, // Jangan perbesar gambar kecil
-                });
+              const config = useRuntimeConfig();
+              const workerUrl = config.pdf_worker_api_url || 'http://localhost:5000';
+              
+              const formData = new FormData();
+              const blob = new Blob([fileData as any], { type: fileType });
+              formData.append('file', blob, data.filename);
+              
+              if (options.compress.quality) {
+                formData.append('quality', options.compress.quality.toString());
+              }
+              if (options.compress.maxWidth) {
+                formData.append('maxWidth', options.compress.maxWidth.toString());
+              }
+              if (options.compress.maxHeight) {
+                formData.append('maxHeight', options.compress.maxHeight.toString());
               }
 
-              // 2. Kompresi berdasarkan tipe file asli
-              const quality = options.compress.quality || 80;
+              const response = await fetch(`${workerUrl}/api/tools/compress-image`, {
+                method: 'POST',
+                body: formData,
+              });
 
-              if (fileType === "image/jpeg" || fileType === "image/jpg") {
-                pipeline = pipeline.jpeg({ quality, mozjpeg: true });
-              } else if (fileType === "image/png") {
-                pipeline = pipeline.png({ quality, compressionLevel: 8 });
-              } else if (fileType === "image/webp") {
-                pipeline = pipeline.webp({ quality });
+              if (!response.ok) {
+                 console.warn(`[Compression Warning] Worker returned ${response.status}`);
+              } else {
+                 const result = await response.json();
+                 if (result.success && result.data) {
+                    // Result data is base64 string
+                    fileData = Buffer.from(result.data, 'base64');
+                 } else {
+                    console.warn(`[Compression Warning] Worker failed: ${result.error}`);
+                 }
               }
-              // Format lain (gif, svg) biasanya dibiarkan atau perlu penanganan khusus
-
-              // Simpan hasil kompresi ke buffer baru
-              const compressedBuffer = await pipeline.toBuffer();
-
-              // Ganti data asli dengan data terkompresi
-              fileData = compressedBuffer;
-
-              // Opsional: Cek ukuran lagi setelah kompresi (biasanya tidak perlu karena pasti lebih kecil/mirip)
             } catch (error) {
               console.warn(
                 `[Compression Warning] Failed to compress ${data.filename}:`,
@@ -142,6 +142,7 @@ export async function customReadMultipartFormData<T>(
               // Jika gagal kompresi, kita biarkan file asli (fallback)
             }
           }
+
 
           parsedData[key] = {
             name: data.filename,

@@ -15,8 +15,6 @@ definePageMeta({
 useHead({
     title: "My Profile"
 });
-
-const { $ts } = useI18n();
 // Fetch user data and refresh function
 const { data: user, refresh } = useAuth();
 
@@ -194,48 +192,48 @@ onMounted(() => {
         {
             element: '#profile',
             popover: {
-                title: $ts('profile'),
-                description: $ts('profile_desc'),
+                title: 'Profil',
+                description: 'Profile Desc',
                 side: 'right'
             },
         },
         {
             element: '#avatar',
             popover: {
-                title: $ts('photo_profile'),
-                description: $ts('avatar_desc'),
+                title: 'Photo Profile',
+                description: 'Avatar Desc',
                 side: 'right'
             }
         },
         {
             element: '#details',
             popover: {
-                title: $ts('details'),
-                description: $ts('details_desc'),
+                title: 'Details',
+                description: 'Details Desc',
                 side: 'right'
             }
         },
         {
             element: '#organization',
             popover: {
-                title: $ts('organization'),
-                description: $ts('organization_desc'),
+                title: 'Organisasi',
+                description: 'Organization Desc',
                 side: 'right'
             }
         },
         {
             element: '#activiness',
             popover: {
-                title: $ts('generate_activiness_letter'),
-                description: $ts('generate_activiness_letter_description'),
+                title: 'Generate Activiness Letter',
+                description: 'Generate Activiness Letter Description',
                 side: 'right'
             }
         },
         {
             element: '#edit',
             popover: {
-                title: $ts('edit'),
-                description: $ts('edit_desc'),
+                title: 'Edit',
+                description: 'Edit Desc',
                 side: 'right'
             }
         }
@@ -318,19 +316,19 @@ const getManualPointsByRange = (range: { start: Date; end: Date }) => {
 
 const tabItems = computed(() => [
     {
-        label: $ts('personal_information'),
+        label: 'Informasi Pribadi',
         icon: 'i-heroicons-user',
         slot: 'personal' as const
     },
     {
-        label: $ts('organization'),
+        label: 'Organisasi',
         icon: 'i-heroicons-building-office-2',
         slot: 'organization' as const
     }
 ] satisfies TabsItem[]);
 const breadcumbs = computed(() => [
-    { label: $ts('dashboard'), icon: 'i-heroicons-home', to: '/dashboard' },
-    { label: $ts('profile'), icon: 'i-heroicons-user' }
+    { label: 'Dasbor', icon: 'i-heroicons-home', to: '/dashboard' },
+    { label: 'Profil', icon: 'i-heroicons-user' }
 ]);
 </script>
 <template>
@@ -355,7 +353,7 @@ const breadcumbs = computed(() => [
                                 <div class="flex items-center justify-between">
                                     <h5
                                         class="text-xl font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                                        {{ $ts('personal_information') }}
+                                        {{ 'Informasi Pribadi' }}
                                     </h5>
                                     <UButton id="edit" icon="i-heroicons-pencil-square" color="neutral" variant="ghost"
                                         @click="editMode = !editMode" />
@@ -365,13 +363,13 @@ const breadcumbs = computed(() => [
                                 <!-- User details -->
                                 <div class="flex flex-col pb-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
-                                        $ts('name') }}
+                                        'Nama Lengkap' }}
                                     </dt>
                                     <dd class="text-base font-semibold sm:text-lg">{{ user?.member.fullName }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
-                                        $ts('birth') }}
+                                        'Tempat & Tanggal Lahir' }}
                                     </dt>
                                     <div class="flex flex-col items-start justify-start md:items-center md:flex-row"
                                         v-if="editMode">
@@ -391,29 +389,30 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
-                                        $ts('gender') }}
+                                        'Jenis Kelamin' }}
                                     </dt>
                                     <USelect v-model="member.sex" v-if="editMode"
-                                        :items="[{ value: 'male', label: $ts('male') }, { value: 'female', label: $ts('female') }]">
+                                        :items="[{ value: 'male', label: 'Laki-laki' }, { value: 'female', label: 'Perempuan' }]">
                                     </USelect>
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{
-                                        $ts(member.sex === 'male' ? 'male' : 'female') }}</dd>
+                                        member.sex === 'male' ? 'Laki-laki' : 'Perempuan' }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
-                                        $ts('religion') }}
+                                        'Agama' }}
                                     </dt>
                                     <UInput v-model="member.religion" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.religion }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
-                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('citizenship')
-                                    }}</dt>
+                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ 'Kewarganegaraan'
+                                        }}</dt>
                                     <UInput v-model="member.citizen" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.citizen }}</dd>
                                 </div>
                                 <div class="flex flex-col pt-2">
-                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('phone') }}</dt>
+                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ 'Nomor Telepon' }}
+                                    </dt>
                                     <UInput v-model="member.phone" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.phone }}</dd>
                                 </div>
@@ -423,14 +422,14 @@ const breadcumbs = computed(() => [
                             <template #header>
                                 <h5
                                     class="text-lg font-semibold text-gray-600 md:text-2xl md:font-semibold dark:text-gray-200">
-                                    {{ $ts('address') }}
+                                    {{ 'Alamat' }}
                                 </h5>
                             </template>
                             <dl class="text-gray-800 dark:text-white">
                                 <!-- User Address -->
                                 <div class="flex flex-col pb-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
-                                        $ts('address') }}
+                                        'Alamat' }}
                                     </dt>
                                     <UTextarea v-if="editMode" placeholder="Address "
                                         v-model="member.address.fullAddress">
@@ -441,7 +440,7 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
-                                        $ts('village') }}
+                                        'Desa/Kelurahan' }}
                                     </dt>
                                     <UInput v-model="member.address.village" v-if="editMode" />
                                     <dd v-else class="text-base font-semibold sm:text-lg">{{
@@ -450,30 +449,31 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
-                                        $ts('district') }}
+                                        'Kecamatan' }}
                                     </dt>
                                     <UInput v-model="member.address.district" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.address.district }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
-                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('city') }}</dt>
+                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ 'Kota/Kabupaten' }}
+                                    </dt>
                                     <UInput v-model="member.address.city" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.address.city }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
-                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('province') }}
+                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ 'Provinsi' }}
                                     </dt>
                                     <UInput v-model="member.address.province" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.address.province }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
-                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('country') }}
+                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ 'Negara' }}
                                     </dt>
                                     <UInput v-model="member.address.country" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.address.country }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
-                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('zipcode') }}
+                                    <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ 'Kode Pos' }}
                                     </dt>
                                     <UInput v-model="member.address.zip" v-if="editMode" type="number" />
                                     <dd v-else class="text-lg font-semibold">{{ member.address.zip }}</dd>
@@ -487,7 +487,7 @@ const breadcumbs = computed(() => [
                         <!-- Current Role -->
                         <UCard>
                             <template #header>
-                                <h3 class="text-lg font-semibold">{{ $ts('organization') }}</h3>
+                                <h3 class="text-lg font-semibold">{{ 'Organisasi' }}</h3>
                             </template>
 
                             <div class="flex items-center justify-between" v-if="member.organizer">
@@ -501,17 +501,17 @@ const breadcumbs = computed(() => [
                                 <UBadge
                                     :color="new Date(member.organizer?.period.end) > new Date() ? 'success' : 'neutral'"
                                     variant="subtle">
-                                    {{ new Date(member.organizer?.period.end) > new Date() ? $ts('active') :
-                                        $ts('inactive') }}
+                                    {{ new Date(member.organizer?.period.end) > new Date() ? 'Aktif' :
+                                        'Tidak Aktif' }}
                                 </UBadge>
                             </div>
                             <div class="flex items-center justify-between" v-else>
                                 <div>
-                                    <h4 class="font-medium">{{ $ts('member') }}</h4>
+                                    <h4 class="font-medium">{{ 'Anggota' }}</h4>
                                 </div>
                                 <UBadge :color="Number(member.semester) > 14 ? 'error' : 'success'" variant="subtle">{{
                                     Number(member.semester) > 14
-                                        ? $ts('active') : $ts('inactive') }}</UBadge>
+                                        ? 'Aktif' : 'Tidak Aktif' }}</UBadge>
                             </div>
                         </UCard>
 
@@ -538,7 +538,7 @@ const breadcumbs = computed(() => [
                         <!-- Points Summary -->
                         <UCard>
                             <template #header>
-                                <h3 class="text-lg font-semibold">{{ $ts('point_summary') }}</h3>
+                                <h3 class="text-lg font-semibold">{{ 'Point Summary' }}</h3>
                             </template>
 
                             <div class="space-y-4">
@@ -552,7 +552,7 @@ const breadcumbs = computed(() => [
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{
                                                     member.point[index]!.point
-                                                    }} pts</UBadge>
+                                                }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -563,8 +563,8 @@ const breadcumbs = computed(() => [
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.agendas.committees +
                                                         member.point[index]!.activities.agendas.participants }}</div>
-                                                    <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
-                                                        }}
+                                                    <div class="text-gray-500 dark:text-gray-300">{{ 'Agenda'
+                                                    }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -573,8 +573,8 @@ const breadcumbs = computed(() => [
                                                         ||
                                                         0
                                                     }}</div>
-                                                    <div class="text-gray-500 dark:text-gray-300">{{ $ts('project')
-                                                        }}
+                                                    <div class="text-gray-500 dark:text-gray-300">{{ 'Proyek'
+                                                    }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -582,16 +582,16 @@ const breadcumbs = computed(() => [
                                                         getAspirationsByRange(member.point[index]!.range)?.length ||
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
-                                                        $ts('aspiration')
-                                                        }}</div>
+                                                        'Aspirasi'
+                                                    }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
                                                         getManualPointsByRange(member.point[index]!.range)?.length ||
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
-                                                        $ts('achievement')
-                                                        }}</div>
+                                                        'Pencapaian'
+                                                    }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -602,7 +602,7 @@ const breadcumbs = computed(() => [
                                                 <UCard>
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
-                                                            <h3 class="text-lg font-semibold">{{ $ts('agenda') }}
+                                                            <h3 class="text-lg font-semibold">{{ 'Agenda' }}
                                                             </h3>
                                                             <UBadge variant="subtle">
                                                                 {{
@@ -618,7 +618,7 @@ const breadcumbs = computed(() => [
                                                     <div class="space-y-4">
                                                         <div
                                                             v-if="getAgendasCommitteeByRange(member.point[index]!.range) && getAgendasCommitteeByRange(member.point[index]!.range).length > 0">
-                                                            <h4 class="font-medium mb-2">{{ $ts('committee') }}</h4>
+                                                            <h4 class="font-medium mb-2">{{ 'Panitia' }}</h4>
                                                             <div class="space-y-2">
                                                                 <div v-for="agenda, i in getAgendasCommitteeByRange(member.point[index]!.range)"
                                                                     :key="i"
@@ -639,7 +639,7 @@ const breadcumbs = computed(() => [
 
                                                         <div
                                                             v-if="getAgendasMemberByRange(member.point[index]!.range) && getAgendasMemberByRange(member.point[index]!.range).length > 0">
-                                                            <h4 class="font-medium mb-2">{{ $ts('participant') }}
+                                                            <h4 class="font-medium mb-2">{{ 'Peserta' }}
                                                             </h4>
                                                             <div class="space-y-2">
                                                                 <div v-for="agenda, i in getAgendasMemberByRange(member.point[index]!.range)"
@@ -661,7 +661,7 @@ const breadcumbs = computed(() => [
 
                                                         <div v-if="(!getAgendasCommitteeByRange(member.point[index]!.range) || getAgendasCommitteeByRange(member.point[index]!.range).length === 0) && (!getAgendasMemberByRange(member.point[index]!.range) || getAgendasMemberByRange(member.point[index]!.range).length === 0)"
                                                             class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                                            {{ $ts('no_agendas') }}
+                                                            {{ 'No Agendas' }}
                                                         </div>
                                                     </div>
                                                 </UCard>
@@ -688,7 +688,7 @@ const breadcumbs = computed(() => [
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                    }}</p>
+                                                                        }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -705,7 +705,7 @@ const breadcumbs = computed(() => [
                                                         </div>
                                                         <div v-else
                                                             class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                                            {{ $ts('no_projects') }}
+                                                            {{ 'No Projects' }}
                                                         </div>
                                                     </div>
                                                 </UCard>
@@ -713,13 +713,13 @@ const breadcumbs = computed(() => [
                                                 <UCard>
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
-                                                            <h3 class="text-lg font-semibold">{{ $ts('aspiration')
-                                                                }}
+                                                            <h3 class="text-lg font-semibold">{{ 'Aspirasi'
+                                                            }}
                                                             </h3>
                                                             <UBadge variant="subtle">{{
                                                                 getAspirationsByRange(member.point[index]!.range)?.length
                                                                 ||
-                                                                0 }} {{ $ts('aspiration') }}
+                                                                0 }} {{ 'Aspirasi' }}
                                                             </UBadge>
                                                         </div>
                                                     </template>
@@ -740,14 +740,14 @@ const breadcumbs = computed(() => [
                                                     </div>
                                                     <div v-else
                                                         class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                                        {{ $ts('no_aspirations') }}
+                                                        {{ 'No Aspirations' }}
                                                     </div>
                                                 </UCard>
                                                 <UCard
                                                     v-if="getManualPointsByRange(member.point[index]!.range)?.length > 0"
                                                     class="mt-4">
                                                     <template #header>
-                                                        <h3 class="text-lg font-semibold">{{ $ts('achievement') }}</h3>
+                                                        <h3 class="text-lg font-semibold">{{ 'Pencapaian' }}</h3>
                                                     </template>
                                                     <div class="space-y-4">
                                                         <div v-for="manualPoint, i in getManualPointsByRange(member.point[index]!.range)"
@@ -770,7 +770,7 @@ const breadcumbs = computed(() => [
 
                                 </div>
                                 <div v-else class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                    {{ $ts('no_points_data') }}
+                                    {{ 'No Points Data' }}
                                 </div>
                             </div>
                         </UCard>
@@ -811,18 +811,18 @@ const breadcumbs = computed(() => [
                                 </dd>
                             </div>
                             <div class="flex flex-col py-3">
-                                <dt class="text-sm text-gray-500 dark:text-gray-400">{{ $ts('class') }}</dt>
+                                <dt class="text-sm text-gray-500 dark:text-gray-400">{{ 'Kelas' }}</dt>
                                 <UInput v-model="member.class" placeholder="Class" v-if="editMode" />
                                 <dd v-else class="text-lg font-semibold">{{ user?.member.class }}</dd>
                             </div>
                             <div class="flex flex-col py-3">
-                                <dt class="text-sm text-gray-500 dark:text-gray-400">{{ $ts('semester') }}</dt>
+                                <dt class="text-sm text-gray-500 dark:text-gray-400">{{ 'Semester' }}</dt>
 
                                 <UInput v-model="member.semester" placeholder="Semester" v-if="editMode" />
                                 <dd class="text-lg font-semibold" v-else>{{ user?.member.semester }}</dd>
                             </div>
                             <div class="flex flex-col">
-                                <dt class="text-sm text-gray-500 dark:text-gray-400">{{ $ts('generation') }}</dt>
+                                <dt class="text-sm text-gray-500 dark:text-gray-400">{{ 'Angkatan' }}</dt>
                                 <dd class="text-lg font-semibold">{{ member.enteredYear }}</dd>
                             </div>
                         </dl>
@@ -830,16 +830,16 @@ const breadcumbs = computed(() => [
                 </UCard>
                 <UCard>
                     <div class="flex flex-col pt-3 gap-4">
-                        <UButton block :label="$ts('generate_activiness_letter')" variant="solid"
+                        <UButton block :label="'Generate Activiness Letter'" variant="solid"
                             @click="generateActivinessLetterConfirm" />
                         <div class="flex flex-row gap-2">
-                            <UButton block class="flex-1" :label="$ts('change_email')" size="sm" color="success"
+                            <UButton block class="flex-1" :label="'Ubah Email'" size="sm" color="success"
                                 :to="{ path: '/change-email', query: { NIM: user?.member.NIM, email: user?.member.email, username: user?.username } }" />
-                            <UButton block class="flex-1" :label="$ts('change_password')" size="sm" color="error"
+                            <UButton block class="flex-1" :label="'Ubah Kata Sandi'" size="sm" color="error"
                                 :to="{ path: '/change-password' }" />
                         </div>
-                        <UButton block :label="editMode ? $ts('cancel') : $ts('edit')"
-                            :color="editMode ? 'error' : 'success'" @click="editMode = !editMode" />
+                        <UButton block :label="editMode ? 'Batal' : 'Edit'" :color="editMode ? 'error' : 'success'"
+                            @click="editMode = !editMode" />
                         <UButton block label="Save" @click="saveProfile" class="pt-2" v-if="editMode" />
                     </div>
                 </UCard>

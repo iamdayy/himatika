@@ -36,7 +36,7 @@
                                     <UButton color="neutral" variant="outline" size="sm" v-if="isOrganizer"
                                         @click="editModal">
                                         <UIcon name="i-heroicons-pencil-square" class="w-4 h-4 mr-2" />
-                                        {{ $ts('edit') }}
+                                        {{ 'Edit' }}
                                     </UButton>
                                 </div>
                             </div>
@@ -54,7 +54,7 @@
                             <!-- Personal Details Card -->
                             <UCard>
                                 <template #header>
-                                    <h3 class="text-lg font-semibold">{{ $ts('personal_information') }}</h3>
+                                    <h3 class="text-lg font-semibold">{{ 'Informasi Pribadi' }}</h3>
                                 </template>
 
                                 <div class="space-y-4">
@@ -63,7 +63,7 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                    $ts('birth')
+                                                    'Tempat & Tanggal Lahir'
                                                 }}</label>
                                             <p class="text-sm">{{ member.birth?.place || 'Not specified' }},
                                                 {{ member.birth?.date ? formatDate(member.birth.date) : 'Not specified'
@@ -73,19 +73,19 @@
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                    $ts('gender') }}</label>
+                                                    'Jenis Kelamin' }}</label>
                                             <p class="text-sm capitalize">{{ member.sex || 'Not specified' }}</p>
                                         </div>
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                    $ts('religion') }}</label>
+                                                    'Agama' }}</label>
                                             <p class="text-sm">{{ member.religion || 'Not specified' }}</p>
                                         </div>
                                         <div>
                                             <label
                                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                    $ts('citizenship') }}</label>
+                                                    'Kewarganegaraan' }}</label>
                                             <p class="text-sm">{{ member.citizen || 'Not specified' }}</p>
                                         </div>
                                     </div>
@@ -96,14 +96,14 @@
                             <!-- Contact Information Card -->
                             <UCard>
                                 <template #header>
-                                    <h3 class="text-lg font-semibold">{{ $ts('contact_information') }}</h3>
+                                    <h3 class="text-lg font-semibold">{{ 'Contact Information' }}</h3>
                                 </template>
 
                                 <div class="space-y-4">
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                $ts('email') }}</label>
+                                                'Email' }}</label>
                                         <div class="flex items-center gap-2">
                                             <UIcon name="i-heroicons-envelope" class="w-4 h-4 text-gray-400" />
                                             <p class="text-sm">{{ member.email }}</p>
@@ -113,7 +113,7 @@
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                $ts('phone') }}</label>
+                                                'Nomor Telepon' }}</label>
                                         <div class="flex items-center gap-2">
                                             <UIcon name="i-heroicons-phone" class="w-4 h-4 text-gray-400" />
                                             <p class="text-sm">{{ member.phone || 'Not specified' }}</p>
@@ -123,7 +123,7 @@
                                     <div v-if="member.address">
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                $ts('address') }}</label>
+                                                'Alamat' }}</label>
                                         <div class="flex items-start gap-2">
                                             <UIcon name="i-heroicons-map-pin" class="w-4 h-4 text-gray-400 mt-0.5" />
                                             <div class="text-sm">
@@ -142,7 +142,7 @@
                         <!-- Academic Details -->
                         <UCard>
                             <template #header>
-                                <h3 class="text-lg font-semibold">{{ $ts('academic_information') }}</h3>
+                                <h3 class="text-lg font-semibold">{{ 'Academic Information' }}</h3>
                             </template>
 
                             <div class="space-y-4">
@@ -150,22 +150,22 @@
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                $ts('class')
+                                                'Kelas'
                                             }}</label>
                                         <p class="text-sm">{{ member.class }}</p>
                                     </div>
                                     <div>
                                         <label
                                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                                $ts('semester') }}</label>
+                                                'Semester' }}</label>
                                         <p class="text-sm">{{ member.semester }}</p>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                        $ts('generation')
-                                    }}</label>
+                                        'Angkatan'
+                                        }}</label>
                                     <p class="text-sm">{{ member.enteredYear || 'Not specified' }}</p>
                                 </div>
                             </div>
@@ -179,7 +179,7 @@
                         <!-- Current Role -->
                         <UCard v-if="member.organizer">
                             <template #header>
-                                <h3 class="text-lg font-semibold">{{ $ts('organization') }}</h3>
+                                <h3 class="text-lg font-semibold">{{ 'Organisasi' }}</h3>
                             </template>
 
                             <div class="flex items-center justify-between">
@@ -193,15 +193,15 @@
                                 <UBadge
                                     :color="new Date(member.organizer.period.end) > new Date() ? 'success' : 'neutral'"
                                     variant="subtle">
-                                    {{ new Date(member.organizer.period.end) > new Date() ? $ts('active') :
-                                        $ts('inactive') }}
+                                    {{ new Date(member.organizer.period.end) > new Date() ? 'Aktif' :
+                                        'Tidak Aktif' }}
                                 </UBadge>
                             </div>
                         </UCard>
                         <!-- Points Summary -->
                         <UCard>
                             <template #header>
-                                <h3 class="text-lg font-semibold">{{ $ts('point_summary') }}</h3>
+                                <h3 class="text-lg font-semibold">{{ 'Point Summary' }}</h3>
                             </template>
 
                             <div class="space-y-4">
@@ -214,7 +214,7 @@
                                                     {{ member.point[index]!.semester
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{ member.point[index]!.point
-                                                    }} pts</UBadge>
+                                                }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -225,26 +225,26 @@
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.agendas.committees +
                                                         member.point[index]!.activities.agendas.participants }}</div>
-                                                    <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda') }}
+                                                    <div class="text-gray-500 dark:text-gray-300">{{ 'Agenda' }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{ member.point[index]!.activities.projects
-                                                        }}</div>
-                                                    <div class="text-gray-500 dark:text-gray-300">{{ $ts('project') }}
+                                                    }}</div>
+                                                    <div class="text-gray-500 dark:text-gray-300">{{ 'Proyek' }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.aspirations }}</div>
-                                                    <div class="text-gray-500 dark:text-gray-300">{{ $ts('aspiration')
-                                                    }}</div>
+                                                    <div class="text-gray-500 dark:text-gray-300">{{ 'Aspirasi'
+                                                        }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.manualPoints }}</div>
-                                                    <div class="text-gray-500 dark:text-gray-300">{{ $ts('achievement')
-                                                    }}</div>
+                                                    <div class="text-gray-500 dark:text-gray-300">{{ 'Pencapaian'
+                                                        }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -255,7 +255,7 @@
                                                 <UCard>
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
-                                                            <h3 class="text-lg font-semibold">{{ $ts('agenda') }}</h3>
+                                                            <h3 class="text-lg font-semibold">{{ 'Agenda' }}</h3>
                                                             <UBadge variant="subtle">
                                                                 {{
                                                                     (getAgendasCommitteeByRange(member.point[index]!.range)?.length
@@ -270,7 +270,7 @@
                                                     <div class="space-y-4">
                                                         <div
                                                             v-if="getAgendasCommitteeByRange(member.point[index]!.range) && getAgendasCommitteeByRange(member.point[index]!.range).length > 0">
-                                                            <h4 class="font-medium mb-2">{{ $ts('committee') }}</h4>
+                                                            <h4 class="font-medium mb-2">{{ 'Panitia' }}</h4>
                                                             <div class="space-y-2">
                                                                 <div v-for="agenda, i in getAgendasCommitteeByRange(member.point[index]!.range)"
                                                                     :key="i"
@@ -282,14 +282,14 @@
                                                                             {{ agenda.at }}</p>
                                                                     </div>
                                                                     <UBadge color="success" variant="subtle">{{
-                                                                        $ts('committee') }}</UBadge>
+                                                                        'Panitia' }}</UBadge>
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         <div
                                                             v-if="getAgendasMemberByRange(member.point[index]!.range) && getAgendasMemberByRange(member.point[index]!.range).length > 0">
-                                                            <h4 class="font-medium mb-2">{{ $ts('participant') }}
+                                                            <h4 class="font-medium mb-2">{{ 'Peserta' }}
                                                             </h4>
                                                             <div class="space-y-2">
                                                                 <div v-for="agenda, i in getAgendasMemberByRange(member.point[index]!.range)"
@@ -301,7 +301,7 @@
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
                                                                             {{ agenda.at }}</p>
                                                                     </div>
-                                                                    <UBadge variant="subtle">{{ $ts('participant') }}
+                                                                    <UBadge variant="subtle">{{ 'Peserta' }}
                                                                     </UBadge>
                                                                 </div>
                                                             </div>
@@ -309,7 +309,7 @@
 
                                                         <div v-if="(!getAgendasCommitteeByRange(member.point[index]!.range) || getAgendasCommitteeByRange(member.point[index]!.range).length === 0) && (!getAgendasMemberByRange(member.point[index]!.range) || getAgendasMemberByRange(member.point[index]!.range).length === 0)"
                                                             class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                                            {{ $ts('no_agendas') }}
+                                                            {{ 'No Agendas' }}
                                                         </div>
                                                     </div>
                                                 </UCard>
@@ -336,7 +336,7 @@
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                        }}</p>
+                                                                    }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -353,7 +353,7 @@
                                                         </div>
                                                         <div v-else
                                                             class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                                            {{ $ts('no_projects') }}
+                                                            {{ 'No Projects' }}
                                                         </div>
                                                     </div>
                                                 </UCard>
@@ -361,12 +361,12 @@
                                                 <UCard>
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
-                                                            <h3 class="text-lg font-semibold">{{ $ts('aspiration') }}
+                                                            <h3 class="text-lg font-semibold">{{ 'Aspirasi' }}
                                                             </h3>
                                                             <UBadge variant="subtle">{{
                                                                 getAspirationsByRange(member.point[index]!.range)?.length
                                                                 ||
-                                                                0 }} {{ $ts('aspiration') }}
+                                                                0 }} {{ 'Aspirasi' }}
                                                             </UBadge>
                                                         </div>
                                                     </template>
@@ -386,18 +386,18 @@
                                                     </div>
                                                     <div v-else
                                                         class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                                        {{ $ts('no_aspirations') }}
+                                                        {{ 'No Aspirations' }}
                                                     </div>
                                                 </UCard>
                                                 <!-- Achievements / Manual Point -->
                                                 <UCard>
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
-                                                            <h3 class="text-lg font-medium">{{ $ts('achievement') }}
+                                                            <h3 class="text-lg font-medium">{{ 'Pencapaian' }}
                                                             </h3>
                                                             <UBadge color="secondary" variant="subtle">{{
                                                                 getManualPointsByRange(member.point[index]!.range).length
-                                                                }}</UBadge>
+                                                            }}</UBadge>
                                                         </div>
                                                     </template>
                                                     <div class="p-6 space-y-4">
@@ -420,7 +420,7 @@
 
                                 </div>
                                 <div v-else class="text-center text-gray-500 dark:text-gray-300 py-4">
-                                    {{ $ts('no_points_data') }}
+                                    {{ 'No Points Data' }}
                                 </div>
                             </div>
                         </UCard>
@@ -448,7 +448,7 @@ import type { AccordionItem, TabsItem } from '@nuxt/ui';
 import type { IMember } from '~~/types';
 import type { IMemberResponse } from '~~/types/IResponse';
 
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const overlay = useOverlay();
 const toast = useToast();
 const EditMemberModal = overlay.create(ModalsMemberEdit);
@@ -469,12 +469,12 @@ const member = computed<IMember | undefined>(() => memberData.value?.data?.membe
 const tabs = computed<TabsItem[]>(() => [
     {
         slot: 'personal' as const,
-        label: $ts('profile_tabs_personal'),
+        label: 'Profile Tabs Personal',
         icon: 'i-heroicons-user'
     },
     {
         slot: 'organization' as const,
-        label: $ts('profile_tabs_organization'),
+        label: 'Profile Tabs Organization',
         icon: 'i-heroicons-building-office'
     },
 ] satisfies TabsItem[]);

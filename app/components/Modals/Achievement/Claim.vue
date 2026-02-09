@@ -129,7 +129,7 @@ const submit = async () => {
 
         <template #footer>
             <div class="flex justify-between gap-2 w-full">
-                <UButton variant="ghost" @click="$emit('close')">Batal</UButton>
+                <UButton variant="ghost" @click="emit('close')">Batal</UButton>
                 <UButton :loading="loading" @click="submit">{{ initialData ? 'Simpan Perubahan' : 'Kirim Klaim' }}
                 </UButton>
             </div>

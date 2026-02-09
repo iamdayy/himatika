@@ -17,7 +17,6 @@ const router = useRouter();
 const overlay = useOverlay();
 const toast = useToast();
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const config = useRuntimeConfig();
 
 const { data: agenda } = useAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
@@ -49,16 +48,16 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
 }));
 
 const canSeeAndRegisterOptions = [
-    { label: $ts('public'), value: 'Public' },
-    { label: $ts('organizer'), value: 'Organizer' },
-    { label: $ts('member'), value: 'Member' },
-    { label: $ts('none'), value: 'None' },
+    { label: 'Publik', value: 'Public' },
+    { label: 'pengurus', value: 'Organizer' },
+    { label: 'Anggota', value: 'Member' },
+    { label: 'Tidak Ada', value: 'None' },
 ]
 const canSeeAndRegisterOptionsWithNone = [
-    { label: $ts('public'), value: 'Public' },
-    { label: $ts('organizer'), value: 'Organizer' },
-    { label: $ts('member'), value: 'Member' },
-    { label: $ts('none'), value: 'None' },
+    { label: 'Publik', value: 'Public' },
+    { label: 'pengurus', value: 'Organizer' },
+    { label: 'Anggota', value: 'Member' },
+    { label: 'Tidak Ada', value: 'None' },
 ]
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/agenda/tags'), {
     transform: (data) => {
@@ -237,43 +236,43 @@ const state = reactiveComputed<IReqAgenda>(() => {
 const stateRules = reactiveComputed<FieldValidationRules<IAgenda>>(() => ({
     title: (value) => {
         if (!value) {
-            return { path: 'title', message: $ts('title_required') };
+            return { path: 'title', message: 'Title Required' };
         }
         if (value.length < 3) {
-            return { path: 'title', message: $ts('title_min_length', { length: 3 }) }
+            return { path: 'title', message: 'Title Min Length' /* params: { length: 3 } */ }
         }
         if (value.length > 100) {
-            return { path: 'title', message: $ts('title_max_length', { length: 100 }) };
+            return { path: 'title', message: 'Title Max Length' /* params: { length: 100 } */ };
         }
         return null;
     },
     category: (value) => {
         if (!value) {
-            return { path: 'category', message: $ts('category_required') };
+            return { path: 'category', message: 'Category Required' };
         }
         return null;
     },
     date: (value) => {
         if (!value.start || !value.end) {
-            return { path: 'date', message: $ts('date_required') };
+            return { path: 'date', message: 'Date Required' };
         }
         if (value.start > value.end) {
-            return { path: 'date', message: $ts('date_invalid') };
+            return { path: 'date', message: 'Date Invalid' };
         }
         return null;
     },
     at: (value) => {
         if (!value) {
-            return { path: 'at', message: $ts('location_required') };
+            return { path: 'at', message: 'Location Required' };
         }
         return null;
     },
     description: (value) => {
         if (!value) {
-            return { path: 'description', message: $ts('description_required') };
+            return { path: 'description', message: 'Description Required' };
         }
         if (value.length < 100) {
-            return { path: 'description', message: $ts('description_min_length', { length: 3 }) }
+            return { path: 'description', message: 'Description Min Length' /* params: { length: 3 } */ }
         }
         return null;
     },
@@ -282,7 +281,7 @@ const stateRules = reactiveComputed<FieldValidationRules<IAgenda>>(() => ({
 const configurationStateRules = reactiveComputed<FieldValidationRules<IAgendaConfiguration>>(() => ({
     canSee: (value) => {
         if (!value) {
-            return { path: 'canSee', message: $ts('can_see_required') };
+            return { path: 'canSee', message: 'Can See Required' };
         }
         return null;
     },
@@ -303,34 +302,34 @@ const loading = ref(false);
 const steps = computed<Step[]>(() => [
     {
         id: 'step1',
-        label: $ts('general_information'),
-        title: $ts('general_information'),
-        description: $ts('general_information_description'),
+        label: 'General Information',
+        title: 'General Information',
+        description: 'General Information Description',
         formData: state,
         validationRules: stateRules,
 
     },
     {
         id: 'step2',
-        label: $ts('configuration'),
-        title: $ts('configuration'),
-        description: $ts('agenda_configuration_description'),
+        label: 'Konfigurasi',
+        title: 'Konfigurasi',
+        description: 'Agenda Configuration Description',
         formData: configurationState,
         validationRules: configurationStateRules,
     },
     {
         id: 'step3',
-        label: $ts('committee'),
-        title: $ts('committee'),
-        description: $ts('committee_description'),
+        label: 'Panitia',
+        title: 'Panitia',
+        description: 'Committee Description',
         formData: committeesState,
         validationRules: committeesStateRules,
     },
     {
         id: 'step4',
-        label: $ts('review_your_agenda'),
-        title: $ts('review_your_agenda'),
-        description: $ts('review_your_agenda_description'),
+        label: 'Review Your Agenda',
+        title: 'Review Your Agenda',
+        description: 'Review Your Agenda Description',
         formData: {},
         onNext: onSubmit,
     },
@@ -348,15 +347,7 @@ async function onSubmit() {
         });
         if (response.statusCode === 200) {
             toast.add({
-                title: $ts('success'), description: $ts('success_to_edit_agenda', {
-                    title: agenda.value?.title || '', date: new Date().toLocaleString('id-ID', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                    })
-                }), color: 'success'
+                title: 'Berhasil!', description: 'Success To Edit Agenda', color: 'success'
             });
             if (enableFormCommittee.value || enableFormParticipant.value) {
                 if (enableFormCommittee.value) {
@@ -373,15 +364,7 @@ async function onSubmit() {
             }
         } else {
             toast.add({
-                title: $ts('failed'), description: $ts('failed_to_edit_agenda', {
-                    title: agenda.value?.title || '', date: new Date().toLocaleString('id-ID', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                    })
-                }), color: 'error'
+                title: 'Failed', description: 'Failed To Edit Agenda', color: 'error'
             });
         }
     } catch (err: any) {
@@ -389,7 +372,7 @@ async function onSubmit() {
         if (err.response) {
             toast.add({ title: err.response.data.message, color: 'error' });
         } else {
-            toast.add({ title: $ts('something_went_wrong'), color: 'error' });
+            toast.add({ title: 'Something Went Wrong', color: 'error' });
         }
     } finally {
         loading.value = false;
@@ -413,7 +396,7 @@ const addNewTag = async (tag: string) => {
         tagsData.value = [tag];
     }
     tagsData.value.push(tag);
-    toast.add({ title: $ts('tag_added', { tag }), color: 'success' });
+    toast.add({ title: 'Tag berhasil ditambahkan.' /* params: { tag } */, color: 'success' });
 }
 
 const addNewJob = async () => {
@@ -427,7 +410,7 @@ const addNewJob = async () => {
                 configurationState.committee.jobAvailables = [];
             }
             if (configurationState.committee.jobAvailables.some((j) => j.label === jobAvailable.label)) {
-                toast.add({ title: $ts('job_available_already_exists', { job: job.label }), color: 'error' });
+                toast.add({ title: 'Job Available Already Exists' /* params: { job: job.label } */, color: 'error' });
                 return;
             }
 
@@ -450,7 +433,7 @@ const addNewReqruitmentCommittee = async () => {
                 configurationState.committee.reqruitments = [];
             }
             if (configurationState.committee.reqruitments.some((r) => r.label === reqruitmentAvailable.label)) {
-                toast.add({ title: $ts('reqruitment_already_exists', { req: reqruitment.label }), color: 'error' });
+                toast.add({ title: 'Reqruitment Already Exists' /* params: { req: reqruitment.label } */, color: 'error' });
                 return;
             }
 
@@ -470,7 +453,7 @@ const addNewReqruitmentParticipant = async () => {
                 configurationState.participant.reqruitments = [];
             }
             if (configurationState.participant.reqruitments.some((r) => r.label === reqruitmentAvailable.label)) {
-                toast.add({ title: $ts('reqruitment_already_exists', { req: reqruitment.label }), color: 'error' });
+                toast.add({ title: 'Reqruitment Already Exists' /* params: { req: reqruitment.label } */, color: 'error' });
                 return;
             }
 
@@ -491,7 +474,7 @@ const editJob = async (job: IJob, index: number) => {
                 configurationState.committee.jobAvailables = [];
             }
             if (index === -1) {
-                toast.add({ title: $ts('job_available_not_found', { job: job.label }), color: 'error' });
+                toast.add({ title: 'Job Available Not Found' /* params: { job: job.label } */, color: 'error' });
                 return;
             }
             configurationState.committee.jobAvailables[index] = jobAvailable;
@@ -514,7 +497,7 @@ const editReqruitmentCommittee = async (reqruitment: IReqruitment, index: number
                 configurationState.committee.reqruitments = [];
             }
             if (index === -1) {
-                toast.add({ title: $ts('reqruitment_not_found', { req: reqruitment.label }), color: 'error' });
+                toast.add({ title: 'Reqruitment Not Found' /* params: { req: reqruitment.label } */, color: 'error' });
                 return;
             }
             configurationState.committee.reqruitments[index] = reqruitmentAvailable;
@@ -537,7 +520,7 @@ const editReqruitmentParticipant = async (reqruitment: IReqruitment, index: numb
                 configurationState.participant.reqruitments = [];
             }
             if (index === -1) {
-                toast.add({ title: $ts('reqruitment_not_found', { req: reqruitment.label }), color: 'error' });
+                toast.add({ title: 'Reqruitment Not Found' /* params: { req: reqruitment.label } */, color: 'error' });
                 return;
             }
             configurationState.participant.reqruitments[index] = reqruitmentAvailable;
@@ -551,10 +534,10 @@ const editReqruitmentParticipant = async (reqruitment: IReqruitment, index: numb
 
 const deleteJob = async (index: number) => {
     ConfirmationModal.open({
-        title: $ts('delete_job_available'),
-        body: $ts('delete_job_available_confirmation', {
-            job: configurationState.committee.jobAvailables![index]!.label,
-        }),
+        title: 'Delete Job Available',
+        body: 'Delete Job Available Confirmation' /* params: {
+             job: configurationState.committee.jobAvailables![index]!.label,
+         } */,
         onConfirm: () => {
             if (!configurationState.committee.jobAvailables) {
                 configurationState.committee.jobAvailables = [];
@@ -569,10 +552,10 @@ const deleteJob = async (index: number) => {
 }
 const deleteReqruitmentCommittee = async (index: number) => {
     ConfirmationModal.open({
-        title: $ts('delete_reqruitment'),
-        body: $ts('delete_reqruitment_confirmation', {
-            req: configurationState.committee.reqruitments![index]!.label,
-        }),
+        title: 'Delete Reqruitment',
+        body: 'Delete Reqruitment Confirmation' /* params: {
+             req: configurationState.committee.reqruitments![index]!.label,
+         } */,
         onConfirm: () => {
             if (!configurationState.committee.reqruitments) {
                 configurationState.committee.reqruitments = [];
@@ -587,10 +570,10 @@ const deleteReqruitmentCommittee = async (index: number) => {
 }
 const deleteReqruitmentParticipant = async (index: number) => {
     ConfirmationModal.open({
-        title: $ts('delete_reqruitment'),
-        body: $ts('delete_reqruitment_confirmation', {
-            req: configurationState.participant.reqruitments![index]!.label,
-        }),
+        title: 'Delete Reqruitment',
+        body: 'Delete Reqruitment Confirmation' /* params: {
+             req: configurationState.participant.reqruitments![index]!.label,
+         } */,
         onConfirm: () => {
             if (!configurationState.participant.reqruitments) {
                 configurationState.participant.reqruitments = [];
@@ -608,110 +591,109 @@ const deleteReqruitmentParticipant = async (index: number) => {
 
 
 const links = computed(() => [
-    { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
-    { label: $ts('agenda'), to: '/dashboard/agendas', icon: 'i-heroicons-clipboard-document-list' },
+    { label: 'Dasbor', to: '/dashboard', icon: 'i-heroicons-home' },
+    { label: 'Agenda', to: '/dashboard/agendas', icon: 'i-heroicons-clipboard-document-list' },
     { label: agenda.value?.title || '', to: `/agendas/${id}`, icon: 'i-heroicons-document' },
-    { label: $ts('edit'), icon: 'i-heroicons-pencil-square' },
+    { label: 'Edit', icon: 'i-heroicons-pencil-square' },
 ]);
 </script>
 
 <template>
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :items="links" />
-        <CoreStepper class="mt-2" :steps="steps" v-model="tab" :prev-button-text="$ts('previous')"
-            :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
+        <CoreStepper class="mt-2" :steps="steps" v-model="tab" :prev-button-text="'Sebelumnya'"
+            :next-button-text="'Selanjutnya'" :complete-button-text="'Selesai'">
             <template #default="{ step, errors }">
                 <div v-if="step?.id === 'step1'">
                     <div class="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                        <UFormField :label="$ts('title')" v-model="state.title" :error="errors.title?.message"
+                        <UFormField :label="'Judul'" v-model="state.title" :error="errors.title?.message"
                             class="col-span-full">
-                            <UInput v-model="state.title" :placeholder="$ts('title')" :size="responsiveUISizes.input" />
+                            <UInput v-model="state.title" :placeholder="'Judul'" :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('category')" :error="errors.category?.message">
-                            <USelectMenu v-model="(state.category as string)" :placeholder="$ts('category')"
+                        <UFormField :label="'Kategori'" :error="errors.category?.message">
+                            <USelectMenu v-model="(state.category as string)" :placeholder="'Kategori'"
                                 :items="categoryOptions" label-key="label" value-key="value" class="w-full" create-item
                                 @create="addNewCategory" :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('tags')" :error="errors.tags?.message">
-                            <USelectMenu v-model="state.tags" :placeholder="$ts('tags')" :items="tagsData" multiple
+                        <UFormField :label="'Tag'" :error="errors.tags?.message">
+                            <USelectMenu v-model="state.tags" :placeholder="'Tag'" :items="tagsData" multiple
                                 class="w-full" create-item @create="addNewTag" :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="`${$ts('date')} & ${$ts('time')}`" name="date" id="date"
+                        <UFormField :label="`${'Tanggal'} & ${'Waktu'}`" name="date" id="date"
                             :class="[isMobile ? 'col-span-full' : 'col-span-2']" required>
                             <RangeDatePicker v-model="state.date" :min="new Date()" />
                         </UFormField>
-                        <UFormField :label="$ts('location')" :error="errors.at?.message">
-                            <UInput v-model="state.at" :placeholder="$ts('location')" :size="responsiveUISizes.input" />
+                        <UFormField :label="'Lokasi'" :error="errors.at?.message">
+                            <UInput v-model="state.at" :placeholder="'Lokasi'" :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('location_link')" :error="errors.atLink?.message">
-                            <UInput v-model="state.atLink" :placeholder="$ts('location_link')"
+                        <UFormField :label="'Tautan Lokasi'" :error="errors.atLink?.message">
+                            <UInput v-model="state.atLink" :placeholder="'Tautan Lokasi'"
                                 :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('description')" :error="errors.description?.message"
-                            class="col-span-full">
-                            <CoreTiptap v-model="state.description" :placeholder="$ts('description')" />
+                        <UFormField :label="'Deskripsi'" :error="errors.description?.message" class="col-span-full">
+                            <CoreTiptap v-model="state.description" :placeholder="'Deskripsi'" />
                         </UFormField>
                     </div>
                 </div>
                 <div v-else-if="step?.id === 'step2'">
                     <div class="flex flex-col gap-4">
-                        <UFormField :label="$ts('can_see')" :error="errors.canSee?.message">
-                            <USelectMenu v-model="configurationState.canSee" :placeholder="$ts('can_see')"
+                        <UFormField :label="'Dapat Dilihat Oleh'" :error="errors.canSee?.message">
+                            <USelectMenu v-model="configurationState.canSee" :placeholder="'Dapat Dilihat Oleh'"
                                 :items="canSeeAndRegisterOptions" label-key="label" value-key="value"
                                 :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('can_see_registered')" :error="errors.canSeeRegistered?.message">
+                        <UFormField :label="'Dapat melihat Peserta Terdaftar'"
+                            :error="errors.canSeeRegistered?.message">
                             <USelectMenu v-model="configurationState.canSeeRegistered"
-                                :placeholder="$ts('can_see_registered')" :items="canSeeAndRegisterOptions"
+                                :placeholder="'Dapat melihat Peserta Terdaftar'" :items="canSeeAndRegisterOptions"
                                 label-key="label" value-key="value" :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('enable_subscription')">
-                            <USwitch v-model="state.enableSubscription" :placeholder="$ts('enable_subscription')"
+                        <UFormField :label="'Aktifkan Langganan'">
+                            <USwitch v-model="state.enableSubscription" :placeholder="'Aktifkan Langganan'"
                                 :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('only_participant_can_visit')"
+                        <UFormField :label="'Hanya Peserta yang dapat mengunjungi'"
                             :error="errors.onlyParticipantCanVisit?.message">
                             <USwitch v-model="configurationState.onlyParticipantCanVisit"
-                                :placeholder="$ts('only_participant_can_visit')" :size="responsiveUISizes.input" />
+                                :placeholder="'Hanya Peserta yang dapat mengunjungi'" :size="responsiveUISizes.input" />
                         </UFormField>
-                        <UFormField :label="$ts('message_after_registration')"
-                            :error="errors.messageAfterRegister?.message">
+                        <UFormField :label="'Pesan Setelah Pendaftaran'" :error="errors.messageAfterRegister?.message">
                             <CoreTiptap v-model="(configurationState.messageAfterRegister as string)"
-                                :placeholder="$ts('message_after_registration')" />
+                                :placeholder="'Pesan Setelah Pendaftaran'" />
                         </UFormField>
                         <div class="grid gap-2 grid-cols-2">
                             <div class="space-y-2">
-                                <USeparator class="my-2" :label="$ts('committee')" />
-                                <UFormField :label="$ts('pay')">
+                                <USeparator class="my-2" :label="'Panitia'" />
+                                <UFormField :label="'Bayar'">
                                     <div class="flex flex-row gap-2 items-center">
-                                        <USwitch v-model="configurationState.committee.pay" :placeholder="$ts('pay')" />
+                                        <USwitch v-model="configurationState.committee.pay" :placeholder="'Bayar'" />
                                         <UInputNumber v-model="configurationState.committee.amount" :format-options="{
                                             style: 'currency',
                                             currency: 'IDR',
                                             currencyDisplay: 'code',
                                             currencySign: 'accounting'
-                                        }" :placeholder="$ts('amount')" :disabled="!configurationState.committee.pay"
+                                        }" :placeholder="'Jumlah'" :disabled="!configurationState.committee.pay"
                                             orientation="vertical" :size="responsiveUISizes.input" />
                                     </div>
                                 </UFormField>
-                                <UFormField :label="$ts('can_register')" :error="errors.canRegister?.message">
+                                <UFormField :label="'Dapat didaftar Oleh'" :error="errors.canRegister?.message">
                                     <USelectMenu v-model="configurationState.committee.canRegister"
-                                        :placeholder="$ts('can_register')" :items="canSeeAndRegisterOptionsWithNone"
+                                        :placeholder="'Dapat didaftar Oleh'" :items="canSeeAndRegisterOptionsWithNone"
                                         label-key="label" value-key="value" :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('can_register_period')"
+                                <UFormField :label="'Dapat didaftar pada periode'"
                                     :error="errors.canRegisterUntil?.message">
                                     <RangeDatePicker v-model="configurationState.committee.canRegisterUntil"
                                         :max="new Date(state.date.start)" />
                                 </UFormField>
-                                <UFormField :label="$ts('enable_form')">
-                                    <USwitch v-model="enableFormCommittee" :placeholder="$ts('enable_form')" />
+                                <UFormField :label="'Enable Form'">
+                                    <USwitch v-model="enableFormCommittee" :placeholder="'Enable Form'" />
                                 </UFormField>
-                                <UFormField :label="$ts('point')" :error="errors.point?.message">
-                                    <UInput v-model="configurationState.committee.point" :placeholder="$ts('point')"
+                                <UFormField :label="'Poin'" :error="errors.point?.message">
+                                    <UInput v-model="configurationState.committee.point" :placeholder="'Poin'"
                                         type="number" :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('reqruitment')" :error="errors.reqruitments?.message">
+                                <UFormField :label="'Persyaratan'" :error="errors.reqruitments?.message">
                                     <UButton icon="i-heroicons-plus" color="neutral" variant="subtle"
                                         @click="addNewReqruitmentCommittee()" block class="mb-2"
                                         :size="responsiveUISizes.button" />
@@ -731,13 +713,13 @@ const links = computed(() => [
                                         </div>
                                         <template #content>
                                             <div class="p-2">
-                                                <h1 class="text-lg font-semibold mb-2">{{ $ts('description') }}</h1>
+                                                <h1 class="text-lg font-semibold mb-2">{{ 'Deskripsi' }}</h1>
                                                 {{ reqruitment.description }}
                                             </div>
                                         </template>
                                     </UCollapsible>
                                 </UFormField>
-                                <UFormField :label="$ts('job_available')" :error="errors.jobAvailables?.message">
+                                <UFormField :label="'Lowongan Jabatan'" :error="errors.jobAvailables?.message">
                                     <UButton icon="i-heroicons-plus" color="neutral" variant="subtle"
                                         @click="addNewJob()" block class="mb-2" :size="responsiveUISizes.button" />
                                     <UCollapsible v-for="(job, index) in configurationState.committee.jobAvailables"
@@ -753,7 +735,7 @@ const links = computed(() => [
                                         </div>
                                         <template #content>
                                             <div class="p-2">
-                                                <h1 class="text-lg font-semibold mb-2">{{ $ts('count') }}</h1>
+                                                <h1 class="text-lg font-semibold mb-2">{{ 'Count' }}</h1>
                                                 {{ job.count }}
                                             </div>
                                         </template>
@@ -761,39 +743,39 @@ const links = computed(() => [
                                 </UFormField>
                             </div>
                             <div class="space-y-2">
-                                <USeparator class="my-2" :label="$ts('participant')" />
-                                <UFormField :label="$ts('pay')">
+                                <USeparator class="my-2" :label="'Peserta'" />
+                                <UFormField :label="'Bayar'">
                                     <div class="flex flex-row gap-2 items-center">
-                                        <USwitch v-model="configurationState.participant.pay" :placeholder="$ts('pay')"
+                                        <USwitch v-model="configurationState.participant.pay" :placeholder="'Bayar'"
                                             :size="responsiveUISizes.input" />
                                         <UInputNumber v-model="configurationState.participant.amount" :format-options="{
                                             style: 'currency',
                                             currency: 'IDR',
                                             currencyDisplay: 'code',
                                             currencySign: 'accounting'
-                                        }" :placeholder="$ts('amount')" :disabled="!configurationState.participant.pay"
+                                        }" :placeholder="'Jumlah'" :disabled="!configurationState.participant.pay"
                                             orientation="vertical" :size="responsiveUISizes.input" />
                                     </div>
                                 </UFormField>
-                                <UFormField :label="$ts('can_register')" :error="errors.canRegister?.message">
+                                <UFormField :label="'Dapat didaftar Oleh'" :error="errors.canRegister?.message">
                                     <USelectMenu v-model="configurationState.participant.canRegister"
-                                        :placeholder="$ts('can_register')" :items="canSeeAndRegisterOptions"
+                                        :placeholder="'Dapat didaftar Oleh'" :items="canSeeAndRegisterOptions"
                                         label-key="label" value-key="value" :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('can_register_period')"
+                                <UFormField :label="'Dapat didaftar pada periode'"
                                     :error="errors.canRegisterUntil?.message">
                                     <RangeDatePicker v-model="configurationState.participant.canRegisterUntil"
                                         :max="new Date(state.date.start)" />
                                 </UFormField>
-                                <UFormField :label="$ts('enable_form')">
-                                    <USwitch v-model="enableFormParticipant" :placeholder="$ts('enable_form')"
+                                <UFormField :label="'Enable Form'">
+                                    <USwitch v-model="enableFormParticipant" :placeholder="'Enable Form'"
                                         :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('point')" :error="errors.point?.message">
-                                    <UInput v-model="configurationState.participant.point" :placeholder="$ts('point')"
+                                <UFormField :label="'Poin'" :error="errors.point?.message">
+                                    <UInput v-model="configurationState.participant.point" :placeholder="'Poin'"
                                         type="number" :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('reqruitment')" :error="errors.reqruitments?.message">
+                                <UFormField :label="'Persyaratan'" :error="errors.reqruitments?.message">
                                     <UButton icon="i-heroicons-plus" color="neutral" variant="subtle"
                                         @click="addNewReqruitmentParticipant()" block class="mb-2"
                                         :size="responsiveUISizes.button" />
@@ -813,7 +795,7 @@ const links = computed(() => [
                                         </div>
                                         <template #content>
                                             <div class="p-2">
-                                                <h1 class="text-lg font-semibold mb-2">{{ $ts('description') }}</h1>
+                                                <h1 class="text-lg font-semibold mb-2">{{ 'Deskripsi' }}</h1>
                                                 {{ reqruitment.description }}
                                             </div>
                                         </template>
@@ -827,16 +809,16 @@ const links = computed(() => [
                     <div class="p-2 space-y-2">
                         <div class="flex flex-row justify-between items-center mb-2 w-full gap-2"
                             v-for="(committee, key) in committeesState" :key="key">
-                            <UFormField :label="$ts('committee')" :error="errors[key]?.message" class="basis-1/3">
-                                <USelectMenu :items="jobsCommittee" icon="i-lucide-user" :placeholder="$ts('search')"
+                            <UFormField :label="'Panitia'" :error="errors[key]?.message" class="basis-1/3">
+                                <USelectMenu :items="jobsCommittee" icon="i-lucide-user" :placeholder="'Cari...'"
                                     v-model="(committeesState[key]!.job)" class="w-full" value-key="label"
                                     label-key="label" :size="responsiveUISizes.input">
                                 </USelectMenu>
                             </UFormField>
-                            <UFormField :label="$ts('member')" :error="errors[key]?.message" class="w-full">
+                            <UFormField :label="'Anggota'" :error="errors[key]?.message" class="w-full">
                                 <USelectMenu :items="members" :loading="memberstatus === 'pending'"
                                     v-model:search-term="memberSearchTerm" :filter-fields="['label', 'email']"
-                                    icon="i-lucide-user" :placeholder="$ts('search')"
+                                    icon="i-lucide-user" :placeholder="'Cari...'"
                                     v-model="(committeesState[key]!.member as number)" value-key="value" class="w-full"
                                     :size="responsiveUISizes.input">
                                     <template #item-label="{ item }">
@@ -852,9 +834,9 @@ const links = computed(() => [
                         </div>
                         <UButton icon="i-heroicons-plus" color="neutral" variant="subtle" @click="addCommittee()" block
                             class="mb-2" :size="responsiveUISizes.button">
-                            {{ $ts('add_committee') }}
+                            {{ 'Add Committee' }}
                         </UButton>
-                        <UFormField :label="$ts('job_available')" :error="errors.jobAvailables?.message">
+                        <UFormField :label="'Lowongan Jabatan'" :error="errors.jobAvailables?.message">
                             <UButton icon="i-heroicons-plus" color="neutral" variant="subtle" @click="addNewJob()" block
                                 class="mb-2" :size="responsiveUISizes.button" />
                             <UCollapsible v-for="(job, index) in configurationState.committee.jobAvailables"
@@ -869,7 +851,7 @@ const links = computed(() => [
                                 </div>
                                 <template #content>
                                     <div class="p-2">
-                                        <h1 class="text-lg font-semibold mb-2">{{ $ts('count') }}</h1>
+                                        <h1 class="text-lg font-semibold mb-2">{{ 'Count' }}</h1>
                                         {{ job.count }}
                                     </div>
                                 </template>
@@ -885,12 +867,12 @@ const links = computed(() => [
                                 class="text-sm" />
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <UFormField :label="$ts('tags')" :error="errors.tags?.message">
-                                <USelectMenu v-model="state.tags" :placeholder="$ts('tags')" :items="tagsData" multiple
+                            <UFormField :label="'Tag'" :error="errors.tags?.message">
+                                <USelectMenu v-model="state.tags" :placeholder="'Tag'" :items="tagsData" multiple
                                     class="w-full" create-item @create="addNewTag" disabled
                                     :size="responsiveUISizes.input" />
                             </UFormField>
-                            <UFormField :label="`${$ts('date')} & ${$ts('time')}`" name="date" id="date"
+                            <UFormField :label="`${'Tanggal'} & ${'Waktu'}`" name="date" id="date"
                                 :class="[isMobile ? 'col-span-full' : 'col-span-2']" required>
                                 <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
                                     <UButton icon="i-heroicons-calendar-days-20-solid" :size="responsiveUISizes.button"
@@ -905,70 +887,70 @@ const links = computed(() => [
                                     </template>
                                 </UPopover>
                             </UFormField>
-                            <UFormField :label="$ts('location')" :error="errors.at?.message">
-                                <UInput v-model="state.at" :placeholder="$ts('location')" disabled />
+                            <UFormField :label="'Lokasi'" :error="errors.at?.message">
+                                <UInput v-model="state.at" :placeholder="'Lokasi'" disabled />
                             </UFormField>
-                            <UFormField :label="$ts('location_link')" :error="errors.atLink?.message">
-                                <UInput v-model="state.atLink" :placeholder="$ts('location_link')" disabled
+                            <UFormField :label="'Tautan Lokasi'" :error="errors.atLink?.message">
+                                <UInput v-model="state.atLink" :placeholder="'Tautan Lokasi'" disabled
                                     :size="responsiveUISizes.input" />
                             </UFormField>
-                            <UFormField :label="$ts('description')" :error="errors.description?.message"
-                                class="col-span-full">
-                                <CoreTiptap v-model="state.description" :placeholder="$ts('description')" disabled />
+                            <UFormField :label="'Deskripsi'" :error="errors.description?.message" class="col-span-full">
+                                <CoreTiptap v-model="state.description" :placeholder="'Deskripsi'" disabled />
                             </UFormField>
                         </div>
-                        <USeparator class="my-2" :label="$ts('configuration')" />
+                        <USeparator class="my-2" :label="'Konfigurasi'" />
 
                         <div class="grid grid-cols-2 gap-2">
-                            <UFormField :label="$ts('can_see')" :error="errors.canSee?.message">
-                                <USelectMenu v-model="configurationState.canSee" :placeholder="$ts('can_see')"
+                            <UFormField :label="'Dapat Dilihat Oleh'" :error="errors.canSee?.message">
+                                <USelectMenu v-model="configurationState.canSee" :placeholder="'Dapat Dilihat Oleh'"
                                     :items="canSeeAndRegisterOptions" label-key="label" value-key="value" disabled
                                     :size="responsiveUISizes.input" />
                             </UFormField>
-                            <UFormField :label="$ts('can_see_registered')" :error="errors.canSeeRegistered?.message">
+                            <UFormField :label="'Dapat melihat Peserta Terdaftar'"
+                                :error="errors.canSeeRegistered?.message">
                                 <USelectMenu v-model="configurationState.canSeeRegistered"
-                                    :placeholder="$ts('can_see_registered')" :items="canSeeAndRegisterOptions"
+                                    :placeholder="'Dapat melihat Peserta Terdaftar'" :items="canSeeAndRegisterOptions"
                                     label-key="label" value-key="value" disabled :size="responsiveUISizes.input" />
                             </UFormField>
-                            <UFormField :label="$ts('enable_subscription')">
-                                <USwitch v-model="state.enableSubscription" :placeholder="$ts('enable_subscription')"
-                                    disabled :size="responsiveUISizes.input" />
-                            </UFormField>
-                            <UFormField :label="$ts('only_participant_can_visit')"
-                                :error="errors.onlyParticipantCanVisit?.message">
-                                <USwitch v-model="configurationState.onlyParticipantCanVisit"
-                                    :placeholder="$ts('only_participant_can_visit')" disabled
+                            <UFormField :label="'Aktifkan Langganan'">
+                                <USwitch v-model="state.enableSubscription" :placeholder="'Aktifkan Langganan'" disabled
                                     :size="responsiveUISizes.input" />
                             </UFormField>
-                            <UFormField :label="$ts('message_after_registration')"
+                            <UFormField :label="'Hanya Peserta yang dapat mengunjungi'"
+                                :error="errors.onlyParticipantCanVisit?.message">
+                                <USwitch v-model="configurationState.onlyParticipantCanVisit"
+                                    :placeholder="'Hanya Peserta yang dapat mengunjungi'" disabled
+                                    :size="responsiveUISizes.input" />
+                            </UFormField>
+                            <UFormField :label="'Pesan Setelah Pendaftaran'"
                                 :error="errors.messageAfterRegister?.message" class="col-span-full">
                                 <CoreTiptap v-model="(configurationState.messageAfterRegister as string)"
-                                    :placeholder="$ts('message_after_registration')" disabled />
+                                    :placeholder="'Pesan Setelah Pendaftaran'" disabled />
                             </UFormField>
                         </div>
 
                         <div class="grid gap-4 grid-cols-2">
                             <div class="space-y-2">
-                                <USeparator class="my-2" :label="$ts('committee')" />
-                                <UFormField :label="$ts('pay')">
+                                <USeparator class="my-2" :label="'Panitia'" />
+                                <UFormField :label="'Bayar'">
                                     <div class="flex flex-row gap-2 items-center">
-                                        <USwitch v-model="configurationState.committee.pay" :placeholder="$ts('pay')"
+                                        <USwitch v-model="configurationState.committee.pay" :placeholder="'Bayar'"
                                             disabled :size="responsiveUISizes.input" />
                                         <UInputNumber v-model="configurationState.committee.amount" :format-options="{
                                             style: 'currency',
                                             currency: 'IDR',
                                             currencyDisplay: 'code',
                                             currencySign: 'accounting'
-                                        }" :placeholder="$ts('amount')" disabled orientation="vertical"
+                                        }" :placeholder="'Jumlah'" disabled orientation="vertical"
                                             :size="responsiveUISizes.input" />
                                     </div>
                                 </UFormField>
-                                <UFormField :label="$ts('can_register')" :error="errors.canRegister?.message">
+                                <UFormField :label="'Dapat didaftar Oleh'" :error="errors.canRegister?.message">
                                     <USelectMenu v-model="configurationState.committee.canRegister"
-                                        :placeholder="$ts('can_register')" :items="canSeeAndRegisterOptions"
+                                        :placeholder="'Dapat didaftar Oleh'" :items="canSeeAndRegisterOptions"
                                         label-key="label" value-key="value" disabled :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('can_register_period')"
+                                <UFormField :label="'Dapat didaftar pada periode'"
                                     :error="errors.canRegisterUntil?.message">
                                     <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
                                         <UButton icon="i-heroicons-calendar-days-20-solid"
@@ -992,14 +974,14 @@ const links = computed(() => [
                                         </template>
                                     </UPopover>
                                 </UFormField>
-                                <UFormField :label="$ts('point')" :error="errors.point?.message">
-                                    <UInput v-model="configurationState.committee.point" :placeholder="$ts('point')"
+                                <UFormField :label="'Poin'" :error="errors.point?.message">
+                                    <UInput v-model="configurationState.committee.point" :placeholder="'Poin'"
                                         type="number" disabled :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('enable_form')">
+                                <UFormField :label="'Enable Form'">
                                     <USwitch v-model="enableFormCommittee" :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('reqruitment')" :error="errors.reqruitments?.message">
+                                <UFormField :label="'Persyaratan'" :error="errors.reqruitments?.message">
                                     <UCollapsible
                                         v-for="(reqruitment, index) in configurationState.committee.reqruitments"
                                         :key="index" v-if="configurationState.committee.reqruitments" class="w-full">
@@ -1010,13 +992,13 @@ const links = computed(() => [
                                         </div>
                                         <template #content>
                                             <div class="p-2">
-                                                <h1 class="text-lg font-semibold mb-2">{{ $ts('description') }}</h1>
+                                                <h1 class="text-lg font-semibold mb-2">{{ 'Deskripsi' }}</h1>
                                                 <p>{{ reqruitment.description }}</p>
                                             </div>
                                         </template>
                                     </UCollapsible>
                                 </UFormField>
-                                <UFormField :label="$ts('job_available')" :error="errors.jobAvailables?.message">
+                                <UFormField :label="'Lowongan Jabatan'" :error="errors.jobAvailables?.message">
                                     <UCollapsible v-for="(job, index) in configurationState.committee.jobAvailables"
                                         :key="index" v-if="configurationState.committee.jobAvailables">
                                         <div class="flex flex-row gap-2 items-center w-full mb-2">
@@ -1026,7 +1008,7 @@ const links = computed(() => [
                                         </div>
                                         <template #content>
                                             <div class="p-2">
-                                                <h1 class="text-lg font-semibold mb-2">{{ $ts('count') }}</h1>
+                                                <h1 class="text-lg font-semibold mb-2">{{ 'Count' }}</h1>
                                                 <p>{{ job.count }}</p>
                                             </div>
                                         </template>
@@ -1034,26 +1016,26 @@ const links = computed(() => [
                                 </UFormField>
                             </div>
                             <div class="space-y-2">
-                                <USeparator class="my-2" :label="$ts('participant')" />
-                                <UFormField :label="$ts('pay')">
+                                <USeparator class="my-2" :label="'Peserta'" />
+                                <UFormField :label="'Bayar'">
                                     <div class="flex flex-row gap-2 items-center">
-                                        <USwitch v-model="configurationState.participant.pay" :placeholder="$ts('pay')"
+                                        <USwitch v-model="configurationState.participant.pay" :placeholder="'Bayar'"
                                             disabled :size="responsiveUISizes.input" />
                                         <UInputNumber v-model="configurationState.participant.amount" :format-options="{
                                             style: 'currency',
                                             currency: 'IDR',
                                             currencyDisplay: 'code',
                                             currencySign: 'accounting'
-                                        }" :placeholder="$ts('amount')" disabled orientation="vertical"
+                                        }" :placeholder="'Jumlah'" disabled orientation="vertical"
                                             :size="responsiveUISizes.input" />
                                     </div>
                                 </UFormField>
-                                <UFormField :label="$ts('can_register')" :error="errors.canRegister?.message">
+                                <UFormField :label="'Dapat didaftar Oleh'" :error="errors.canRegister?.message">
                                     <USelectMenu v-model="configurationState.participant.canRegister"
-                                        :placeholder="$ts('can_register')" :items="canSeeAndRegisterOptions"
+                                        :placeholder="'Dapat didaftar Oleh'" :items="canSeeAndRegisterOptions"
                                         label-key="label" value-key="value" disabled :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('can_register_period')"
+                                <UFormField :label="'Dapat didaftar pada periode'"
                                     :error="errors.canRegisterUntil?.message">
                                     <UPopover :popper="{ placement: 'bottom-start', strategy: 'absolute' }">
                                         <UButton icon="i-heroicons-calendar-days-20-solid"
@@ -1078,14 +1060,14 @@ const links = computed(() => [
                                         </template>
                                     </UPopover>
                                 </UFormField>
-                                <UFormField :label="$ts('point')" :error="errors.point?.message">
-                                    <UInput v-model="configurationState.participant.point" :placeholder="$ts('point')"
+                                <UFormField :label="'Poin'" :error="errors.point?.message">
+                                    <UInput v-model="configurationState.participant.point" :placeholder="'Poin'"
                                         type="number" disabled :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('enable_form')">
+                                <UFormField :label="'Enable Form'">
                                     <USwitch v-model="enableFormParticipant" :size="responsiveUISizes.input" />
                                 </UFormField>
-                                <UFormField :label="$ts('reqruitment')" :error="errors.reqruitments?.message">
+                                <UFormField :label="'Persyaratan'" :error="errors.reqruitments?.message">
                                     <UCollapsible
                                         v-for="(reqruitment, index) in configurationState.participant.reqruitments"
                                         :key="index" v-if="configurationState.participant.reqruitments">
@@ -1096,7 +1078,7 @@ const links = computed(() => [
                                         </div>
                                         <template #content>
                                             <div class="p-2">
-                                                <h1 class="text-lg font-semibold mb-2">{{ $ts('description') }}</h1>
+                                                <h1 class="text-lg font-semibold mb-2">{{ 'Deskripsi' }}</h1>
                                                 <p>{{ reqruitment.description }}</p>
                                             </div>
                                         </template>

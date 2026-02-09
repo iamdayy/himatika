@@ -9,7 +9,7 @@ definePageMeta({
     middleware: 'sidebase-auth'
 });
 
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const router = useRouter();
 /**
  * Detect large screen using windowSize
@@ -89,11 +89,11 @@ const calendarAttributes = computed(() => [
 
 const registeredAgendasAs = computed<TabsItem[]>(() => [
     {
-        label: $ts('tabs.participant'),
+        label: 'Tabs.Participant',
         slot: 'participant',
     },
     {
-        label: $ts('tabs.committee'),
+        label: 'Tabs.Committee',
         slot: 'committee',
     }
 ])
@@ -103,12 +103,12 @@ const goToDetail = (id: string) => {
     router.push(`/agendas/${id}`);
 };
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 },
 {
-    label: $ts('agendas'),
+    label: 'Agendas',
     icon: 'i-heroicons-calendar',
 }]);
 </script>
@@ -120,8 +120,8 @@ const links = computed(() => [{
 
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $ts('title') }}</h1>
-                    <p class="text-gray-500 dark:text-gray-400">{{ $ts('description') }}</p>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ 'Judul' }}</h1>
+                    <p class="text-gray-500 dark:text-gray-400">{{ 'Deskripsi' }}</p>
                 </div>
             </div>
 
@@ -138,7 +138,7 @@ const links = computed(() => [{
                         <div
                             class="w-24 h-24 md:w-32 md:h-32 bg-white/20 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center border border-white/30 text-center p-2">
                             <span class="text-4xl md:text-5xl font-bold">{{ new Date(nearestAgenda.date.start).getDate()
-                                }}</span>
+                            }}</span>
                             <span class="text-sm md:text-base uppercase tracking-wider">{{
                                 new Date(nearestAgenda.date.start)
                                     .toLocaleDateString('id-ID',
@@ -149,7 +149,7 @@ const links = computed(() => [{
                     </div>
 
                     <div class="flex-1 text-center md:text-left space-y-2">
-                        <UBadge color="warning" variant="solid" size="sm" class="mb-2">{{ $ts('registrationOpen') }} 🔥
+                        <UBadge color="warning" variant="solid" size="sm" class="mb-2">{{ 'RegistrationOpen' }} 🔥
                         </UBadge>
                         <h2 class="text-2xl md:text-3xl font-bold leading-tight">{{ nearestAgenda.title }}</h2>
                         <div
@@ -167,7 +167,7 @@ const links = computed(() => [{
                             </div>
                             <div class="flex items-center gap-1">
                                 <UIcon name="i-heroicons-map-pin" />
-                                <span>{{ nearestAgenda.at || $ts('onlineTBA') }}</span>
+                                <span>{{ nearestAgenda.at || 'OnlineTBA' }}</span>
                             </div>
                         </div>
                     </div>
@@ -175,7 +175,7 @@ const links = computed(() => [{
                     <div class="flex-shrink-0">
                         <UButton size="xl" color="primary" variant="solid" :to="`/agendas/${nearestAgenda._id}`"
                             class="text-primary-700 font-bold px-8">
-                            {{ $ts('joinNow') }}
+                            {{ 'JoinNow' }}
                         </UButton>
                     </div>
                 </div>
@@ -186,7 +186,7 @@ const links = computed(() => [{
                 <div class="lg:col-span-4 xl:col-span-3">
                     <UCard class="sticky top-4">
                         <template #header>
-                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ $ts('calendar') }}</h3>
+                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ 'Calendar' }}</h3>
                         </template>
 
                         <ClientOnly>
@@ -215,10 +215,10 @@ const links = computed(() => [{
 
                         <div class="mt-4 flex gap-4 text-xs justify-center">
                             <div class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-accent-4"></span> {{ $ts('open') }}
+                                <span class="w-2 h-2 rounded-full bg-accent-4"></span> {{ 'Buka' }}
                             </div>
                             <div class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-gray-400"></span> {{ $ts('closed') }}
+                                <span class="w-2 h-2 rounded-full bg-gray-400"></span> {{ 'Closed' }}
                             </div>
                         </div>
                     </UCard>
@@ -226,7 +226,7 @@ const links = computed(() => [{
 
                 <div class="lg:col-span-8 xl:col-span-9 space-y-6">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-bold">{{ $ts('registeredAgendas') }}</h2>
+                        <h2 class="text-xl font-bold">{{ 'RegisteredAgendas' }}</h2>
                     </div>
                     <UTabs :items="registeredAgendasAs" class="w-full">
                         <template #participant>
@@ -243,7 +243,7 @@ const links = computed(() => [{
                             <div v-else
                                 class="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
                                 <UIcon name="i-heroicons-calendar" class="text-4xl text-gray-400 mb-2" />
-                                <p class="text-gray-500">{{ $ts('noAgendas.title') }}</p>
+                                <p class="text-gray-500">{{ 'NoAgendas.Title' }}</p>
                             </div>
                         </template>
                         <template #committee>
@@ -260,7 +260,7 @@ const links = computed(() => [{
                             <div v-else
                                 class="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
                                 <UIcon name="i-heroicons-calendar" class="text-4xl text-gray-400 mb-2" />
-                                <p class="text-gray-500">{{ $ts('noAgendas.title') }}</p>
+                                <p class="text-gray-500">{{ 'NoAgendas.Title' }}</p>
                             </div>
                         </template>
                     </UTabs>

@@ -27,7 +27,6 @@ const pagination = ref({
  * Number of items per page
  */
 const route = useRoute();
-const { $ts, $tn } = useI18n();
 const { $api } = useNuxtApp()
 const { data: user } = useAuth();
 const overlay = useOverlay();
@@ -123,7 +122,7 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
         },
         {
             accessorKey: 'fullName',
-            header: $ts('name'),
+            header: 'Nama Lengkap',
             size: 150,
             cell: ({ row }) => {
                 return h('div', { class: 'flex flex-row items-center gap-2', }, [
@@ -148,35 +147,35 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
         },
         {
             accessorKey: 'class',
-            header: $ts('class'),
+            header: 'Kelas',
             cell: ({ row }) => {
                 return (row.original.member as IMember | undefined)?.class || (row.original.guest as IGuest | undefined)?.class || '-'
             }
         },
         {
             accessorKey: 'semester',
-            header: $ts('semester'),
+            header: 'Semester',
             cell: ({ row }) => {
                 return (row.original.member as IMember | undefined)?.semester || (row.original.guest as IGuest | undefined)?.semester || '-'
             }
         },
         {
             accessorKey: 'association',
-            header: $ts('association'),
+            header: 'Asosiasi',
             cell: ({ row }) => {
                 return row.original.member ? 'Member' : 'Guest';
             }
         },
         {
             accessorKey: 'prodi',
-            header: $ts('study_program'),
+            header: 'Program Studi',
             cell: ({ row }) => {
                 return row.original.guest ? (row.original.guest as IGuest | undefined)?.prodi || '-' : 'Informatika'
             }
         },
         {
             accessorKey: 'instution',
-            header: $ts('instance'),
+            header: 'Instansi',
             cell: ({ row }) => {
                 return row.original.guest ? (row.original.guest as IGuest | undefined)?.instance || '-' : 'ITSNU Pekalongan'
             }
@@ -187,21 +186,21 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
         const committeeColumns: TableColumn<IParticipant>[] = [
             {
                 accessorKey: 'paid',
-                header: $ts('payment_status'),
+                header: 'Status Pembayaran',
                 cell: ({ row }) => {
                     return h(UBadge, {
                         color: row.original.payment?.status && row.original.payment?.status === 'success' ? 'success' : 'error',
-                        label: row.original.payment?.status && agenda.value?.configuration.participant.pay ? row.original.payment?.status as string : $ts('not_paid')
+                        label: row.original.payment?.status && agenda.value?.configuration.participant.pay ? row.original.payment?.status as string : 'Tidak Membayar'
                     })
                 }
             },
             {
                 accessorKey: 'visiting',
-                header: $ts('visit_status'),
+                header: 'Status Kunjungan',
                 cell: ({ row }) => {
                     return h(UBadge, {
                         color: row.original.visiting ? 'success' : 'error',
-                        label: row.original.visiting ? $ts('visited') : $ts('not_visited')
+                        label: row.original.visiting ? 'Sudah Mengunjungi' : 'Belum Mengunjungi'
                     })
                 }
             },
@@ -241,23 +240,23 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
     return [
         {
             type: 'label',
-            label: $ts('action')
+            label: 'Tindakan'
         },
         {
             icon: 'i-heroicons-eye-20-solid',
-            label: $ts('view'),
+            label: 'Lihat',
             to: `profile/${(row.original.member as IMember)?.NIM || '-'}`,
             disabled: !isCommittee.value && !isOrganizer.value && !row.original.member,
         },
         {
             icon: 'i-heroicons-check-circle',
-            label: $ts('set_visit_status'),
+            label: 'Set Visit Status',
             disabled: !user.value || row.original.visiting || !isCommittee.value,
             onSelect: () => openSetVisitedModal(row.original._id as string)
         },
         {
             icon: 'i-heroicons-banknotes',
-            label: $ts('set_payment_status'),
+            label: 'Atur Status Pembayaran',
             disabled: !user.value || row.original.payment?.status === 'success' || !isCommittee.value || agenda.value?.configuration.participant.pay === false,
             onSelect: () => setPaid(row.original._id as string)
         },
@@ -266,7 +265,7 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
         },
         {
             icon: 'i-heroicons-trash',
-            label: $ts('delete'),
+            label: 'Hapus',
             color: 'error',
             disabled: !isCommittee.value,
             onSelect: () => deleteParticipant(row.original._id as string)
@@ -407,7 +406,7 @@ const bulkActions = computed<DropdownMenuItem[][]>(() => [
         disabled: true
     }],
     [{
-        label: $ts('export_data'),
+        label: 'Export Data',
         icon: 'i-heroicons-document-arrow-down',
         onSelect: generateXlsx
     }, {
@@ -416,12 +415,12 @@ const bulkActions = computed<DropdownMenuItem[][]>(() => [
         onSelect: printNametags
     }],
     [{
-        label: $ts('set_visit_status'),
+        label: 'Set Visit Status',
         icon: 'i-heroicons-check-circle',
         disabled: selectedParticipant.value.length === 0,
         onSelect: () => setBatch('visiting')
     }, {
-        label: $ts('set_payment_status'),
+        label: 'Atur Status Pembayaran',
         icon: 'i-heroicons-banknotes',
         disabled: selectedParticipant.value.length === 0,
         onSelect: () => setBatch('payment')
@@ -522,17 +521,17 @@ const perPageOptions = computed(() => {
 });
 const deleteParticipant = async (participantId: string) => {
     ConfirmationModal.open({
-        title: $ts('delete_participant'),
-        body: $ts('delete_participant_confirmation'),
+        title: 'Delete Participant',
+        body: 'Delete Participant Confirmation',
         onConfirm: async () => {
             try {
                 const response = await $api<IResponse & { data: string }>(`/api/agenda/${id}/participant/register/${participantId}`, {
                     method: "DELETE",
                 })
-                toast.add({ title: $ts('success'), description: $ts('success_to_delete_participant') });
+                toast.add({ title: 'Berhasil!', description: 'Success To Delete Participant' });
                 refresh();
             } catch (error: any) {
-                toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_participant') });
+                toast.add({ title: 'Failed', description: 'Failed To Delete Participant' });
             } finally {
                 ConfirmationModal.close();
             }
@@ -542,8 +541,8 @@ const deleteParticipant = async (participantId: string) => {
 
 const setPaid = async (registeredId: string) => {
     ConfirmationModal.open({
-        title: $ts('set_payment_status'),
-        body: $ts('set_payment_status_confirmation'),
+        title: 'Atur Status Pembayaran',
+        body: 'Set Payment Status Confirmation',
         onConfirm: async () => {
             try {
                 const response = await $api<IResponse>(`/api/agenda/${id}/participant/register/${registeredId}/pay`, {
@@ -553,18 +552,18 @@ const setPaid = async (registeredId: string) => {
                     }
                 });
                 if (response.statusCode != 200) {
-                    return toast.add({ title: $ts('failed'), description: $ts('failed_to_set_payment_status'), color: 'error' });
+                    return toast.add({ title: 'Failed', description: 'Failed To Set Payment Status', color: 'error' });
                 }
                 refresh();
                 return toast.add({
-                    title: $ts('success'),
-                    description: $ts('success_to_set_payment_status'),
+                    title: 'Berhasil!',
+                    description: 'Success To Set Payment Status',
                     color: 'success',
                 })
             } catch (error: any) {
                 toast.add({
-                    title: $ts('failed'),
-                    description: $ts('failed_to_setyment_status'),
+                    title: 'Failed',
+                    description: 'Failed To Setyment Status',
                     color: 'error',
                 })
             } finally {
@@ -578,18 +577,18 @@ const setVisited = async (registeredId: string) => {
     try {
         const response = await $api<IResponse>(`/api/agenda/${id}/participant/register/${registeredId}/visited`);
         if (response.statusCode != 200) {
-            return toast.add({ title: $ts('failed'), description: $ts('failed_to_set_visit_status'), color: 'error' });
+            return toast.add({ title: 'Failed', description: 'Failed To Set Visit Status', color: 'error' });
         }
         refresh();
         return toast.add({
-            title: $ts('success'),
-            description: $ts('success_to_set_visit_status'),
+            title: 'Berhasil!',
+            description: 'Success To Set Visit Status',
             color: 'success',
         })
     } catch (error: any) {
         toast.add({
-            title: $ts('failed'),
-            description: $ts('failed_to_set_visit_status'),
+            title: 'Failed',
+            description: 'Failed To Set Visit Status',
             color: 'error',
         })
     }
@@ -597,11 +596,11 @@ const setVisited = async (registeredId: string) => {
 
 const setBatch = async (field: 'payment' | 'visiting') => {
     if (selectedParticipant.value.length === 0) {
-        return toast.add({ title: $ts('no_participant_selected'), color: 'warning' });
+        return toast.add({ title: 'No Participant Selected', color: 'warning' });
     }
     ConfirmationModal.open({
-        title: field === 'payment' ? $ts('set_payment_status') : $ts('set_visit_status'),
-        body: field === 'payment' ? $ts('set_payment_status_confirmation') : $ts('set_visit_status_confirmation'),
+        title: field === 'payment' ? 'Atur Status Pembayaran' : 'Set Visit Status',
+        body: field === 'payment' ? 'Set Payment Status Confirmation' : 'Set Visit Status Confirmation',
         onConfirm: async () => {
             try {
                 const response = await $api<IResponse>(`/api/agenda/${id}/participant/register/batch`, {
@@ -612,18 +611,18 @@ const setBatch = async (field: 'payment' | 'visiting') => {
                     }
                 });
                 if (response.statusCode != 200) {
-                    return toast.add({ title: $ts('failed'), description: field === 'payment' ? $ts('success_to_set_payment_status') : $ts('success_to_set_visit_status'), color: 'error' });
+                    return toast.add({ title: 'Failed', description: field === 'payment' ? 'Success To Set Payment Status' : 'Success To Set Visit Status', color: 'error' });
                 }
                 refresh();
                 return toast.add({
-                    title: $ts('success'),
-                    description: field === 'payment' ? $ts('success_to_set_payment_status') : $ts('success_to_set_visit_status'),
+                    title: 'Berhasil!',
+                    description: field === 'payment' ? 'Success To Set Payment Status' : 'Success To Set Visit Status',
                     color: 'success',
                 })
             } catch (error: any) {
                 toast.add({
-                    title: $ts('failed'),
-                    description: field === 'payment' ? $ts('failed_to_set_payment_status') : $ts('failed_to_set_visit_status'),
+                    title: 'Failed',
+                    description: field === 'payment' ? 'Failed To Set Payment Status' : 'Failed To Set Visit Status',
                     color: 'error',
                 })
             } finally {
@@ -634,8 +633,8 @@ const setBatch = async (field: 'payment' | 'visiting') => {
 }
 const openSetVisitedModal = (registeredId: string) => {
     ConfirmationModal.open({
-        title: $ts('set_visit_status'),
-        body: $ts('set_visit_status_confirmation'),
+        title: 'Set Visit Status',
+        body: 'Set Visit Status Confirmation',
         onConfirm: async () => {
             await setVisited(registeredId);
             ConfirmationModal.close();
@@ -652,11 +651,11 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
     pagination: isMobile.value ? 'xs' : 'md',
 }));
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
     to: '/administrator/agendas'
 },
@@ -666,14 +665,14 @@ const links = computed(() => [{
     to: `/administrator/agendas/${id}`
 },
 {
-    label: $ts('participant'),
+    label: 'Peserta',
     to: `/administrator/agendas/${id}/participant`,
     icon: 'i-heroicons-link'
 }]);
 
 
 useHead({
-    title: () => `${$ts('participant')} - ${agenda.value?.title}`,
+    title: () => `${'Peserta'} - ${agenda.value?.title}`,
     meta: [
         {
             name: 'description',
@@ -688,8 +687,8 @@ useHead({
         <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
             <template #header>
                 <div class="flex items-center justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-neutral-200">{{ $ts('participant') }}</h2>
-                    <UButton :label="$ts('add')" :to="`/administrator/agendas/${id}/participant/add`"
+                    <h2 class="text-xl font-semibold dark:text-neutral-200">{{ 'Peserta' }}</h2>
+                    <UButton :label="'Tambah'" :to="`/administrator/agendas/${id}/participant/add`"
                         icon="i-heroicons-plus-circle" :size="responsiveUISizes.button" class="my-2" variant="outline"
                         v-if="isCommittee" />
                 </div>
@@ -698,7 +697,7 @@ useHead({
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full mb-4">
                 <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" @keyup.enter="refresh()"
                     :loading="pending"
-                    :placeholder="$ts('search_placeholder', { key: $ts('participant') }) || 'Cari nama / NIM...'"
+                    :placeholder="'Cari {key}...' /* params: { key: 'Peserta' } */ || 'Cari nama / NIM...'"
                     :size="responsiveUISizes.input" class="w-full md:w-64" />
 
                 <div class="flex items-center gap-2 self-end">

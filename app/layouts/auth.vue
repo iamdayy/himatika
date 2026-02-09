@@ -50,14 +50,14 @@ useHead({
                         <nuxt-link to="/login"
                             class="inline-block w-full px-4 py-3 rounded-lg hover:bg-accent-2 dark:hover:bg-accent-1 hover:text-white"
                             active-class="bg-accent-3 text-primary-dark dark:text-primary-light hover:bg-accent-2 dark:hover:bg-accent-1 hover:text-secondary-dark dark:hover:text-secondary-light">{{
-                                $ts('login') }}</nuxt-link>
+                                'Masuk' }}</nuxt-link>
                     </li>
                     <!-- Register tab -->
                     <li class="w-1/2 m-1">
                         <nuxt-link to="/register"
                             class="inline-block w-full px-4 py-3 rounded-lg hover:bg-accent-2 dark:hover:bg-accent-1 hover:text-white"
                             active-class="bg-accent-3 text-primary-dark dark:text-primary-light hover:bg-accent-2 dark:hover:bg-accent-1 hover:text-secondary-dark dark:hover:text-secondary-light">{{
-                                $ts('register') }}</nuxt-link>
+                                'Daftar' }}</nuxt-link>
                     </li>
                 </ul>
                 <!-- 3D card wrapper for content -->

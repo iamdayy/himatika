@@ -6,8 +6,6 @@ const route = useRoute();
 const router = useRouter();
 const { $api } = useNuxtApp();
 const { signOut } = useAuth();
-const { $ts } = useI18n();
-
 const state = reactive<ChangePasswordSchema>({
     old_password: '',
     password: '',
@@ -62,23 +60,23 @@ useHead({
                     loading="lazy" />
             </div>
             <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
-                $ts('change_password') }}</h4>
+                'Ubah Kata Sandi' }}</h4>
             <div class="pb-8 mt-2 sm:mx-auto sm:w-full sm:max-w-sm max-h-96">
                 <UForm ref="form" :state="state" @submit="onSubmit" class="space-y-2">
-                    <UFormGroup :label="$ts('old_password')" id="oldPassword" name="old_password">
+                    <UFormGroup :label="'Kata Sandi Lama'" id="oldPassword" name="old_password">
                         <UInput type="password" color="neutral" variant="outline" required
                             v-model="state.old_password" />
                     </UFormGroup>
-                    <UFormGroup :label="$ts('new_password')" id="newPassword" name="password">
+                    <UFormGroup :label="'Kata Sandi Baru'" id="newPassword" name="password">
                         <UInput type="password" color="neutral" variant="outline" required v-model="state.password" />
                     </UFormGroup>
-                    <UFormGroup :label="$ts('new_password_confirm')" id="confirmNewPassword"
+                    <UFormGroup :label="'New Password Confirm'" id="confirmNewPassword"
                         name="password_confirmation">
                         <UInput type="password" color="neutral" variant="outline" required
                             v-model="state.password_confirmation" />
                     </UFormGroup>
                     <div>
-                        <UButton type="submit" block :loading="loading">{{ $ts('change_password') }}</UButton>
+                        <UButton type="submit" block :loading="loading">{{ 'Ubah Kata Sandi' }}</UButton>
                     </div>
                 </UForm>
             </div>

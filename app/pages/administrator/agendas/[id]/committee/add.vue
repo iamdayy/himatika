@@ -10,7 +10,7 @@ definePageMeta({
 
 const route = useRoute();
 const id = route.params.id as string;
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const toast = useToast();
 
 const { data: agenda } = await useAsyncData('admin-agenda-detail',
@@ -20,11 +20,11 @@ const { data: agenda } = await useAsyncData('admin-agenda-detail',
 
 // Navigation Links
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
     to: '/administrator/agendas'
 },
@@ -34,12 +34,12 @@ const links = computed(() => [{
     to: `/administrator/agendas/${id}`
 },
 {
-    label: $ts('committee'),
+    label: 'Panitia',
     to: `/administrator/agendas/${id}/committee`,
     icon: 'i-heroicons-link'
 },
 {
-    label: $ts('add-committee'),
+    label: 'Add-Committee',
     icon: 'i-heroicons-user-plus',
 }
 ]);
@@ -130,7 +130,7 @@ const submit = async () => {
                                     <span class="truncate font-medium">{{ item.fullName }}</span>
                                     <span class="text-xs text-gray-500">{{ item.NIM }} • {{ item.class ||
                                         'Unknown'
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </template>

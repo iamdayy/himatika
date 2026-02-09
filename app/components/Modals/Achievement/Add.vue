@@ -74,7 +74,7 @@ const submit = async () => {
         <template #header>
             <div class="flex justify-between items-center w-full">
                 <h3 class="font-semibold text-lg">Input Reward / Poin Manual</h3>
-                <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" @click="$emit('close')" />
+                <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" @click="emit('close')" />
             </div>
         </template>
         <template #body>
@@ -89,7 +89,7 @@ const submit = async () => {
                                     <span class="truncate font-medium">{{ item.fullName }}</span>
                                     <span class="text-xs text-gray-500">{{ item.NIM }} • {{ item.class ||
                                         'Unknown'
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </template>
@@ -144,7 +144,7 @@ const submit = async () => {
         </template>
         <template #footer>
             <div class="flex justify-between items-center gap-2 w-full">
-                <UButton variant="ghost" @click="$emit('close')">Batal</UButton>
+                <UButton variant="ghost" @click="emit('close')">Batal</UButton>
                 <UButton :loading="loading" @click="submit" color="primary">
                     Simpan
                 </UButton>

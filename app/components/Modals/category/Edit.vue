@@ -1,9 +1,8 @@
 <script setup lang='ts'>
-import type { ICategory } from '~/types';
-import type { IResponse } from '~/types/IResponse';
+import type { ICategory } from '~~/types';
+import type { IResponse } from '~~/types/IResponse';
 
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
 const toast = useToast();
 
 
@@ -35,33 +34,33 @@ const save = async () => {
             body: data
         });
         if (res.statusCode === 200) {
-            toast.add({ title: $ts('success'), description: $ts('success_to_edit_category') });
+            toast.add({ title: 'Berhasil!', description: 'Success To Edit Category' });
             emit('triggerRefresh');
         } else {
-            toast.add({ title: $ts('failed'), description: $ts('failed_to_edit_category'), color: 'error' });
+            toast.add({ title: 'Failed', description: 'Failed To Edit Category', color: 'error' });
         }
     } catch (error) {
         console.error(error);
-        toast.add({ title: $ts('failed'), description: $ts('failed_to_edit_category'), color: 'error' });
+        toast.add({ title: 'Failed', description: 'Failed To Edit Category', color: 'error' });
     }
 }
 </script>
 <template>
-    <UModal :title="$ts('edit_category', { title: category.title })">
+    <UModal :title="'Edit Kategori {title}' /* params: { title: category.title } */">
         <template #body>
             <div class="flex flex-col gap-4">
-                <UFormField :label="$ts('title')">
-                    <UInput v-model="category.title" :placeholder="$ts('title')" />
+                <UFormField :label="'Judul'">
+                    <UInput v-model="category.title" :placeholder="'Judul'" />
                 </UFormField>
-                <UFormField :label="$ts('description')">
-                    <UTextarea v-model="category.description" :placeholder="$ts('description')" />
+                <UFormField :label="'Deskripsi'">
+                    <UTextarea v-model="category.description" :placeholder="'Deskripsi'" />
                 </UFormField>
             </div>
         </template>
         <template #footer>
             <div class="flex flex-row justify-between w-full gap-2">
-                <UButton @click="$emit('close')" color="neutral">{{ $ts('cancel') }}</UButton>
-                <UButton @click="save" color="primary">{{ $ts('save') }}</UButton>
+                <UButton @click="emit('close')" color="neutral">{{ 'Batal' }}</UButton>
+                <UButton @click="save" color="primary">{{ 'Simpan' }}</UButton>
             </div>
         </template>
     </UModal>

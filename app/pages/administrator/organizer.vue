@@ -29,8 +29,6 @@ const {
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
 const overlay = useOverlay();
-const { $ts } = useI18n();
-
 const AddOrganizerModal = overlay.create(ModalsOrganizerAdd);
 const EditOrganizerModal = overlay.create(ModalsOrganizerEdit);
 /**
@@ -118,12 +116,12 @@ const editModal = () => {
 // Define the items for the tabs in the UI
 const items = [
     {
-        label: $ts('daily_manager'),
+        label: 'Pengurus Harian',
         icon: "i-heroicons-user-group",
         slot: "dailyManager" as const,
     },
     {
-        label: $ts('department'),
+        label: 'Departemen',
         icon: "i-heroicons-user-group",
         slot: "departments" as const,
     }
@@ -175,11 +173,11 @@ const imageDimensions = computed(() => ({
 }));
 
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('organizer'),
+    label: 'pengurus',
     icon: 'i-heroicons-user-group',
 }]);
 </script>
@@ -190,7 +188,7 @@ const links = computed(() => [{
             <template #header>
                 <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                        {{ $ts('organizer') }}
+                        {{ 'pengurus' }}
                     </h1>
                     <div class="min-w-24">
                         <UButton label="New" :size="responsiveUISizes.button" v-if="isOrganizer" @click="addModal" />
@@ -240,7 +238,7 @@ const links = computed(() => [{
             <div>
                 <h1
                     class="mt-2 mb-2 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:-mt-12 md:mb-4 md:text-3xl dark:text-white">
-                    {{ $ts('advisor') }}
+                    {{ 'Pembina' }}
                 </h1>
                 <div class="mx-auto wrapper" :style="wrapperDimensions">
                     <div class="card" :style="{ height: cardDimensions.height }">
@@ -264,7 +262,7 @@ const links = computed(() => [{
                 <div>
                     <h1
                         class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-3xl dark:text-white">
-                        {{ $ts('considers') }}
+                        {{ 'Dewan Pertimbangan' }}
                     </h1>
                     <div
                         :class="`grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-${organizer?.considerationBoard.length}`">

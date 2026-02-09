@@ -165,7 +165,7 @@ const responsiveClasses = computed(() => ({
                     </div>
 
                     <!-- Tags input -->
-                    <UFormField :class="responsiveClasses.halfSpan" :label="$ts('tags')">
+                    <UFormField :class="responsiveClasses.halfSpan" :label="'Tag'">
                         <USelectMenu v-model="tags" :items="tagsOptions" multiple create-item @create="addNewTag"
                             name="tag" placeholder="Select Tags" />
                     </UFormField>

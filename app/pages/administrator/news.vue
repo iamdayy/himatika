@@ -17,8 +17,6 @@ const overlay = useOverlay();
 const toast = useToast();
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
-const { $ts } = useI18n();
-
 const AddNewsModal = overlay.create(ModalsNewsAdd);
 const EditNewsModal = overlay.create(ModalsNewsEdit);
 const ConfirmationModal = overlay.create(ModalsConfirmation);
@@ -90,10 +88,10 @@ const publishNews = async (slug: string) => {
         const published = await $api('/api/news/publish', {
             query: { slug }
         });
-        toast.add({ title: $ts('success'), description: $ts('success_to_publish_news') });
+        toast.add({ title: 'Berhasil!', description: 'Success To Publish News' });
         refresh();
     } catch (error) {
-        toast.add({ title: $ts('error'), description: $ts('failed_to_publish_news'), color: 'error' });
+        toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Failed To Publish News', color: 'error' });
     }
 }
 /**
@@ -105,10 +103,10 @@ const ArchiveNews = async (slug: string) => {
         const published = await $api('/api/news/archive', {
             query: { slug }
         });
-        toast.add({ title: $ts('success'), description: $ts('success_to_archive_news') });
+        toast.add({ title: 'Berhasil!', description: 'Success To Archive News' });
         refresh();
     } catch (error: any) {
-        toast.add({ title: $ts('error'), description: $ts('failed_to_archive_news'), color: 'error' });
+        toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Failed To Archive News', color: 'error' });
     }
 }
 
@@ -152,15 +150,15 @@ const DeleteModal = (slug: string) => {
                     method: 'DELETE',
                     query: { slug }
                 });
-                toast.add({ title: $ts('success'), description: $ts('success_to_delete_news') });
+                toast.add({ title: 'Berhasil!', description: 'Success To Delete News' });
                 refresh();
                 ConfirmationModal.close();
             } catch (error) {
-                toast.add({ title: $ts('error'), description: $ts('failed_to_delete_news'), color: 'error' });
+                toast.add({ title: 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.', description: 'Failed To Delete News', color: 'error' });
             }
         },
-        title: $ts('delete_news'),
-        body: $ts('delete_news_confirmation')
+        title: 'Delete News',
+        body: 'Delete News Confirmation'
     })
 }
 
@@ -174,8 +172,8 @@ const PublishModal = (slug: string) => {
             await publishNews(slug);
             ConfirmationModal.close();
         },
-        title: $ts('publish_news'),
-        body: $ts('publish_news_confirmation')
+        title: 'Publish News',
+        body: 'Publish News Confirmation'
     })
 }
 
@@ -189,8 +187,8 @@ const UnpublishModal = (slug: string) => {
             await publishNews(slug);
             ConfirmationModal.close();
         },
-        title: $ts('unpublish_news'),
-        body: $ts('unpublish_news_confirmation')
+        title: 'Unpublish News',
+        body: 'Unpublish News Confirmation'
     })
 }
 /**
@@ -203,8 +201,8 @@ const ArchiveModal = (slug: string) => {
             await ArchiveNews(slug);
             ConfirmationModal.close();
         },
-        title: $ts('archive_news'),
-        body: $ts('archive_news_confirmation')
+        title: 'Archive News',
+        body: 'Archive News Confirmation'
     })
 }
 /**
@@ -217,8 +215,8 @@ const UnarchiveModal = (slug: string) => {
             await ArchiveNews(slug);
             ConfirmationModal.close();
         },
-        title: $ts('unarchive_news'),
-        body: $ts('unarchive_news_confirmation')
+        title: 'Unarchive News',
+        body: 'Unarchive News Confirmation'
     })
 }
 
@@ -249,30 +247,30 @@ const share = async (news: INews) => {
  */
 const items = (news: INews): Array<any> => [[
     {
-        label: $ts('delete'),
+        label: 'Hapus',
         icon: 'i-heroicons-trash',
         onSelect: () => DeleteModal(news.slug!),
         disabled: !isOrganizer.value
     },
     {
-        label: $ts('edit'),
+        label: 'Edit',
         icon: 'i-heroicons-pencil-square',
         onSelect: () => EditModal(news),
         disabled: !isOrganizer.value
     },
     {
-        label: $ts(news.published ? 'unpublish' : 'publish'),
+        label: news.published ? 'Belum dipublikasikan' : 'Publikasikan',
         icon: news.published ? 'i-heroicons-arrow-down-on-square' : 'i-heroicons-arrow-up-on-square',
         onSelect: () => news.published ? UnpublishModal(news.slug!) : PublishModal(news.slug!),
         disabled: !isOrganizer.value
     },
     {
-        label: $ts('share'),
+        label: 'Bagikan',
         icon: 'i-heroicons-share',
         onSelect: () => share(news)
     },
     {
-        label: $ts(news.archived ? 'unarchive' : 'archive'),
+        label: news.archived ? 'Tidak diarsipkan' : 'Arsipkan',
         icon: 'i-heroicons-archive-box',
         onSelect: () => news.archived ? UnarchiveModal(news.slug!) : ArchiveModal(news.slug!),
         disabled: !isOrganizer.value
@@ -294,11 +292,11 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
 }));
 
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('news'),
+    label: 'Berita',
     icon: 'i-heroicons-clipboard-document-list',
 
 }]);
@@ -322,11 +320,11 @@ useSeoMeta({
             <template #header>
                 <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">{{
-                        $ts('news') }}
+                        'Berita' }}
                     </h1>
                     <div class="min-w-24">
-                        <UButton :label="$ts('add')" :size="responsiveUISizes.button" @click="AddModal"
-                            v-if="isOrganizer" block />
+                        <UButton :label="'Tambah'" :size="responsiveUISizes.button" @click="AddModal" v-if="isOrganizer"
+                            block />
                     </div>
                 </div>
                 <div class="flex flex-col gap-2 px-2 my-2 md:items-center md:justify-between md:flex-row md:px-4">
@@ -334,19 +332,19 @@ useSeoMeta({
                         placeholder="Search news..." class="mb-4 md:mb-0 md:w-64" />
                     <div class="flex flex-wrap justify-end gap-2 md:flex-row">
                         <USelectMenu v-if="!isMobile" v-model="selectedTags" :items="tags" multiple
-                            :placeholder="$ts('filter_by', { key: $ts('tag') })" class="w-full md:min-w-48 md:max-w-24"
-                            :size="responsiveUISizes.input" />
-                        <USelectMenu v-if="!isMobile" v-model="selectedCategory" :items="categoryOptions"
-                            :placeholder="$ts('filter_by', { key: $ts('category') })" multiple value-key="value"
+                            :placeholder="'Filter berdasarkan {key}' /* params: { key: 'Tag' } */"
                             class="w-full md:min-w-48 md:max-w-24" :size="responsiveUISizes.input" />
-                        <UFormField class="flex flex-col items-center gap-2" :label="$ts('not_published')" size="xs">
+                        <USelectMenu v-if="!isMobile" v-model="selectedCategory" :items="categoryOptions"
+                            :placeholder="'Filter berdasarkan {key}' /* params: { key: 'Kategori' } */" multiple
+                            value-key="value" class="w-full md:min-w-48 md:max-w-24" :size="responsiveUISizes.input" />
+                        <UFormField class="flex flex-col items-center gap-2" :label="'Belum Dipublikasikan'" size="xs">
                             <!-- <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="published">{{
-                                $ts('not_published') }}</label> -->
+                                'Belum Dipublikasikan' }}</label> -->
                             <USwitch v-model="notPublished" id="published" size="xs" />
                         </UFormField>
-                        <UFormField class="flex flex-col items-center gap-2" :label="$ts('archived')" size="xs">
+                        <UFormField class="flex flex-col items-center gap-2" :label="'Diarsipkan'" size="xs">
                             <!-- <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="published">{{
-                                $ts('archived') }}</label> -->
+                                'Diarsipkan' }}</label> -->
                             <USwitch v-model="archived" id="archived" size="xs" />
                         </UFormField>
                         <UButton :size="responsiveUISizes.button" color="primary" variant="ghost"
@@ -372,7 +370,7 @@ useSeoMeta({
                         <NuxtLink :to="`/news/${news.slug}`">
                             <h2 class="text-sm font-semibold sm:text-lg md:text-xl lg:text-2xl line-clamp-2">{{
                                 news.title
-                            }}</h2>
+                                }}</h2>
                         </NuxtLink>
                         <div class="line-clamp-3">
                             <CoreContent :content="news.body" size="sm" />
@@ -404,7 +402,7 @@ useSeoMeta({
                                         :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
                                 </UAvatarGroup>
                                 <div v-if="news.published && !news.archived" class="text-xs font-light">
-                                    {{ $ts('published_at') }}
+                                    {{ 'Dipublikasikan pada' }}
                                     <span>
                                         {{ new Date(news.publishedAt!).toLocaleDateString('id-Id', {
                                             dateStyle: "long"
@@ -412,7 +410,7 @@ useSeoMeta({
                                     </span>
                                 </div>
                                 <span class="text-xs font-light text-red-500 ms-3" v-else-if="news.archived">
-                                    {{ $ts('archived_at') }}
+                                    {{ 'Diarsipkan pada' }}
                                     <span>
                                         {{ new Date(news.archivedAt!).toLocaleDateString('id-Id', {
                                             dateStyle: "long"
@@ -420,7 +418,7 @@ useSeoMeta({
                                     </span>
                                 </span>
                                 <span class="text-xs font-light text-red-500 ms-3" v-else>
-                                    {{ $ts('not_published') }}
+                                    {{ 'Belum Dipublikasikan' }}
                                 </span>
                             </div>
                             <UDropdownMenu :items="items(news)">
@@ -433,18 +431,19 @@ useSeoMeta({
             <div v-else class="flex items-center justify-center">
                 <div class="flex flex-col items-center justify-center gap-4">
                     <UIcon name="i-heroicons-circle-stack" class="w-12 h-12 text-gray-400" />
-                    <h1 class="text-2xl font-semibold text-gray-600 dark:text-gray-400">{{ $ts('not_found') }}</h1>
+                    <h1 class="text-2xl font-semibold text-gray-600 dark:text-gray-400">{{ 'Tidak Ditemukan' }}</h1>
                 </div>
             </div>
             <template #footer>
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 md:mb-0">
-                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page') }}</span>
+                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ 'Baris per Halaman' }}</span>
                         <USelect v-model="pagination.pageSize" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 md:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
+                            {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end:
+                            pageTo, total: pageTotal } */ }}
                         </span>
                     </div>
                     <UPagination v-model:page="pagination.pageIndex" :items-per-page="pagination.pageSize"

@@ -106,7 +106,7 @@ const addProject = async (): Promise<void> => {
         toast.add({ title: "Failed to update Project" });
     } finally {
         loading.value = false;
-        emit("close");
+        emit('close');
     }
 };
 
@@ -180,26 +180,26 @@ const inputSize = computed(() => {
             <UForm :state="stateProject" @submit="addProject">
                 <div class="space-y-6 text-start">
                     <div :class="['grid', 'gap-2', layoutClass]">
-                        <UFormField class="col-span-full" :label="$ts('title')">
+                        <UFormField class="col-span-full" :label="'Judul'">
                             <UInput type="text" name="Title" id="Title" placeholder="Project 1"
                                 v-model="stateProject.title" required class="w-full" :size="inputSize" />
                         </UFormField>
 
                         <!-- Categories input -->
-                        <UFormField class="col-span-full" :label="$ts('category')">
+                        <UFormField class="col-span-full" :label="'Kategori'">
                             <USelectMenu v-model="stateProject.category as string" :items="categoryOptions" searchable
                                 create-item @create="addNewCategory" label-key="title" value-key="value"
                                 class="w-full" />
                         </UFormField>
-                        <UFormField class="col-span-full lg:col-span-3" :label="$ts('date')">
+                        <UFormField class="col-span-full lg:col-span-3" :label="'Tanggal'">
                             <DatePicker v-model="stateProject.date" />
                         </UFormField>
-                        <UFormField class="col-span-full lg:col-span-3" :label="$ts('url')">
+                        <UFormField class="col-span-full lg:col-span-3" :label="'Tautan'">
                             <UInput type="url" name="url" id="url" placeholder="https://example.com"
                                 v-model="stateProject.url" required class="w-full" :size="inputSize" />
                         </UFormField>
                         <!-- Image upload -->
-                        <UFormField class="col-span-full min-h-36" :label="$ts('image')">
+                        <UFormField class="col-span-full min-h-36" :label="'Gambar'">
                             <UFileUpload v-model="file" accept="image/*" @update:model-value="handleCropImage">
                                 <template #default="{ open }">
                                     <NuxtImg v-if="typeof stateProject.image === 'string'" :src="stateProject.image"
@@ -211,12 +211,12 @@ const inputSize = computed(() => {
                                 </template>
                             </UFileUpload>
                         </UFormField>
-                        <UFormField class="col-span-full" :label="$ts('description')">
+                        <UFormField class="col-span-full" :label="'Deskripsi'">
                             <CoreTiptap v-model="stateProject.description" />
                         </UFormField>
-                        <UFormField class="w-full" :label="$ts('contributor')">
+                        <UFormField class="w-full" :label="'Contributor'">
                             <USelectMenu :items="members" :loading="status === 'pending'"
-                                :filter-fields="['label', 'email']" icon="i-lucide-user" :placeholder="$ts('search')"
+                                :filter-fields="['label', 'email']" icon="i-lucide-user" :placeholder="'Cari...'"
                                 v-model:search-term="searchMember" v-model="stateProject.members as number[]" multiple
                                 value-key="value" class="w-full">
 
@@ -229,14 +229,14 @@ const inputSize = computed(() => {
                                 </template>
                             </USelectMenu>
                         </UFormField>
-                        <UFormField class="space-y-4 col-span-full" :label="$ts('tag')">
+                        <UFormField class="space-y-4 col-span-full" :label="'Tag'">
                             <USelectMenu v-model="stateProject.tags" :items="tagsOptions" multiple create-item
-                                @create="addNewTag" name="tag" :placeholder="$ts('select_tag')" />
+                                @create="addNewTag" name="tag" :placeholder="'Pilih Tag'" />
                         </UFormField>
-                        <UFormField class="space-y-4 col-span-full" :label="$ts('progress')">
+                        <UFormField class="space-y-4 col-span-full" :label="'Progres'">
                             <USlider v-model="stateProject.progress" :min="0" :max="100" :step="5" />
                             <p class="text-sm text-gray-500 dark:text-gray-400 text-end">{{ stateProject.progress
-                                }}%
+                            }}%
                             </p>
                         </UFormField>
                     </div>
@@ -246,7 +246,7 @@ const inputSize = computed(() => {
 
         <template #footer>
             <div class="flex items-center justify-between w-full">
-                <UButton @click="emit('close')" label="Close" icon="i-heroicons-x-mark" variant="ghost" color="error"
+                <UButton @click="$emit('close')" label="Close" icon="i-heroicons-x-mark" variant="ghost" color="error"
                     :size="buttonSize" :loading="loading" />
                 <UButton type="submit" @click="addProject" label="Save" icon="i-heroicons-clipboard" trailing
                     :size="buttonSize" :loading="loading" />

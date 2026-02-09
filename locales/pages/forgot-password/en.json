@@ -1,6 +1,0 @@
-{
-    "account_description": "Input your account information below, make sure your NIM and email are registered",
-    "otp_description": "Enter the OTP (One-Time Password) we sent to your email",
-    "reset_password_description": "Enter your new password below. Make sure you remember your new password",
-    "complete_description": "Congratulations, your new password has been successfully changed!"
-}

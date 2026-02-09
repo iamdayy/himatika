@@ -9,7 +9,7 @@ definePageMeta({
 
 const route = useRoute();
 const id = route.params.id as string;
-const { $api, $ts } = useNuxtApp();
+const { $api } = useNuxtApp();
 const toast = useToast();
 
 const { data: agenda } = await useAsyncData('admin-agenda-detail',
@@ -19,11 +19,11 @@ const { data: agenda } = await useAsyncData('admin-agenda-detail',
 
 // Navigation Links
 const links = computed(() => [{
-    label: $ts('dashboard'),
+    label: 'Dasbor',
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('agenda'),
+    label: 'Agenda',
     icon: 'i-heroicons-calendar',
     to: '/administrator/agendas'
 },
@@ -33,20 +33,20 @@ const links = computed(() => [{
     to: `/administrator/agendas/${id}`
 },
 {
-    label: $ts('participant'),
+    label: 'Peserta',
     to: `/administrator/agendas/${id}/participant`,
     icon: 'i-heroicons-link'
 },
 {
-    label: $ts('add-participant'),
+    label: 'Add-Participant',
     icon: 'i-heroicons-user-plus',
 }
 ]);
 
 // Tabs
 const tabs = computed<TabsItem[]>(() => [
-    { label: $ts('add-member-participant'), icon: 'i-heroicons-user-group', slot: 'member', value: 'member' },
-    { label: $ts('add-guest-participant'), icon: 'i-heroicons-user-group', slot: 'guest', value: 'guest' }
+    { label: 'Add-Member-Participant', icon: 'i-heroicons-user-group', slot: 'member', value: 'member' },
+    { label: 'Add-Guest-Participant', icon: 'i-heroicons-user-group', slot: 'guest', value: 'guest' }
 ]);
 
 // State
@@ -159,7 +159,7 @@ const submit = async () => {
                                             <span class="truncate font-medium">{{ item.fullName }}</span>
                                             <span class="text-xs text-gray-500">{{ item.NIM }} • {{ item.class ||
                                                 'Unknown'
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
                                 </template>

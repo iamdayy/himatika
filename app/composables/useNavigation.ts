@@ -1,36 +1,34 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 export const useDashboardNavigation = () => {
-  const { $ts } = useNuxtApp(); // Asumsi $ts tersedia global atau import useI18n
   const organizerStore = useOrganizerStore();
   const { isOrganizer } = storeToRefs(organizerStore);
-  const { data: user } = useAuth(); // Ambil user untuk nama di menu
 
   const links = computed<NavigationMenuItem[][]>(() => {
     const baseLinks = [
       [
         {
-          label: $ts("dashboard"),
+          label: 'Dasbor',
           icon: "i-heroicons-rectangle-group",
           to: "/dashboard",
         },
         {
-          label: $ts("agenda"),
+          label: 'Agenda',
           icon: "i-heroicons-calendar",
           to: "/dashboard/agendas",
         },
         {
-          label: $ts("project"),
+          label: 'Proyek',
           icon: "i-heroicons-code-bracket",
           to: "/dashboard/projects",
         },
         {
-          label: $ts("achievement"),
+          label: 'Pencapaian',
           icon: "i-heroicons-trophy",
           to: "/dashboard/achievements",
         },
         {
-          label: $ts("aspiration"),
+          label: 'Aspirasi',
           icon: "i-heroicons-clipboard-document-list",
           to: "/dashboard/aspirations",
         },
@@ -39,47 +37,47 @@ export const useDashboardNavigation = () => {
     if (isOrganizer.value) {
       baseLinks.push([
         {
-          label: $ts("member"),
+          label: 'Anggota',
           icon: "i-heroicons-users",
           to: "/administrator/members",
         },
         {
-          label: $ts("organizer"),
+          label: 'pengurus',
           icon: "i-heroicons-user-group",
           to: "/administrator/organizer",
         },
         {
-          label: $ts("agenda-management"),
+          label: 'Manajemen Agenda',
           icon: "i-heroicons-calendar",
           to: "/administrator/agendas",
         },
         {
-          label: $ts("achievement-management"),
+          label: 'Manajemen Pencapaian',
           icon: "i-heroicons-trophy",
           to: "/administrator/achievements",
         },
         {
-          label: $ts("news"),
+          label: 'Berita',
           icon: "i-heroicons-clipboard-document-list",
           to: "/administrator/news",
         },
         {
-          label: $ts("gallery"),
+          label: 'Galeri',
           icon: "i-heroicons-photo",
           to: "/administrator/photos",
         },
         {
-          label: $ts("signature"),
+          label: 'Tanda Tangan',
           icon: "i-heroicons-finger-print",
           to: "/signatures",
         },
         {
-          label: $ts("message"),
+          label: 'Pesan',
           icon: "i-heroicons-archive-box",
           to: "/administrator/messages",
         },
         {
-          label: $ts("config"),
+          label: 'Pengaturan',
           icon: "i-heroicons-cog",
           to: "/administrator/config",
         },

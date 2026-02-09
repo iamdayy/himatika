@@ -159,7 +159,7 @@ const links = computed(() => [{
 
                                     </div>
                                     <p class="p-2 text-lg font-semibold text-gray-800 dark:text-gray-200">{{
-                                        group.photos.length }} {{ $ts('image') }}
+                                        group.photos.length }} {{ 'Gambar' }}
                                     </p>
                                     <div class="flex flex-wrap gap-2">
                                         <UBadge
@@ -181,14 +181,14 @@ const links = computed(() => [{
             <template #footer>
                 <div class="flex flex-wrap items-center justify-between gap-1.5">
                     <div class="flex items-center gap-1.5">
-                        <span class="text-sm leading-5">{{ $ts('rows_per_page') }}</span>
+                        <span class="text-sm leading-5">{{ 'Baris per Halaman' }}</span>
                         <USelect v-model="perPage" :items="perPageOptions" :size="responsiveUISizes.select"
                             class="w-20 me-2" />
                     </div>
                     <div>
 
                         <span class="text-sm leading-5">
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal || 0 }) }}
+                            {{ 'Menampilkan {start} hingga {end} dari {total} hasil' /* params: { start: pageFrom, end: pageTo, total: pageTotal || 0 } */ }}
                         </span>
                     </div>
                     <div class="flex items-center gap-3">

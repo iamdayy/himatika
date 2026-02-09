@@ -298,7 +298,7 @@ async function cancel() {
         });
         if (response.statusCode === 200) {
             payment.value.status = 'canceled';
-            emits("cancel");
+            emits('cancel');
         }
     } catch (error) {
         console.error("Cancellation failed", error);

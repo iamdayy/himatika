@@ -13,8 +13,6 @@ const router = useRouter();
 const overlay = useOverlay();
 const toast = useToast();
 const { $api } = useNuxtApp();
-const { $ts } = useI18n();
-
 const AddDocModal = overlay.create(ModalsDocAdd);
 const AddPhotoModal = overlay.create(ModalsImageAdd);
 const AddVideoModal = overlay.create(ModalsVideoAdd);
@@ -30,25 +28,25 @@ const readFileAsBlob = (file: File) => {
 const steps = computed<Step[]>(() => [
     {
         id: 'step1',
-        label: $ts('create_aspiration'),
-        title: $ts('create_aspiration'),
-        description: $ts('create_aspiration_description'),
+        label: 'Create Aspiration',
+        title: 'Create Aspiration',
+        description: 'Create Aspiration Description',
         formData: state,
         validationRules: stateRules,
 
     },
     {
         id: 'step2',
-        label: $ts('proof'),
-        title: $ts('proof'),
-        description: $ts('proof_description'),
+        label: 'Bukti',
+        title: 'Bukti',
+        description: 'Proof Description',
         formData: {},
     },
     {
         id: 'step3',
-        label: $ts('review_your_aspiration'),
-        title: $ts('review_your_aspiration'),
-        description: $ts('review_your_aspiration_description'),
+        label: 'Review Your Aspiration',
+        title: 'Review Your Aspiration',
+        description: 'Review Your Aspiration Description',
         formData: {},
     },
 ])
@@ -63,13 +61,13 @@ const state = reactive<IAspiration>({
 });
 const stateRules = reactiveComputed<FieldValidationRules<IAspiration>>(() => ({
     subject: (value: string) => {
-        return value ? null : { path: 'subject', message: $ts('required') };
+        return value ? null : { path: 'subject', message: 'Wajib diisi' };
     },
     message: (value: string) => {
-        return value ? null : { path: 'message', message: $ts('required') };
+        return value ? null : { path: 'message', message: 'Wajib diisi' };
     },
     anonymous: (value: boolean) => {
-        return typeof value === 'boolean' ? null : { path: 'anonymous', message: $ts('required') };
+        return typeof value === 'boolean' ? null : { path: 'anonymous', message: 'Wajib diisi' };
     },
 }))
 const loading = ref(false);
@@ -116,14 +114,14 @@ async function onSubmit() {
                 });
                 toast.add({ title: response.statusMessage });
             });
-            toast.add({ title: $ts('success'), description: $ts('aspiration_success_description'), color: 'success' });
+            toast.add({ title: 'Berhasil!', description: 'Aspiration Success Description', color: 'success' });
         }
     } catch (err: any) {
         loading.value = false;
         if (err.response) {
             toast.add({ title: err.response.data.message, color: 'error' });
         } else {
-            toast.add({ title: $ts('something_went_wrong'), color: 'error' });
+            toast.add({ title: 'Something Went Wrong', color: 'error' });
         }
     } finally {
         loading.value = false;
@@ -133,9 +131,9 @@ async function onSubmit() {
     }
 };
 const links = [
-    { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
-    { label: $ts('aspiration'), to: '/dashboard/aspirations', icon: 'i-heroicons-clipboard-document-list' },
-    { label: $ts('create_aspiration'), icon: 'i-heroicons-plus' },
+    { label: 'Dasbor', to: '/dashboard', icon: 'i-heroicons-home' },
+    { label: 'Aspirasi', to: '/dashboard/aspirations', icon: 'i-heroicons-clipboard-document-list' },
+    { label: 'Create Aspiration', icon: 'i-heroicons-plus' },
 ];
 
 const addPhotoModal = () => {
@@ -183,15 +181,15 @@ const deleteDoc = (index: number) => {
             <template #default="{ step, errors }">
                 <div v-if="step?.id === 'step1'">
                     <div class="flex flex-col gap-4">
-                        <UFormField :label="$ts('subject')" name="subject" required :help="$ts('subject_description')"
+                        <UFormField :label="'Subjek'" name="subject" required :help="'Subject Description'"
                             :error="errors.subject?.message">
                             <UInput v-model="state.subject" />
                         </UFormField>
-                        <UFormField :label="$ts('message')" name="message" required :help="$ts('message_description')"
+                        <UFormField :label="'Pesan'" name="message" required :help="'Message Description'"
                             :error="errors.message?.message">
                             <UTextarea v-model="state.message" />
                         </UFormField>
-                        <UFormField :label="$ts('anonymous')" name="anonymous" :help="$ts('anonymous_description')"
+                        <UFormField :label="'Anonim'" name="anonymous" :help="'Anonymous Description'"
                             :error="errors.anonymous?.message">
                             <USwitch v-model="state.anonymous" />
                         </UFormField>
@@ -200,7 +198,7 @@ const deleteDoc = (index: number) => {
                 <div v-else-if="step?.id === 'step2'">
                     <div class="flex flex-col gap-2 p-2">
                         <div class="flex flex-col gap-2">
-                            <div>{{ $ts('photo') }}:</div>
+                            <div>{{ 'Foto' }}:</div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <div v-for="photo, i in newPhotos" :key="i" class="relative group">
                                     <img :src="readFileAsBlob(photo.image as File)" :alt="photo.tags?.join(', ')"
@@ -216,7 +214,7 @@ const deleteDoc = (index: number) => {
                             <UButton block @click="addPhotoModal" icon="i-heroicons-plus"></UButton>
                         </div>
                         <div class="flex flex-col gap-2">
-                            <div>{{ $ts('video') }}:</div>
+                            <div>{{ 'Video' }}:</div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <div v-for="video, i in newVideos" :key="i" class="relative group">
                                     <video :src="readFileAsBlob(video.video as File)" controls
@@ -232,7 +230,7 @@ const deleteDoc = (index: number) => {
                             <UButton block @click="addVideoModal" icon="i-heroicons-plus"></UButton>
                         </div>
                         <div class="flex flex-col gap-2">
-                            <div>{{ $ts('document') }}:</div>
+                            <div>{{ 'Dokumen' }}:</div>
                             <div class="flex flex-col items-center gap-2">
                                 <div v-for="document, i in newDocs" :key="i"
                                     class="flex flex-row items-center justify-between w-full gap-2 px-3 py-2 bg-opacity-25 border border-gray-400 rounded-md shadow-md dark:border-gray-700 hover:bg-gray-400">
@@ -268,11 +266,11 @@ const deleteDoc = (index: number) => {
                             <div class="flex flex-row items-center justify-between gap-2">
                                 <h1
                                     class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                                    {{ $ts('proof') }}
+                                    {{ 'Bukti' }}
                                 </h1>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <div>{{ $ts('photo') }}:</div>
+                                <div>{{ 'Foto' }}:</div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <div v-for="photo, i in newPhotos" :key="i" class="relative group">
                                         <img :src="readFileAsBlob(photo.image as File)" :alt="photo.tags?.join(', ')"
@@ -287,7 +285,7 @@ const deleteDoc = (index: number) => {
                                 </div>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <div>{{ $ts('video') }}:</div>
+                                <div>{{ 'Video' }}:</div>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <div v-for="video, i in newVideos" :key="i" class="relative group">
                                         <video :src="readFileAsBlob(video.video as File)" controls
@@ -302,7 +300,7 @@ const deleteDoc = (index: number) => {
                                 </div>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <div>{{ $ts('document') }}:</div>
+                                <div>{{ 'Dokumen' }}:</div>
                                 <div class="flex flex-col items-center gap-2">
                                     <div v-for="document, i in newDocs" :key="i"
                                         class="flex flex-row items-center justify-between w-full gap-2 px-3 py-2 bg-opacity-25 border border-gray-400 rounded-md shadow-md dark:border-gray-700 hover:bg-gray-400">
