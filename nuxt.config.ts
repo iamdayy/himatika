@@ -9,10 +9,11 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       autoSubfolderIndex: false
-    }
-  },
-  build: {
-    transpile: ["@react-email/render"]
+    },
+    preset: 'node-server',
+    externals: {
+      external: ["@react-email/render", "react-dom/server.edge"],
+    },
   },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
