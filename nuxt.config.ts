@@ -6,9 +6,6 @@ export default defineNuxtConfig({
       if (!nuxt.options._prepare) process.exit();
     },
   },
-  nitro: {
-    preset: 'deno_deploy'
-  },
   routeRules: {
     // 1. Dashboard & Profile: Render di browser saja (SPA)
     "/dashboard/**": { ssr: false },
