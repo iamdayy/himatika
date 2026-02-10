@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { type ICategory } from '~~/types';
+import { type ICategory, type IMember } from '~~/types';
 import { type IAgendaResponse } from '~~/types/IResponse';
 
 // Page Meta
@@ -15,9 +15,13 @@ const { $api, $ts } = useNuxtApp();
 const router = useRouter();
 
 // Data Fetching
-const { data: agenda, pending, refresh } = await useAsyncData('agenda',
+const { data: agenda, pending, refresh } = await useAsyncData(`agenda-${id}`,
     () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda
+});
+
+onMounted(() => {
+    refresh();
 });
 
 // Auth & Permissions
@@ -197,7 +201,7 @@ function formatCurrency(amount: number): string {
                 <NuxtImg :src="bannerImage" provider="localProvider"
                     class="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm scale-105 transition-transform duration-700 group-hover:scale-110"
                     alt="Banner" />
-                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
+                <div class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
 
                 <div
                     class="absolute inset-0 container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-12 z-10">
@@ -295,6 +299,16 @@ function formatCurrency(amount: number): string {
                                         <p class="text-xs opacity-80">Sebagai {{ isRegistered === 'Committee' ?
                                             'Panitia'
                                             : 'Peserta' }}</p>
+                                        <UBadge
+                                            v-if="isRegistered === 'Participant' && (agenda.participants?.find((p) => (p.member as IMember)?.NIM === user?.member?.NIM)?.visiting)"
+                                            color="neutral" variant="solid" size="lg" class="mt-1 text-green-600">
+                                            <UIcon name="i-heroicons-check-circle" class="mr-1" /> Sudah Hadir
+                                        </UBadge>
+                                        <UBadge
+                                            v-else-if="isRegistered === 'Committee' && (agenda.committees?.find((c) => (c.member as IMember)?.NIM === user?.member?.NIM)?.visiting)"
+                                            color="neutral" variant="solid" size="lg" class="mt-1 text-green-600">
+                                            <UIcon name="i-heroicons-check-circle" class="mr-1" /> Sudah Hadir
+                                        </UBadge>
                                     </div>
                                     <UButton
                                         :to="`/agendas/${id}/${isRegistered === 'Committee' ? 'committee' : 'participant'}`"

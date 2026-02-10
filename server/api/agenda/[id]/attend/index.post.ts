@@ -24,15 +24,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. Cari User di daftar Peserta atau Panitia
-  // Note: Kita mencocokkan user.id (dari session) dengan field 'id' di array participants
-  const isParticipant = agenda.participants?.some(
+  const participant = agenda.participants?.find(
     (p) => ((p.member as IMember) || null)?.NIM === user.member.NIM
   );
-  const isCommittee = agenda.committees?.some(
+  const committee = agenda.committees?.find(
     (c) => ((c.member as IMember) || null)?.NIM === user.member.NIM
   );
 
-  if (!isParticipant && !isCommittee) {
+  if (!participant && !committee) {
     throw createError({
       statusCode: 403,
       message: "Anda belum terdaftar di agenda ini.",
@@ -40,11 +39,10 @@ export default defineEventHandler(async (event) => {
   }
 
   // 5. Cek apakah sudah presensi sebelumnya
-  // (Logic update agak tricky di Mongo untuk array nested, kita coba cari yang spesifik)
-  const targetCollection = isParticipant ? "participants" : "committees";
+  const targetCollection = participant ? "participants" : "committees";
 
   // Cek status visited
-  const currentList = isParticipant ? agenda.participants : agenda.committees;
+  const currentList = participant ? agenda.participants : agenda.committees;
   const userDataInAgenda = currentList?.find(
     (u) => ((u.member as IMember) || null)?.NIM === user.member.NIM
   );
@@ -58,8 +56,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // 6. Update Database: Set visited = true
-  await AgendaModel.updateOne(
-    { _id: agendaId, [`${targetCollection}.id`]: user.id },
+  const updateResult = await AgendaModel.updateOne(
+    { _id: agendaId, [`${targetCollection}._id`]: participant?._id || committee?._id },
     {
       $set: {
         [`${targetCollection}.$.visiting`]: true,
@@ -67,10 +65,18 @@ export default defineEventHandler(async (event) => {
       },
     }
   );
+  console.log(updateResult);
+
+  if (!updateResult.modifiedCount) {
+    throw createError({
+      statusCode: 500,
+      message: "Gagal update database",
+    });
+  }
 
   return {
     status: "success",
     message: "Presensi berhasil dicatat!",
-    role: isParticipant ? "Peserta" : "Panitia",
+    role: participant ? "Peserta" : "Panitia",
   };
 });
