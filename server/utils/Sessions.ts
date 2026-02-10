@@ -155,7 +155,7 @@ export const refreshSession = async (payload: string) => {
             updatedAt: new Date(),
           },
         },
-        { new: true } // Return dokumen baru
+        { returnDocument: "after" } // Return dokumen baru
       );
 
       // Jika berhasil update (atomic)

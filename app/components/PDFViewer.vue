@@ -3,9 +3,6 @@
         <div class="border border-gray-300 dark:border-gray-600 overflow-hidden rounded-lg pdf-viewer">
             <object :data="pdfUrl" type="application/pdf" class="w-full h-full">
                 <iframe :src="pdfUrl" class="w-full h-full">
-                    <p>Browser Anda tidak mendukung PDF Plugin.
-                        <a :href="pdfUrl">Klik disini untuk mengunduh PDF file.</a>
-                    </p>
                 </iframe>
             </object>
         </div>

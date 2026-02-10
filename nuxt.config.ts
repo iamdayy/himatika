@@ -299,9 +299,6 @@ export default defineNuxtConfig({
   },
   icon: {
     collections: ["heroicons", "uil", "ion", "ph"],
-    serverBundle: {
-      externalizeIconsJson: true,
-    },
   },
   ui: {},
   auth: {
