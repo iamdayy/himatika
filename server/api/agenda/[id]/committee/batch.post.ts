@@ -8,10 +8,10 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!user || !user.member.organizer) throw createError({ statusCode: 403 });
 
     const { id } = event.context.params as { id: string };
-    // Menerima array: [{ nim: 123, job: 'Sekretaris' }, ...]
-    const body = await readBody<{ data: { nim: number; job: string }[] }>(
-      event
-    );
+    // Menerima array: [{ nim: 123, job: 'Sekretaris', payment?: any, visiting?: boolean }, ...]
+    const body = await readBody<{
+      data: { nim: number; job: string; payment?: any; visiting?: boolean }[];
+    }>(event);
 
     if (!id || !body.data || body.data.length === 0)
       throw createError({ statusCode: 400 });
@@ -35,6 +35,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
           member: member.id,
           job: reqItem.job || "Anggota", // Default job
           approved: true, // Auto approve karena import admin
+          payment: reqItem.payment,
+          visiting: reqItem.visiting,
+          visitTime: reqItem.visiting ? new Date() : undefined
         });
         addedCount++;
       }

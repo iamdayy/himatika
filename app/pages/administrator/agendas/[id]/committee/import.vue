@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { UButton, UCheckbox, UFileUpload, UTable } from '#components';
+import { UButton, UCheckbox, UFileUpload, USwitch, UTable } from '#components';
 import type { TableColumn } from '@nuxt/ui';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { IMember } from '~~/types';
@@ -48,14 +48,22 @@ const parsedData = ref<any[]>([]);
 const selectedRows = ref<{
     [key: number]: boolean;
 }>({});
-const selectedMembers = computed<{ nim: number; job: string; namePreview: string; }[]>(() => {
+
+const paymentStatus = ref(true); // true = success, false = pending
+const paymentMethod = ref('cash');
+const isVisiting = ref(false);
+
+const paymentStatusOptions = ['pending', 'success', 'failed'];
+const paymentMethodOptions = ['cash', 'bank_transfer', 'qris'];
+
+const selectedMembers = computed<{ nim: number; job: string; name: string; payment: boolean; visiting: boolean; }[]>(() => {
     return parsedData.value.filter((row: IMember, index) => {
         return selectedRows.value[index] !== undefined && selectedRows.value[index] !== null;
     }) || [];
 });
 
 
-const columns = computed<TableColumn<IMember>[]>(() => [
+const columns = computed<TableColumn<any>[]>(() => [
     {
         id: 'select',
         header: ({ table }) =>
@@ -94,7 +102,31 @@ const columns = computed<TableColumn<IMember>[]>(() => [
         size: 100,
     },
     {
-        accessorKey: 'namePreview',
+        accessorKey: 'payment',
+        header: 'Bayar?',
+        cell: ({ row }) => {
+            return h(USwitch, {
+                modelValue: row.original.payment,
+                'onUpdate:modelValue': (val: boolean) => {
+                    row.original.payment = val;
+                }
+            });
+        }
+    },
+    {
+        accessorKey: 'visiting',
+        header: 'Hadir?',
+        cell: ({ row }) => {
+            return h(USwitch, {
+                modelValue: row.original.visiting,
+                'onUpdate:modelValue': (val: boolean) => {
+                    row.original.visiting = val;
+                }
+            });
+        }
+    },
+    {
+        accessorKey: 'name',
         header: $ts('Nama (Preview)'),
         size: 100,
     },
@@ -146,8 +178,10 @@ const handleFileUpload = async () => {
         // Mapping kolom excel
         parsedData.value = res.data.map((row: any) => ({
             nim: row.NIM || row.nim,
-            namePreview: row.fullName || row.Nama || 'Unknown',
+            name: row.fullName || row.Nama || 'Unknown',
             job: row.Jabatan || row.jabatan || row.Job || 'Anggota', // Default jika kosong
+            payment: paymentStatus.value,
+            visiting: isVisiting.value
         })).filter((r: any) => r.nim);
 
         toast.add({ title: `Siap import ${parsedData.value.length} panitia` });
@@ -165,7 +199,16 @@ const submitImport = async () => {
         await $api(`/api/agenda/${id}/committee/batch`, {
             method: 'POST',
             body: {
-                data: selectedMembers.value.map((m) => ({ nim: m.nim, job: m.job }))
+                data: selectedMembers.value.map((m) => ({
+                    nim: m.nim,
+                    job: m.job,
+                    payment: {
+                        status: m.payment ? 'success' : 'pending',
+                        method: paymentMethod.value,
+                        time: new Date()
+                    },
+                    visiting: m.visiting
+                }))
             } // Kirim array nim & job
         });
         toast.add({ title: 'Import Panitia sukses', color: 'success' });
@@ -197,6 +240,21 @@ const submitImport = async () => {
                     position="inside" :max-file-size="5 * 1024 * 1024"
                     accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .xlsx" v-model="file">
                 </UFileUpload>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <UFormGroup label="Status Pembayaran (Default)">
+                        <UToggle v-model="paymentStatus" />
+                        <span class="ml-2 text-sm">{{ paymentStatus ? 'Lunas' : 'Belum Lunas' }}</span>
+                    </UFormGroup>
+                    <UFormGroup label="Metode Pembayaran (Default)">
+                        <USelect v-model="paymentMethod" :options="paymentMethodOptions" />
+                    </UFormGroup>
+                    <UFormGroup label="Status Kehadiran (Default)">
+                        <UToggle v-model="isVisiting" />
+                        <span class="ml-2 text-sm">{{ isVisiting ? 'Hadir' : 'Tidak Hadir' }}</span>
+                    </UFormGroup>
+                </div>
+
                 <USeparator class="my-2 md:my-4" />
                 <UTable v-model:row-selection="selectedRows" :data="parsedData" :columns="columns" :loading="loading">
                 </UTable>
