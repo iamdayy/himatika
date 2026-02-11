@@ -861,7 +861,7 @@ const links = [
                         </UFormField>
                         <UFormField :label="`${$ts('date')} & ${$ts('time')}`" name="date" id="date"
                             :class="[isMobile ? 'col-span-full' : 'col-span-2']" required>
-                            <RangeDatePicker v-model="state.date" :min="new Date()" />
+                            <RangeDatePicker v-model="state.date" />
                         </UFormField>
                         <UFormField :label="$ts('location')" :error="errors.at?.message">
                             <UInput v-model="state.at" :placeholder="$ts('location')" :size="responsiveUISizes.input" />
@@ -1043,7 +1043,7 @@ const links = [
                                     class="w-full" :size="responsiveUISizes.input">
                                     <template #item-label="{ item }">
                                         {{ item.label }}
-                                        <span class="text-(--ui-text-muted)">
+                                        <span class="text-muted">
                                             {{ item.value }}
                                         </span>
                                     </template>

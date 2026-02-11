@@ -20,9 +20,6 @@ const { $api } = useNuxtApp();
 const { $ts } = useI18n();
 const config = useRuntimeConfig();
 
-const { data: agenda } = useAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
-    transform: (data) => data.data?.agenda,
-});
 
 const AddCategoryModal = overlay.create(ModalsCategoryAdd);
 const AddJobModal = overlay.create(ModalsJobAdd);
@@ -39,6 +36,10 @@ const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 
 const { id } = route.params as { id: string };
+
+const { data: agenda } = useAsyncData(`agenda-${id}`, async () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
+    transform: (data) => data.data?.agenda,
+});
 
 /**
  * Responsive UI sizes for components
@@ -102,39 +103,39 @@ const { data: members, status: memberstatus } = useAsyncData("members", () => $a
 });
 
 
-const configurationState = reactiveComputed<IAgendaConfiguration>(() => {
-    return {
-        canSee: agenda.value?.configuration?.canSee || 'Public',
-        canSeeRegistered: agenda.value?.configuration?.canSeeRegistered || 'Public',
-        onlyParticipantCanVisit: agenda.value?.configuration?.onlyParticipantCanVisit || false,
-        messageAfterRegister: agenda.value?.configuration?.messageAfterRegister || '',
-        committee: {
-            pay: agenda.value?.configuration?.committee?.pay || false,
-            amount: agenda.value?.configuration?.committee?.amount || 0,
-            point: agenda.value?.configuration?.committee?.point || 0,
-            reqruitments: agenda.value?.configuration?.committee?.reqruitments || [],
-            jobAvailables: agenda.value?.configuration?.committee?.jobAvailables || [],
-            canRegister: agenda.value?.configuration?.committee?.canRegister || 'Public',
-            canRegisterUntil: {
-                start: agenda.value?.configuration?.committee?.canRegisterUntil?.start || new Date(),
-                end: agenda.value?.configuration?.committee?.canRegisterUntil?.end || new Date(),
-            },
+const configurationState = reactive<IAgendaConfiguration>({
+    canSee: 'Public',
+    canSeeRegistered: 'Public',
+    onlyParticipantCanVisit: false,
+    messageAfterRegister: '',
+    committee: {
+        pay: false,
+        amount: 0,
+        point: 0,
+        reqruitments: [],
+        jobAvailables: [],
+        canRegister: 'Public',
+        canRegisterUntil: {
+            start: new Date(),
+            end: new Date(),
         },
-        participant: {
-            pay: agenda.value?.configuration?.participant?.pay || false,
-            amount: agenda.value?.configuration?.participant?.amount || 0,
-            point: agenda.value?.configuration?.participant?.point || 0,
-            reqruitments: agenda.value?.configuration?.participant?.reqruitments || [],
-            canRegister: agenda.value?.configuration?.participant?.canRegister || 'Public',
-            canRegisterUntil: {
-                start: agenda.value?.configuration?.participant?.canRegisterUntil?.start || new Date(),
-                end: agenda.value?.configuration?.participant?.canRegisterUntil?.end || new Date(),
-            },
-        }
-    };
+    },
+    participant: {
+        pay: false,
+        amount: 0,
+        point: 0,
+        reqruitments: [],
+        canRegister: 'Public',
+        canRegisterUntil: {
+            start: new Date(),
+            end: new Date(),
+        },
+    }
 });
-const enableFormCommittee = ref<boolean>((configurationState.committee.questions ?? []).length > 0 || false);
-const enableFormParticipant = ref<boolean>((configurationState.participant.questions?.length ?? 0) > 0);
+
+const enableFormCommittee = ref<boolean>(false);
+const enableFormParticipant = ref<boolean>(false);
+
 type ICommitteeState = {
     [key: number]: ICommittee;
 };
@@ -165,18 +166,98 @@ const jobsCommittee = computed(() => [
         label: 'Sponsorship',
     },
 ]);
+
+const state = reactive<IReqAgenda>({
+    title: '',
+    category: '',
+    tags: [],
+    description: '',
+    at: '',
+    atLink: '',
+    date: {
+        start: new Date(),
+        end: new Date(),
+    },
+    enableSubscription: false,
+    configuration: configurationState,
+    committees: []
+});
+
 const committeesStateRef = ref<ICommitteeState>({});
+
 watch(agenda, (newAgenda) => {
-    if (newAgenda && newAgenda.committees) {
-        const committees: ICommitteeState = {};
-        newAgenda.committees.forEach((committee, index) => {
-            committees[index + 1] = {
-                ...committee,
-                member: (committee.member as IMember)?.NIM || 0,
+    if (newAgenda) {
+        // Update State
+        state.title = newAgenda.title || '';
+        state.category = (newAgenda.category as ICategory)?._id as string || '';
+        state.tags = newAgenda.tags || [];
+        state.description = newAgenda.description || '';
+        state.at = newAgenda.at || '';
+        state.atLink = newAgenda.atLink || '';
+        state.date = {
+            start: newAgenda.date.start ? new Date(newAgenda.date.start) : new Date(),
+            end: newAgenda.date.end ? new Date(newAgenda.date.end) : new Date(),
+        };
+        state.enableSubscription = false; // Assuming default or missing from response?
+
+        // Update Configuration
+        if (newAgenda.configuration) {
+            Object.assign(configurationState, {
+                canSee: newAgenda.configuration.canSee || 'Public',
+                canSeeRegistered: newAgenda.configuration.canSeeRegistered || 'Public',
+                onlyParticipantCanVisit: newAgenda.configuration.onlyParticipantCanVisit || false,
+                messageAfterRegister: newAgenda.configuration.messageAfterRegister || '',
+                committee: {
+                    pay: newAgenda.configuration.committee?.pay || false,
+                    amount: newAgenda.configuration.committee?.amount || 0,
+                    point: newAgenda.configuration.committee?.point || 0,
+                    reqruitments: newAgenda.configuration.committee?.reqruitments || [],
+                    jobAvailables: newAgenda.configuration.committee?.jobAvailables || [],
+                    canRegister: newAgenda.configuration.committee?.canRegister || 'Public',
+                    canRegisterUntil: {
+                        start: newAgenda.configuration.committee?.canRegisterUntil?.start ? new Date(newAgenda.configuration.committee.canRegisterUntil.start) : new Date(),
+                        end: newAgenda.configuration.committee?.canRegisterUntil?.end ? new Date(newAgenda.configuration.committee.canRegisterUntil.end) : new Date(),
+                    },
+                },
+                participant: {
+                    pay: newAgenda.configuration.participant?.pay || false,
+                    amount: newAgenda.configuration.participant?.amount || 0,
+                    point: newAgenda.configuration.participant?.point || 0,
+                    reqruitments: newAgenda.configuration.participant?.reqruitments || [],
+                    canRegister: newAgenda.configuration.participant?.canRegister || 'Public',
+                    canRegisterUntil: {
+                        start: newAgenda.configuration.participant?.canRegisterUntil?.start ? new Date(newAgenda.configuration.participant.canRegisterUntil.start) : new Date(),
+                        end: newAgenda.configuration.participant?.canRegisterUntil?.end ? new Date(newAgenda.configuration.participant.canRegisterUntil.end) : new Date(),
+                    },
+                }
+            });
+
+            enableFormCommittee.value = (configurationState.committee.questions ?? []).length > 0;
+            enableFormParticipant.value = (configurationState.participant.questions?.length ?? 0) > 0;
+        }
+
+        // Update Committees
+        if (newAgenda.committees) {
+            const committees: ICommitteeState = {};
+            newAgenda.committees.forEach((committee, index) => {
+                committees[index + 1] = {
+                    ...committee,
+                    member: (committee.member as IMember)?.NIM || 0,
+                };
+            });
+            committeesStateRef.value = committees;
+        } else {
+            committeesStateRef.value = {
+                1: {
+                    job: 'PIC/Penanggung Jawab',
+                    member: 0,
+                    approved: true,
+                    approvedAt: new Date(),
+                },
             };
-        });
-        committeesStateRef.value = committees;
+        }
     } else {
+        // Default initialization if needed, though reactive defaults handle most
         committeesStateRef.value = {
             1: {
                 job: 'PIC/Penanggung Jawab',
@@ -187,6 +268,7 @@ watch(agenda, (newAgenda) => {
         };
     }
 }, { immediate: true });
+
 const committeesState = reactiveComputed<ICommitteeState>(() => {
     return committeesStateRef.value;
 });
@@ -210,30 +292,32 @@ const removeCommittee = (keyToRemove: number) => {
     committeesStateRef.value = reindexedCommittees;
 };
 
-const state = reactiveComputed<IReqAgenda>(() => {
-    return {
-        title: agenda.value?.title || '',
-        category: (agenda.value?.category as ICategory)?._id as string || '',
-        tags: agenda.value?.tags || [],
-        description: agenda.value?.description || '',
-        at: agenda.value?.at || '',
-        atLink: agenda.value?.atLink || '',
-        date: {
-            start: agenda.value?.date.start || new Date(),
-            end: agenda.value?.date.end || new Date(),
-        },
-        enableSubscription: false,
-        configuration: configurationState,
-        committees: Object.values(committeesState).map((committee) => {
-            return {
-                job: committee.job,
-                member: committee.member as number,
-                approved: committee.approved,
-                approvedAt: committee.approvedAt,
-            };
-        })
-    };
-});
+// Ensure state committees property is updated when committeesStateRef changes (via computed property access or separate sync?)
+// state.committees is in the reactive object, but we need to keep it in sync for submission.
+// simpler: allow state.committees to be a getter or sync it before submit?
+// The original code had `committees: Object.values(committeesState)...` inside reactiveComputed.
+// If state is now plain reactive, we should probably make `committees` a computed property or update it before submit.
+// Or we can use a watcher to sync committeesStateRef to state.committees
+// OR simpler: just construct the payload at submit time and don't worry about keeping state.committees strictly in sync 
+// if it's only used for submission.
+// However, the `state` object is passed to `steps` which might use it?
+// Step 4 uses `state`? No, Step 4 has empty formData.
+// Checking `onSubmit`: `body: state`
+// So `state` MUST contain the correct data at submission.
+// We can use a computed property for `committees` inside `state` if `state` was a `reactive` wrapping a reference, 
+// but `reactive` unwraps specific refs.
+// Better: keep `committees` in `state` updated.
+
+watch(committeesStateRef, () => {
+    state.committees = Object.values(committeesStateRef.value).map((committee) => {
+        return {
+            job: committee.job,
+            member: committee.member as number,
+            approved: committee.approved,
+            approvedAt: committee.approvedAt,
+        };
+    });
+}, { deep: true });
 const stateRules = reactiveComputed<FieldValidationRules<IAgenda>>(() => ({
     title: (value) => {
         if (!value) {
@@ -638,7 +722,7 @@ const links = computed(() => [
                         </UFormField>
                         <UFormField :label="`${$ts('date')} & ${$ts('time')}`" name="date" id="date"
                             :class="[isMobile ? 'col-span-full' : 'col-span-2']" required>
-                            <RangeDatePicker v-model="state.date" :min="new Date()" />
+                            <RangeDatePicker v-model="state.date" />
                         </UFormField>
                         <UFormField :label="$ts('location')" :error="errors.at?.message">
                             <UInput v-model="state.at" :placeholder="$ts('location')" :size="responsiveUISizes.input" />
@@ -841,7 +925,7 @@ const links = computed(() => [
                                     :size="responsiveUISizes.input">
                                     <template #item-label="{ item }">
                                         {{ item.label }}
-                                        <span class="text-(--ui-text-muted)">
+                                        <span class="text-muted">
                                             {{ item.value }}
                                         </span>
                                     </template>
