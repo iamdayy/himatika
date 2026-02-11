@@ -186,7 +186,7 @@ const submitLikeComment = async (id?: string) => {
                     {{ $ts('post_your_comment') }}
                 </UButton>
                 <div class="flex items-center">
-                    <UToggle v-model="anonymous" size="lg" variant="primary" />
+                    <USwitch v-model="anonymous" size="lg" variant="primary" />
                     <span class="ml-2">{{ $ts('anonymous') }}</span>
                 </div>
             </div>
@@ -209,8 +209,8 @@ const submitLikeComment = async (id?: string) => {
                     </div>
                 </template>
                 <div class="flex items-start">
-                    <div class="flex-grow">
-                        <TiptapShow :content="(comment as IComment).body" />
+                    <div class="grow">
+                        <CoreContent :content="(comment as IComment).body" />
                     </div>
                 </div>
                 <template #footer>

@@ -243,14 +243,14 @@ const submitImport = async () => {
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <UFormGroup label="Status Pembayaran (Default)">
-                        <UToggle v-model="paymentStatus" />
+                        <USwitch v-model="paymentStatus" />
                         <span class="ml-2 text-sm">{{ paymentStatus ? 'Lunas' : 'Belum Lunas' }}</span>
                     </UFormGroup>
                     <UFormGroup label="Metode Pembayaran (Default)">
                         <USelect v-model="paymentMethod" :options="paymentMethodOptions" />
                     </UFormGroup>
                     <UFormGroup label="Status Kehadiran (Default)">
-                        <UToggle v-model="isVisiting" />
+                        <USwitch v-model="isVisiting" />
                         <span class="ml-2 text-sm">{{ isVisiting ? 'Hadir' : 'Tidak Hadir' }}</span>
                     </UFormGroup>
                 </div>
