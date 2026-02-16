@@ -141,6 +141,8 @@ export default defineNuxtConfig({
       public_uri: process.env.PUBLIC_URI,
       version: process.env.VERSION,
     },
+    googleClientId: process.env.GOOGLE_CLIENT_ID,
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
   },
   app: {
     pageTransition: { name: "page", mode: "out-in" },
