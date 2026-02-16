@@ -625,6 +625,7 @@ export interface IBadge {
 
 export interface ILeaderboard {
   _id: string | Types.ObjectId;
+  number: number;
   fullName: string;
   avatar?: string;
   nim: number;

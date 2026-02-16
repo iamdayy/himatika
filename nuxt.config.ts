@@ -1,4 +1,4 @@
-
+import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   hooks: {
@@ -96,11 +96,11 @@ export default defineNuxtConfig({
     },
 
     // 3. Halaman yang tidak pernah berubah (Static)
-    "/login": { prerender: true },
-    "/register": { prerender: true },
-    "/forgot-password": { prerender: true },
-    "/change-password": { prerender: true },
-    "/change-email": { prerender: true },
+    "/login": { ssr: false },
+    "/register": { ssr: false },
+    "/forgot-password": { ssr: false },
+    "/change-password": { ssr: false },
+    "/change-email": { ssr: false },
     "/api/*": {
       cors: true,
       headers: {
@@ -141,6 +141,8 @@ export default defineNuxtConfig({
       public_uri: process.env.PUBLIC_URI,
       version: process.env.VERSION,
     },
+    googleClientId: process.env.GOOGLE_CLIENT_ID,
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
   },
   app: {
     pageTransition: { name: "page", mode: "out-in" },
@@ -299,9 +301,6 @@ export default defineNuxtConfig({
   },
   icon: {
     collections: ["heroicons", "uil", "ion", "ph"],
-    serverBundle: {
-      externalizeIconsJson: true,
-    },
   },
   ui: {},
   auth: {
@@ -361,5 +360,10 @@ export default defineNuxtConfig({
     sessionRefresh: {
       enableOnWindowFocus: false,
     },
+  },
+  vite: {
+    plugins: [
+      tailwindcss() as any,
+    ],
   },
 });

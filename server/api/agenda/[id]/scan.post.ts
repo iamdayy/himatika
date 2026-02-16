@@ -6,8 +6,9 @@ export default defineEventHandler(async (event) => {
   const payload = await readBody(event);
   const agendaId = getRouterParam(event, "id");
   const { code } = payload; // code = registeredId (misal: "REG-123456")
+  const { id, role } = JSON.parse(code);
 
-  if (!code) {
+  if (!code || !id || !role) {
     throw createError({ statusCode: 400, message: "QR Code tidak valid" });
   }
 
@@ -19,16 +20,14 @@ export default defineEventHandler(async (event) => {
 
   // 3. Cari Data Peserta/Panitia di dalam Agenda tersebut
   // Kita cari di array participants dulu
+  let roleFound = "Participant";
   let participant: IParticipant | ICommittee | undefined =
-    agenda.participants?.find((p) => p._id?.toString() === code);
-  let role = "Participant";
-  console.log(participant);
+    agenda.participants?.find((p) => p._id?.toString() === id);
 
   // Jika tidak ketemu, cari di array committees
   if (!participant) {
-    participant = agenda.committees?.find((c) => c._id?.toString() === code);
-    console.log(participant);
-    role = "Committee";
+    participant = agenda.committees?.find((c) => c._id?.toString() === id);
+    roleFound = "Committee";
   }
 
   // Jika masih tidak ketemu
@@ -50,8 +49,6 @@ export default defineEventHandler(async (event) => {
   }
 
   // 5. Cek apakah sudah presensi (visited)
-  // Asumsi ada field `visited` (boolean) atau `visitedAt` (Date) di schema
-  // Kita cek jika sudah visited, kita return error atau info
   if (participant.visiting) {
     throw createError({
       statusCode: 409, // Conflict
@@ -61,9 +58,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // 6. Update Status Presensi (Tanpa save full agenda object agar atomik jika pakai subdoc update, tapi di mongoose array agak tricky)
-  // Cara mudah update array item:
-  if (role === "Participant") {
+  // 6. Update Status Presensi
+  if (roleFound === "Participant") {
     await AgendaModel.updateOne(
       { _id: agendaId, "participants._id": participant._id },
       {
@@ -84,8 +80,9 @@ export default defineEventHandler(async (event) => {
       }
     );
   }
+
   let memberData: IMember | IGuest | undefined;
-  if (role === "Participant") {
+  if (roleFound === "Participant") {
     if (!(participant as IParticipant).member) {
       memberData = (participant as IParticipant).guest as IGuest;
     } else {
@@ -94,10 +91,11 @@ export default defineEventHandler(async (event) => {
   } else {
     memberData = (participant as ICommittee).member as IMember;
   }
+
   // 7. Return Data
   return {
     status: "success",
-    role,
+    role: roleFound,
     participant: {
       name: memberData?.fullName || "N/A",
       email: memberData?.email || "N/A",

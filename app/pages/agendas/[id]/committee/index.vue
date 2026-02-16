@@ -214,15 +214,15 @@ definePageMeta({
                 <!-- Ticket Card -->
                 <div v-else class="relative group">
                     <!-- Clean design without glow effects -->
-                    <div class="relative bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl overflow-hidden">
+                    <div class="relative bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
 
                         <!-- Top Section: Visual & Header -->
                         <div class="h-64 relative bg-gray-900">
                             <NuxtImg provider="localProvider" :src="bannerImage"
                                 class="w-full h-full object-cover opacity-80 mix-blend-overlay" alt="Banner" />
-                            <div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/60 to-transparent">
+                            <div class="absolute inset-x-0 top-0 h-32 bg-linear-to-b from-black/60 to-transparent">
                             </div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent">
+                            <div class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/40 to-transparent">
                             </div>
 
                             <!-- Event Info Overlay -->
@@ -282,7 +282,7 @@ definePageMeta({
                                         </p>
                                         <div class="flex items-center gap-3">
                                             <div
-                                                class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                                                class="w-8 h-8 rounded-full bg-linear-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
                                                 {{ (me?.member as IMember)?.fullName?.charAt(0) || 'C' }}
                                             </div>
                                             <div>
@@ -309,12 +309,12 @@ definePageMeta({
                                             masuk
                                         </p>
                                         <div v-if="me?.visiting"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-bold mt-2">
-                                            <Icon name="i-heroicons-check-badge-solid" class="w-4 h-4" />
-                                            Sudah Check-in
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold mt-2 shadow-lg shadow-green-500/30 animate-pulse">
+                                            <Icon name="i-heroicons-check-badge-solid" class="w-5 h-5" />
+                                            TERVERIFIKASI HADIR
                                         </div>
                                         <div v-else
-                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-bold mt-2">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-bold mt-2 border border-gray-200 dark:border-gray-700">
                                             <Icon name="i-heroicons-clock" class="w-4 h-4" />
                                             Belum Check-in
                                         </div>

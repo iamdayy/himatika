@@ -2,6 +2,7 @@
 import type { Form, FormSubmitEvent } from '#ui/types';
 import type { DriveStep } from "driver.js";
 import type { LoginSchema } from "~~/types/schemas/auth";
+
 // Page metadata
 definePageMeta({
     pageTransition: {
@@ -13,6 +14,7 @@ definePageMeta({
         navigateAuthenticatedTo: '/profile'
     }
 });
+
 // Authentication composable
 const { signIn } = useAuth();
 const { $ts } = useI18n();
@@ -24,6 +26,7 @@ const responsiveUISizes = useResponsiveUiSizes();
 const useEmail = ref(false);
 const showPassword = ref(false);
 const loading = ref(false);
+const isMagicLink = ref(false); // State for Magic Link mode
 const state = reactive<LoginSchema>({
     username: "",
     email: "",
@@ -55,6 +58,26 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
         if (previousUrl) {
             previousUrlCookie.value = null;
         }
+
+        // Magic Link Flow
+        if (isMagicLink.value) {
+            if (!state.email) {
+                form.value?.setErrors([{ name: 'email', message: 'Email is required for Magic Link' }]);
+                return;
+            }
+            await $fetch('/api/auth/magic/request', {
+                method: 'POST',
+                body: { email: state.email }
+            });
+            toast.add({
+                title: 'Magic Link Sent',
+                description: 'Check your email for the login link.',
+                color: 'success'
+            });
+            return;
+        }
+
+        // Normal Login Flow
         if (useEmail.value) {
             await signIn({
                 email: event.data.email,
@@ -73,15 +96,32 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
             window.location.replace(redirectUrl);
         }
     } catch (error: any) {
-        form.value?.setErrors([error.data.data]);
+        form.value?.setErrors([error.data?.data || {}]);
         toast.add({
             title: $ts('login_failed'),
-            description: error.data.data.message,
+            description: error.data?.statusMessage || error.message || 'Login failed',
             color: 'error'
         });
     } finally {
         loading.value = false;
     }
+}
+
+const handleGoogleLogin = () => {
+    window.location.href = '/api/auth/google/redirect';
+}
+
+const toggleMagicLink = () => {
+    isMagicLink.value = !isMagicLink.value;
+    if (isMagicLink.value) {
+        useEmail.value = true; // Magic link requires email
+        state.username = ""; // Clear username just in case
+        state.password = "placeholder"; // Hack to bypass client-side validation if required
+    } else {
+        useEmail.value = false;
+        state.password = "";
+    }
+    form.value?.clear();
 }
 
 
@@ -96,6 +136,16 @@ useHead({
     ]
 });
 onMounted(() => {
+    // Check for error query param from OAuth redirect
+    const route = useRoute();
+    if (route.query.error) {
+        toast.add({
+            title: 'Login Error',
+            description: route.query.error as string,
+            color: 'error'
+        });
+    }
+
     const steps: DriveStep[] = [
         {
             element: '#username-login',
@@ -131,23 +181,32 @@ onMounted(() => {
 
 <template>
     <div
-        class="max-w-md border rounded-lg shadow-2xl card bg-gradient-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
+        class="max-w-md border rounded-lg shadow-2xl card bg-linear-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
         <div class="card-wrap">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm" id="img">
                 <nuxtImg provider="localProvider" class="w-auto h-10 mx-auto image" src="/img/logo.png" alt="Himatika"
                     loading="lazy" />
             </div>
             <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
-                $ts('login') }}</h4>
+                isMagicLink ? 'Magic Login' : $ts('login') }}</h4>
 
             <UForm ref="form" :state="state" @submit="onSubmit"
                 class="px-2 mt-6 space-y-6 overflow-y-scroll no-scrollbar max-h-96">
+
+                <!-- Email input for Magic Link or Email Login -->
+                <UFormField v-if="useEmail || isMagicLink" id="email-login" label="Email" name="email">
+                    <UInput color="neutral" variant="outline" :size="responsiveUISizes.input" type="email"
+                        placeholder="your@email.com" required v-model="state.email" icon="heroicons-envelope" />
+                </UFormField>
+
                 <!-- Username input -->
-                <UFormField id="username-login" :label="`${$ts('username')} / NIM`" name="username">
+                <UFormField v-else id="username-login" :label="`${$ts('username')} / NIM`" name="username">
                     <UInput color="neutral" variant="outline" :size="responsiveUISizes.input" type="text"
                         :placeholder="$ts('username_desc')" required v-model="state.username" />
                 </UFormField>
-                <UFormField id="password-login" :label="$ts('password')" name="password">
+
+                <!-- Password input -->
+                <UFormField v-if="!isMagicLink" id="password-login" :label="$ts('password')" name="password">
                     <div class="flex w-full gap-1 mt-2">
                         <UInput color="neutral" variant="outline" :size="responsiveUISizes.input"
                             :type="showPassword ? 'text' : 'password'" :placeholder="$ts('password_desc')" required
@@ -158,8 +217,12 @@ onMounted(() => {
                     </div>
                 </UFormField>
 
-                <div class="text-sm text-end">
-                    <NuxtLink to="/forgot-password" class="font-semibold text-indigo-400 hover:text-indigo-500">
+                <div class="flex justify-between text-sm">
+                    <UButton variant="link" :padded="false" color="neutral" @click="toggleMagicLink">
+                        {{ isMagicLink ? 'Use Password' : 'Use Magic Link' }}
+                    </UButton>
+                    <NuxtLink v-if="!isMagicLink" to="/forgot-password"
+                        class="font-semibold text-indigo-400 hover:text-indigo-500">
                         {{ $ts('forgot_password') }}?</NuxtLink>
                 </div>
 
@@ -167,9 +230,17 @@ onMounted(() => {
                 <div>
                     <UButton id="signin" type="submit" variant="solid" :size="responsiveUISizes.button" block
                         :loading="loading">
-                        {{ $ts('login') }}
+                        {{ isMagicLink ? 'Send Login Link' : $ts('login') }}
                     </UButton>
                 </div>
+
+                <UDivider label="OR" />
+
+                <!-- Google Login Button -->
+                <UButton icon="i-simple-icons-google" color="neutral" variant="solid" block @click="handleGoogleLogin">
+                    Sign in with Google
+                </UButton>
+
             </UForm>
         </div>
     </div>
