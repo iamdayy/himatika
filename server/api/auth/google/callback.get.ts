@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
+import { GuestModel } from "~~/server/models/GuestModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { UserModel } from "~~/server/models/UserModel";
 import { getGoogleUser } from "~~/server/utils/googleAuth";
@@ -33,104 +34,146 @@ export default defineEventHandler(async (event) => {
     // Find member by email
     const member = await MemberModel.findOne({ email: googleUser.email });
     
-    if (!member) {
-       throw createError({
+    if (member) {
+      if (member.status !== 'active') { 
+         // If member is not active, try to find if they are a guest
+         const guest = await GuestModel.findOne({ email: googleUser.email });
+         if (guest) {
+             // Generate Tokens (Guest)
+            const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
+                expiresIn: "1d",
+            });
+            const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
+                expiresIn: "30d",
+            });
+
+            // Set Session (Guest)
+            await setSession({
+                token,
+                refreshToken,
+                guest: guest._id as Types.ObjectId,
+            });
+            
+            setCookie(event, 'auth.token', token, {
+                maxAge: 60 * 60 * 24, 
+                secure: process.env.NODE_ENV === "production",
+                sameSite: 'lax'
+            });
+             setCookie(event, 'auth.refresh-token', refreshToken, {
+                maxAge: 60 * 60 * 24 * 30, 
+                secure: process.env.NODE_ENV === "production",
+                sameSite: 'lax'
+            });
+
+            return sendRedirect(event, '/guest/dashboard');
+         }
+      }
+
+      // Find or create user
+      let user = await UserModel.findOne({ member: member });
+      
+      if (!user) {
+          user = new UserModel({
+              username: member.NIM.toString(), 
+              password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8), 
+              member: member._id,
+              verified: true, 
+              token: "",
+              key: ""
+          });
+          await user.save();
+      } else {
+          if (!user.verified && googleUser.email_verified) {
+              user.verified = true;
+              await user.save();
+          }
+      }
+
+      // Generate Tokens (User)
+      const token = jwt.sign({ user: user._id }, getSecretKey(), {
+        expiresIn: "1d",
+      });
+      const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
+        expiresIn: "90d",
+      });
+
+      // Set Session (User)
+      await setSession({
+        token,
+        refreshToken,
+        user: user._id as Types.ObjectId,
+      });
+
+      // Audit Log (User)
+      const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
+      await AuditLogModel.create({
+          action: 'LOGIN',
+          user: member._id,
+          ip: ip,
+          details: { username: user.username, method: 'google' },
+          target: 'Auth'
+      });
+      
+      setCookie(event, 'auth.token', token, {
+          maxAge: 60 * 60 * 24, 
+          secure: process.env.NODE_ENV === "production",
+          sameSite: 'lax'
+      });
+      setCookie(event, 'auth.refresh-token', refreshToken, {
+          maxAge: 60 * 60 * 24 * 90, 
+          secure: process.env.NODE_ENV === "production",
+          sameSite: 'lax'
+      });
+
+      return sendRedirect(event, '/profile');
+
+    } else {
+      // Check for Guest
+      const guest = await GuestModel.findOne({ email: googleUser.email });
+
+      if (guest) {
+        // Generate Tokens (Guest)
+        const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
+            expiresIn: "1d",
+        });
+        const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
+            expiresIn: "30d",
+        });
+
+        // Set Session (Guest)
+        await setSession({
+            token,
+            refreshToken,
+            guest: guest._id as Types.ObjectId,
+        });
+
+        // Audit Log (Guest - simplified or skipped depending on model)
+        // AuditLog usually links to Member. We might need to update AuditLog to support Guest or just skip / store string.
+        // For now, let's skip or try to conform.
+        
+        setCookie(event, 'auth.token', token, {
+            maxAge: 60 * 60 * 24, 
+            secure: process.env.NODE_ENV === "production",
+            sameSite: 'lax'
+        });
+        setCookie(event, 'auth.refresh-token', refreshToken, {
+            maxAge: 60 * 60 * 24 * 30, 
+            secure: process.env.NODE_ENV === "production",
+            sameSite: 'lax'
+        });
+
+        return sendRedirect(event, '/guest/dashboard');
+      }
+
+      // Neither Member nor Guest
+      throw createError({
         statusCode: 403,
-        statusMessage: "Email not associated with any member",
+        statusMessage: "Email not registered",
         data: {
-            message: "Email not found in member database. Please contact administrator.",
+            message: "Email not associated with any account (Member or Guest). Please register first.",
         }
       });
     }
-
-    if (member.status !== 'active') { // Check if member is active? Signin.post.ts checks verified on User and status on member potentially?
-       // Signin checks: user?.verified (boolean)
-       // Let's adhere to signin.post.ts logic as much as possible but for OAuth we might skip "verified" check if we trust Google's email verification?
-       // Actually `signin.post.ts` checks `user.verified`.
-       // If we create a new user, we should probably set verified=true since it came from Google.
-    }
-
-    // Find or create user
-    let user = await UserModel.findOne({ member: member });
-    
-    if (!user) {
-        // Create a new user for this member if one doesn't exist
-        // We need a username and password. 
-        // Username: use email or part of email? Or NIM?
-        // Password: random string (they can reset it later, or just login via Google always)
-        
-        user = new UserModel({
-            username: member.NIM.toString(), // Default username to NIM
-            password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8), // Random password
-            member: member._id,
-            verified: true, // Auto-verify since we trust Google
-            token: "",
-            key: ""
-        });
-        await user.save();
-    } else {
-        // If user exists, but verified is false, maybe update it?
-        if (!user.verified && googleUser.email_verified) {
-            user.verified = true;
-            await user.save();
-        }
-    }
-
-    // Generate Tokens (Same as signin.post.ts)
-    const token = jwt.sign({ user: user._id }, getSecretKey(), {
-      expiresIn: "1d",
-    });
-    const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
-      expiresIn: "90d",
-    });
-
-    // Set Session
-    await setSession({
-      token,
-      refreshToken,
-      user: user._id as Types.ObjectId,
-    });
-
-    // Audit Log
-    const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
-    await AuditLogModel.create({
-        action: 'LOGIN',
-        user: member._id, // AuditLog uses Member ID based on signin.post.ts:85 `user.member`
-        ip: ip,
-        details: { username: user.username, method: 'google' },
-        target: 'Auth'
-    });
-
-    // Redirect to profile with tokens in query? 
-    // OR set cookies directly here?
-    // nuxt-auth's `local` provider usually expects the client to receive the token and save it.
-    // However, for OAuth redirect flow, the server must pass the token back to the client.
-    
-    // METHOD: Set cookies that `nuxt-auth` (or our custom logic) can read?
-    // `nuxt-auth` uses `auth.token` cookie by default.
-    // nuxt.config.ts says: cookieName: "auth.token"
-    
-    setCookie(event, 'auth.token', token, {
-        maxAge: 60 * 60 * 24, // 1 day
-        secure: process.env.NODE_ENV === "production",
-        sameSite: 'lax'
-    });
-    
-    // We typically also need to set the state for specific provider if using authjs, but here we are "simulating" local provider login.
-    // But `useAuth` hook in frontend might not pick it up automatically unless we reload or init session.
-    // One common trick: Redirect to a page that calls `signIn` with credentials? No we have the token.
-    // Just setting the cookie might be enough if `useAuth` checks it.
-    // "token.type": "Bearer" -> The cookie value should be just the token? or "Bearer <token>"?
-    // Usually nuxt-auth stores just the token in cookie, but sends as Bearer header.
-    
-    // ALSO: refresh token
-    setCookie(event, 'auth.refresh-token', refreshToken, {
-        maxAge: 60 * 60 * 24 * 90, // 90 days
-        secure: process.env.NODE_ENV === "production",
-        sameSite: 'lax'
-    });
-
-    return sendRedirect(event, '/profile');
 
   } catch (error: any) {
     console.error("Google OAuth Error:", error);

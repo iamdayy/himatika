@@ -127,6 +127,7 @@ export interface IMember {
 }
 
 export interface IGuest {
+  _id?: Types.ObjectId | string;
   fullName: string;
   email: string;
   phone: string;
@@ -135,6 +136,7 @@ export interface IGuest {
   semester?: number;
   prodi?: string;
   instance?: string;
+  avatar?: string;
 }
 
 /**
@@ -142,6 +144,7 @@ export interface IGuest {
  */
 export interface IUser {
   member: IMember;
+  guest?: IGuest;
   username: string;
   key?: string;
   token?: string;
@@ -156,7 +159,8 @@ export interface ISession {
   refreshToken: string;
   previousRefreshToken?: string;
   previousToken?: string;
-  user: Types.ObjectId | IUser;
+  user?: Types.ObjectId | IUser;
+  guest?: Types.ObjectId | IGuest;
 }
 
 /**

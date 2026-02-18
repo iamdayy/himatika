@@ -354,6 +354,10 @@ export default defineNuxtConfig({
             class: "string",
             sex: "'female' | 'male'",
           },
+          guest: {
+            email: "string",
+            instance: "string",
+          },
         },
       },
     },

@@ -110,7 +110,7 @@ const shareAgenda = () => {
 };
 
 const navigateToRegisterParticipant = () => {
-    if (!user.value && agenda.value?.configuration.participant.canRegister !== 'Public') {
+    if (!user.value) {
         router.push({ path: '/login', query: { redirect: route.fullPath } });
     } else {
         router.push(`/agendas/${id}/participant/register`);

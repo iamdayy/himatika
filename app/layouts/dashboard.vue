@@ -24,25 +24,35 @@ const { $ts, $switchLocale, $getLocale } = useI18n();
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 /**
- * Generate dropdown items for logged-in users
- * @param user - The logged-in user
  * @returns An array of dropdown item groups
  */
+const userData = computed(() => {
+    const u = user.value as any;
+    return {
+        username: u?.username || u?.guest?.fullName || 'User',
+        avatar: u?.member?.avatar || u?.guest?.avatar || '/img/profile-blank.png',
+        identifier: u?.member?.NIM || u?.guest?.email || '',
+        isGuest: !!u?.guest
+    }
+});
+
 const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
     [{
-        label: user.value?.username || '',
+        label: userData.value.username,
         slot: 'account' as const,
         disabled: true
     }],
-    [{
-        label: $ts('profile'),
-        icon: 'i-heroicons-user',
-        to: '/profile'
-    }],
+    [
+        ...(userData.value.isGuest ? [] : [{
+            label: $ts('profile'),
+            icon: 'i-heroicons-user',
+            to: '/profile'
+        }])
+    ],
     [{
         label: $ts('dashboard'),
         icon: 'i-heroicons-rectangle-group',
-        to: '/dashboard'
+        to: userData.value.isGuest ? '/guest/dashboard' : '/dashboard'
     }, {
         label: $ts('agenda'),
         icon: 'i-heroicons-calendar',
@@ -121,7 +131,7 @@ const openSlideOver = ref<boolean>(false);
             <div class="flex flex-wrap items-center justify-between p-4 mx-auto">
 
                 <USlideover v-model:open="openSlideOver" :overlay="false" :title="'HIMAPP'" side="left"
-                    v-if="route.fullPath !== '/dashboard' || isMobile">
+                    v-if="(!route.fullPath.includes('/guest') && route.fullPath !== '/dashboard') || isMobile">
                     <UButton variant="link" color="neutral" :padded="false" icon="i-heroicons-bars-3-center-left" />
                     <template #content>
                         <div class="flex-1 p-4">
@@ -183,8 +193,7 @@ const openSlideOver = ref<boolean>(false);
 
                     <!-- User dropdown -->
                     <UDropdownMenu :items="items">
-                        <NuxtImg v-if="isLoggedIn" provider="localProvider"
-                            :src="user?.member.avatar || '/img/profile-blank.png'"
+                        <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" loading="lazy" alt="Profile" />
                         <UAvatar v-else icon="i-heroicons-arrow-right-end-on-rectangle" />
 
@@ -202,7 +211,7 @@ const openSlideOver = ref<boolean>(false);
                         <template #item="{ item }">
                             <NuxtLink :to="item.to">
                                 <UIcon :name="item.icon" v-if="item.icon"
-                                    class="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
+                                    class="shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
                                 <span class="truncate">{{ item.label }}</span>
                             </NuxtLink>
                         </template>

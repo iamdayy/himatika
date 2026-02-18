@@ -1,5 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
-import { IMember } from "~~/types";
+import { IGuest, IMember } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   // 1. Cek User Login
@@ -24,12 +24,26 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. Cari User di daftar Peserta atau Panitia
-  const participant = agenda.participants?.find(
-    (p) => ((p.member as IMember) || null)?.NIM === user.member.NIM
-  );
-  const committee = agenda.committees?.find(
-    (c) => ((c.member as IMember) || null)?.NIM === user.member.NIM
-  );
+  let participant: any = null;
+  let committee: any = null;
+
+  if (user.member) {
+      participant = agenda.participants?.find(
+        (p) => ((p.member as IMember) || null)?.NIM === user.member.NIM
+      );
+      committee = agenda.committees?.find(
+        (c) => ((c.member as IMember) || null)?.NIM === user.member.NIM
+      );
+  } else if (user.guest) {
+      participant = agenda.participants?.find(
+          (p) => {
+              const pGuestId = (p.guest as IGuest)?._id || p.guest;
+              const userGuestId = user.guest._id;
+              return pGuestId?.toString() === userGuestId?.toString();
+          }
+      );
+      // Guests cannot be committee members (yet)
+  }
 
   if (!participant && !committee) {
     throw createError({
@@ -42,10 +56,8 @@ export default defineEventHandler(async (event) => {
   const targetCollection = participant ? "participants" : "committees";
 
   // Cek status visited
-  const currentList = participant ? agenda.participants : agenda.committees;
-  const userDataInAgenda = currentList?.find(
-    (u) => ((u.member as IMember) || null)?.NIM === user.member.NIM
-  );
+  // We already found the specific participant object above, but to be safe/consistent with original code style:
+  const userDataInAgenda = participant || committee;
 
   if (userDataInAgenda?.visiting) {
     return {
@@ -56,8 +68,12 @@ export default defineEventHandler(async (event) => {
   }
 
   // 6. Update Database: Set visited = true
+  // Note: participant._id is the _id of the subdocument in the array, NOT the member/guest ID.
+  // So we can use that to uniquely identify the array element to update.
+  const subDocId = participant?._id || committee?._id;
+
   const updateResult = await AgendaModel.updateOne(
-    { _id: agendaId, [`${targetCollection}._id`]: participant?._id || committee?._id },
+    { _id: agendaId, [`${targetCollection}._id`]: subDocId },
     {
       $set: {
         [`${targetCollection}.$.visiting`]: true,
@@ -77,6 +93,6 @@ export default defineEventHandler(async (event) => {
   return {
     status: "success",
     message: "Presensi berhasil dicatat!",
-    role: participant ? "Peserta" : "Panitia",
+    role: participant ? (user.guest ? "Tamu" : "Peserta") : "Panitia",
   };
 });
