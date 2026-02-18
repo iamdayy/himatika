@@ -56,6 +56,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
       type: Types.ObjectId,
       ref: "Member",
       unique: true,
+      sparse: true,
       autopopulate: {
         match: {
           status: "active",
@@ -155,6 +156,12 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
         ],
       },
     },
+    guest: {
+      type: Types.ObjectId,
+      ref: "Guest",
+      unique: true,
+      sparse: true,
+    }
   },
   {
     timestamps: true,

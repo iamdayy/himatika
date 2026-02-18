@@ -77,25 +77,103 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
             return;
         }
 
-        // Normal Login Flow
-        if (useEmail.value) {
-            await signIn({
-                email: event.data.email,
-                password: event.data.password
-            }, { callbackUrl: previousUrl ? previousUrl : '/profile', redirect: redirectUrl ? false : true });
-            if (redirectUrl) {
-                window.location.replace(redirectUrl);
+        // Guest Login Flow (if user explicitly toggled or we detect guest intent? For now, let's keep it simple: 
+        // If "useEmail" is true (which is toggled for guests currently in UI logic), we might try guest login? 
+        // OR add a specific toggle "Login as Guest".
+        // The current UI has "Use Magic Link" vs "Use Password".
+        // Let's add a "Login as Guest" checkbox or tab?
+        // Or simply try Member login, if fails try Guest login? 
+        // Better: Explicit option.
+
+        // AUTO-DETECT STRATEGY (Simplified for UX):
+        // 1. Try Member Login
+        // 2. If 401, Try Guest Login (only if username resembles email)
+
+        try {
+            // Attempt Member Login first
+            if (useEmail.value) {
+                console.log('Member Login');
+                await signIn({
+                    email: event.data.email,
+                    password: event.data.password
+                }, { callbackUrl: previousUrl ? previousUrl : '/profile', redirect: true });
+            } else {
+                console.log('Guest Login');
+                await signIn({
+                    username: event.data.username,
+                    password: event.data.password
+                }, { callbackUrl: previousUrl ? previousUrl : '/profile', redirect: true });
             }
-            return;
+            // If successful
+            // if (redirectUrl) {
+            //     window.location.replace(redirectUrl);
+            // } else {
+            //     // Default member redirect
+            //     window.location.replace('/profile');
+            // }
+        } catch (memberError: any) {
+            console.log(memberError);
+            // If Member login failed, check if we should try Guest login
+            // Only try if the credential looks like an email (Guest username is email)
+            const credential = useEmail.value ? event.data.email : event.data.username;
+            const isEmail = credential.includes('@');
+
+            if (isEmail) {
+                try {
+                    // Manual fetch for guest login because `signIn` from nuxt-auth might be configured for single provider
+                    // But we can use a custom endpoint.
+                    // IMPORTANT: `signIn` uses `local` provider by default which points to `signin.post.ts`.
+                    // We created `api/auth/guest/login.post.ts`. 
+                    // We can't easily switch provider in `signIn` without config.
+                    // So we call the endpoint directly and then set the token.
+
+                    const guestResponse = await $fetch<{ token: string, refreshToken: string }>('/api/auth/guest/login', {
+                        method: 'POST',
+                        body: { email: credential, password: event.data.password }
+                    });
+                    console.log(guestResponse);
+
+                    // If successful, we need to set the token manually in the auth state
+                    // nuxt-auth might have a `data` or `token` setter.
+                    // Or we just reload/redirect because the backend `guest/login` should set the HttpOnly cookie? 
+                    // Wait, our `login.post.ts` returns token. We rely on client to set it? 
+                    // `signIn` does this automatically.
+                    // The `signin.post.ts` sets a session in DB.
+                    // `guest/login.post.ts` ALSO sets a session in DB using `setSession`.
+                    // The client needs to receive the token to put in header? 
+                    // Our `authHelper` checks Header `Authorization: Bearer ...`.
+                    // So specific client side logic is needed to store this token.
+                    // But `useAuth` from `@sidebase/nuxt-auth` expects the `local` provider pattern.
+
+                    // ALTERNATIVE: Modify `signin.post.ts` to handle BOTH? 
+                    // User requested "Separation". 
+                    // But for `login.vue` using `signIn`, it expects one endpoint.
+                    // Let's manually handle guest login here:
+
+                    const { token } = guestResponse;
+                    console.log(token);
+                    const { data, setToken } = useAuthState();
+                    setToken(token); // This might be enough to trick existing auth state if it uses `token` property
+
+                    // Typically `signIn` handles token storage (cookies/localstorage).
+                    // We need to store it manually if we bypass signIn.
+                    const tokenCookie = useCookie('auth:token');
+                    tokenCookie.value = token;
+
+                    // Redirect
+                    window.location.replace('/guest/dashboard');
+                    return;
+
+                } catch (guestError) {
+                    // Both failed, throw original error or guest error?
+                    throw memberError; // Throw member error to keep it simple, or custom message
+                }
+            }
+            throw memberError;
         }
-        await signIn({
-            username: event.data.username,
-            password: event.data.password
-        }, { callbackUrl: previousUrl ? previousUrl : '/profile', redirect: redirectUrl ? false : true });
-        if (redirectUrl) {
-            window.location.replace(redirectUrl);
-        }
+
     } catch (error: any) {
+        // ... err handling
         form.value?.setErrors([error.data?.data || {}]);
         toast.add({
             title: $ts('login_failed'),
@@ -181,17 +259,16 @@ onMounted(() => {
 
 <template>
     <div
-        class="max-w-md border rounded-lg shadow-2xl card bg-linear-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
+        class="mx-auto max-w-md border rounded-lg shadow-2xl card bg-linear-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
         <div class="card-wrap">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm" id="img">
                 <nuxtImg provider="localProvider" class="w-auto h-10 mx-auto image" src="/img/logo.png" alt="Himatika"
                     loading="lazy" />
             </div>
-            <h4 class="my-12 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
+            <h4 class="my-4 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
                 isMagicLink ? 'Magic Login' : $ts('login') }}</h4>
 
-            <UForm ref="form" :state="state" @submit="onSubmit"
-                class="px-2 mt-6 space-y-6 overflow-y-scroll no-scrollbar max-h-96">
+            <UForm ref="form" :state="state" @submit="onSubmit" class="px-2 mt-6 space-y-6">
 
                 <!-- Email input for Magic Link or Email Login -->
                 <UFormField v-if="useEmail || isMagicLink" id="email-login" label="Email" name="email">
@@ -200,7 +277,7 @@ onMounted(() => {
                 </UFormField>
 
                 <!-- Username input -->
-                <UFormField v-else id="username-login" :label="`${$ts('username')} / NIM`" name="username">
+                <UFormField v-else id="username-login" :label="`${$ts('username')} / NIM / Email`" name="username">
                     <UInput color="neutral" variant="outline" :size="responsiveUISizes.input" type="text"
                         :placeholder="$ts('username_desc')" required v-model="state.username" />
                 </UFormField>
@@ -234,10 +311,22 @@ onMounted(() => {
                     </UButton>
                 </div>
 
-                <UDivider label="OR" />
+                <div class="text-center text-sm pt-2">
+                    <span class="text-gray-500 dark:text-gray-400">Don't have an account?</span>
+                    <NuxtLink to="/register" class="font-semibold text-accent-1 hover:text-accent-2 ml-1">
+                        Register
+                    </NuxtLink>
+                    |
+                    <NuxtLink to="/guest/register" class="font-semibold text-accent-1 hover:text-accent-2 ml-1">
+                        Register as Guest
+                    </NuxtLink>
+                </div>
+
+                <USeparator class="my-4" label="OR" />
 
                 <!-- Google Login Button -->
-                <UButton icon="i-simple-icons-google" color="neutral" variant="solid" block @click="handleGoogleLogin">
+                <UButton class="mb-4" icon="i-simple-icons-google" color="neutral" variant="solid" block
+                    @click="handleGoogleLogin">
                     Sign in with Google
                 </UButton>
 
@@ -252,17 +341,20 @@ onMounted(() => {
 /* Card styles */
 .card {
     width: 100%;
-    height: 100%;
-    position: absolute;
-    left: 0;
-    top: 0;
+    height: auto;
+    min-height: 100%;
+    position: relative;
+    /* position: absolute; removed */
+    /* left: 50%; removed */
+    /* top: 50%; removed */
+    /* transform: translateX(-50%) translateY(-50%); removed */
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     -webkit-backface-visibility: hidden;
     -moz-backface-visibility: hidden;
     -o-backface-visibility: hidden;
     backface-visibility: hidden;
-    justify-self: anchor-center;
+    /* justify-self: anchor-center; removed */
 }
 
 .card-wrap {
@@ -286,7 +378,8 @@ onMounted(() => {
     display: block;
     text-align: center;
     margin-top: 1rem;
-    transform: translate3d(0, 0, 30px) perspective(100px);
+    left: 50%;
+    transform: translate(-50%, -100%) translate3d(0, 0, 30px) perspective(100px);
 }
 
 /* Animated background for heading */

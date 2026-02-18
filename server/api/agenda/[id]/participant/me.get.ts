@@ -21,10 +21,16 @@ export default defineEventHandler(
       }
       let participant: IParticipant | undefined;
       if (user) {
-        participant = agenda.participants?.find(
-          (r) => (r.member as IMember).NIM === user.member.NIM
-        );
-      } else {
+        if (user.member) {
+          participant = agenda.participants?.find(
+            (r) => (r.member as IMember)?.NIM === user.member.NIM
+          );
+        } else if (user.guest) {
+           participant = agenda.participants?.find(
+            (r) => (r.guest as any)?._id?.toString() === user.guest._id.toString() || (r.guest as any)?.toString() === user.guest._id.toString()
+          );
+        }
+      } else if (participantId) {
         participant = agenda.participants?.find(
           (r) => r._id?.toString() === participantId
         );

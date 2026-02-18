@@ -72,7 +72,7 @@ export interface IMemberSchema extends Omit<IMember, "id">, Document {
   updatedAt: Date;
 }
 
-export interface IGuestSchema extends Omit<IGuest, "id">, Document {
+export interface IGuestSchema extends Omit<IGuest, "_id">, Document {
   createdAt: Date;
   updatedAt: Date;
 }

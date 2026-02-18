@@ -82,7 +82,7 @@ export default defineEventHandler(async (event) => {
     const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
     await AuditLogModel.create({
         action: 'LOGIN',
-        user: user.member, // or user._id
+        user: user.member || user.guest || user._id,
         ip: ip,
         details: { username: body.username },
         target: 'Auth'

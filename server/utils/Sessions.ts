@@ -61,45 +61,59 @@ export const checkSession = async (payload: string) => {
     }
 
     // 3. Ambil user dengan populate member (Lite version)
-    // Kita disable autopopulate default User -> Member yang load semua project/agenda
-    // Kita manual populate hanya field penting
-    const user = await UserModel.findById(session.user)
-      .select("username member")
-      .populate({
-        path: "member",
-        populate: [
-          {
-            path: 'organizersConsiderationBoard'
-          },
-          {
-            path: 'organizersDailyManagement'
-          },
-          {
-            path: 'organizersDepartmentCoordinator'
-          },
-          {
-            path: 'organizersDepartmentMembers'
-          },
-          // {
-          //   path: 'organizer'
-          // }
-        ],
-        select: "NIM fullName avatar email organizer status semester class sex",
-        options: { autopopulate: false }, // Penting: Matikan autopopulate di level Member
-      })
+    // Cek apakah session punya user atau guest
+    if (session.user) {
+      const user = await UserModel.findById(session.user)
+        .select("username member")
+        .populate({
+          path: "member",
+          populate: [
+            { path: 'organizersConsiderationBoard' },
+            { path: 'organizersDailyManagement' },
+            { path: 'organizersDepartmentCoordinator' },
+            { path: 'organizersDepartmentMembers' },
+          ],
+          select: "NIM fullName avatar email organizer status semester class sex",
+          options: { autopopulate: false }, 
+        })
+        .populate({
+          path: "guest",
+        });
 
-    if (!user) {
-      throw createError({
-        statusMessage: "User context not found",
-        statusCode: 401,
-      });
+      if (!user) {
+        throw createError({
+          statusMessage: "User context not found",
+          statusCode: 401,
+        });
+      }
+
+      return {
+        username: user.username,
+        member: user.member ? user.member : null,
+        guest: user.guest ? user.guest : null,
+      };
+    } else if (session.guest) {
+       // Load Guest
+       const { GuestModel } = await import("~~/server/models/GuestModel");
+       const guest = await GuestModel.findById(session.guest);
+       
+       if (!guest) {
+        throw createError({
+            statusMessage: "Guest context not found",
+            statusCode: 401,
+        });
+       }
+
+       return {
+         guest: guest
+       }
+    } else {
+        throw createError({
+            statusMessage: "Invalid Session Data",
+            statusCode: 401,
+        });
     }
 
-    // 4. Return data yang bersih (Lite Session)
-    return {
-      username: user.username,
-      member: user.member ? user.member : null,
-    };
   } catch (error: any) {
     // Jika error dari JWT (expired), kita lempar 401
     if (
@@ -121,7 +135,7 @@ export const checkSession = async (payload: string) => {
 export const refreshSession = async (payload: string) => {
   try {
     const decoded = jwt.verify(payload, getSecretKey()) as jwt.JwtPayload;
-    if (!decoded || !decoded.user) {
+    if (!decoded || (!decoded.user && !decoded.guest)) {
       throw createError({ statusMessage: "Invalid Token", statusCode: 401 });
     }
 
@@ -139,7 +153,10 @@ export const refreshSession = async (payload: string) => {
 
     // Kita hanya update JIKA refreshToken di DB masih sama dengan payload (belum diubah orang lain)
     if (session.refreshToken === payload) {
-      const newToken = jwt.sign({ user: session.user }, getSecretKey(), {
+      // Determine if it's a user or guest session for the new token payload
+      const tokenPayload = session.user ? { user: session.user } : { guest: session.guest };
+      
+      const newToken = jwt.sign(tokenPayload, getSecretKey(), {
         expiresIn: "1d",
       });
 
@@ -175,6 +192,7 @@ export const refreshSession = async (payload: string) => {
       statusCode: 401,
     });
   } catch (error: any) {
+    console.error("Error refreshing session:", error);
     throw createError({
       statusMessage: error.message || "Failed to refresh session",
       statusCode: 401,

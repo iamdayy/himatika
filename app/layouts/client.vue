@@ -40,25 +40,33 @@ const navigation = computed<NavigationMenuItem[]>(() => [
 ])
 
 /**
- * Generate dropdown items for logged-in users
- * @param user - The logged-in user
  * @returns An array of dropdown item groups
  */
+const userData = computed(() => {
+    const u = user.value as any;
+    return {
+        username: u?.username || u?.guest?.fullName || 'User',
+        avatar: u?.member?.avatar || u?.guest?.avatar || '/img/profile-blank.png',
+    }
+});
+
 const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
     [{
-        label: user.value?.username || '',
+        label: userData.value.username,
         slot: 'account' as const,
         disabled: true
     }],
-    [{
-        label: $ts('profile'),
-        icon: 'i-heroicons-user',
-        to: '/profile'
-    }],
+    [
+        ...((user.value as any)?.guest ? [] : [{
+            label: $ts('profile'),
+            icon: 'i-heroicons-user',
+            to: '/profile'
+        }])
+    ],
     [{
         label: $ts('dashboard'),
         icon: 'i-heroicons-rectangle-group',
-        to: '/dashboard'
+        to: (user.value as any)?.guest ? '/guest/dashboard' : '/dashboard'
     }, {
         label: $ts('agenda'),
         icon: 'i-heroicons-calendar',
@@ -161,8 +169,7 @@ useHead({
                         :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
                         @click="isDarkMode = !isDarkMode" />
                     <UDropdownMenu :items="items" :content="{ side: 'bottom' }">
-                        <NuxtImg v-if="isLoggedIn" provider="localProvider"
-                            :src="user?.member.avatar || '/img/profile-blank.png'"
+                        <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" format="webp" preload
                             alt="Profile" />
                         <UButton v-else icon="i-heroicons-arrow-right-end-on-rectangle" variant="ghost"
@@ -182,7 +189,7 @@ useHead({
                         <template #item="{ item }">
                             <NuxtLink :to="item.to">
                                 <UIcon :name="item.icon" v-if="item.icon"
-                                    class="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
+                                    class="shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
                                 <span class="truncate">{{ item.label }}</span>
                             </NuxtLink>
                         </template>

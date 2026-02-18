@@ -54,6 +54,7 @@ export const ensureAuth = async (event: H3Event) => {
   try {
     return await checkSession(extractedToken);
   } catch (error) {
+    console.log(error);
     throw createError({
       statusCode: 401,
       statusMessage: "Anda harus login untuk menggunakan endpoint ini",
