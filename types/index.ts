@@ -220,6 +220,7 @@ export interface ICommittee {
     | { approved: boolean }[]
     | (IReqruitment & { approved: boolean }[]);
   answers?: IAnswer[];
+  certificateDoc?: string | Types.ObjectId | IDoc;
 }
 
 /**
@@ -263,6 +264,7 @@ export interface IParticipant {
     | { approved: boolean }[]
     | (IReqruitment & { approved: boolean }[]);
   answers?: IAnswer[];
+  certificateDoc?: string | Types.ObjectId | IDoc;
 }
 
 /**
@@ -312,6 +314,38 @@ export interface IAgendaParticipantConfiguration {
   questions?: IQuestion[] | Types.ObjectId[];
 }
 
+
+export interface ICertificateItem {
+  id?: string; // Stable unique id for cross-referencing (e.g. linking signer to signature item)
+  type: "name" | "role" | "text" | "signature" | "qr" | "date" | "code";
+  label?: string; // UI Label or internal use
+  value?: string; // Static text for text items
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  fontWeight?: 'normal' | 'bold';
+  fontFamily?: string;
+  align?: "left" | "center" | "right";
+  color?: string;
+  // Signature-specific fields
+  signerType?: 'external' | 'system'; // 'external' = upload image; 'system' = digital QR sign
+  signerNIM?: string;   // NIM member sistem → maps to IRequestSign.user (system mode)
+  signerName?: string;  // Nama cetak untuk signer eksternal
+  signerAs?: string;    // Jabatan penandatangan (dicetak di bawah area TTD)
+}
+
+export interface ICertificateConfiguration {
+  active: boolean;
+  templateUrl?: string; // PDF Template URL
+  previewUrl?: string; // Image preview of the template
+  pdfWidth?: number;
+  pdfHeight?: number;
+  items: ICertificateItem[];
+  signers?: { memberId: string; as: string; signatureItemId?: string }[];
+}
+
 export interface IAgendaConfiguration {
   canSee?: TRole;
   canSeeRegistered?: TRole;
@@ -319,6 +353,7 @@ export interface IAgendaConfiguration {
   messageAfterRegister?: string;
   committee: IAgendaCommitteeConfiguration;
   participant: IAgendaParticipantConfiguration;
+  certificate?: ICertificateConfiguration;
 }
 
 /**

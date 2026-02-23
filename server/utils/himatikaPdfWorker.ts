@@ -86,6 +86,8 @@ export const himatikaPdfWorker = {
     outputBlobPath: string;
     qrValue: string;
     locations: SignatureBox[];
+    signerName?: string; // nama member (dicetak di bawah QR)
+    signerAs?: string;   // jabatan penandatangan
   }) {
     const config = useRuntimeConfig();
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";

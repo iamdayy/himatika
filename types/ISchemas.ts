@@ -10,6 +10,7 @@ import type {
   IAuditLog,
   IBadge,
   ICategory,
+  ICertificateConfiguration,
   IComment,
   ICommittee,
   IConfig,
@@ -115,6 +116,10 @@ export interface IAgendaConfigurationSchema
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface ICertificateConfigurationSchema
+  extends Omit<ICertificateConfiguration, "_id">,
+    Document {}
 
 export interface IParticipantConfigurationSchema
   extends Omit<IAgendaParticipantConfiguration, "_id">,
