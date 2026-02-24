@@ -117,6 +117,11 @@ const tabs = [
         label: 'Panitia',
         icon: 'i-heroicons-briefcase',
         slot: 'committee' as string
+    },
+    {
+        label: 'Sertifikat',
+        icon: 'i-heroicons-academic-cap',
+        slot: 'certificate' as string
     }
 ] satisfies TabsItem[];
 
@@ -149,6 +154,12 @@ watch(agenda, async (newVal) => {
         committeeConfigState.amount = newVal.configuration.committee.amount || 0;
         // Clone array agar tidak reaktif langsung ke agenda.value sebelum disimpan
         committeeConfigState.reqruitments = JSON.parse(JSON.stringify(newVal.configuration.committee.reqruitments || []));
+
+        // Ensure certificate config exists
+        if (!newVal.configuration.certificate) {
+            newVal.configuration.certificate = { active: false, items: [] };
+        }
+
         qrCodeUrl.value = await QRCode.toDataURL(id, { width: 300, margin: 2 })
     }
 }, { immediate: true });
@@ -254,7 +265,8 @@ const saveConfig = async () => {
                     pay: committeeConfigState.pay,
                     amount: committeeConfigState.amount,
                     reqruitments: committeeConfigState.reqruitments
-                }
+                },
+                certificate: agenda.value.configuration.certificate
             },
             // Mapping committees agar sesuai schema API
             committees: agenda.value.committees?.map((c: any) => ({
@@ -463,7 +475,7 @@ const cetakQrCode = () => {
                                                 <USwitch v-model="participantConfigState.pay" @change="saveConfig" />
                                                 <span class="text-sm">{{ participantConfigState.pay ? 'Berbayar' :
                                                     'Gratis'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </UFormField>
                                     </div>
@@ -563,7 +575,7 @@ const cetakQrCode = () => {
                                                 <USwitch v-model="committeeConfigState.pay" @change="saveConfig" />
                                                 <span class="text-sm">{{ committeeConfigState.pay ? 'Berbayar' :
                                                     'Gratis'
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </UFormField>
                                     </div>
@@ -632,6 +644,25 @@ const cetakQrCode = () => {
                                         </UButton>
                                     </div>
                                 </div>
+                            </UCard>
+                        </template>
+                        <template #certificate>
+                            <UCard>
+                                <template #header>
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="font-semibold flex items-center gap-2 text-lg">
+                                            <UIcon name="i-heroicons-academic-cap" /> Desain Sertifikat
+                                        </h3>
+                                        <UButton v-if="!saving" size="xs" variant="ghost" icon="i-heroicons-check"
+                                            @click="saveConfig">
+                                            Simpan Perubahan
+                                        </UButton>
+                                        <UIcon v-else name="i-heroicons-arrow-path" class="animate-spin text-primary" />
+                                    </div>
+                                </template>
+
+                                <AdminCertificateDesigner v-if="agenda.configuration.certificate"
+                                    v-model="agenda.configuration.certificate" :agenda-id="id" />
                             </UCard>
                         </template>
                     </UTabs>

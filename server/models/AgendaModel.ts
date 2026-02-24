@@ -4,6 +4,7 @@ import { ICommittee, IGuest, IMember, IParticipant, IUser } from "~~/types";
 import {
   IAgendaConfigurationSchema,
   IAgendaSchema,
+  ICertificateConfigurationSchema,
   ICommitteeConfigurationSchema,
   ICommitteeSchema,
   IGuestSchema,
@@ -207,6 +208,52 @@ const participantConfigurationSchema =
       },
     },
   });
+
+const certificateItemSchema = new Schema({
+  id: { type: String }, // stable cross-reference id
+  type: {
+    type: String,
+    required: true,
+    enum: ["name", "role", "text", "signature", "qr", "date", "code"],
+  },
+  label: String,
+  value: String,
+  x: { type: Number, required: true },
+  y: { type: Number, required: true },
+  width: Number,
+  height: Number,
+  fontSize: Number,
+  fontWeight: String,
+  fontFamily: String,
+  align: { type: String, default: "center", enum: ["left", "center", "right"] },
+  color: { type: String, default: "#000000" },
+  // Signature-specific fields
+  signerType: { type: String, enum: ['external', 'system'], default: 'external' },
+  signerNIM: { type: String },   // NIM member sistem (system mode)
+  signerName: { type: String },  // Nama cetak signer eksternal
+  signerAs: { type: String },    // Jabatan penandatangan
+});
+
+const certificateConfigurationSchema =
+  new Schema<ICertificateConfigurationSchema>({
+    active: { type: Boolean, default: false },
+    templateUrl: String,
+    previewUrl: String,
+    pdfWidth: Number,
+    pdfHeight: Number,
+    items: [certificateItemSchema],
+    signers: [
+      new Schema(
+        {
+          memberId: { type: Types.ObjectId, ref: 'Member', required: true },
+          as: { type: String, required: true },
+          signatureItemId: { type: String }, // references ICertificateItem.id
+        },
+        { _id: false }
+      ),
+    ],
+  });
+
 /**
  * Schema for representing an agenda configuration.
  */
@@ -217,6 +264,10 @@ const configurationSchema = new Schema<IAgendaConfigurationSchema>({
   },
   participant: {
     type: participantConfigurationSchema,
+    default: {},
+  },
+  certificate: {
+    type: certificateConfigurationSchema,
     default: {},
   },
   canSee: {
@@ -278,6 +329,10 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
       time: Date.now(),
     },
   },
+  certificateDoc: {
+    type: Types.ObjectId,
+    ref: 'Doc',
+  },
   // answers: {
   //   type: [AnswerSchema],
   // },
@@ -322,6 +377,10 @@ const participantSchema = new Schema<IParticipantSchema>({
       status: "pending",
       time: Date.now(),
     },
+  },
+  certificateDoc: {
+    type: Types.ObjectId,
+    ref: 'Doc',
   },
 });
 

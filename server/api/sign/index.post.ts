@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { DocModel } from "~~/server/models/DocModel";
 import EncryptionModel from "~~/server/models/EncryptionModel";
+import { MemberModel } from "~~/server/models/MemberModel";
 import SignModel from "~~/server/models/SignModel";
 import { decrypt } from "~~/server/utils/encrypt";
 import { signData } from "~~/server/utils/encryption";
@@ -98,13 +99,13 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
       }
 
       doc.signs[indexSign] = {
-        as: doc.signs[indexSign].as,
+        as: doc.signs[indexSign]!.as,
         user: new Types.ObjectId(sign.user as unknown as string),
         signed: true,
         sign: new Types.ObjectId(sign._id),
         signedAt: new Date(),
         signedIp: "",
-        location: doc.signs[indexSign].location
+        location: doc.signs[indexSign]!.location
       };
       const newTrail: ITrail = {
         action: "SIGN",
@@ -115,7 +116,7 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
       };
       doc.trails = doc.trails || [];
       doc.trails.push(newTrail);
-      if (!doc.signs[indexSign].location) {
+      if (!doc.signs[indexSign]!.location) {
         return {
           statusCode: 404,
           statusMessage: "Location not found",
@@ -123,11 +124,17 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
       }
 
       // Use Worker for PDF Overlay
+      // Fetch member's name + role for the QR overlay text area
+      const memberDoc = await MemberModel.findOne({ NIM: member.NIM }).select('fullName').lean();
+      const signEntry = doc.signs[indexSign];
+
       const signedDocUrl = await himatikaPdfWorker.processSignOverlay({
           pdf: doc.doc as string,
-          outputBlobPath: new URL(doc.doc as string).pathname.split(".").shift() + "_signed_" + new Date().toISOString() + ".pdf", // get documents without domain & add number
+          outputBlobPath: new URL(doc.doc as string).pathname.split(".").shift() + "_signed_" + new Date().toISOString() + ".pdf",
           qrValue: sign.signature as string,
-          locations: [doc.signs[indexSign].location]
+          locations: [doc.signs[indexSign].location],
+          signerName: memberDoc?.fullName || (member as IMember).fullName,
+          signerAs: signEntry.as || '',
       });
 
       if (!signedDocUrl) {
