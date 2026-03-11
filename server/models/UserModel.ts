@@ -6,6 +6,7 @@ import { IUserSchema } from "~~/types/ISchemas";
 import { AgendaModel } from "./AgendaModel";
 import { AspirationModel } from "./AspirationModel";
 import { DocModel } from "./DocModel";
+import './GuestModel';
 import OrganizerModel from "./OrganizerModel";
 import { PointModel } from "./PointModel";
 import { ProjectModel } from "./ProjectModel";
