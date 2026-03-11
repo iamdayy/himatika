@@ -26,6 +26,12 @@ const sessionSchema = new Schema<ISessionSchema>(
     user: {
       type: Types.ObjectId,
       ref: "User",
+      sparse: true,
+    },
+    guest: {
+        type: Types.ObjectId,
+        ref: "Guest",
+        sparse: true,
     },
     createdAt: Date,
     updatedAt: Date,

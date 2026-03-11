@@ -1,9 +1,10 @@
 import mongoose, { model, Schema, Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
-import { ICommittee, IMember, IParticipant } from "~~/types";
+import { ICommittee, IGuest, IMember, IParticipant, IUser } from "~~/types";
 import {
   IAgendaConfigurationSchema,
   IAgendaSchema,
+  ICertificateConfigurationSchema,
   ICommitteeConfigurationSchema,
   ICommitteeSchema,
   IGuestSchema,
@@ -17,9 +18,9 @@ import { AnswerModel } from "./AnswerModel";
 import CategoryModel from "./CategoryModel";
 import { QuestionModel } from "./QuestionModel";
 interface IAgendaMethods {
-  canMeRegisterAsParticipant(member?: IMember): boolean;
-  canMeRegisterAsCommittee(member?: IMember): boolean;
-  isRegisterd(member?: IMember): ICommittee | IParticipant | false;
+  canMeRegisterAsParticipant(user?: IUser): boolean;
+  canMeRegisterAsCommittee(user?: IUser): boolean;
+  isRegisterd(user?: IUser): ICommittee | IParticipant | false;
   isRegisterdById(registeredId: string): ICommittee | IParticipant | false;
 }
 type IAgendaModel = mongoose.Model<IAgendaSchema, {}, IAgendaMethods>;
@@ -32,7 +33,7 @@ const IGuestSchema = new Schema<IGuestSchema>({
   email: {
     type: String,
     required: true,
-    unique: true,
+    index: true, 
     sparse: true,
   },
   phone: {
@@ -41,7 +42,6 @@ const IGuestSchema = new Schema<IGuestSchema>({
   },
   NIM: {
     type: Number,
-    unique: true,
     sparse: true,
   },
   semester: {
@@ -208,6 +208,52 @@ const participantConfigurationSchema =
       },
     },
   });
+
+const certificateItemSchema = new Schema({
+  id: { type: String }, // stable cross-reference id
+  type: {
+    type: String,
+    required: true,
+    enum: ["name", "role", "text", "signature", "qr", "date", "code"],
+  },
+  label: String,
+  value: String,
+  x: { type: Number, required: true },
+  y: { type: Number, required: true },
+  width: Number,
+  height: Number,
+  fontSize: Number,
+  fontWeight: String,
+  fontFamily: String,
+  align: { type: String, default: "center", enum: ["left", "center", "right"] },
+  color: { type: String, default: "#000000" },
+  // Signature-specific fields
+  signerType: { type: String, enum: ['external', 'system'], default: 'external' },
+  signerNIM: { type: String },   // NIM member sistem (system mode)
+  signerName: { type: String },  // Nama cetak signer eksternal
+  signerAs: { type: String },    // Jabatan penandatangan
+});
+
+const certificateConfigurationSchema =
+  new Schema<ICertificateConfigurationSchema>({
+    active: { type: Boolean, default: false },
+    templateUrl: String,
+    previewUrl: String,
+    pdfWidth: Number,
+    pdfHeight: Number,
+    items: [certificateItemSchema],
+    signers: [
+      new Schema(
+        {
+          memberId: { type: Types.ObjectId, ref: 'Member', required: true },
+          as: { type: String, required: true },
+          signatureItemId: { type: String }, // references ICertificateItem.id
+        },
+        { _id: false }
+      ),
+    ],
+  });
+
 /**
  * Schema for representing an agenda configuration.
  */
@@ -218,6 +264,10 @@ const configurationSchema = new Schema<IAgendaConfigurationSchema>({
   },
   participant: {
     type: participantConfigurationSchema,
+    default: {},
+  },
+  certificate: {
+    type: certificateConfigurationSchema,
     default: {},
   },
   canSee: {
@@ -279,6 +329,10 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
       time: Date.now(),
     },
   },
+  certificateDoc: {
+    type: Types.ObjectId,
+    ref: 'Doc',
+  },
   // answers: {
   //   type: [AnswerSchema],
   // },
@@ -302,7 +356,9 @@ const participantSchema = new Schema<IParticipantSchema>({
     },
   },
   guest: {
-    type: IGuestSchema,
+    type: Types.ObjectId,
+    ref: "Guest",
+    autopopulate: true,
   },
   visiting: {
     type: Boolean,
@@ -321,6 +377,10 @@ const participantSchema = new Schema<IParticipantSchema>({
       status: "pending",
       time: Date.now(),
     },
+  },
+  certificateDoc: {
+    type: Types.ObjectId,
+    ref: 'Doc',
   },
 });
 
@@ -436,7 +496,14 @@ agendaSchema.virtual("presences").get(function (this: IAgendaSchema) {
     ),
   };
 });
-agendaSchema.methods.canMeRegisterAsCommittee = function (member?: IMember) {
+
+agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
+  const member = user?.member;
+  
+  // Committee is usually redundant for Guests, assume Guest CANNOT be committee? 
+  // "Committee" implies Member usually.
+  if (user?.guest) return false;
+
   const organizer = member?.organizer;
   const now = new Date(Date.now());
   const start = new Date(
@@ -445,13 +512,14 @@ agendaSchema.methods.canMeRegisterAsCommittee = function (member?: IMember) {
   const end = new Date(
     this.configuration.committee.canRegisterUntil?.end || Date.now()
   );
-  if (this.isRegisterd(member)) {
+  if (this.isRegisterd(user)) {
     return false;
   }
   if (now < start || now > end) {
     return false;
   }
   if (this.configuration.committee.canRegister === "Public") {
+    // Only members can be committee? Or public too? Schema says "Public"
     return true;
   }
   if (this.configuration.committee.canRegister === "Organizer" && organizer) {
@@ -470,20 +538,30 @@ agendaSchema.methods.canMeRegisterAsCommittee = function (member?: IMember) {
   if (typeof this.configuration.committee.canRegister === "string" && member) {
     const [roleName, value] =
       this.configuration.committee.canRegister.split("<");
-    if (value < (member[roleName as keyof IMember] ?? 0)) {
-      return true;
+    const memberValue = member[roleName as keyof IMember];
+    if (typeof memberValue === "number" && typeof value === "number") {
+      if (value < memberValue) {
+        return true;
+      }
     }
   }
   if (typeof this.configuration.committee.canRegister === "string" && member) {
     const [roleName, value] =
       this.configuration.committee.canRegister.split(">");
-    if (value > (member[roleName as keyof IMember] ?? 0)) {
-      return true;
+    const memberValue = member[roleName as keyof IMember];
+    if (typeof memberValue === "number" && typeof value === "number") {
+      if (value > memberValue) {
+        return true;
+      }
     }
   }
   return false;
 };
-agendaSchema.methods.canMeRegisterAsParticipant = function (member?: IMember) {
+
+agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
+  const member = user?.member;
+  const guest = user?.guest;
+  
   const organizer = member?.organizer;
   const now = new Date(Date.now());
   const start = new Date(
@@ -492,15 +570,20 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (member?: IMember) {
   const end = new Date(
     this.configuration.participant.canRegisterUntil?.end || Date.now()
   );
-  if (this.isRegisterd(member)) {
+  
+  if (this.isRegisterd(user)) {
     return false;
   }
   if (now < start || now > end) {
     return false;
   }
   if (this.configuration.participant.canRegister === "Public") {
-    return true;
+    return true; // Guests fall here
   }
+  
+  // If restricted, Guests usually can't register unless "Public"
+  if (guest) return false;
+
   if (this.configuration.participant.canRegister === "Organizer" && organizer) {
     return !!organizer;
   }
@@ -523,8 +606,11 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (member?: IMember) {
   ) {
     const [roleName, value] =
       this.configuration.participant.canRegister.split("<");
-    if (value < (member[roleName as keyof IMember] ?? 0)) {
-      return true;
+    const memberValue = member[roleName as keyof IMember];
+    if (typeof memberValue === "number" && typeof value === "number") {
+      if (value < memberValue) {
+        return true;
+      }
     }
   }
   if (
@@ -533,26 +619,44 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (member?: IMember) {
   ) {
     const [roleName, value] =
       this.configuration.participant.canRegister.split(">");
-    if (value > (member[roleName as keyof IMember] ?? 0)) {
-      return true;
+    const memberValue = member[roleName as keyof IMember];
+    if (typeof memberValue === "number" && typeof value === "number") {
+      if (value > memberValue) {
+        return true;
+      }
     }
   }
   return false;
 };
+
 agendaSchema.methods.isRegisterd = function (
-  member?: IMember
+  user?: IUser
 ): ICommittee | IParticipant | false {
-  if (!member) return false;
-  const committee = this.committees?.find(
-    (item) => (item.member as IMember | undefined)?.NIM == member.NIM
-  );
-  if (committee) return committee;
-  const participant = this.participants?.find(
-    (item) => (item.member as IMember | undefined)?.NIM == member.NIM
-  );
-  if (participant) return participant;
+  if (!user) return false;
+  const member = user.member;
+  const guest = user.guest;
+
+  if (member) {
+      const committee = this.committees?.find(
+        (item) => (item.member as IMember | undefined)?.NIM == member.NIM
+      );
+      if (committee) return committee;
+      const participant = this.participants?.find(
+        (item) => (item.member as IMember | undefined)?.NIM == member.NIM
+      );
+      if (participant) return participant;
+  }
+  
+  if (guest) {
+      const participant = this.participants?.find(
+        (item) => (item.guest as IGuest | undefined)?.email == guest.email
+      );
+      if (participant) return participant;
+  }
+
   return false;
 };
+
 agendaSchema.methods.isRegisterdById = function (
   registeredId: string
 ): ICommittee | IParticipant | false {

@@ -13,6 +13,7 @@ const route = useRoute();
 const id = route.params.id as string;
 const { $api, $ts } = useNuxtApp();
 const router = useRouter();
+const toast = useToast()
 
 // Data Fetching
 const { data: agenda, pending, refresh } = await useAsyncData(`agenda-${id}`,
@@ -109,8 +110,134 @@ const shareAgenda = () => {
     }
 };
 
+// --- CERTIFICATE LOGIC ---
+const isCertificateLoading = ref(false);
+const myCertificateDoc = ref<null | { _id: string; doc: string; signs: { signed: boolean }[] }>(null);
+
+const myParticipant = computed(() => {
+    if (!user.value || !agenda.value) return null;
+
+    // Check Participant
+    const p = agenda.value.participants?.find((p: any) => (p.member?.NIM || p.member) === user.value?.member?.NIM);
+    if (p) return { ...p, type: 'participant' };
+
+    // Check Committee
+    const c = agenda.value.committees?.find((c: any) => (c.member?.NIM || c.member) === user.value?.member?.NIM);
+    if (c) return { ...c, type: 'committee' };
+
+    return null;
+});
+
+const canDownloadCertificate = computed(() => {
+    if (!myParticipant.value) return false;
+    if (!agenda.value?.configuration?.certificate?.active) return false;
+    if (!myParticipant.value.visiting) return false;
+    return true;
+});
+
+// Whether the participant already has a certificate Doc generated
+const hasCertificateDoc = computed(() => myParticipant.value?.certificateDoc ? true : false);
+
+// Signing progress from the locally fetched Doc
+const certSignsTotal = computed(() => myCertificateDoc.value?.signs?.length ?? 0);
+const certSignedCount = computed(() => myCertificateDoc.value?.signs?.filter((s: any) => s.signed).length ?? 0);
+const isCertificateSigningPending = computed(() =>
+    hasCertificateDoc.value && certSignedCount.value < certSignsTotal.value
+);
+const isCertificateFullySigned = computed(() =>
+    hasCertificateDoc.value && (certSignsTotal.value === 0 || certSignedCount.value === certSignsTotal.value)
+);
+
+// Fetch the certificate Doc status when participant changes
+const fetchCertificateStatus = async (p: typeof myParticipant.value) => {
+    if (!p?._id || !agenda.value?._id) {
+        myCertificateDoc.value = null;
+        return;
+    }
+    try {
+        const res = await $api<{
+            statusCode: number;
+            data: { hasCertificate: boolean; url: string | null; signedCount: number; signsTotal: number; docId: string | null }
+        }>('/api/pdf/certificate', {
+            query: {
+                agendaId: agenda.value._id,
+                participantId: p._id,
+                participantType: p.type ?? 'participant',
+            }
+        });
+        if (res.data?.hasCertificate) {
+            myCertificateDoc.value = {
+                _id: res.data.docId!,
+                doc: res.data.url!,
+                signs: Array.from({ length: res.data.signsTotal }, (_, i) => ({
+                    signed: i < res.data.signedCount
+                }))
+            };
+        } else {
+            myCertificateDoc.value = null;
+        }
+    } catch {
+        myCertificateDoc.value = null;
+    }
+};
+
+watch(myParticipant, (p) => fetchCertificateStatus(p), { immediate: true });
+
+// Generate certificate (creates Doc + queues signing)
+const generateCertificate = async () => {
+    if (!canDownloadCertificate.value || isCertificateLoading.value) return;
+    isCertificateLoading.value = true;
+    try {
+        const certConfig = agenda.value?.configuration.certificate;
+        if (!certConfig || !certConfig.templateUrl) {
+            toast.add({ title: 'Template sertifikat belum diatur', color: 'error' }); return;
+        }
+        const participant = myParticipant.value;
+        const participantType = participant?.type ?? 'participant';
+        const res = await $api<{ success: boolean; url: string; docId: string; cached: boolean; signedCount: number; signsTotal: number }>('/api/pdf/certificate', {
+            method: 'POST',
+            body: {
+                agendaId: id,
+                participantId: participant?._id?.toString(),
+                participantType,
+                templateUrl: certConfig.templateUrl,
+                items: certConfig.items,
+                signers: certConfig.signers || [],
+                data: {
+                    name: user.value?.member?.fullName || 'Peserta',
+                    role: participantType === 'committee' ? ((participant as any)?.job ?? 'Panitia') : 'Peserta',
+                    NIM: user.value?.member?.NIM,
+                }
+            }
+        });
+        if (res.success) {
+            // Refresh the agenda data to get updated certificateDoc reference
+            await refresh();
+            // Update local certificate status so UI reflects the new state immediately
+            await fetchCertificateStatus(myParticipant.value);
+            if (res.signsTotal > 0 && res.signedCount < res.signsTotal) {
+                toast.add({ title: 'Sertifikat sedang menunggu tanda tangan', description: `${res.signedCount}/${res.signsTotal} sudah ditandatangani`, color: 'info' });
+            } else {
+                toast.add({ title: res.cached ? 'Sertifikat sudah ada' : 'Sertifikat berhasil dibuat', color: 'success' });
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        toast.add({ title: 'Gagal membuat sertifikat', color: 'error' });
+    } finally {
+        isCertificateLoading.value = false;
+    }
+};
+
+// Download final signed certificate
+const downloadCertificate = () => {
+    const docUrl = myCertificateDoc.value?.doc;
+    if (docUrl) window.open(docUrl as string, '_blank');
+};
+
+
 const navigateToRegisterParticipant = () => {
-    if (!user.value && agenda.value?.configuration.participant.canRegister !== 'Public') {
+    if (!user.value) {
         router.push({ path: '/login', query: { redirect: route.fullPath } });
     } else {
         router.push(`/agendas/${id}/participant/register`);
@@ -315,6 +442,42 @@ function formatCurrency(amount: number): string {
                                         variant="link" size="xs">
                                         Lihat Detail Tiket &rarr;
                                     </UButton>
+
+                                    <div v-if="canDownloadCertificate"
+                                        class="w-full pt-2 border-t border-green-200 dark:border-green-800/50 mt-2 space-y-2">
+
+                                        <!-- State 1: Not generated yet -->
+                                        <UButton v-if="!hasCertificateDoc" block color="primary" variant="solid"
+                                            icon="i-heroicons-academic-cap" :loading="isCertificateLoading"
+                                            @click="generateCertificate">
+                                            Buat Sertifikat
+                                        </UButton>
+
+                                        <!-- State 2: Generated but waiting for signatures -->
+                                        <div v-else-if="isCertificateSigningPending"
+                                            class="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 p-3 text-center space-y-2">
+                                            <div
+                                                class="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400">
+                                                <UIcon name="i-heroicons-clock" class="w-5 h-5 animate-pulse" />
+                                                <span class="text-sm font-medium">Menunggu Tanda Tangan</span>
+                                            </div>
+                                            <div class="w-full bg-amber-200 dark:bg-amber-800 rounded-full h-1.5">
+                                                <div class="bg-amber-500 h-1.5 rounded-full transition-all"
+                                                    :style="{ width: `${(certSignedCount / certSignsTotal) * 100}%` }">
+                                                </div>
+                                            </div>
+                                            <p class="text-xs text-amber-600 dark:text-amber-400">
+                                                {{ certSignedCount }} / {{ certSignsTotal }} penandatangan selesai
+                                            </p>
+                                        </div>
+
+                                        <!-- State 3: Fully signed → Download -->
+                                        <UButton v-else-if="isCertificateFullySigned" block color="success"
+                                            variant="solid" icon="i-heroicons-arrow-down-tray"
+                                            @click="downloadCertificate">
+                                            Unduh Sertifikat
+                                        </UButton>
+                                    </div>
                                 </div>
 
                                 <div v-else class="space-y-6">

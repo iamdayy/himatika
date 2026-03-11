@@ -17,5 +17,6 @@ export interface ISetSessionParams {
   /**
    * The MongoDB ObjectId of the user associated with this session.
    */
-  user: Types.ObjectId;
+  user?: Types.ObjectId;
+  guest?: Types.ObjectId;
 }

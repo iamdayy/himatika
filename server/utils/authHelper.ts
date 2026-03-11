@@ -12,7 +12,7 @@ const TOKEN_TYPE = "Bearer";
  * @returns The extracted token.
  */
 const extractToken = (authHeaderValue: string) => {
-  const [, token] = authHeaderValue.split(`${TOKEN_TYPE} `);
+  const [, token] = authHeaderValue.split(`${TOKEN_TYPE} `) ?? "";
   return token;
 };
 
@@ -44,9 +44,17 @@ export const ensureAuth = async (event: H3Event) => {
   }
 
   const extractedToken = extractToken(authHeaderValue);
+  if (typeof extractedToken === "undefined") {
+    throw createError({
+      statusCode: 401,
+      statusMessage:
+        "Perlu menyertakan header Authorization Bearer yang valid untuk mengakses endpoint ini",
+    });
+  }
   try {
     return await checkSession(extractedToken);
   } catch (error) {
+    console.log(error);
     throw createError({
       statusCode: 401,
       statusMessage: "Anda harus login untuk menggunakan endpoint ini",
@@ -100,6 +108,13 @@ export const killAuth = async (event: H3Event) => {
   }
 
   const extractedToken = extractToken(authHeaderValue);
+  if (typeof extractedToken === "undefined") {
+    throw createError({
+      statusCode: 401,
+      statusMessage:
+        "Perlu menyertakan header Authorization Bearer yang valid untuk mengakses endpoint ini",
+    });
+  }
   try {
     return await exitSession(extractedToken);
   } catch (error) {

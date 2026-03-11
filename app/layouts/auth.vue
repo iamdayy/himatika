@@ -39,9 +39,9 @@ useHead({
             </div>
         </nav>
         <!-- Main container for the authentication layout -->
-        <div class="relative min-h-[calc(100vh-8rem)]">
+        <div class="relative flex items-center justify-center min-h-[calc(100vh-8rem)] py-12">
             <!-- Centered content wrapper -->
-            <div class="absolute w-full px-4 py-8 transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+            <div class="w-full px-4">
                 <!-- Navigation tabs for Login and Register -->
                 <ul class="flex flex-row w-full max-w-md gap-3 mx-auto mb-12 font-sans font-semibold text-center text-white dark:text-gray-200 bg-accent-1 dark:bg-accent-2 rounded-xl"
                     v-if="route.name === 'login' || route.name === 'register'">
@@ -84,7 +84,7 @@ useHead({
     position: relative;
     width: 100%;
     max-width: 720px;
-    height: 100%;
+    height: auto;
     min-height: 510px;
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
@@ -94,11 +94,8 @@ useHead({
 
 /* 3D card wrapper styles */
 .card-3d-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: relative;
+    /* top: 0; left: 0; right: 0; bottom: 0; removed to let it size naturally */
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     transition: transform 700ms 400ms ease-out;

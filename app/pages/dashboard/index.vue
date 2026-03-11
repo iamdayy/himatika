@@ -36,6 +36,10 @@ useHead({
  * Get authentication data
  */
 const { status, data: user } = useAuth();
+// Redirect guest to dashboard
+if ((user.value as any)?.guest) {
+    navigateTo('/guest/dashboard');
+}
 const { $pageGuide, $api } = useNuxtApp();
 
 const rankIcon = (rank: number, userNIM: number) => {
@@ -241,7 +245,7 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
                         <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
@@ -254,7 +258,7 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 projectsMe.length
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="projectsMe.length || 0" :color="color" :max="data?.count || 100"
@@ -267,7 +271,7 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 aspirations.length
-                                }}</h2>
+                            }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
