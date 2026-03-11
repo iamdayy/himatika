@@ -149,7 +149,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     .filter(
       (agenda: IAgenda) =>
         agenda.committees?.find(
-          (c) => (c.member as IMember)?.NIM === this.NIM && c.visiting
+          (c) => (c.member as IMember)?.NIM === this.NIM && c.visiting === false
         ) === undefined
     );
   const agendasMember = (this.agendasMember || [])
@@ -171,7 +171,7 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     .filter(
       (agenda: IAgenda) =>
         agenda.participants?.find(
-          (r) => (r.member as IMember)?.NIM === this.NIM && r.visiting
+          (r) => (r.member as IMember)?.NIM === this.NIM && r.visiting === false
         ) === undefined
     );
   const committeesAgenda =
@@ -241,18 +241,6 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     projectsPoint +
     aspirationsPoint +
     manualTotal;
-  // Check if total is NaN and return 0 if it is
-  // if (isNaN(total)) {
-  //   return 0;
-  // }
-  // // Check if total is undefined and return 0 if it is
-  // if (total === undefined) {
-  //   return 0;
-  // }
-  // // Check if total is null and return 0 if it is
-  // if (total === null) {
-  //   return 0;
-  // }
   return {
     semester: semester,
     range: rangeDate,
