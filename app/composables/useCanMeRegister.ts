@@ -25,11 +25,15 @@ export const useCanMeRegister = () => {
         }
         return false;
       default:
+        // Ensure user is a Member before checking member roles
+        if (!user.value || !(user.value as any).member) return false;
+        
+        const member = (user.value as any).member;
+        
         if (typeof canRegister === "string" && canRegister.includes(":")) {
           const [role, value] = canRegister.split(":");
           if (
-            user.value &&
-            value == user.value.member[role as keyof typeof user.value.member]
+            value == member[role as keyof typeof member]
           ) {
             return true;
           }
@@ -37,8 +41,7 @@ export const useCanMeRegister = () => {
         if (typeof canRegister === "string" && canRegister.includes("<")) {
           const [role, value] = canRegister.split("<");
           if (
-            user.value &&
-            user.value.member[role as keyof typeof user.value.member] <
+            member[role as keyof typeof member] <
               Number(value)
           ) {
             return true;
@@ -48,8 +51,7 @@ export const useCanMeRegister = () => {
           const [role, value] = canRegister.split(">");
 
           if (
-            user.value &&
-            user.value.member[role as keyof typeof user.value.member] >
+            member[role as keyof typeof member] >
               Number(value)
           ) {
             return true;

@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import Email from "~~/server/utils/mailTemplate";
 import { generateQRCode } from "~~/server/utils/qrcode";
-import { IAgenda, IMember } from "~~/types";
+import { IAgenda, IUser } from "~~/types";
 import { IAgendaRegisterResponse, IError } from "~~/types/IResponse";
 
 /**
@@ -80,7 +80,7 @@ export default defineEventHandler(
       }
 
       const canRegister = agenda.canMeRegisterAsParticipant(
-        user?.member as IMember | undefined
+        user as IUser | undefined
       );
       if (!canRegister) {
         throw createError({
@@ -90,12 +90,13 @@ export default defineEventHandler(
         });
       }
 
-      const participantId = new Types.ObjectId();
+      let participantId = new Types.ObjectId();
       let updateQuery: any = {};
       let conditionQuery: any = { _id: id };
-      let email: string, name: string;
+      let email: string = "";
+      let name: string = "";
 
-      if (user) {
+      if (user && user.member) {
         name = user.member.fullName;
         email = user.member.email;
         // Condition: User must NOT be in participants list
@@ -109,11 +110,31 @@ export default defineEventHandler(
             },
           },
         };
+      } else if (user && user.guest) {
+         // Authenticated Guest
+         const g = user.guest;
+         name = g.fullName;
+         email = g.email;
+         // Condition: Guest account must NOT be in participants list (by email or ID?)
+         // Agenda stores `guest` schema embedded.
+         // Let's check by email in embedded guest schema.
+         conditionQuery["participants.guest.email"] = { $ne: g.email };
+
+         updateQuery = {
+          $push: {
+            participants: {
+              _id: participantId,
+              guest: g._id,
+            },
+          },
+        };
       } else if (guest) {
+        // Unauthenticated Guest (Legacy or specific flow?)
+        // If we want to allow unauthenticated guests to register by filling form?
         name = guest.fullName;
         email = guest.email;
-        // Condition: Guest NIM must NOT be in participants list
-        conditionQuery["participants.guest.NIM"] = { $ne: guest.NIM };
+        // Condition: Guest NIM/Email must NOT be in participants list
+        conditionQuery["participants.guest.email"] = { $ne: guest.email };
 
         updateQuery = {
           $push: {
@@ -135,7 +156,7 @@ export default defineEventHandler(
       } else {
         throw createError({
           statusCode: 400,
-          statusMessage: "Invalid registration data.",
+          statusMessage: "Invalid registration data. Please login or provide guest details.",
         });
       }
 

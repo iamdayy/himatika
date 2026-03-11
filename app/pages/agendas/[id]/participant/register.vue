@@ -1,58 +1,12 @@
-/**
-* This Vue component is used for registering to an agenda.
-*
-* Script Setup:
-* - Imports necessary types and hooks.
-* - Defines the page metadata with layout and authentication settings.
-* - Retrieves the route parameter `id`.
-* - Determines if the current view is on a mobile device.
-* - Fetches user authentication data.
-* - Fetches agenda data based on the `id` parameter.
-* - Computes breadcrumb links for navigation.
-* - Computes the steps for the registration process.
-* - Initializes reactive form data for registration, payment, and confirmation.
-* - Defines options for the "register as" radio group.
-* - Computes responsive classes and sizes for UI elements.
-* - Checks if the selected program of study (prodi) is related to informatics.
-*
-* Template:
-* - Renders a breadcrumb component for navigation.
-* - Renders a stepper component for the registration process.
-* - Displays different form fields based on the current step and registration type.
-* - Shows a message if the selected program of study is related to informatics.
-*
-* Components:
-* - UBreadcrumb: Displays breadcrumb navigation links.
-* - CoreStepper: Manages the steps of the registration process.
-* - UFormField: Groups form elements with labels.
-* - URadioGroup: Displays radio buttons for selecting registration type.
-* - UInput: Input fields for various form data.
-* - USeparator: Separator element for separating sections.
-* - ULink: Link component for navigation.
-*
-* Computed Properties:
-* - `isMobile`: Determines if the current view is on a mobile device.
-* - `agenda`: Retrieves the agenda data from the fetched response.
-* - `links`: Generates breadcrumb links based on the agenda data.
-* - `steps`: Generates the steps for the registration process.
-* - `responsiveClasses`: Computes responsive classes for UI elements.
-* - `responsiveUISizes`: Computes responsive sizes for UI elements.
-* - `checkIfProdiIsInformatics`: Checks if the selected program of study is related to informatics.
-*
-* Reactive Data:
-* - `activeStep`: Tracks the current active step in the registration process.
-* - `formData`: Stores the form data for registration, payment, and confirmation.
-* - `registerAsOptions`: Options for the "register as" radio group.
-*/
 <script setup lang='ts'>
-import type { IMember, IParticipant, IPaymentMethod } from '~~/types';
+import type { IGuest, IMember, IParticipant, IPaymentMethod } from '~~/types';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
 import type { IPaymentBody } from '~~/types/IRequestPost';
 import type { IAgendaRegisterResponse, IAgendaResponse, IAnswersResponse, IParticipantResponse, IResponse } from '~~/types/IResponse';
 
 definePageMeta({
     layout: 'client',
-    auth: false
+    // auth: false // Removed to allow manual check or middleware
 });
 const route = useRoute();
 const router = useRouter();
@@ -66,6 +20,10 @@ const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 
 const { data: user } = useAuth();
+// Redirect if not logged in
+if (!user.value) {
+    router.push({ path: '/login', query: { redirect: route.fullPath } });
+}
 
 const { data: agenda, refresh } = useAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`, {
     method: 'GET',
@@ -94,7 +52,7 @@ const participant = computed<IParticipant>(() => {
         if (participantData.value.guest) {
             return {
                 ...participantData.value,
-                guest: participantData.value.guest,
+                guest: participantData.value.guest as IGuest,
                 member: undefined,
             }
         }
@@ -111,7 +69,7 @@ const participant = computed<IParticipant>(() => {
             updatedAt: '',
         },
         member: user.value?.member,
-        guest: undefined,
+        guest: user.value?.guest as IGuest | undefined,
     };
 });
 const registrationId = computed(() => participantId || participant.value?._id || '');
@@ -578,7 +536,7 @@ watch(participant, (newValue) => {
                                         <span class="text-gray-500">Admin Fee</span>
                                         <span>Rp {{ formatCurrency(priceSummary.admin) }}</span>
                                     </div>
-                                    <Useparator class="my-2" />
+                                    <USeparator class="my-2" />
                                     <div class="flex justify-between font-bold text-lg text-primary-600">
                                         <span>Total</span>
                                         <span>Rp {{ formatCurrency(priceSummary.total) }}</span>

@@ -1,12 +1,12 @@
 import { useStatsStore } from "~/stores/useStatsStore";
-import type { IAgenda, IMember, IUser, TPaymentStatus } from "~~/types";
+import type { IAgenda, IGuest, IMember, TPaymentStatus } from "~~/types";
 
 export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
   const organizerState = useOrganizerStore();
   const { organizer, isOrganizer } = storeToRefs(organizerState);
 
   const { data: dataUser, status } = useAuth();
-  const user = computed(() => dataUser.value as IUser);
+  const user = computed(() => dataUser.value);
 
   // Use stats store for deep data (agendasMe)
   const statsStore = useStatsStore();
@@ -112,11 +112,15 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
         }
         return false;
       default:
+        // Ensure user is a Member before checking member roles
+        if (!user.value || !(user.value as any).member) return false;
+        
+        const member = (user.value as any).member;
+
         if (typeof canRegister === "string" && canRegister.includes(":")) {
           const [role, value] = canRegister.split(":");
           if (
-            user.value &&
-            value == user.value.member[role as keyof typeof user.value.member]
+            value == member[role as keyof typeof member]
           ) {
             return true;
           }
@@ -124,11 +128,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
         if (typeof canRegister === "string" && canRegister.includes("<")) {
           const [role, value] = canRegister.split("<");
           if (
-            user.value &&
-            user.value.member &&
-            typeof user.value.member[role as keyof typeof user.value.member] !==
-              "undefined" &&
-            Number(user.value.member[role as keyof typeof user.value.member]) <
+            member[role as keyof typeof member] <
               Number(value)
           ) {
             return true;
@@ -137,13 +137,10 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
         if (typeof canRegister === "string" && canRegister.includes(">")) {
           const [role, value] = canRegister.split(">");
           if (
-            user.value &&
-            user.value.member &&
-            typeof user.value.member[role as keyof typeof user.value.member] !==
-              "undefined"
+            member[role as keyof typeof member]
           ) {
             const memberProp =
-              user.value.member[role as keyof typeof user.value.member];
+              member[role as keyof typeof member];
             const memberPropNum =
               typeof memberProp === "number" ? memberProp : Number(memberProp);
             if (!isNaN(memberPropNum) && memberPropNum > Number(value)) {
@@ -162,16 +159,19 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
       return false;
     }
     const registerAs = isRegistered.value;
+    const member = (user.value as any).member;
+    if (!member) return false;
+
     if (registerAs === "Committee") {
       return agenda.value.committees?.some(
         (reg) =>
-          (reg.member as IMember)?.NIM == user.value?.member.NIM &&
+          (reg.member as IMember)?.NIM == member.NIM &&
           !reg.approved
       );
     } else if (registerAs === "Participant") {
       return agenda.value.participants?.some((reg) => {
         const status =
-          (reg.member as IMember)?.NIM == user.value?.member.NIM &&
+          (reg.member as IMember)?.NIM == member.NIM &&
           reg.payment?.status !== "success" &&
           !reg.visiting;
         return status;
@@ -180,37 +180,63 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
     return false;
   });
   const registeredId = () => {
-    if (!agenda.value) {
+    if (!agenda.value || !user.value) {
       return false;
     }
     const registerAs = isRegistered.value;
-    if (registerAs === "Committee") {
+    const member = (user.value as any).member;
+    const guest = (user.value as any).guest;
+
+    if (registerAs === "Committee" && member) {
       const committee = agenda.value.committees?.find(
-        (reg) => (reg.member as IMember)?.NIM == user.value?.member.NIM
+        (reg) => (reg.member as IMember)?.NIM == member.NIM
       );
       return committee ? committee._id : false;
     }
     if (registerAs === "Participant") {
-      const participant = agenda.value.participants?.find(
-        (reg) => (reg.member as IMember)?.NIM == user.value?.member.NIM
-      );
+      let participant;
+      if (member) {
+        participant = agenda.value.participants?.find(
+            (reg) => (reg.member as IMember)?.NIM == member.NIM
+        );
+      } else if (guest) {
+        participant = agenda.value.participants?.find(
+             (reg) => (reg.guest as any)?._id === guest._id || (reg.guest as any)?.email === guest.email
+        );
+      }
       return participant ? participant._id : false;
     }
     return "";
   };
+
   const payStatus = () => {
     let payStatus: false | TPaymentStatus = false;
-    if (!agenda.value) {
+    if (!agenda.value || !user.value) {
       return false;
     }
     const participantPay = agenda.value.configuration.participant.pay;
     const committeePay = agenda.value.configuration.committee.pay;
-    const participant = agenda.value.participants?.find(
-      (reg) => (reg.member as IMember)?.NIM == user.value?.member.NIM
-    );
-    const committee = agenda.value.committees?.find(
-      (comm) => (comm.member as IMember).NIM == user.value?.member.NIM
-    );
+    
+    // Helper to safely get NIM/Guest
+    const memberNIM = (user.value as any)?.member?.NIM;
+    const guestEmail = (user.value as any)?.guest?.email;
+
+    let participant;
+    let committee;
+
+    if (memberNIM) {
+        participant = agenda.value.participants?.find(
+        (reg) => (reg.member as IMember)?.NIM == memberNIM
+        );
+        committee = agenda.value.committees?.find(
+        (comm) => (comm.member as IMember).NIM == memberNIM
+        );
+    } else if (guestEmail) {
+         participant = agenda.value.participants?.find(
+            (reg) => (reg.guest as IGuest)?.email == guestEmail
+        );
+    }
+
     if (!participant && !committee) {
       return false;
     }
@@ -222,6 +248,7 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
       }
     }
     if (committee) {
+        // ... committee logic (guests normally aren't committees)
       if (committeePay) {
         payStatus = committee.payment?.status || "pending";
       } else {
@@ -230,29 +257,37 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
     }
     return payStatus;
   };
+
   const isRegistered = computed<false | "Committee" | "Participant">(() => {
     let as: "Committee" | "Participant" | false = false;
-    if (!agenda.value) {
+    if (!agenda.value || !user.value) {
       return false;
     }
-    if (!user.value) {
-      return false;
+    
+    const memberNIM = (user.value as any)?.member?.NIM;
+    const guestEmail = (user.value as any)?.guest?.email;
+
+    if (memberNIM) {
+        const participant = agenda.value.participants?.some(
+            (reg) => (reg.member as IMember | undefined)?.NIM == memberNIM
+        );
+        const committee = agenda.value.committees?.some(
+            (comm) => (comm.member as IMember | undefined)?.NIM == memberNIM
+        );
+        if (committee) {
+            as = "Committee";
+        } else if (participant) {
+            as = "Participant";
+        }
+    } else if (guestEmail) {
+         const participant = agenda.value.participants?.some(
+            (reg) => (reg.guest as IGuest)?.email == guestEmail
+        );
+        if (participant) {
+            as = "Participant";
+        }
     }
-    const participant = agenda.value.participants?.some(
-      (reg) =>
-        (reg.member as IMember | undefined)?.NIM == user.value?.member.NIM
-    );
-    const committee = agenda.value.committees?.some(
-      (comm) =>
-        (comm.member as IMember | undefined)?.NIM == user.value.member.NIM
-    );
-    if (committee) {
-      as = "Committee";
-    } else if (participant) {
-      as = "Participant";
-    } else {
-      as = false;
-    }
+    
     return as;
   });
   const isCommittee = computed(() => {
@@ -268,9 +303,13 @@ export const useAgendas = (agenda: Ref<IAgenda | undefined>) => {
     if (isOrganizer.value) {
       return true;
     }
+    
+    const memberNIM = (user.value as any)?.member?.NIM;
+    if (!memberNIM) return false;
+
     return agenda.value.committees?.some(
       (comm) =>
-        (comm.member as IMember | undefined)?.NIM == user.value?.member.NIM
+        (comm.member as IMember | undefined)?.NIM == memberNIM
     );
   });
   return {

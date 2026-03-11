@@ -12,7 +12,6 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Unauthorized",
       });
     }
-    console.log("IP", getRequestIP(event));
     const body = await readBody<IReqDoc>(event);
     const doc = await DocModel.findById(id);
     if (!doc) {
@@ -78,7 +77,7 @@ export default defineEventHandler(async (event) => {
             "signs.$.sign": signId._id,
           },
         },
-        { new: true } // This is crucial: Return the updated document
+        { returnDocument: "after" } // This is crucial: Return the updated document
       );
 
       if (!updatedDoc) {

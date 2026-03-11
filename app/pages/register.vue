@@ -373,7 +373,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
     <div
-        class="border rounded-lg shadow-2xl card bg-gradient-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
+        class="border rounded-lg shadow-2xl card bg-linear-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
         <div class="card-wrap">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm" id="img">
                 <nuxtImg provider="localProvider" class="w-auto h-10 mx-auto image" src="/img/logo.png" alt="Himatika"
@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div v-if="step?.id === 'account'" class="space-y-3">
-                        <div class="px-1 space-y-6 overflow-y-scroll no-scrollbar">
+                        <div class="px-1 space-y-6">
                             <UFormField :label="$ts('NIM')" id="NIM" name="NIM" :error="errors.NIM?.message">
                                 <UInput type="number" :size="responsiveUISizes.input" disabled required
                                     v-model="stateVerifyNIM.NIM" color="neutral" variant="outline" />
@@ -454,10 +454,12 @@ onBeforeUnmount(() => {
 
 .card {
     width: 100%;
-    /* height: 724px; */
-    position: absolute;
-    left: 0;
-    top: 0;
+    height: auto;
+    /* height: 724px; removed */
+    position: relative;
+    /* position: absolute; removed */
+    /* left: 0; removed */
+    /* top: 0; removed */
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     -webkit-backface-visibility: hidden;

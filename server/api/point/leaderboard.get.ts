@@ -17,16 +17,17 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
     .populate({path:"badges", model:BadgeModel});
 
   let leaderboard = members
-    .map((member) => {
+    .map((member, index) => {
       const pointsData = member.point;
       let totalPoints = 0;
+      const semester = event.context.user.member.semester;
 
-      if (Array.isArray(pointsData)) {
-        totalPoints = pointsData.reduce((sum, p) => sum + (p.point || 0), 0);
-      }
+      const pointThisSemester = pointsData?.filter((p) => p.semester == semester);
+      totalPoints = pointThisSemester?.reduce((sum, p) => sum + (p.point || 0), 0) || 0;
 
       return {
         _id: member._id,
+        number: index + 1,
         fullName: member.fullName,
         avatar: member.avatar,
         nim: member.NIM,
@@ -44,11 +45,12 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
     let me;
     if (meRaw) {
       let totalPoints = 0;
-      if (Array.isArray(meRaw.point)) {
-        totalPoints = meRaw.point.reduce((sum, p) => sum + (p.point || 0), 0);
-      }
+      const semester = event.context.user.member.semester;
+      const pointThisSemester = meRaw.point?.filter((p) => p.semester == semester);
+      totalPoints = pointThisSemester?.reduce((sum, p) => sum + (p.point || 0), 0) || 0;
         me = {
         _id: meRaw._id,
+        number: members.findIndex((m) => m.NIM == meRaw.NIM) + 1,
         fullName: meRaw.fullName,
         avatar: meRaw.avatar,
         nim: meRaw.NIM,

@@ -1,5 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
-import { IMember } from "~~/types";
+import { IGuest, IMember } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   // 1. Cek User Login
@@ -24,15 +24,28 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. Cari User di daftar Peserta atau Panitia
-  // Note: Kita mencocokkan user.id (dari session) dengan field 'id' di array participants
-  const isParticipant = agenda.participants?.some(
-    (p) => ((p.member as IMember) || null)?.NIM === user.member.NIM
-  );
-  const isCommittee = agenda.committees?.some(
-    (c) => ((c.member as IMember) || null)?.NIM === user.member.NIM
-  );
+  let participant: any = null;
+  let committee: any = null;
 
-  if (!isParticipant && !isCommittee) {
+  if (user.member) {
+      participant = agenda.participants?.find(
+        (p) => ((p.member as IMember) || null)?.NIM === user.member.NIM
+      );
+      committee = agenda.committees?.find(
+        (c) => ((c.member as IMember) || null)?.NIM === user.member.NIM
+      );
+  } else if (user.guest) {
+      participant = agenda.participants?.find(
+          (p) => {
+              const pGuestId = (p.guest as IGuest)?._id || p.guest;
+              const userGuestId = user.guest._id;
+              return pGuestId?.toString() === userGuestId?.toString();
+          }
+      );
+      // Guests cannot be committee members (yet)
+  }
+
+  if (!participant && !committee) {
     throw createError({
       statusCode: 403,
       message: "Anda belum terdaftar di agenda ini.",
@@ -40,14 +53,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // 5. Cek apakah sudah presensi sebelumnya
-  // (Logic update agak tricky di Mongo untuk array nested, kita coba cari yang spesifik)
-  const targetCollection = isParticipant ? "participants" : "committees";
+  const targetCollection = participant ? "participants" : "committees";
 
   // Cek status visited
-  const currentList = isParticipant ? agenda.participants : agenda.committees;
-  const userDataInAgenda = currentList?.find(
-    (u) => ((u.member as IMember) || null)?.NIM === user.member.NIM
-  );
+  // We already found the specific participant object above, but to be safe/consistent with original code style:
+  const userDataInAgenda = participant || committee;
 
   if (userDataInAgenda?.visiting) {
     return {
@@ -58,8 +68,12 @@ export default defineEventHandler(async (event) => {
   }
 
   // 6. Update Database: Set visited = true
-  await AgendaModel.updateOne(
-    { _id: agendaId, [`${targetCollection}.id`]: user.id },
+  // Note: participant._id is the _id of the subdocument in the array, NOT the member/guest ID.
+  // So we can use that to uniquely identify the array element to update.
+  const subDocId = participant?._id || committee?._id;
+
+  const updateResult = await AgendaModel.updateOne(
+    { _id: agendaId, [`${targetCollection}._id`]: subDocId },
     {
       $set: {
         [`${targetCollection}.$.visiting`]: true,
@@ -67,10 +81,18 @@ export default defineEventHandler(async (event) => {
       },
     }
   );
+  console.log(updateResult);
+
+  if (!updateResult.modifiedCount) {
+    throw createError({
+      statusCode: 500,
+      message: "Gagal update database",
+    });
+  }
 
   return {
     status: "success",
     message: "Presensi berhasil dicatat!",
-    role: isParticipant ? "Peserta" : "Panitia",
+    role: participant ? (user.guest ? "Tamu" : "Peserta") : "Panitia",
   };
 });

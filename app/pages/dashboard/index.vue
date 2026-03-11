@@ -36,6 +36,10 @@ useHead({
  * Get authentication data
  */
 const { status, data: user } = useAuth();
+// Redirect guest to dashboard
+if ((user.value as any)?.guest) {
+    navigateTo('/guest/dashboard');
+}
 const { $pageGuide, $api } = useNuxtApp();
 
 const rankIcon = (rank: number, userNIM: number) => {
@@ -58,7 +62,7 @@ const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
         header: $ts('rank'),
         cell: ({ row }) => {
             return h('span', undefined, [
-                rankIcon(row.index, row.original.nim)
+                rankIcon(row.original.number, row.original.nim)
             ])
         },
     },
