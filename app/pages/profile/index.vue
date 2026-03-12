@@ -3,7 +3,7 @@ import { ModalsImageCrop, ModalsImageOpen, ModalsProfileActivinessLetter, NuxtIm
 import type { AccordionItem, TabsItem } from "@nuxt/ui";
 import imageCompression from "browser-image-compression";
 import type { DriveStep } from "driver.js";
-import type { IAgenda } from "~~/types";
+import type { IAgenda, IMember } from "~~/types";
 import { type IMeResponse } from "~~/types/IResponse";
 // Define page metadata
 definePageMeta({
@@ -107,6 +107,7 @@ const onFileChange = async ($event: Event) => {
     }
 }
 const member = ref({
+    NIM: fullProfile.value?.NIM || "",
     email: fullProfile.value?.email || "",
     fullName: fullProfile.value?.fullName || "",
     class: fullProfile.value?.class || "",
@@ -144,6 +145,28 @@ const member = ref({
 watch(fullProfile, (newVal) => {
     if (newVal) {
         if (!member.value) return;
+        member.value.NIM = newVal.NIM || "";
+        member.value.email = newVal.email || "";
+        member.value.fullName = newVal.fullName || "";
+        member.value.class = newVal.class || "";
+        member.value.semester = newVal.semester || 1;
+        member.value.birth = {
+            place: newVal.birth?.place || "",
+            date: new Date(newVal.birth?.date!) || new Date(),
+        };
+        member.value.sex = newVal.sex || "male";
+        member.value.religion = newVal.religion || "";
+        member.value.citizen = newVal.citizen || "";
+        member.value.phone = newVal.phone || "";
+        member.value.address = {
+            fullAddress: newVal.address?.fullAddress || "",
+            village: newVal.address?.village || "",
+            district: newVal.address?.district || "",
+            city: newVal.address?.city || "",
+            province: newVal.address?.province || "",
+            country: newVal.address?.country || "",
+            zip: newVal.address?.zip || "",
+        };
         member.value.enteredYear = newVal.enteredYear || "";
         member.value.point = newVal.point || [];
         member.value.agendasCommittee = newVal.agendas?.committees || [];
@@ -415,7 +438,7 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('citizenship')
-                                        }}</dt>
+                                    }}</dt>
                                     <UInput v-model="member.citizen" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.citizen }}</dd>
                                 </div>
@@ -559,7 +582,7 @@ const breadcumbs = computed(() => [
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{
                                                     member.point[index]!.point
-                                                }} pts</UBadge>
+                                                    }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -571,7 +594,7 @@ const breadcumbs = computed(() => [
                                                         member.point[index]!.activities.agendas.committees +
                                                         member.point[index]!.activities.agendas.participants }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
-                                                    }}
+                                                        }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -581,7 +604,7 @@ const breadcumbs = computed(() => [
                                                         0
                                                     }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project')
-                                                    }}
+                                                        }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -590,7 +613,7 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('aspiration')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
@@ -598,7 +621,7 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('achievement')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -609,8 +632,7 @@ const breadcumbs = computed(() => [
                                                 <UCard>
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
-                                                            <h3 class="text-lg font-semibold">{{ $ts('agenda') }}
-                                                            </h3>
+                                                            <h3 class="text-lg font-semibold">{{ $ts('agenda') }}</h3>
                                                             <UBadge variant="subtle">
                                                                 {{
                                                                     (getAgendasCommitteeByRange(member.point[index]!.range)?.length
@@ -631,15 +653,34 @@ const breadcumbs = computed(() => [
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-green-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ agenda.title }}
-                                                                        </p>
+                                                                        <p class="font-medium">{{ agenda.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
                                                                             {{ agenda.at }}</p>
                                                                     </div>
-                                                                    <UBadge color="success" variant="subtle">{{
-                                                                        agenda.configuration.committee.point || 0 }} Pts
-                                                                    </UBadge>
+                                                                    <div class="flex items-center gap-2">
+                                                                        <UBadge color="success" variant="subtle">
+                                                                            {{agenda.committees?.find((committee) =>
+                                                                                (committee.member as IMember).NIM ===
+                                                                                member?.NIM)?.job
+                                                                            }}
+                                                                        </UBadge>
+                                                                        <UBadge :color="agenda.committees?.find((committee) =>
+                                                                            (committee.member as IMember).NIM === member?.NIM)?.visiting
+                                                                            ? 'success'
+                                                                            : 'error'">
+                                                                            {{
+                                                                                agenda.committees?.find((committee) =>
+                                                                                    (committee.member as IMember).NIM ===
+                                                                                    member?.NIM)?.visiting
+                                                                                    ? 'Telah Hadir'
+                                                                                    : 'Belum Hadir'
+                                                                            }}
+                                                                        </UBadge>
+                                                                        <UBadge color="neutral" variant="subtle">{{
+                                                                            agenda.configuration.committee.point }} Pts
+                                                                        </UBadge>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -653,15 +694,28 @@ const breadcumbs = computed(() => [
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-blue-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ agenda.title }}
-                                                                        </p>
+                                                                        <p class="font-medium">{{ agenda.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
                                                                             {{ agenda.at }}</p>
                                                                     </div>
-                                                                    <UBadge variant="subtle">{{
-                                                                        agenda.configuration.participant.point || 0 }}
-                                                                        Pts</UBadge>
+                                                                    <div class="flex items-center gap-2">
+                                                                        <UBadge :color="agenda.participants?.find((participant) => (participant.member as IMember).NIM === member?.NIM)?.visiting
+                                                                            ? 'success'
+                                                                            : 'error'">
+                                                                            {{
+                                                                                agenda.participants?.find((participant) =>
+                                                                                    (participant.member as IMember).NIM ===
+                                                                                    member?.NIM)?.visiting
+                                                                                    ? 'Telah Hadir'
+                                                                                    : 'Belum Hadir'
+                                                                            }}
+                                                                        </UBadge>
+                                                                        <UBadge color="neutral" variant="subtle">{{
+                                                                            agenda.configuration.participant.point }}
+                                                                            Pts
+                                                                        </UBadge>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -695,7 +749,7 @@ const breadcumbs = computed(() => [
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                        }}</p>
+                                                                    }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -721,7 +775,7 @@ const breadcumbs = computed(() => [
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
                                                             <h3 class="text-lg font-semibold">{{ $ts('aspiration')
-                                                            }}
+                                                                }}
                                                             </h3>
                                                             <UBadge variant="subtle">{{
                                                                 getAspirationsByRange(member.point[index]!.range)?.length

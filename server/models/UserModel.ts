@@ -70,25 +70,27 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
           {
             path: "agendasMember",
             model: AgendaModel,
-            select: "title date at description configuration -_id",
+            select: "title date at description configuration participants -_id",
             transform: (doc: IAgenda) => ({
               title: doc.title,
               date: doc.date,
               at: doc.at,
               description: doc.description,
               configuration: doc.configuration,
+              participants: doc.participants
             }),
           },
           {
             path: "agendasCommittee",
             model: AgendaModel,
-            select: "title date at description configuration -_id",
+            select: "title date at description configuration committees -_id",
             transform: (doc: IAgenda) => ({
               title: doc.title,
               date: doc.date,
               at: doc.at,
               description: doc.description,
               configuration: doc.configuration,
+              committees: doc.committees
             }),
           },
           {
@@ -166,6 +168,13 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+    },
+    toObject: {
+      virtuals: true,
+      getters: true,
+    },
   }
 );
 

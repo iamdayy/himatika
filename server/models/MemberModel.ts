@@ -148,9 +148,13 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     })
     .filter(
       (agenda: IAgenda) =>
-        agenda.committees?.find(
-          (c) => (c.member as IMember)?.NIM === this.NIM && c.visiting === false
-        ) === undefined
+      {
+        const p = agenda.committees?.find(
+          (c) => (c.member as IMember)?.NIM == this.NIM
+        )
+        // Committee hanya dapat poin jika SETUJU (approved) dan HADIR (visiting)
+        return p?.approved === true && p?.visiting === true;
+      }
     );
   const agendasMember = (this.agendasMember || [])
     .filter((agenda: IAgenda) => {
@@ -170,9 +174,13 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     })
     .filter(
       (agenda: IAgenda) =>
-        agenda.participants?.find(
-          (r) => (r.member as IMember)?.NIM === this.NIM && r.visiting === false
-        ) === undefined
+      {
+        const p = agenda.participants?.find(
+          (r) => (r.member as IMember)?.NIM == this.NIM
+        )
+        // Participant hanya dapat poin jika HADIR (visiting)
+        return p?.visiting === true;
+      }
     );
   const committeesAgenda =
     agendasCommittee?.reduce(
@@ -193,7 +201,8 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     if (!project.date) {
       return false; // Skip projects without a date
     }
-    if (rangeDate.start >= project.date && rangeDate.end <= project.date) {
+    const projectDate = new Date(project.date);
+    if (projectDate >= rangeDate.start && projectDate <= rangeDate.end) {
       return true; // Include projects that fall within the date range
     }
     // If both start and end dates are provided, check if the project
@@ -207,10 +216,11 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     if (asp.archived) {
       return false; // Skip archived aspirations
     }
+    const aspDate = new Date(asp.createdAt!);
     if (
       asp.createdAt &&
-      rangeDate.start >= asp.createdAt &&
-      rangeDate.end <= asp.createdAt
+      aspDate >= rangeDate.start &&
+      aspDate <= rangeDate.end
     ) {
       return true; // Include aspirations that fall within the date range
     }

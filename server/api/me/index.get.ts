@@ -1,3 +1,7 @@
+import { DocModel } from "~~/server/models/DocModel";
+import OrganizerModel from "~~/server/models/OrganizerModel";
+import { PointModel } from "~~/server/models/PointModel";
+import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
 import type { IMeResponse } from "~~/types/IResponse";
 import { UserModel } from "../../models/UserModel";
 import { ensureAuth } from "../../utils/authHelper";
@@ -31,7 +35,99 @@ export default defineEventHandler(async (event): Promise<IMeResponse> => {
   
   try {
     // Kita query UserModel full power (dengan autopopulate nyala sesuai default schema)
-    const user = await UserModel.findOne({ username: sessionUser.username });
+    const user = await UserModel.findOne({ username: sessionUser.username }, { autopopulate: {
+      path: "member",
+      select: "NIM avatar fullName email class semester enteredYear createdAt status",
+      populate: [
+        {
+          path: "agendasCommittee",
+          select: "title date at description configuration committees -_id",
+          transform: (doc: IAgenda) => ({
+            title: doc.title,
+            date: doc.date,
+            at: doc.at,
+            description: doc.description,
+            configuration: doc.configuration,
+            committees: doc.committees,
+          }),
+        },
+        {
+          path: "agendasMember",
+          select: "title date at description configuration participants -_id",
+          transform: (doc: IAgenda) => ({
+            title: doc.title,
+            date: doc.date,
+            at: doc.at,
+            description: doc.description,
+            configuration: doc.configuration,
+            participants: doc.participants,
+          }),
+        },
+        {
+          path: "projects",
+          select: "title deadline description -_id",
+          transform: (doc: IProject) => ({
+            title: doc.title,
+            date: doc.date,
+            description: doc.description,
+          }),
+        },
+        {
+          path: "organizersDailyManagement",
+          model: OrganizerModel,
+          transform: (doc: IOrganizer, id: any) => {
+            if (doc) {
+              return {
+                role: doc.dailyManagement.find(
+                  (daily) => (daily.member as IMember)?.id == id
+                )?.position,
+                period: doc.period,
+              };
+            }
+            return null;
+          },
+        },
+        {
+          path: "organizersDepartmentCoordinator",
+          model: OrganizerModel,
+          transform: (doc: IOrganizer, id: any) => {
+            if (doc) {
+              return {
+                role: "Coordinator Departement",
+                period: doc.period,
+              };
+            }
+            return null;
+          },
+        },
+        {
+          path: "organizersDepartmentMembers",
+          model: OrganizerModel,
+          transform: (doc: IOrganizer, id: any) => {
+            if (doc) {
+              return {
+                role: "Member Departement",
+                period: doc.period,
+              };
+            }
+            return null;
+          },
+        },
+        {
+          path: "aspirations",
+        },
+        {
+          path: "manualPoints",
+          model: PointModel,
+          select: "amount reason date status -_id",
+          match: { status: "approved" },
+        },
+        {
+          path: "documents",
+          model: DocModel,
+        },
+      ]
+    } });
     
     if (!user || !user.member) {
        throw createError({

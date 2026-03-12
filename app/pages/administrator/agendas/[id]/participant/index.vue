@@ -246,7 +246,7 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
         {
             icon: 'i-heroicons-eye-20-solid',
             label: $ts('view'),
-            to: `profile/${(row.original.member as IMember)?.NIM || '-'}`,
+            to: `/administrator/members/profile/${(row.original.member as IMember)?.NIM || '-'}`,
             disabled: !isCommittee.value && !isOrganizer.value && !row.original.member,
         },
         {

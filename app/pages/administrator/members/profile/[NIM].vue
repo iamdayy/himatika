@@ -165,7 +165,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
                                         $ts('generation')
-                                        }}</label>
+                                    }}</label>
                                     <p class="text-sm">{{ member.enteredYear || 'Not specified' }}</p>
                                 </div>
                             </div>
@@ -214,7 +214,7 @@
                                                     {{ member.point[index]!.semester
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{ member.point[index]!.point
-                                                }} pts</UBadge>
+                                                    }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -230,7 +230,7 @@
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{ member.point[index]!.activities.projects
-                                                    }}</div>
+                                                        }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project') }}
                                                     </div>
                                                 </div>
@@ -238,13 +238,13 @@
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.aspirations }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('aspiration')
-                                                        }}</div>
+                                                    }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.manualPoints }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('achievement')
-                                                        }}</div>
+                                                    }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -372,7 +372,7 @@
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                    }}</p>
+                                                                        }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -433,7 +433,7 @@
                                                             </h3>
                                                             <UBadge color="secondary" variant="subtle">{{
                                                                 getManualPointsByRange(member.point[index]!.range).length
-                                                            }}</UBadge>
+                                                                }}</UBadge>
                                                         </div>
                                                     </template>
                                                     <div class="p-6 space-y-4">

@@ -36,24 +36,26 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
         .select("-phone -address -religion -citizen -birth") // Exclude Sensitive PII
         .populate({
           path: "agendasCommittee",
-          select: "title date at description configuration -_id",
+          select: "title date at description configuration committees -_id",
           transform: (doc: IAgenda) => ({
             title: doc.title,
             date: doc.date,
             at: doc.at,
             description: doc.description,
             configuration: doc.configuration,
+            committees: doc.committees
           }),
         })
         .populate({
           path: "agendasMember",
-          select: "title date at description configuration -_id",
+          select: "title date at description configuration participants -_id",
           transform: (doc: IAgenda) => ({
             title: doc.title,
             date: doc.date,
             at: doc.at,
             description: doc.description,
             configuration: doc.configuration,
+            participants: doc.participants
           }),
         })
         .populate({
@@ -182,24 +184,26 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
     const members = await MemberModel.find(query)
       .populate({
         path: "agendasCommittee",
-        select: "title date at description configuration -_id",
+        select: "title date at description configuration committees -_id",
         transform: (doc: IAgenda) => ({
           title: doc.title,
           date: doc.date,
           at: doc.at,
           description: doc.description,
           configuration: doc.configuration,
+          committees: doc.committees,
         }),
       })
       .populate({
         path: "agendasMember",
-        select: "title date at description configuration -_id",
+        select: "title date at description configuration participants -_id",
         transform: (doc: IAgenda) => ({
           title: doc.title,
           date: doc.date,
           at: doc.at,
           description: doc.description,
           configuration: doc.configuration,
+          participants: doc.participants,
         }),
       })
       .populate({
