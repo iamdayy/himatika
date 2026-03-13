@@ -34,6 +34,8 @@ const config = computed(() => data.value?.data);
                         <UButton v-for="socialMedia, i in config?.socialMedia" :key="i"
                             :icon="`i-ph-${socialMedia.name.toLowerCase()}-logo`" variant="outline" class="rounded-full"
                             :to="socialMedia.url" external color="neutral" />
+                        <UButton icon="i-heroicons-document-text" variant="outline" class="rounded-full"
+                            to="https://docs.himatika-itsnupekalongan.com" external color="neutral" />
                     </div>
                 </div>
             </div>

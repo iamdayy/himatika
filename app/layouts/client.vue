@@ -32,11 +32,11 @@ const navigation = computed<NavigationMenuItem[]>(() => [
     { label: $ts('news'), to: '/news' },
     { label: $ts('gallery'), to: '/gallery' },
     {
-        label: $ts('signature'), children: [
-            { label: $ts('scan'), to: '/signatures/scan' },
-            { label: $ts('signature'), to: '/signatures' },
+        label: 'Alat', children: [
+            { label: 'Verifikasi Dokumen', to: '/signatures/scan' },
+            { label: 'Dokumentasi', to: 'https://docs.himatika-itsnupekalongan.com', target: '_blank' }
         ]
-    }
+    },
 ])
 
 /**
