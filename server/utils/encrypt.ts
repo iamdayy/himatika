@@ -17,23 +17,16 @@ function getEncryptionKey(): Buffer {
   return Buffer.from(hexKey, "hex");
 }
 
-// Cache the key at module level to avoid re-parsing on every call.
+// Resolve and cache the key once at module load time.
 // Note: if ENCRYPTION_KEY changes at runtime, the server must be restarted for the new key to take effect.
-let cachedKey: Buffer | null = null;
-function resolveKey(): Buffer {
-  if (!cachedKey) {
-    cachedKey = getEncryptionKey();
-  }
-  return cachedKey;
-}
+const cachedKey: Buffer = getEncryptionKey();
 
 export function encrypt(text: string): {
   iv: string;
   encrypted: string;
 } {
-  const key = resolveKey();
   const iv = Uint8Array.from(crypto.randomBytes(16));
-  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  const cipher = crypto.createCipheriv(algorithm, cachedKey, iv);
   let encrypted = cipher.update(text, "utf8", "hex");
   encrypted += cipher.final("hex");
   return {
@@ -43,11 +36,10 @@ export function encrypt(text: string): {
 }
 
 export function decrypt(encryptedText: string, ivData: string): string {
-  const key = resolveKey();
   const ivBuffer = Buffer.from(ivData, "hex");
   const decipher = crypto.createDecipheriv(
     algorithm,
-    key,
+    cachedKey,
     new Uint8Array(ivBuffer)
   );
   let decrypted = decipher.update(encryptedText, "hex", "utf8");

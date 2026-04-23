@@ -3,6 +3,15 @@ import { IMember } from "~~/types";
 import { IReqMemberBatch } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
+// Allowlist of fields that can be updated in batch to prevent NoSQL injection
+const ALLOWED_BATCH_FIELDS: ReadonlySet<string> = new Set([
+  "status",
+  "class",
+  "semester",
+  "religion",
+  "citizen",
+]);
+
 export default defineEventHandler(
   async (
     event
@@ -25,15 +34,6 @@ export default defineEventHandler(
 
     // Read the request body containing an array of member data
     const body = await readBody<IReqMemberBatch>(event);
-
-    // Allowlist of fields that can be updated in batch to prevent NoSQL injection
-    const ALLOWED_BATCH_FIELDS: ReadonlySet<string> = new Set([
-      "status",
-      "class",
-      "semester",
-      "religion",
-      "citizen",
-    ]);
 
     if (!ALLOWED_BATCH_FIELDS.has(body.field)) {
       throw createError({
