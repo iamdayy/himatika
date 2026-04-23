@@ -117,6 +117,7 @@ export default defineNuxtConfig({
   ssr: true,
   devtools: { enabled: true },
   runtimeConfig: {
+    encryptionKey: process.env.ENCRYPTION_KEY,
     jwtSecret: process.env.JWT_SECRET,
     mongodb_uri: process.env.HIMATIKA_MONGODB_URI,
     dbName: process.env.DBNAME,

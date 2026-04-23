@@ -442,7 +442,6 @@ memberSchema.pre("save", function () {
   if (this.isModified("semester")) {
     if (this.semester > 14) {
       this.status = "inactive";
-      this.save();
       return;
     }
   }

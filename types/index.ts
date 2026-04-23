@@ -455,7 +455,6 @@ export interface IPrivateKey {
   encrypted_key: string;
   metadata: {
     iv: string;
-    key: string;
     tag?: string;
   };
 }

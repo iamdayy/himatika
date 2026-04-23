@@ -47,8 +47,7 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
 
       const private_key = decrypt(
         encryptionData?.private_key.encrypted_key,
-        encryptionData?.private_key.metadata.iv,
-        encryptionData?.private_key.metadata.key
+        encryptionData?.private_key.metadata.iv
       );
 
       const signature = signData(private_key, data);
