@@ -17,7 +17,8 @@ function getEncryptionKey(): Buffer {
   return Buffer.from(hexKey, "hex");
 }
 
-// Cache the key at module level to avoid re-parsing on every call
+// Cache the key at module level to avoid re-parsing on every call.
+// Note: if ENCRYPTION_KEY changes at runtime, the server must be restarted for the new key to take effect.
 let cachedKey: Buffer | null = null;
 function resolveKey(): Buffer {
   if (!cachedKey) {
