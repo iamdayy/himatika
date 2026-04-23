@@ -72,6 +72,7 @@ export default defineEventHandler(
 
       user.password = password;
       await user.save();
+      await OTPModel.deleteOne({ code, type: "Reset Password" });
       return {
         statusCode: 200,
         statusMessage: "Succesfully reset password for " + user.username,

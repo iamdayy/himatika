@@ -47,7 +47,7 @@ export default defineEventHandler(
       const t = await useTranslationServerMiddleware(event);
       const otp = await OTPModel.findOne({ email });
       if (otp) {
-        // otp.code = code;
+        otp.code = code;
         otp.expiresAt = expiresAt;
         await otp.save();
         linkTo = `${config.public.public_uri}${link}&code=${otp.code}&expiresAt=${otp.expiresAt}`;

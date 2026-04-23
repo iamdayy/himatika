@@ -26,6 +26,22 @@ export default defineEventHandler(
     // Read the request body containing an array of member data
     const body = await readBody<IReqMemberBatch>(event);
 
+    // Allowlist of fields that can be updated in batch to prevent NoSQL injection
+    const ALLOWED_BATCH_FIELDS: ReadonlySet<string> = new Set([
+      "status",
+      "class",
+      "semester",
+      "religion",
+      "citizen",
+    ]);
+
+    if (!ALLOWED_BATCH_FIELDS.has(body.field)) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Field '${body.field}' cannot be updated in batch`,
+      });
+    }
+
     // Attempt to insert multiple members into the database
     let savedCount = 0;
     let failedCount = 0;

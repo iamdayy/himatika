@@ -94,6 +94,24 @@ export default defineNuxtConfig({
             }
         }
     },
+    "/api/otp/generate": {
+        security: {
+            rateLimiter: {
+                tokensPerInterval: 5,
+                interval: 60000,
+                headers: false,
+            }
+        }
+    },
+    "/api/otp/verify": {
+        security: {
+            rateLimiter: {
+                tokensPerInterval: 10,
+                interval: 60000,
+                headers: false,
+            }
+        }
+    },
 
     // 3. Halaman yang tidak pernah berubah (Static)
     "/login": { ssr: false },
