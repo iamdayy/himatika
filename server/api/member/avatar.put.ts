@@ -5,6 +5,9 @@ import { IResponse } from "~~/types/IResponse";
 // Gunakan util R2 Client yang sudah dibuat sebelumnya
 import { R2_BUCKET_NAME, R2_PUBLIC_DOMAIN, r2Client } from "~~/server/utils/r2";
 
+// Allowed avatar image MIME types — defined at module scope to avoid recreating on every request
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const { NIM } = getQuery(event);
@@ -53,8 +56,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       avatarFile?.type?.split("/")[1] || "png"
     }`;
 
-    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-    if (!avatarFile?.type || !ALLOWED_IMAGE_TYPES.includes(avatarFile.type)) {
+    if (!avatarFile?.type || !ALLOWED_IMAGE_TYPES.includes(avatarFile.type as any)) {
       throw createError({
         statusCode: 400,
         statusMessage: "Invalid file type: Please upload a JPEG, PNG, or WebP image",

@@ -22,8 +22,7 @@ function getEncryptionKey(): Buffer {
   return Buffer.from(hexKey, "hex");
 }
 
-// Resolve and cache the key once at module load time.
-// Note: if ENCRYPTION_KEY changes at runtime, the server must be restarted for the new key to take effect.
+// The key is cached at module load time. If ENCRYPTION_KEY changes, the server must be restarted for the new key to take effect.
 const cachedKey: Buffer = getEncryptionKey();
 
 export function encrypt(text: string): {

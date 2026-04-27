@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Doc updated successfully",
     };
   } catch (error: any) {
-    console.error("Doc update error:", error);
+    console.error("Doc update error:", { statusCode: error.statusCode, message: error.message });
     return {
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || "Internal Server Error",
