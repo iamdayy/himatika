@@ -1,10 +1,1 @@
-{
-    "add_organizer": "إضافة منظِّم",
-    "add_organizer_description": "إضافة منظِّم جديد إلى النظام.",
-    "add_organizer_success": "تمت إضافة المنظِّم بنجاح",
-    "add_organizer_failed": "فشل إضافة المنظِّم",
-    "edit_organizer": "تعديل المنظِّم {period}",
-    "edit_organizer_description": "تعديل تفاصيل المنظِّم المحدد.",
-    "edit_organizer_success": "تم تعديل المنظِّم بنجاح",
-    "edit_organizer_failed": "فشل تعديل المنظِّم"
-}
+{}

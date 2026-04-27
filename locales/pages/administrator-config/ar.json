@@ -1,10 +1,1 @@
-{
-    "success_to_add_carrousel": "تمت إضافة الشريط التمريري بنجاح",
-    "failed_to_add_carrousel": "فشل إضافة الشريط التمريري",
-    "success_to_delete_carrousel": "تم حذف الشريط التمريري بنجاح",
-    "failed_to_delete_carrousel": "فشل حذف الشريط التمريري",
-    "success_to_update_config": "تم تحديث الإعدادات بنجاح",
-    "failed_to_update_config": "فشل تحديث الإعدادات",
-    "auto_save_enabled": "تم تفعيل الحفظ التلقائي",
-    "auto_save_disabled": "تم تعطيل الحفظ التلقائي"
-}
+{}

@@ -1,13 +1,1 @@
-{
-    "create_aspiration": "إنشاء تطلع",
-    "create_aspiration_description": "التطلع هو هدف تريد تحقيقه. يمكنك إنشاء تطلعات جديدة وإدارتها هنا.",
-    "show_deleted": "إظهار المحذوفات",
-    "delete_aspiration_description": "هل أنت متأكد من رغبتك في حذف هذا التطلع؟",
-    "restore_aspiration_description": "هل أنت متأكد من رغبتك في استعادة هذا التطلع؟",
-    "archive_aspiration_description": "هل أنت متأكد من رغبتك في أرشفة هذا التطلع؟",
-    "unarchive_aspiration_description": "هل أنت متأكد من رغبتك في إلغاء أرشفة هذا التطلع؟",
-    "aspiration_archived": "تمت أرشفة التطلع.",
-    "aspiration_unarchived": "تم إلغاء أرشفة التطلع.",
-    "aspiration_restored": "تمت استعادة التطلع.",
-    "aspiration_deleted": "تم حذف التطلع."
-}
+{}

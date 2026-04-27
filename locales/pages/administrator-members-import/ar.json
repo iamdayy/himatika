@@ -1,16 +1,1 @@
-{
-    "add_member": "إضافة {count} أعضاء",
-    "download_template": "تنزيل النموذج",
-    "preview_data": "معاينة البيانات",
-    "preview_data_hint": "تحقق من البيانات قبل الاستيراد",
-    "selected": "محدد",
-    "error_upload": "حدث خطأ أثناء تحميل بعض البيانات. يرجى المحاولة مرة أخرى.",
-    "some_members_failed_to_upload": "فشل تحميل بعض الأعضاء. يرجى تنزيل قائمة الأعضاء الفاشلين أدناه.",
-    "download_failed_member": "تنزيل الأعضاء الفاشلين",
-    "warning": "تحذير",
-    "import_warning_hint": "تأكد من صحة البيانات المستوردة. قد تتسبب البيانات غير الصحيحة في فشل الاستيراد.",
-    "success_to_add_collegers": "تمت إضافة {success} أعضاء جدد بنجاح من ملف CSV. فشل إضافة {failed} أعضاء.",
-    "failed_to_add_collegers": "فشل إضافة الأعضاء من ملف CSV.",
-    "no_data": "لا توجد بيانات للعرض.",
-    "no_data_hint": "قم بتحميل ملف CSV لمعاينة البيانات هنا."
-}
+{}

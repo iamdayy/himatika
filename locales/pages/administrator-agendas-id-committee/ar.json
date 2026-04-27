@@ -1,18 +1,1 @@
-{
-    "set_visit_status": "تعيين حالة الزيارة",
-    "set_visit_status_confirmation": "هل أنت متأكد من رغبتك في تعيين حالة الزيارة لهذه اللجنة؟",
-    "success_to_set_visit_status": "تم تعيين حالة الزيارة للجنة بنجاح",
-    "failed_to_set_visit_status": "فشل تعيين حالة الزيارة للجنة",
-    "set_payment_status": "تعيين حالة الدفع",
-    "set_payment_status_confirmation": "هل أنت متأكد من رغبتك في تعيين حالة الدفع لهذه اللجنة؟",
-    "success_to_set_payment_status": "تم تعيين حالة الدفع للجنة بنجاح",
-    "failed_to_set_payment_status": "فشل تعيين حالة الدفع للجنة",
-    "delete_committee": "حذف اللجنة",
-    "delete_committee_confirmation": "هل أنت متأكد من رغبتك في حذف هذه اللجنة؟",
-    "success_to_delete_committee": "تم حذف اللجنة بنجاح",
-    "failed_to_delete_committee": "فشل حذف اللجنة",
-    "set_approved": "تعيين الموافقة",
-    "set_approved_confirmation": "هل أنت متأكد من رغبتك في الموافقة على هذه اللجنة؟",
-    "success_to_set_approved": "تمت الموافقة على اللجنة بنجاح",
-    "failed_to_set_approved": "فشل الموافقة على اللجنة"
-}
+{}
