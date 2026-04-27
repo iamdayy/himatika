@@ -1,1 +1,23 @@
-{}
+{
+    "add-manual-committee": "إضافة لجنة يدوياً",
+    "search-member": "البحث عن عضو...",
+    "committee-to-register": "اللجنة المراد تسجيلها",
+    "no-committee-selected": "لم يتم اختيار أي أعضاء لجنة بعد.",
+    "register-all-staged": "تسجيل الكل",
+    "all-committees-added-successfully": "تمت إضافة جميع أعضاء اللجنة بنجاح.",
+    "some-committees-failed-to-add": "تعذّر إضافة بعض أعضاء اللجنة.",
+    "back": "رجوع",
+    "add-committee-success": "تمت إضافة عضو اللجنة بنجاح",
+    "add-committee-failed": "فشل إضافة عضو اللجنة",
+    "job-description": "وصف المنصب",
+    "success": "نجاح",
+    "error": "خطأ",
+    "warning": "تحذير",
+    "add": "إضافة",
+    "name": "الاسم",
+    "class": "الفصل",
+    "semester": "الفصل الدراسي",
+    "home": "الرئيسية",
+    "agenda": "جدول الأعمال",
+    "committee": "اللجنة"
+}

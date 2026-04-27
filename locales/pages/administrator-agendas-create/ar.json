@@ -1,1 +1,20 @@
-{}
+{
+    "general_information": "المعلومات العامة",
+    "general_information_description": "المعلومات العامة حول جدول الأعمال",
+    "agenda_configuration_description": "تكوين إعدادات جدول الأعمال",
+    "committee_description": "اللجنة المسؤولة عن جدول الأعمال هذا",
+    "review_your_agenda": "مراجعة جدول أعمالك",
+    "review_your_agenda_description": "راجع جدول أعمالك قبل إرساله",
+    "success_to_add_agenda": "تمت إضافة جدول الأعمال {title} بنجاح بتاريخ {date}",
+    "failed_to_add_agenda": "فشل إضافة جدول الأعمال {title} بتاريخ {date}",
+    "job_available_already_exists": "المنصب {job} موجود بالفعل في جدول الأعمال هذا",
+    "job_available_not_found": "المنصب {job} غير موجود في جدول الأعمال هذا",
+    "reqruitment_already_exists": "الشرط {req} موجود بالفعل في جدول الأعمال هذا",
+    "reqruitment_not_found": "الشرط {req} غير موجود في جدول الأعمال هذا",
+    "delete_job_available": "حذف المنصب",
+    "delete_job_available_confirmation": "هل أنت متأكد من رغبتك في حذف هذا المنصب {job}؟",
+    "delete_reqruitment": "حذف الشرط",
+    "delete_reqruitment_confirmation": "هل أنت متأكد من رغبتك في حذف هذا الشرط {req}؟",
+    "enable_form": "تفعيل النموذج",
+    "count": "العدد"
+}

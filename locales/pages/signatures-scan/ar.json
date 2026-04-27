@@ -1,1 +1,14 @@
-{}
+{
+    "verify_doc_success": "تم التحقق من الوثيقة",
+    "verify_doc_success_description": "تم التحقق من الوثيقة وتوقيعها من قِبَل الجهة المخوّلة.",
+    "verify_doc_failed": "فشل التحقق من الوثيقة",
+    "verify_doc_failed_description": "فشل التحقق من الوثيقة. يرجى المحاولة مرة أخرى لاحقاً.",
+    "verify_doc_error": "خطأ في التحقق من الوثيقة",
+    "verify_doc_qr_code_failed": "رمز QR غير صالح",
+    "verify_doc_qr_code_description": "رمز QR غير صالح. يرجى المحاولة مرة أخرى.",
+    "verify_doc_qr_code_error": "خطأ في التحقق من رمز QR",
+    "upload_pdf_description": "يرجى رفع مستند PDF الذي تريد التحقق منه. لن يُخزَّن هذا المستند على خادمنا ويُستخدم لأغراض التحقق فقط.",
+    "scan_pdf_description": "يرجى مسح رمز QR الموجود على مستند PDF الذي تريد التحقق منه. لن يُخزَّن هذا المستند على خادمنا ويُستخدم لأغراض التحقق فقط.",
+    "document_verified": "تم التحقق من الوثيقة",
+    "document_verified_description": "تم التحقق من الوثيقة وتوقيعها من قِبَل الجهة المخوّلة."
+}

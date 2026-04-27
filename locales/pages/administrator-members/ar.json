@@ -1,1 +1,23 @@
-{}
+{
+    "set_point": "تعيين النقاط",
+    "success_to_set_point": "تم تعيين النقاط بنجاح للعضو {name}. النقاط المعينة: {point}",
+    "failed_to_set_point": "فشل تعيين النقاط للعضو {name}.",
+    "update_semester": "تحديث الفصل الدراسي",
+    "export_all": "تصدير الكل",
+    "export_selected": "تصدير المحدد",
+    "add_new_member": "إضافة عضو جديد",
+    "add_new_member_description": "يرجى ملء المعلومات التالية لإضافة عضو جديد إلى النظام. تأكد من أن جميع المعلومات المقدمة دقيقة وكاملة.",
+    "success_to_add_member": "تمت إضافة العضو الجديد بنجاح.",
+    "failed_to_add_member": "فشل إضافة العضو الجديد.",
+    "success_to_update_member": "تم تحديث العضو بنجاح.",
+    "failed_to_update_member": "فشل تحديث العضو.",
+    "confirmation_delete_member": "هل أنت متأكد من رغبتك في حذف هذا العضو؟",
+    "success_to_delete_member": "تم حذف العضو بنجاح.",
+    "failed_to_delete_member": "فشل حذف العضو.",
+    "edit_member": "تعديل معلومات العضو {name}",
+    "edit_member_description": "يرجى تحديث المعلومات التالية للعضو {name}. تأكد من أن جميع المعلومات المقدمة دقيقة وكاملة.",
+    "select_field": "اختر الحقل",
+    "enter_value": "أدخل القيمة المحدّثة",
+    "update_selected": "تحديث الأعضاء المحددين ({count})",
+    "total_members": "إجمالي الأعضاء: {count}"
+}

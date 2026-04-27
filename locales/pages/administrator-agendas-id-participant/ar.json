@@ -1,1 +1,16 @@
-{}
+{
+    "set_visit_status": "تعيين حالة الزيارة",
+    "set_visit_status_confirmation": "هل أنت متأكد من رغبتك في تعيين حالة الزيارة لهذا المشارك؟",
+    "success_to_set_visit_status": "تم تعيين حالة الزيارة للمشارك بنجاح",
+    "failed_to_set_visit_status": "فشل تعيين حالة الزيارة للمشارك",
+    "set_payment_status": "تعيين حالة الدفع",
+    "set_payment_status_confirmation": "هل أنت متأكد من رغبتك في تعيين حالة الدفع لهذا المشارك؟",
+    "success_to_set_payment_status": "تم تعيين حالة الدفع للمشارك بنجاح",
+    "failed_to_set_payment_status": "فشل تعيين حالة الدفع للمشارك",
+    "delete_participant": "حذف المشارك",
+    "delete_participant_confirmation": "هل أنت متأكد من رغبتك في حذف هذا المشارك؟",
+    "success_to_delete_participant": "تم حذف المشارك بنجاح",
+    "failed_to_delete_participant": "فشل حذف المشارك",
+    "view_answer_registration": "عرض إجابة التسجيل",
+    "answer": "الإجابة"
+}

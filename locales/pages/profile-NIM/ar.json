@@ -1,1 +1,10 @@
-{}
+{
+    "profile_tabs_personal": "الشخصية",
+    "profile_tabs_organization": "المنظمة",
+    "point_summary": "ملخص النقاط",
+    "no_agendas": "لا توجد جداول أعمال متبوعة.",
+    "no_projects": "لا توجد مشاريع مرفوعة.",
+    "no_aspirations": "لا توجد تطلعات مقدّمة.",
+    "academic_information": "المعلومات الأكاديمية",
+    "contact_information": "معلومات الاتصال"
+}
