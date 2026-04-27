@@ -1,5 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { MemberModel } from "~~/server/models/MemberModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda } from "~~/types";
 import { IReqAgendaQuery } from "~~/types/IRequestPost";
 import { IAgendaMeResponse } from "~~/types/IResponse";
@@ -47,6 +48,7 @@ export default defineEventHandler(async (event): Promise<IAgendaMeResponse> => {
     }
 
     if (sort && order) {
+      validateSortField("agenda", sort);
       sortOpt = {
         [sort]: order === "asc" ? 1 : -1,
       };

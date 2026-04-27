@@ -2,6 +2,7 @@ import { SortOrder } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
 import { PointModel } from "~~/server/models/PointModel";
+import { validateFilterByField, validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
 import { IReqMemberQuery } from "~~/types/IRequestPost";
 import { IMemberResponse } from "~~/types/IResponse";
@@ -145,9 +146,11 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       query.status = { $nin: "deleted" };
     }
     if (order && sort) {
+      validateSortField("member", sort);
       sortOpt[sort] = order as SortOrder;
     }
     if (filter && filterBy) {
+      validateFilterByField("member", filterBy);
       query[filterBy] = filter;
     }
     if (NIM) {

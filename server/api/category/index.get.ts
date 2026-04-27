@@ -1,4 +1,5 @@
 import CategoryModel from "~~/server/models/CategoryModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqCategoryQuery } from "~~/types/IRequestPost";
 import { ICategoriesResponse } from "~~/types/IResponse";
 
@@ -32,6 +33,7 @@ export default defineEventHandler(
       const limit = Number(perPage);
       const sortOpt: any = {};
       if (sort && order) {
+        validateSortField("category", sort);
         sortOpt[sort] = order === "asc" ? 1 : -1;
       }
       const length = await CategoryModel.countDocuments(query);

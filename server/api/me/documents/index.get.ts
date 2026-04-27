@@ -1,5 +1,6 @@
 import { DocModel } from "~~/server/models/DocModel";
 import { MemberModel } from "~~/server/models/MemberModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IDoc } from "~~/types";
 import { IReqDocQuery } from "~~/types/IRequestPost";
 import { IDocsMeResponse } from "~~/types/IResponse";
@@ -31,12 +32,13 @@ export default defineEventHandler(async (event): Promise<IDocsMeResponse> => {
         { no: { $regex: search, $options: "i" } },
       ];
     }
+    if (sort && order) {
+      validateSortField("doc", sort);
+    }
     const docs = await DocModel.find(query)
       .skip((Number(page) - 1) * Number(perPage))
       .limit(Number(perPage))
-      .sort({
-        [sort]: order === "asc" ? 1 : -1,
-      });
+      .sort(sort && order ? { [sort]: order === "asc" ? 1 : -1 } : {});
     const docsCount = await DocModel.countDocuments(query);
     if (!docs) {
       throw createError({

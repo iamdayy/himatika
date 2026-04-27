@@ -1,5 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqAgendaQuery } from "~~/types/IRequestPost";
 import { IAgendaResponse, IError } from "~~/types/IResponse";
 
@@ -71,6 +72,7 @@ export default defineCachedEventHandler(
         };
       }
       if (sort && order) {
+        validateSortField("agenda", sort);
         sortOpt = {
           [sort]: order === "asc" ? 1 : -1,
         };

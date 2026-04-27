@@ -27,5 +27,12 @@ export const validatePassword = (password: string) => {
       data: { message: "Kurang angka", path: "password" },
     });
   }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Kata sandi harus mengandung setidaknya satu karakter khusus",
+      data: { message: "Kurang karakter khusus", path: "password" },
+    });
+  }
   return true;
 };

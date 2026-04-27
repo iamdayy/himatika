@@ -53,30 +53,30 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       avatarFile?.type?.split("/")[1] || "png"
     }`;
 
-    if (avatarFile?.type?.startsWith("image/")) {
-      // --- UPLOAD KE R2 ---
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: avatarFile.data,
-          ContentType: avatarFile.type,
-        })
-      );
-
-      // Susun URL Publik R2
-      const imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
-
-      // Update member dengan URL baru
-      member.avatar = imageUrl;
-      await member.save();
-      // --------------------
-    } else {
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    if (!avatarFile?.type || !ALLOWED_IMAGE_TYPES.includes(avatarFile.type)) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid file type: Please upload an image file",
+        statusMessage: "Invalid file type: Please upload a JPEG, PNG, or WebP image",
       });
     }
+    // --- UPLOAD KE R2 ---
+    await r2Client.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: fileName,
+        Body: avatarFile.data,
+        ContentType: avatarFile.type,
+      })
+    );
+
+    // Susun URL Publik R2
+    const imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+
+    // Update member dengan URL baru
+    member.avatar = imageUrl;
+    await member.save();
+    // --------------------
 
     return {
       statusCode: 200,
