@@ -8,6 +8,7 @@
     "gallery_desc": "Bagian ini berisi galeri foto dari agenda ini",
     "visited_desc": "Tekan tombol ini untuk melihat daftar peserta yang sudah mengunjungi",
     "qr_code_desc": "Tekan tombol ini untuk melihat Kode QR dari agenda ini",
+    "qr_reader": "Pemindai Kode QR",
     "qr_reader_desc": "Tekan tombol ini untuk membuka pemindai kode QR",
     "open_qr_code_scanner": "Buka Pemindai Kode QR",
     "qr_code_presence": "Kode QR Kehadiran",

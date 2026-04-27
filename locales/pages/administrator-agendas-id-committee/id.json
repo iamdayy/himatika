@@ -13,6 +13,8 @@
     "failed_to_delete_committee": "Gagal menghapus panitia",
     "set_approved": "Atur Disetujui",
     "set_approved_confirmation": "Apakah Anda yakin ingin mengatur panitia ini sebagai disetujui?",
+    "success_to_set_approved": "Berhasil mengatur panitia sebagai disetujui",
+    "failed_to_set_approved": "Gagal mengatur panitia sebagai disetujui",
     "success_to_set_approved_status": "Berhasil mengatur panitia sebagai disetujui",
     "failed_to_set_approved_status": "Gagal mengatur panitia sebagai disetujui"
 }
