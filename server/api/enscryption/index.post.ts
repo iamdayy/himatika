@@ -6,9 +6,9 @@ import { IReqEncryption } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
-    const { title, tag } = await readBody<IReqEncryption>(event);
+    const { title } = await readBody<IReqEncryption>(event);
     const { publicKey, privateKey } = generateKeyPair();
-    const { encrypted, iv } = encrypt(privateKey);
+    const { encrypted, iv, tag } = encrypt(privateKey);
     const encryptionData: IEncryption = {
       title,
       private_key: {

@@ -9,35 +9,35 @@ import { IMember, IRequestSign, ISign, ITrail } from "~~/types";
 import { IReqSignDocument } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
-export default defineEventHandler(async (event): Promise<IResponse & { data?: string }> => {
-     try {
-        const { encryption, docId, data } = await readBody<IReqSignDocument>(event);
-        const user = event.context.user;
-        if (!user) {
-          return {
-            statusCode: 401,
-            statusMessage: "Unauthorized",
-          };
-        }
-        const member = user.member as IMember;
-        if (!member) {
-          return {
-            statusCode: 404,
-            statusMessage: "Member not found",
-          }
-        }
+export default defineEventHandler(
+  async (event): Promise<IResponse & { data?: string }> => {
+    try {
+      const { encryption, docId, data } =
+        await readBody<IReqSignDocument>(event);
+      const user = event.context.user;
+      if (!user) {
+        return {
+          statusCode: 401,
+          statusMessage: "Unauthorized",
+        };
+      }
+      const member = user.member as IMember;
+      if (!member) {
+        return {
+          statusCode: 404,
+          statusMessage: "Member not found",
+        };
+      }
 
-        const id = await findMemberByNim(member.NIM);
-        if (!id) {
-          return {
-            statusCode: 404,
-            statusMessage: "Member not found",
-          }
-        }
-        
-      const encryptionData = await EncryptionModel.findById(
-        encryption
-      );
+      const id = await findMemberByNim(member.NIM);
+      if (!id) {
+        return {
+          statusCode: 404,
+          statusMessage: "Member not found",
+        };
+      }
+
+      const encryptionData = await EncryptionModel.findById(encryption);
       if (!encryptionData) {
         return {
           statusCode: 404,
@@ -45,9 +45,18 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
         };
       }
 
+      const privMeta = encryptionData?.private_key?.metadata;
+      if (!privMeta || !privMeta.iv || !privMeta.tag) {
+        return {
+          statusCode: 500,
+          statusMessage: "Encryption metadata incomplete (iv or tag missing)",
+        };
+      }
+
       const private_key = decrypt(
-        encryptionData?.private_key.encrypted_key,
-        encryptionData?.private_key.metadata.iv
+        encryptionData.private_key.encrypted_key,
+        privMeta.iv,
+        privMeta.tag,
       );
 
       const signature = signData(private_key, data);
@@ -69,7 +78,7 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
         {},
         {
           autopopulate: false,
-        }
+        },
       );
       if (!doc) {
         return {
@@ -87,7 +96,7 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
 
       doc.signs = doc.signs || [];
       const indexSign = doc.signs.findIndex(
-        (sign: IRequestSign) => sign.user.toString() === id.toString()
+        (sign: IRequestSign) => sign.user.toString() === id.toString(),
       );
 
       if (indexSign < 0) {
@@ -104,7 +113,7 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
         sign: new Types.ObjectId(sign._id),
         signedAt: new Date(),
         signedIp: "",
-        location: doc.signs[indexSign]!.location
+        location: doc.signs[indexSign]!.location,
       };
       const newTrail: ITrail = {
         action: "SIGN",
@@ -124,16 +133,22 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
 
       // Use Worker for PDF Overlay
       // Fetch member's name + role for the QR overlay text area
-      const memberDoc = await MemberModel.findOne({ NIM: member.NIM }).select('fullName').lean();
+      const memberDoc = await MemberModel.findOne({ NIM: member.NIM })
+        .select("fullName")
+        .lean();
       const signEntry = doc.signs[indexSign];
 
       const signedDocUrl = await himatikaPdfWorker.processSignOverlay({
-          pdf: doc.doc as string,
-          outputBlobPath: new URL(doc.doc as string).pathname.split(".").shift() + "_signed_" + new Date().toISOString() + ".pdf",
-          qrValue: sign.signature as string,
-          locations: [doc.signs[indexSign].location],
-          signerName: memberDoc?.fullName || (member as IMember).fullName,
-          signerAs: signEntry.as || '',
+        pdf: doc.doc as string,
+        outputBlobPath:
+          new URL(doc.doc as string).pathname.split(".").shift() +
+          "_signed_" +
+          new Date().toISOString() +
+          ".pdf",
+        qrValue: sign.signature as string,
+        locations: [doc.signs[indexSign].location],
+        signerName: memberDoc?.fullName || (member as IMember).fullName,
+        signerAs: signEntry.as || "",
       });
 
       if (!signedDocUrl) {
@@ -158,4 +173,5 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: st
         data: error,
       };
     }
-})
+  },
+);
