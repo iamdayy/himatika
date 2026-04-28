@@ -1,3 +1,5 @@
+const SPECIAL_CHAR_REGEX = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+
 export const validatePassword = (password: string) => {
   if (password.length < 8) {
     throw createError({
@@ -25,6 +27,13 @@ export const validatePassword = (password: string) => {
       statusCode: 400,
       statusMessage: "Kata sandi harus mengandung setidaknya satu angka",
       data: { message: "Kurang angka", path: "password" },
+    });
+  }
+  if (!SPECIAL_CHAR_REGEX.test(password)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Kata sandi harus mengandung setidaknya satu karakter khusus",
+      data: { message: "Kurang karakter khusus", path: "password" },
     });
   }
   return true;

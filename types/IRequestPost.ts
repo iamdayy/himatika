@@ -378,7 +378,6 @@ export interface IReqAnswer {
 
 export interface IReqEncryption {
   title: string;
-  tag: string;
 }
 
 export interface IReqSignDocument {

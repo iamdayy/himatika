@@ -14,7 +14,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         options.headers = {
           ...options.headers,
           Authorization: token.value,
-        } as any;
+        } as Headers;
       }
     },
   });
@@ -32,8 +32,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         // If no refresh token is available, logout immediately
         if (!refreshToken.value) {
-            await signOut({ callbackUrl: "/login", redirect: true });
-            throw error;
+          await signOut({ callbackUrl: "/login", redirect: true });
+          throw error;
         }
 
         // Initialize refresh process if not already running

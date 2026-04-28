@@ -1,6 +1,7 @@
 import { SortOrder } from "mongoose";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { ProjectModel } from "~~/server/models/ProjectModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IProject } from "~~/types";
 import { IReqProjectQuery } from "~~/types/IRequestPost";
 import { IProjectsResponse } from "~~/types/IResponse";
@@ -67,6 +68,7 @@ export default defineEventHandler(async (event): Promise<IProjectsResponse> => {
     }
     let sortOpt: ISortable = {};
     if (sort && order) {
+      validateSortField("project", sort);
       sortOpt = { [sort]: order };
     }
 

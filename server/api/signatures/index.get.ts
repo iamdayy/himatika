@@ -1,4 +1,5 @@
 import { DocModel } from "~~/server/models/DocModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqDocQuery } from "~~/types/IRequestPost";
 import { IDocResponse } from "~~/types/IResponse";
 
@@ -16,6 +17,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
     const userId = await findMemberByNim(user.member.NIM);
     let sortOpt = {};
     if (sort && order) {
+      validateSortField("signatures", sort);
       sortOpt = {
         [sort]: order === "asc" ? 1 : -1,
       };

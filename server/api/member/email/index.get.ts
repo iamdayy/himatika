@@ -6,6 +6,15 @@ export default defineEventHandler(
   async (
     event
   ): Promise<IResponse & { data: { email: string; username: string } }> => {
+    // Ensure the user is authenticated
+    const sessionUser = event.context.user;
+    if (!sessionUser) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "You must be logged in to access this endpoint",
+      });
+    }
+
     // Read the request query
     const { NIM } = getQuery(event);
     // Validate the request body

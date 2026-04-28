@@ -1,5 +1,6 @@
 import { SortOrder } from "mongoose";
 import { PhotoModel } from "~~/server/models/PhotoModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda, IPhoto, IPhotoGrouped, IProject } from "~~/types";
 import { IReqPhotoQuery } from "~~/types/IRequestPost";
 import { IPhotoResponse } from "~~/types/IResponse";
@@ -48,6 +49,7 @@ export default defineCachedEventHandler(
         query.tags = { $in: JSON.parse(tags) };
       }
       if (sort && order) {
+        validateSortField("photo", sort);
         sortQuery = {
           [sort]: order == "asc" ? 1 : -1,
         };

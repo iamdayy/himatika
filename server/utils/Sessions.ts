@@ -219,7 +219,7 @@ export const setSession = async (
     }
     return true;
   } catch (error: any) {
-    return error;
+    throw error;
   }
 };
 

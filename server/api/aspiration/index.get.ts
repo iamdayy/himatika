@@ -3,6 +3,7 @@ import { AspirationModel } from "~~/server/models/AspirationModel";
 import { DocModel } from "~~/server/models/DocModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { VideoModel } from "~~/server/models/VideoModel";
+import { validateFilterByField, validateSortField } from "~~/server/utils/validateQueryParams";
 import { IMember } from "~~/types";
 import { IReqAspirationQuery } from "~~/types/IRequestPost";
 import { IAspirationResponse } from "~~/types/IResponse";
@@ -80,12 +81,14 @@ export default defineEventHandler(
       };
       let sortOpt: ISortable = {};
       if (order && sort) {
+        validateSortField("aspiration", sort);
         sortOpt[sort] = order as SortOrder;
       }
       if (search) {
         query.subject = { $regex: search, $options: "i" };
       }
       if (filterBy && filter) {
+        validateFilterByField("aspiration", filterBy);
         query[filterBy] = filter;
       }
       const organizer = event.context.organizer;

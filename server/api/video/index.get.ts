@@ -1,5 +1,6 @@
 import { SortOrder } from "mongoose";
 import { VideoModel } from "~~/server/models/VideoModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda, IProject, IVideo, IVideoGrouped } from "~~/types";
 import { IReqVideoQuery } from "~~/types/IRequestPost";
 import { IVideoResponse } from "~~/types/IResponse";
@@ -47,6 +48,7 @@ export default defineEventHandler(async (event): Promise<IVideoResponse> => {
       query.tags = { $in: JSON.parse(tags) };
     }
     if (sort && order) {
+      validateSortField("video", sort);
       sortQuery = {
         [sort]: order == "asc" ? 1 : -1,
       };

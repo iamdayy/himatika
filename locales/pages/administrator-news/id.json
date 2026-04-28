@@ -9,6 +9,7 @@
     "failed_to_edit_news": "Gagal memperbarui berita.",
     "delete_news": "Hapus Berita",
     "delete_news_description": "Berita yang dihapus tidak dapat dikembalikan.",
+    "delete_news_confirmation": "Apakah Anda yakin ingin menghapus berita ini?",
     "success_to_delete_news": "Berita berhasil dihapus.",
     "failed_to_delete_news": "Gagal menghapus berita.",
     "publish_news": "Terbitkan Berita",

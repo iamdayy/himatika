@@ -7,6 +7,10 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
  */
 export default defineEventHandler(async (event) => {
     try {
+        const user = event.context.user;
+        if (!user) {
+            throw createError({ statusCode: 401, statusMessage: "You must be logged in to upload files" });
+        }
 
         const files = await readMultipartFormData(event);
         if (!files || files.length === 0) {

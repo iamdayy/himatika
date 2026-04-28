@@ -1,6 +1,14 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
-const getSecret = () => useRuntimeConfig().jwtSecret || "fallback-secret";
+const getSecret = (): string => {
+  const secretKey = useRuntimeConfig().jwtSecret;
+  if (!secretKey) {
+    throw new Error(
+      "JWT secret key is not configured. Set the JWT_SECRET environment variable."
+    );
+  }
+  return secretKey;
+};
 /**
  * Generate a token
  * @param email
@@ -39,6 +47,6 @@ export const verifyToken = async (
   const calculated = createHmac("sha256", getSecret())
     .update(data)
     .digest("hex");
-  // Gunakan timingSafeEqual untuk mencegah timing attacks (opsional tapi bagus)
-  return token === calculated;
+  // Use timingSafeEqual to prevent timing attacks
+  return timingSafeEqual(Buffer.from(token, "hex"), Buffer.from(calculated, "hex"));
 };

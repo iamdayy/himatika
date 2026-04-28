@@ -50,6 +50,7 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
         data: { message: t("register_page.check_member"), path: "NIM" },
       });
     }
+    validatePassword(body.password);
     if (body.password !== body.password_confirmation) {
       throw createError({
         statusCode: 400,

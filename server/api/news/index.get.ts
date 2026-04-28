@@ -1,5 +1,6 @@
 import { CommentModel } from "~~/server/models/CommentModel";
 import { NewsModel } from "~~/server/models/NewsModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqNewsQuery } from "~~/types/IRequestPost";
 import type { INewsResponse } from "~~/types/IResponse";
 
@@ -70,6 +71,7 @@ export default defineCachedEventHandler(
 
       // Apply sorting if provided
       if (order && sort) {
+        validateSortField("news", sort);
         sortOpt = { [sort]: order };
       }
 
