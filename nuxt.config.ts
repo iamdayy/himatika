@@ -68,31 +68,31 @@ export default defineNuxtConfig({
 
     // 2.2 Security Rate Limiting (Nuxt Security)
     "/api/signin": {
-        security: {
-            rateLimiter: {
-                tokensPerInterval: 10,
-                interval: 60000,
-                headers: false,
-            }
-        }
+      security: {
+        rateLimiter: {
+          tokensPerInterval: 10,
+          interval: 60000,
+          headers: false,
+        },
+      },
     },
     "/api/signup": {
-        security: {
-            rateLimiter: {
-                tokensPerInterval: 10,
-                interval: 60000,
-                headers: false,
-            }
-        }
+      security: {
+        rateLimiter: {
+          tokensPerInterval: 10,
+          interval: 60000,
+          headers: false,
+        },
+      },
     },
     "/api/reset-password": {
-        security: {
-            rateLimiter: {
-                tokensPerInterval: 10,
-                interval: 60000,
-                headers: false,
-            }
-        }
+      security: {
+        rateLimiter: {
+          tokensPerInterval: 10,
+          interval: 60000,
+          headers: false,
+        },
+      },
     },
 
     // 3. Halaman yang tidak pernah berubah (Static)
@@ -106,7 +106,8 @@ export default defineNuxtConfig({
       headers: {
         "Access-Control-Allow-Origin": process.env.PUBLIC_URI,
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, content-length",
+        "Access-Control-Allow-Headers":
+          "Content-Type, Authorization, content-length",
       },
     },
   },
@@ -158,12 +159,14 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "nuxt-security",
     "@vite-pwa/nuxt",
+    "@vercel/speed-insights",
   ],
   pwa: {
     manifest: {
       name: "Himatika App",
       short_name: "Himatika",
-      description: "Aplikasi Sistem Informasi Himpunan Mahasiswa Informatika ITSNU Pekalongan",
+      description:
+        "Aplikasi Sistem Informasi Himpunan Mahasiswa Informatika ITSNU Pekalongan",
       theme_color: "#ffffff",
       icons: [
         {
@@ -222,26 +225,32 @@ export default defineNuxtConfig({
       navigateFallbackAllowlist: [/^\/$/],
       type: "module",
     },
-  },  
+  },
   security: {
     headers: {
-       crossOriginEmbedderPolicy: 'unsafe-none',
-       contentSecurityPolicy: {
-        'img-src': ['self', 'data:', 'blob:', 'https:', 'http:',  process.env.PUBLIC_URI || 'http://localhost:3000'],
-       },
-       permissionsPolicy: {
+      crossOriginEmbedderPolicy: "unsafe-none",
+      contentSecurityPolicy: {
+        "img-src": [
+          "self",
+          "data:",
+          "blob:",
+          "https:",
+          "http:",
+          process.env.PUBLIC_URI || "http://localhost:3000",
+        ],
+      },
+      permissionsPolicy: {
         camera: ["self"],
-       }
+      },
     },
     requestSizeLimiter: {
-        maxRequestSizeInBytes: 10 * 1024 * 1024, // 10MB
+      maxRequestSizeInBytes: 10 * 1024 * 1024, // 10MB
     },
     rateLimiter: {
-        driver: {
-            name: 'lruCache'
-        }
+      driver: {
+        name: "lruCache",
+      },
     },
-    
   },
 
   css: ["./app/assets/css/main.css"],
@@ -366,8 +375,6 @@ export default defineNuxtConfig({
     },
   },
   vite: {
-    plugins: [
-      tailwindcss() as any,
-    ],
+    plugins: [tailwindcss() as any],
   },
 });
