@@ -6,7 +6,7 @@ import { IUserSchema } from "~~/types/ISchemas";
 import { AgendaModel } from "./AgendaModel";
 import { AspirationModel } from "./AspirationModel";
 import { DocModel } from "./DocModel";
-import './GuestModel';
+import "./GuestModel";
 import OrganizerModel from "./OrganizerModel";
 import { PointModel } from "./PointModel";
 import { ProjectModel } from "./ProjectModel";
@@ -77,7 +77,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
               at: doc.at,
               description: doc.description,
               configuration: doc.configuration,
-              participants: doc.participants
+              participants: doc.participants,
             }),
           },
           {
@@ -90,7 +90,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
               at: doc.at,
               description: doc.description,
               configuration: doc.configuration,
-              committees: doc.committees
+              committees: doc.committees,
             }),
           },
           {
@@ -137,7 +137,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
               if (doc) {
                 return {
                   role: doc.dailyManagement.find(
-                    (daily) => (daily.member as IMember | null)?.id == id
+                    (daily) => (daily.member as IMember | null)?.id == id,
                   )?.position,
                   period: doc.period,
                 };
@@ -164,7 +164,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
       ref: "Guest",
       unique: true,
       sparse: true,
-    }
+    },
   },
   {
     timestamps: true,
@@ -175,20 +175,20 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
       virtuals: true,
       getters: true,
     },
-  }
+  },
 );
 
 /**
  * Pre-save middleware to hash the user's password before saving
  */
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    return next();
+    return;
   } catch (error: any) {
-    return next(error);
+    return error;
   }
 });
 
@@ -197,7 +197,7 @@ userSchema.pre("save", async function (next) {
  */
 userSchema.methods.verifyPassword = async (
   fromBody: string,
-  fromDb: string
+  fromDb: string,
 ) => {
   try {
     const isMatch = await bcrypt.compare(fromBody, fromDb);
