@@ -39,7 +39,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (!agenda.committees) {
       throw createError({
         statusCode: 404,
-        statusMessage: "Committee not found",
+        statusMessage: "No committees found for this agenda",
       });
     }
     const indexCommittee = agenda.committees.findIndex(
@@ -49,6 +49,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       throw createError({
         statusCode: 404,
         statusMessage: "Committee not found",
+        message: "index of committee not found",
       });
     }
 
