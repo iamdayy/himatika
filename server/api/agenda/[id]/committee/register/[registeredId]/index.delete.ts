@@ -27,7 +27,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       };
     }
     const committee = agenda?.committees?.find(
-      (r) => r._id?.toString() === registeredId
+      (r) => r._id?.toString() === registeredId,
     );
     if (!committee) {
       return {
@@ -35,14 +35,38 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Committee not found",
       };
     }
+
+    if (!agenda.committees) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Committee not found",
+      });
+    }
+    const indexCommittee = agenda.committees.findIndex(
+      (r) => r._id?.toString() === registeredId,
+    );
+    if (!indexCommittee || indexCommittee < 0) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Committee not found",
+      });
+    }
+
     if (committee.member) {
       fullName = (committee.member as IMember).fullName;
+    } else {
+      agenda.committees.splice(indexCommittee, 1);
+      await agenda.save();
+      return {
+        statusCode: 200,
+        statusMessage: "Success deleted committee with no member",
+      };
     }
     if (committee.member && user.member) {
       meIsCommittee = (committee.member as IMember).NIM === user.member.NIM;
     }
     const isCommittee = agenda.committees?.some(
-      (c) => (c.member as IMember).NIM === user.member.NIM
+      (c) => (c.member as IMember).NIM === user.member.NIM,
     );
     if (!isCommittee && !meIsCommittee && !organizer) {
       return {
@@ -63,21 +87,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         });
       }
     }
-    if (!agenda.committees) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Committee not found",
-      });
-    }
-    const indexCommittee = agenda.committees.findIndex(
-      (r) => r._id?.toString() === registeredId
-    );
-    if (!indexCommittee || indexCommittee < 0) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Committee not found",
-      });
-    }
+
     agenda.committees.splice(indexCommittee, 1);
     await agenda.save();
     return {

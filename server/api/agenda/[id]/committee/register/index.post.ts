@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import Email from "~~/server/utils/mailTemplate";
-import { IMember } from "~~/types";
+import { IMember, IUser } from "~~/types";
 import { IReqAgendaRegister } from "~~/types/IRequestPost";
 import { IAgendaRegisterResponse, IError } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -52,9 +52,7 @@ export default defineEventHandler(
         email = me.email;
         name = me.fullName;
         // Check if the user can register for the agenda
-        const canRegister = agenda.canMeRegisterAsCommittee(
-          user.member as IMember
-        );
+        const canRegister = agenda.canMeRegisterAsCommittee(user as IUser);
         if (!canRegister) {
           throw createError({
             statusCode: 403,
@@ -65,7 +63,7 @@ export default defineEventHandler(
 
         // Check if the user is already committee
         const isCommittee = agenda.committees?.some(
-          (item) => (item.member as IMember | undefined)?.NIM == me.NIM
+          (item) => (item.member as IMember | undefined)?.NIM == me.NIM,
         );
         if (isCommittee) {
           throw createError({
@@ -75,58 +73,57 @@ export default defineEventHandler(
         }
 
         // Check Job Availability
-        const jobAvailables = agenda.configuration?.committee?.jobAvailables || [];
-        const jobConfig = jobAvailables.find(
-          (j) => j.label === job
-        );
+        const jobAvailables =
+          agenda.configuration?.committee?.jobAvailables || [];
+        const jobConfig = jobAvailables.find((j) => j.label === job);
         if (jobConfig) {
           const currentCount = (agenda.committees || []).filter(
-            (c) => c.job === job
+            (c) => c.job === job,
           ).length;
           if (currentCount >= jobConfig.count) {
-             throw createError({
+            throw createError({
               statusCode: 400,
               statusMessage: "This job position is full",
             });
           }
         }
 
-      // Atomic Update: Push to committees ONLY if member is not already in it
-      const result = await AgendaModel.updateOne(
-        { 
-          _id: id,
-          "committees.member": { $ne: me._id } 
-        },
-        {
-          $push: {
-            committees: {
-              _id: committeeId,
-              job: job,
-              member: me._id as Types.ObjectId,
-              approved: false,
+        // Atomic Update: Push to committees ONLY if member is not already in it
+        const result = await AgendaModel.updateOne(
+          {
+            _id: id,
+            "committees.member": { $ne: me._id },
+          },
+          {
+            $push: {
+              committees: {
+                _id: committeeId,
+                job: job,
+                member: me._id as Types.ObjectId,
+                approved: false,
+              },
             },
-          }
-        }
-      );
+          },
+        );
 
-      if (result.modifiedCount === 0) {
+        if (result.modifiedCount === 0) {
           // Check if it failed because Agenda not found or User already committee
           // We know Agenda exists from the findById, so it must be the duplicate check
-           throw createError({
+          throw createError({
             statusCode: 409,
             statusMessage: "You are already committee for this agenda",
           });
-      }
+        }
       } else {
-         throw createError({
-            statusCode: 401,
-            statusMessage: "You must be logged in to register as committee",
-         });
+        throw createError({
+          statusCode: 401,
+          statusMessage: "You must be logged in to register as committee",
+        });
       }
 
       // Fetch updated agenda to get details for email (or just use existing 'agenda' object which has title)
       // Note: 'agenda' object in memory is stale now regarding the new committee, but strictly for email text it's fine.
-      
+
       let sender = {
         email: config.resend_from,
         name: "Administrator",
@@ -155,7 +152,7 @@ export default defineEventHandler(
         email,
         "Agenda Registration Confirmation",
         newMail.render(),
-        "agenda-registration"
+        "agenda-registration",
       );
 
       // Return success response
@@ -175,5 +172,5 @@ export default defineEventHandler(
           "An unexpected error occurred during agenda registration",
       };
     }
-  }
+  },
 );
