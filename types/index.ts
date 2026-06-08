@@ -208,6 +208,7 @@ export interface IOrganizer {
  */
 export interface ICommittee {
   _id?: string | Types.ObjectId;
+  agendaId: string | Types.ObjectId;
   job: string;
   member: Partial<IMember> | string | number | Types.ObjectId | undefined;
   approved: boolean;
@@ -254,6 +255,7 @@ export interface IPayment {
  */
 export interface IParticipant {
   _id?: string | Types.ObjectId;
+  agendaId: string | Types.ObjectId;
   member?: Types.ObjectId | Partial<IMember> | number;
   guest?: IGuest;
   visiting?: boolean;
@@ -369,8 +371,6 @@ export interface IAgenda {
   atLink: string;
   description: string;
   configuration: IAgendaConfiguration;
-  committees?: ICommittee[];
-  participants?: IParticipant[];
   presences?: {
     committees?: ICommittee[];
     participants?: IParticipant[];
@@ -383,6 +383,7 @@ export interface IAgenda {
   photos?: IPhoto[];
   videos?: IVideo[];
   docs?: IDoc[];
+  certificates?: string[] | Types.ObjectId[] | IDoc[];
 }
 
 /**

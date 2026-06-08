@@ -79,6 +79,7 @@ export default defineCachedEventHandler(
       }
       const length = await AgendaModel.countDocuments(query);
       const agendas = await AgendaModel.find(query)
+        .select('title date category at configuration.participant.amount configuration.participant.pay configuration.committee.amount configuration.committee.pay tags description')
         .populate({
           path: "photos",
           model: PhotoModel,

@@ -1,32 +1,30 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { IReqParticipantBatch } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
-    const organizer = event.context.organizer;
-    if (!user && !organizer) {
-      return {
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      };
-    }
+
     const { id } = event.context.params as { id: string };
     const body = await readBody<IReqParticipantBatch>(event);
     if (!body || !body.participants || !body.field) {
-      return {
+      throw createError({
         statusCode: 400,
         statusMessage: "Invalid request body",
-      };
+      });
     }
     const agenda = await AgendaModel.findById(id);
     if (!agenda) {
-      return {
+      throw createError({
         statusCode: 404,
         statusMessage: "Agenda not found",
-      };
+      });
     }
+
+    ensureCommitteeOrOrganizer(agenda, user);
+
     const updatedParticipants = agenda.participants?.map((participant) => {
       if (body.participants.includes(participant._id?.toString() || "")) {
         if (body.field === "payment") {
@@ -47,9 +45,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusMessage: "Participants updated successfully",
     };
   } catch (error: any) {
-    return {
-      statusCode: 500,
+    throw createError({
+      statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || error.message,
-    };
+    });
   }
 });

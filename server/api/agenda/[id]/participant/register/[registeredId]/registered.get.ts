@@ -12,19 +12,19 @@ export default defineEventHandler(
       const agenda = await AgendaModel.findById(id);
       let fullName = "";
       if (!agenda) {
-        return {
+        throw createError({
           statusCode: 404,
           statusMessage: "Agenda not found",
-        };
+        });
       }
       const registered = agenda?.participants?.find(
         (r) => r._id?.toString() === registeredId
       );
       if (!registered) {
-        return {
+        throw createError({
           statusCode: 404,
           statusMessage: "Registered not found",
-        };
+        });
       }
       if (registered.guest) {
         fullName = registered.guest.fullName;
@@ -37,10 +37,10 @@ export default defineEventHandler(
         data: fullName,
       };
     } catch (error: any) {
-      return {
-        statusCode: 500,
+      throw createError({
+        statusCode: error.statusCode || 500,
         statusMessage: error.statusMessage || error.message,
-      };
+      });
     }
   }
 );

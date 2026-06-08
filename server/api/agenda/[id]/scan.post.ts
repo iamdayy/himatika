@@ -1,8 +1,10 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { ICommittee, IGuest, IMember, IParticipant } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   // 1. Validasi Auth & Input
+  const user = event.context.user;
   const payload = await readBody(event);
   const agendaId = getRouterParam(event, "id");
   const { code } = payload; // code = registeredId (misal: "REG-123456")
@@ -18,28 +20,36 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: "Agenda tidak ditemukan" });
   }
 
+  // 2.5 Auth: Hanya committee/organizer yang bisa scan
+  await ensureCommitteeOrOrganizer(agenda._id.toString(), user);
+
   // 3. Cari Data Peserta/Panitia di dalam Agenda tersebut
-  // Kita cari di array participants dulu
+  const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+  const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
   let roleFound = "Participant";
-  let participant: IParticipant | ICommittee | undefined =
-    agenda.participants?.find((p) => p._id?.toString() === id);
+  let participant: any = await ParticipantModel.findById(id).populate("member").populate("guest");
 
   // Jika tidak ketemu, cari di array committees
   if (!participant) {
-    participant = agenda.committees?.find((c) => c._id?.toString() === id);
+    participant = await CommitteeModel.findById(id).populate("member");
     roleFound = "Committee";
   }
 
   // Jika masih tidak ketemu
-  if (!participant) {
+  if (!participant || participant.agendaId.toString() !== agendaId) {
     throw createError({
       statusCode: 404,
       message: "Data peserta tidak ditemukan di agenda ini.",
     });
   }
 
-  // 4. Validasi Status Pembayaran (Opsional, tergantung kebijakan)
-  if (participant.payment?.status !== "success") {
+  // 4. Validasi Status Pembayaran (hanya jika role tersebut butuh bayar)
+  const roleConfig = roleFound === "Participant"
+    ? agenda.configuration?.participant
+    : agenda.configuration?.committee;
+
+  if (roleConfig?.pay && participant.payment?.status !== "success") {
     // Jika ingin strict (harus bayar dulu):
     throw createError({
       statusCode: 402,
@@ -59,37 +69,19 @@ export default defineEventHandler(async (event) => {
   }
 
   // 6. Update Status Presensi
-  if (roleFound === "Participant") {
-    await AgendaModel.updateOne(
-      { _id: agendaId, "participants._id": participant._id },
-      {
-        $set: {
-          "participants.$.visiting": true,
-          "participants.$.visitAt": new Date(),
-        },
-      }
-    );
-  } else {
-    await AgendaModel.updateOne(
-      { _id: agendaId, "committees._id": participant._id },
-      {
-        $set: {
-          "committees.$.visiting": true,
-          "committees.$.visitAt": new Date(),
-        },
-      }
-    );
-  }
+  participant.visiting = true;
+  participant.visitAt = new Date();
+  await participant.save();
 
   let memberData: IMember | IGuest | undefined;
   if (roleFound === "Participant") {
-    if (!(participant as IParticipant).member) {
-      memberData = (participant as IParticipant).guest as IGuest;
+    if (!participant.member) {
+      memberData = participant.guest as IGuest;
     } else {
-      memberData = (participant as IParticipant).member as IMember;
+      memberData = participant.member as IMember;
     }
   } else {
-    memberData = (participant as ICommittee).member as IMember;
+    memberData = participant.member as IMember;
   }
 
   // 7. Return Data

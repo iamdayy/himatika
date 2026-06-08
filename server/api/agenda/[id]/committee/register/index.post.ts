@@ -61,14 +61,17 @@ export default defineEventHandler(
           });
         }
 
-        // Check if the user is already committee
-        const isCommittee = agenda.committees?.some(
-          (item) => (item.member as IMember | undefined)?.NIM == me.NIM,
-        );
-        if (isCommittee) {
+        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+        const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+
+        // Check if the user is already committee or participant
+        const isCommittee = await CommitteeModel.exists({ agendaId: id, member: me._id });
+        const isParticipant = await ParticipantModel.exists({ agendaId: id, member: me._id });
+
+        if (isCommittee || isParticipant) {
           throw createError({
-            statusCode: 400,
-            statusMessage: "You are already committee for this agenda",
+            statusCode: 409,
+            statusMessage: "You are already registered for this agenda",
           });
         }
 
@@ -77,9 +80,7 @@ export default defineEventHandler(
           agenda.configuration?.committee?.jobAvailables || [];
         const jobConfig = jobAvailables.find((j) => j.label === job);
         if (jobConfig) {
-          const currentCount = (agenda.committees || []).filter(
-            (c) => c.job === job,
-          ).length;
+          const currentCount = await CommitteeModel.countDocuments({ agendaId: id, job: job });
           if (currentCount >= jobConfig.count) {
             throw createError({
               statusCode: 400,
@@ -88,32 +89,14 @@ export default defineEventHandler(
           }
         }
 
-        // Atomic Update: Push to committees ONLY if member is not already in it
-        const result = await AgendaModel.updateOne(
-          {
-            _id: id,
-            "committees.member": { $ne: me._id },
-          },
-          {
-            $push: {
-              committees: {
-                _id: committeeId,
-                job: job,
-                member: me._id as Types.ObjectId,
-                approved: false,
-              },
-            },
-          },
-        );
-
-        if (result.modifiedCount === 0) {
-          // Check if it failed because Agenda not found or User already committee
-          // We know Agenda exists from the findById, so it must be the duplicate check
-          throw createError({
-            statusCode: 409,
-            statusMessage: "You are already committee for this agenda",
-          });
-        }
+        // Insert new committee member
+        await CommitteeModel.create({
+          _id: committeeId,
+          agendaId: id,
+          job: job,
+          member: me._id,
+          approved: false,
+        });
       } else {
         throw createError({
           statusCode: 401,
@@ -165,12 +148,13 @@ export default defineEventHandler(
       };
     } catch (error: any) {
       // Handle any errors that occur during the process
-      return {
+      throw createError({
         statusCode: error.statusCode || 500,
         statusMessage:
+          error.statusMessage ||
           error.message ||
           "An unexpected error occurred during agenda registration",
-      };
+      });
     }
   },
 );

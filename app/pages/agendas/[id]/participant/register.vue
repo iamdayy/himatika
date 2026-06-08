@@ -168,7 +168,7 @@ const FEES = {
 };
 
 const priceSummary = computed(() => {
-    const basePrice = agenda.value?.configuration.committee.amount || 0;
+    const basePrice = agenda.value?.configuration.participant.amount || 0;
     let adminFee = 0;
 
     if (formPayment.method === 'bank_transfer') {
@@ -202,11 +202,13 @@ const nextToAnswerQuestion = async () => {
 
 const register = async (): Promise<boolean | FormError> => {
     try {
+        const body: any = {};
+        if (!user.value) {
+            body.guest = formRegistration;
+        }
         const { data, statusCode, statusMessage } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register`, {
             method: 'POST',
-            body: {
-                guest: formRegistration
-            }
+            body
         });
         if (statusCode === 200 && data) {
             refreshParticipant();
@@ -388,16 +390,15 @@ async function handleAnswer() {
 }
 onMounted(() => {
     setTimeout(() => {
-        if (tab === 'register') {
-            activeStep.value = 0;
-        } else if (tab === 'answer_question') {
-            activeStep.value = 1;
-        } else if (tab === 'select_payment') {
-            activeStep.value = 2;
-        } else if (tab === 'payment') {
-            activeStep.value = 3;
-        } else if (tab === 'success') {
-            activeStep.value = 4;
+        const stepMap: Record<string, number> = {
+            'register': 0,
+            'answer_question': steps.value.findIndex(s => s.id === 'answer_question'),
+            'select_payment': steps.value.findIndex(s => s.id === 'select_payment'),
+            'payment': steps.value.findIndex(s => s.id === 'payment'),
+            'success': steps.value.findIndex(s => s.id === 'success'),
+        };
+        if (tab && typeof tab === 'string' && stepMap[tab] !== undefined && stepMap[tab] >= 0) {
+            activeStep.value = stepMap[tab];
         } else {
             activeStep.value = 0;
         }
@@ -549,7 +550,7 @@ watch(participant, (newValue) => {
                                     <UIcon name="i-heroicons-information-circle" class="w-6 h-6 text-yellow-500" />
                                     <div class="text-sm text-yellow-700 dark:text-yellow-200">
                                         Please come to the committee secretariat to make a cash payment.
-                                        Amount: <strong>Rp {{ formatCurrency(agenda?.configuration.committee.amount ||
+                                        Amount: <strong>Rp {{ formatCurrency(agenda?.configuration.participant.amount ||
                                             0) }}</strong>
                                     </div>
                                 </div>

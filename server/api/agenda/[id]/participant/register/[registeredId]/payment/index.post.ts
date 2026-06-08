@@ -51,10 +51,9 @@ export default defineEventHandler(
           statusMessage: "Agenda not found",
         });
       }
-      const participant = agenda.participants?.find(
-        (r) => r._id?.toString() === registeredId
-      );
-      if (!participant) {
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const participant = await ParticipantModel.findById(registeredId).populate("member").populate("guest");
+      if (!participant || participant.agendaId.toString() !== id) {
         throw createError({
           statusCode: 400,
           statusMessage: "Participant not found",
@@ -79,7 +78,7 @@ export default defineEventHandler(
         };
       }
       // --- LOGIC HARGA BARU ---
-      const ticketPrice = agenda.configuration.participant.amount || 0;
+      const ticketPrice = agenda.configuration?.participant?.amount || 0;
 
       // Hitung Admin Fee berdasarkan tipe pembayaran yang dipilih user
       const adminFee = calculateAdminFee(ticketPrice, body.payment_method);
@@ -108,17 +107,17 @@ export default defineEventHandler(
         },
         customer_details: {
           first_name:
-            typeof participant.member === "object"
-              ? (participant.member as IMember).fullName
-              : participant.guest?.fullName || "",
+            participant.member
+              ? (participant.member as any).fullName
+              : (participant.guest as any)?.fullName || "",
           email:
-            typeof participant.member === "object"
-              ? (participant.member as IMember).email
-              : participant.guest?.email || "",
+            participant.member
+              ? (participant.member as any).email
+              : (participant.guest as any)?.email || "",
           phone:
-            typeof participant.member === "object"
-              ? (participant.member as IMember).phone || ""
-              : participant.guest?.phone || "",
+            participant.member
+              ? (participant.member as any).phone || ""
+              : (participant.guest as any)?.phone || "",
         },
       });
       // ✅ UPDATE: Logic penyimpanan ke DB
@@ -135,7 +134,7 @@ export default defineEventHandler(
         qris_png: payment.actions?.[1]?.url,
       };
 
-      await agenda.save();
+      await participant.save();
       return {
         statusCode: 200,
         statusMessage: "Payment created",

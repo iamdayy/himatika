@@ -58,7 +58,7 @@ const IGuestSchema = new Schema<IGuestSchema>({
   },
 });
 
-const paymentSchema = new Schema<IPaymentSchema>({
+export const paymentSchema = new Schema<IPaymentSchema>({
   method: {
     type: String,
     enum: ["cash", "bank_transfer", "qris"],
@@ -435,16 +435,9 @@ const agendaSchema = new Schema<IAgendaSchema, IAgendaModel, IAgendaMethods>(
       type: configurationSchema,
       default: {},
     },
-    committees: {
-      type: [CommitteeSchema],
-      default: [],
-    },
-    participants: {
-      type: [participantSchema],
-      default: [],
-      autopopulate: {
-        path: "answers",
-      },
+    certificates: {
+      type: [Types.ObjectId],
+      ref: "Doc",
     },
   },
   {
@@ -486,16 +479,7 @@ agendaSchema.virtual("gallery").get(function (this: IAgendaSchema) {
     docs: this.docs,
   };
 });
-agendaSchema.virtual("presences").get(function (this: IAgendaSchema) {
-  return {
-    commiittees: this.committees?.filter(
-      (committee) => committee.visitTime !== undefined
-    ),
-    participants: this.participants?.filter(
-      (participant) => participant.visitTime !== undefined
-    ),
-  };
-});
+// presences virtual removed due to decoupling
 
 agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
   const member = user?.member;
@@ -506,17 +490,16 @@ agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
 
   const organizer = member?.organizer;
   const now = new Date(Date.now());
-  const start = new Date(
-    this.configuration.committee.canRegisterUntil?.start || Date.now()
-  );
-  const end = new Date(
-    this.configuration.committee.canRegisterUntil?.end || Date.now()
-  );
   if (this.isRegisterd(user)) {
     return false;
   }
-  if (now < start || now > end) {
-    return false;
+  // Enforce registration period only when configured
+  if (this.configuration.committee.canRegisterUntil?.start && this.configuration.committee.canRegisterUntil?.end) {
+    const start = new Date(this.configuration.committee.canRegisterUntil.start);
+    const end = new Date(this.configuration.committee.canRegisterUntil.end);
+    if (now < start || now > end) {
+      return false;
+    }
   }
   if (this.configuration.committee.canRegister === "Public") {
     // Only members can be committee? Or public too? Schema says "Public"
@@ -536,21 +519,23 @@ agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
     }
   }
   if (typeof this.configuration.committee.canRegister === "string" && member) {
-    const [roleName, value] =
+    const [roleName, rawValue] =
       this.configuration.committee.canRegister.split("<");
     const memberValue = member[roleName as keyof IMember];
-    if (typeof memberValue === "number" && typeof value === "number") {
-      if (value < memberValue) {
+    const numValue = Number(rawValue);
+    if (typeof memberValue === "number" && !isNaN(numValue)) {
+      if (memberValue < numValue) {
         return true;
       }
     }
   }
   if (typeof this.configuration.committee.canRegister === "string" && member) {
-    const [roleName, value] =
+    const [roleName, rawValue] =
       this.configuration.committee.canRegister.split(">");
     const memberValue = member[roleName as keyof IMember];
-    if (typeof memberValue === "number" && typeof value === "number") {
-      if (value > memberValue) {
+    const numValue = Number(rawValue);
+    if (typeof memberValue === "number" && !isNaN(numValue)) {
+      if (memberValue > numValue) {
         return true;
       }
     }
@@ -564,18 +549,17 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
   
   const organizer = member?.organizer;
   const now = new Date(Date.now());
-  const start = new Date(
-    this.configuration.participant.canRegisterUntil?.start || Date.now()
-  );
-  const end = new Date(
-    this.configuration.participant.canRegisterUntil?.end || Date.now()
-  );
   
   if (this.isRegisterd(user)) {
     return false;
   }
-  if (now < start || now > end) {
-    return false;
+  // Enforce registration period only when configured
+  if (this.configuration.participant.canRegisterUntil?.start && this.configuration.participant.canRegisterUntil?.end) {
+    const start = new Date(this.configuration.participant.canRegisterUntil.start);
+    const end = new Date(this.configuration.participant.canRegisterUntil.end);
+    if (now < start || now > end) {
+      return false;
+    }
   }
   if (this.configuration.participant.canRegister === "Public") {
     return true; // Guests fall here
@@ -604,11 +588,12 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
     typeof this.configuration.participant.canRegister === "string" &&
     member
   ) {
-    const [roleName, value] =
+    const [roleName, rawValue] =
       this.configuration.participant.canRegister.split("<");
     const memberValue = member[roleName as keyof IMember];
-    if (typeof memberValue === "number" && typeof value === "number") {
-      if (value < memberValue) {
+    const numValue = Number(rawValue);
+    if (typeof memberValue === "number" && !isNaN(numValue)) {
+      if (memberValue < numValue) {
         return true;
       }
     }
@@ -617,11 +602,12 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
     typeof this.configuration.participant.canRegister === "string" &&
     member
   ) {
-    const [roleName, value] =
+    const [roleName, rawValue] =
       this.configuration.participant.canRegister.split(">");
     const memberValue = member[roleName as keyof IMember];
-    if (typeof memberValue === "number" && typeof value === "number") {
-      if (value > memberValue) {
+    const numValue = Number(rawValue);
+    if (typeof memberValue === "number" && !isNaN(numValue)) {
+      if (memberValue > numValue) {
         return true;
       }
     }
@@ -631,43 +617,13 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
 
 agendaSchema.methods.isRegisterd = function (
   user?: IUser
-): ICommittee | IParticipant | false {
-  if (!user) return false;
-  const member = user.member;
-  const guest = user.guest;
-
-  if (member) {
-      const committee = this.committees?.find(
-        (item) => (item.member as IMember | undefined)?.NIM == member.NIM
-      );
-      if (committee) return committee;
-      const participant = this.participants?.find(
-        (item) => (item.member as IMember | undefined)?.NIM == member.NIM
-      );
-      if (participant) return participant;
-  }
-  
-  if (guest) {
-      const participant = this.participants?.find(
-        (item) => (item.guest as IGuest | undefined)?.email == guest.email
-      );
-      if (participant) return participant;
-  }
-
+): false {
   return false;
 };
 
 agendaSchema.methods.isRegisterdById = function (
   registeredId: string
-): ICommittee | IParticipant | false {
-  const committee = this.committees?.find(
-    (item) => item._id?.toString() == registeredId
-  );
-  if (committee) return committee;
-  const participant = this.participants?.find(
-    (item) => item._id?.toString() == registeredId
-  );
-  if (participant) return participant;
+): false {
   return false;
 };
 
