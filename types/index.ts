@@ -257,7 +257,7 @@ export interface IParticipant {
   _id?: string | Types.ObjectId;
   agendaId: string | Types.ObjectId;
   member?: Types.ObjectId | Partial<IMember> | number;
-  guest?: IGuest;
+  guest?: IGuest | Types.ObjectId;
   visiting?: boolean;
   visitAt?: string;
   visitTime?: Date;
