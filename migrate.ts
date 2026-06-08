@@ -14,8 +14,9 @@ if (!uri) {
 const migrate = async () => {
   try {
     console.log("Connecting to MongoDB...");
-    await mongoose.connect(uri);
-    console.log("Connected.");
+    const dbName = process.env.DBNAME || "himatika";
+    await mongoose.connect(uri, { dbName });
+    console.log(`Connected to database: ${dbName}`);
 
     // Access the raw collections using mongoose.connection.db
     const agendasCollection = mongoose.connection.db?.collection("agendas");
