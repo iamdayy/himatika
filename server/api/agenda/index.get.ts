@@ -79,7 +79,7 @@ export default defineCachedEventHandler(
       }
       const length = await AgendaModel.countDocuments(query);
       const agendas = await AgendaModel.find(query)
-        .select('title date category at configuration.participant.amount configuration.participant.pay configuration.committee.amount configuration.committee.pay tags description')
+        .select('title date category at configuration tags description')
         .populate({
           path: "photos",
           model: PhotoModel,
@@ -87,7 +87,37 @@ export default defineCachedEventHandler(
         .skip(skip || 0)
         .limit(limit || 0)
         .sort(sortOpt);
-      if (!agendas) {
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      
+      const agendasWithCounts = await Promise.all(agendas.map(async (agenda) => {
+        const participantsCount = await ParticipantModel.countDocuments({ agendaId: agenda._id });
+        const committeesCount = await CommitteeModel.countDocuments({ agendaId: agenda._id });
+        
+        let myParticipant = undefined;
+        let myCommittee = undefined;
+
+        if (user?.member) {
+          const { MemberModel } = await import("~~/server/models/MemberModel");
+          const member = await MemberModel.findOne({ NIM: user.member.NIM });
+          if (member) {
+            myParticipant = await ParticipantModel.findOne({ agendaId: agenda._id, member: member._id }).lean();
+            myCommittee = await CommitteeModel.findOne({ agendaId: agenda._id, member: member._id }).lean();
+          }
+        } else if (user?.guest) {
+          myParticipant = await ParticipantModel.findOne({ agendaId: agenda._id, guest: user.guest._id }).lean();
+        }
+
+        return {
+          ...agenda.toObject(),
+          participantsCount,
+          committeesCount,
+          myParticipant,
+          myCommittee
+        };
+      }));
+
+      if (!agendasWithCounts) {
         throw createError({
           statusCode: 400,
           message: "No agendas found",
@@ -97,7 +127,7 @@ export default defineCachedEventHandler(
         statusCode: 200,
         statusMessage: "Agendas found",
         data: {
-          agendas,
+          agendas: agendasWithCounts,
           length,
         },
       };

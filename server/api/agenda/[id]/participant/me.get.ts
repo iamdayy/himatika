@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { IMember, IParticipant } from "~~/types";
 import { IError, IParticipantResponse } from "~~/types/IResponse";
 
@@ -19,22 +20,21 @@ export default defineEventHandler(
           statusMessage: "Agenda not found",
         };
       }
-      let participant: IParticipant | undefined;
+      let participant: any;
       if (user) {
         if (user.member) {
-          participant = agenda.participants?.find(
-            (r) => (r.member as IMember)?.NIM === user.member.NIM
-          );
+          const { MemberModel } = await import("~~/server/models/MemberModel");
+          const member = await MemberModel.findOne({ NIM: user.member.NIM });
+          if (member) {
+            participant = await ParticipantModel.findOne({ agendaId: id, member: member._id });
+          }
         } else if (user.guest) {
-           participant = agenda.participants?.find(
-            (r) => (r.guest as any)?._id?.toString() === user.guest._id.toString() || (r.guest as any)?.toString() === user.guest._id.toString()
-          );
+          participant = await ParticipantModel.findOne({ agendaId: id, guest: user.guest._id });
         }
       } else if (participantId) {
-        participant = agenda.participants?.find(
-          (r) => r._id?.toString() === participantId
-        );
+        participant = await ParticipantModel.findOne({ agendaId: id, _id: participantId });
       }
+
       if (!participant) {
         return {
           statusCode: 404,

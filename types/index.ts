@@ -124,6 +124,8 @@ export interface IMember {
   organizersDailyManagement?: IOrganizer[];
   organizersDepartmentCoordinator?: IOrganizer[];
   organizersDepartmentMembers?: IOrganizer[];
+  participantsData?: any[];
+  committeesData?: any[];
 }
 
 export interface IGuest {
@@ -384,6 +386,10 @@ export interface IAgenda {
   videos?: IVideo[];
   docs?: IDoc[];
   certificates?: string[] | Types.ObjectId[] | IDoc[];
+  participantsCount?: number;
+  committeesCount?: number;
+  myParticipant?: IParticipant;
+  myCommittee?: ICommittee;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { IParticipant } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
@@ -35,10 +36,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Agenda not found",
       });
     }
-    agenda.participants?.push({
+
+    await ParticipantModel.create({
+      agendaId: id,
       member: body.member,
+      guest: body.guest,
+      answers: body.answers || []
     });
-    await agenda.save();
 
     return {
       statusCode: 200,

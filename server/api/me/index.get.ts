@@ -40,28 +40,32 @@ export default defineEventHandler(async (event): Promise<IMeResponse> => {
       select: "NIM avatar fullName email class semester enteredYear createdAt status",
       populate: [
         {
-          path: "agendasCommittee",
-          select: "title date at description configuration committees -_id",
-          transform: (doc: IAgenda) => ({
-            title: doc.title,
-            date: doc.date,
-            at: doc.at,
-            description: doc.description,
-            configuration: doc.configuration,
-            committees: doc.committees,
-          }),
+          path: "committeesData",
+          populate: {
+            path: "agendaId",
+            select: "title date at description configuration committees -_id",
+            transform: (doc: IAgenda) => ({
+              title: doc.title,
+              date: doc.date,
+              at: doc.at,
+              description: doc.description,
+              configuration: doc.configuration,
+            }),
+          }
         },
         {
-          path: "agendasMember",
-          select: "title date at description configuration participants -_id",
-          transform: (doc: IAgenda) => ({
-            title: doc.title,
-            date: doc.date,
-            at: doc.at,
-            description: doc.description,
-            configuration: doc.configuration,
-            participants: doc.participants,
-          }),
+          path: "participantsData",
+          populate: {
+            path: "agendaId",
+            select: "title date at description configuration participants -_id",
+            transform: (doc: IAgenda) => ({
+              title: doc.title,
+              date: doc.date,
+              at: doc.at,
+              description: doc.description,
+              configuration: doc.configuration,
+            }),
+          }
         },
         {
           path: "projects",

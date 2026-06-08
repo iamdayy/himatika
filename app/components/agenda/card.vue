@@ -19,19 +19,26 @@
             <p class="text-gray-600 dark:text-gray-400 text-sm flex-1 line-clamp-3">
                 <CoreContent :content="agenda.description || 'No description provided.'" />
             </p>
+            <div class="flex items-center gap-1" :title="$ts('participant')" v-if="agenda.participantsCount !== undefined">
+                <UIcon name="i-heroicons-user-group" class="w-3.5 h-3.5" />
+                <UAvatarGroup size="3xs" :max="2">
+                    <UAvatar src="" alt="Peserta" class="bg-gray-100 dark:bg-gray-800" />
+                    <UAvatar src="" alt="Peserta" class="bg-gray-200 dark:bg-gray-700" />
+                    <UAvatar v-if="agenda.participantsCount > 2"
+                        :alt="'+' + (agenda.participantsCount - 2)"
+                        class="bg-gray-300 dark:bg-gray-600 font-medium text-gray-700 dark:text-gray-200" />
+                </UAvatarGroup>
+            </div>
+            <div class="flex items-center gap-1" :title="$ts('committee')" v-if="agenda.committeesCount !== undefined">
+                <UIcon name="i-heroicons-users" class="w-3.5 h-3.5" />
+                <span class="text-xs">{{ agenda.committeesCount }}</span>
+            </div>
         </div>
 
         <template #footer>
             <div class="flex items-center gap-2 pt-3">
-                <UAvatarGroup size="xs" :max="3">
-                    <UAvatar v-for="participant in agenda.participants || []" :key="participant._id as string"
-                        :src="(participant.member as IMember)?.avatar || '/img/profile-blank.png'"
-                        :alt="(participant.member as IMember)?.fullName || 'Participant Name'" />
-                </UAvatarGroup>
-                <span class="text-xs dark:text-gray-300 text-gray-400" v-if="(agenda.participants?.length || 0) > 3">+
-                    {{
-                        agenda.participants?.length ?
-                            (agenda.participants.length - 2) : 0 }}
+                <span class="text-xs dark:text-gray-300 text-gray-400" v-if="(agenda.participantsCount || 0) > 0">
+                    {{ agenda.participantsCount }}
                     {{ $ts('joined') }}</span>
             </div>
         </template>

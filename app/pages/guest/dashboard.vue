@@ -137,21 +137,7 @@ const registeredAgendas = computed(() => {
     if (!agendas.value) return [];
     if (!guest.value) return [];
 
-    return agendas.value.filter(agenda => {
-        // Check if guest is in participants
-        // Need to handle populated or unpopulated cases if possible, but mainly relying on the fact that we might just check IDs if structure allows
-        // Step 1004 showed useAgendas logic for `isRegistered`.
-        // Let's manually check participants array using the guest ID/Email
-
-        return agenda.participants?.some(p => {
-            const pGuest = p.guest as any; // Could be object or ID
-            const pGuestId = pGuest?._id || pGuest;
-            const pGuestEmail = pGuest?.email;
-
-            return (pGuestId && pGuestId.toString() === guest.value?._id?.toString()) ||
-                (pGuestEmail && pGuestEmail === guest.value?.email);
-        });
-    });
+    return agendas.value.filter(agenda => !!agenda.myParticipant);
 });
 
 </script>

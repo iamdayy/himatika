@@ -8,31 +8,21 @@ export default defineEventHandler(
     const { transaction_id } = getQuery<IReqPaymentQuery>(event);
     try {
       const response = await getTransactionStatus(transaction_id);
-      const agenda = await AgendaModel.findOne({
-        $or: [
-          { "participants.payment.transaction_id": transaction_id },
-          { "committees.payment.transaction_id": transaction_id },
-        ],
-      });
-      if (!agenda) {
-        throw createError({
-          statusCode: 404,
-          statusMessage: "Agenda & pendaftaran tidak ditemukan",
-        });
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      
+      let registered = await ParticipantModel.findOne({ "payment.transaction_id": transaction_id });
+      if (!registered) {
+        registered = await CommitteeModel.findOne({ "payment.transaction_id": transaction_id });
       }
-      const registered =
-        agenda.participants?.find(
-          (r) => r.payment?.transaction_id === transaction_id
-        ) ||
-        agenda.committees?.find(
-          (r) => r.payment?.transaction_id === transaction_id
-        );
+
       if (!registered) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Peserta tidak ditemukan",
+          statusMessage: "Pendaftaran tidak ditemukan",
         });
       }
+
       if (!registered.payment) {
         throw createError({
           statusCode: 404,
@@ -40,9 +30,7 @@ export default defineEventHandler(
         });
       }
       registered.payment.status = response;
-      agenda.markModified("participants");
-      agenda.markModified("committees");
-      await agenda.save();
+      await registered.save();
       return {
         statusCode: 200,
         statusMessage: "Transaksi ditemukan",

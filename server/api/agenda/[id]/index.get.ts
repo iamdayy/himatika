@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
     let committees: any[] = [];
 
     // Permission to see participants
-    if (roles.includes(eventDataDoc.configuration.canSeeRegistered as string)) {
+    if (roles.includes(eventDataDoc.configuration.canSeeRegistered as string) || roles.includes("Organizer")) {
       // Import at the top dynamically or use global models
       const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
       participants = await ParticipantModel.find({ agendaId: id }).lean();
@@ -87,10 +87,31 @@ export default defineEventHandler(async (event) => {
       committees = fetchedCommittees;
     }
 
+    let myParticipant = undefined;
+    let myCommittee = undefined;
+
+    if (user?.member) {
+      const { MemberModel } = await import("~~/server/models/MemberModel");
+      const member = await MemberModel.findOne({ NIM: user.member.NIM });
+      if (member) {
+        const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+        myParticipant = await ParticipantModel.findOne({ agendaId: id, member: member._id }).lean();
+        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+        myCommittee = await CommitteeModel.findOne({ agendaId: id, member: member._id }).lean();
+      }
+    } else if (user?.guest) {
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      myParticipant = await ParticipantModel.findOne({ agendaId: id, guest: user.guest._id }).lean();
+    }
+
     const agenda = {
       ...eventDataDoc,
       participants,
-      committees
+      committees,
+      participantsCount: participants.length,
+      committeesCount: committees.length,
+      myParticipant,
+      myCommittee
     };
 
     return {

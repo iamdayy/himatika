@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { AnswerModel } from "~~/server/models/AnswerModel";
 import { IGuest, IMember } from "~~/types";
 import { IReqAgendaParticipantQuery } from "~~/types/IRequestPost";
@@ -13,63 +14,60 @@ export default defineEventHandler(
       const { id } = event.context.params as {
         id: string;
       };
-      const agenda = await AgendaModel.findById(id)
-        .populate({
-          path: "participants",
-          populate: {
-            path: "answers",
-            model: AnswerModel,
-            select: "question value",
-          },
-        })
-        .exec();
+      
+      const agenda = await AgendaModel.findById(id).select("-configuration.committee -description").exec();
       if (!agenda) {
         return {
           statusCode: 404,
           statusMessage: "Agenda not found",
         };
       }
-      const participants =
-        (agenda.participants as IParticipantSchema[])
-          ?.map((participant: IParticipantSchema) => {
-            return {
-              ...participant.toObject(),
-              answers: participant.answers,
-            };
-          })
-          ?.slice(
-            (Number(page) - 1) * Number(perPage),
-            Number(perPage) * Number(page)
-          )
-          .filter((participant) => {
-            if (search) {
-              const searchString = search.toLowerCase();
-              const nameMember =
-                (participant.member as IMember)?.fullName.toLowerCase() || "";
-              const nimMember = (participant.member as IMember)?.NIM || 0;
-              const emailMember =
-                (participant.member as IMember)?.email?.toLowerCase() || "";
-              const nameGuest =
-                (participant.guest as IGuest)?.fullName.toLowerCase() || "";
-              const emailGuest =
-                (participant.guest as IGuest)?.email?.toLowerCase() || "";
-              return (
-                nameMember.includes(searchString) ||
-                nimMember.toString().includes(searchString) ||
-                emailMember.includes(searchString) ||
-                nameGuest.includes(searchString) ||
-                emailGuest.includes(searchString)
-              );
-            }
-            return true;
-          }) || [];
+
+      const allParticipants = await ParticipantModel.find({ agendaId: id })
+        .populate("member", "fullName NIM email")
+        .populate("guest", "fullName email")
+        .populate({
+          path: "answers",
+          model: AnswerModel,
+          select: "question value",
+        })
+        .exec();
+
+      let filteredParticipants = allParticipants;
+      
+      if (search) {
+        const searchString = search.toLowerCase();
+        filteredParticipants = allParticipants.filter((participant) => {
+          const nameMember =
+            (participant.member as IMember)?.fullName.toLowerCase() || "";
+          const nimMember = (participant.member as IMember)?.NIM || 0;
+          const emailMember =
+            (participant.member as IMember)?.email?.toLowerCase() || "";
+          const nameGuest =
+            (participant.guest as IGuest)?.fullName.toLowerCase() || "";
+          const emailGuest =
+            (participant.guest as IGuest)?.email?.toLowerCase() || "";
+          return (
+            nameMember.includes(searchString) ||
+            nimMember.toString().includes(searchString) ||
+            emailMember.includes(searchString) ||
+            nameGuest.includes(searchString) ||
+            emailGuest.includes(searchString)
+          );
+        });
+      }
+
+      const paginatedParticipants = filteredParticipants
+        .slice((Number(page) - 1) * Number(perPage), Number(page) * Number(perPage))
+        .map(p => p.toObject());
+
       return {
         statusCode: 200,
         statusMessage: "Success",
         data: {
           agenda: agenda.toObject(),
-          participants: participants,
-          length: agenda.participants?.length || 0,
+          participants: paginatedParticipants as any,
+          length: filteredParticipants.length,
         },
       };
     } catch (error: any) {

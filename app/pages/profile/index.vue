@@ -132,8 +132,8 @@ const member = ref({
     enteredYear: fullProfile.value?.enteredYear || "",
     // Data berat diambil dari fullProfile
     point: fullProfile.value?.point || [],
-    agendasCommittee: fullProfile.value?.agendas?.committees || [],
-    agendasMember: fullProfile.value?.agendas?.members || [],
+    committeesData: fullProfile.value?.committeesData || [],
+    participantsData: fullProfile.value?.participantsData || [],
     projects: fullProfile.value?.projects || [],
     aspirations: fullProfile.value?.aspirations || [],
     manualPoints: fullProfile.value?.manualPoints || [],
@@ -169,8 +169,8 @@ watch(fullProfile, (newVal) => {
         };
         member.value.enteredYear = newVal.enteredYear || "";
         member.value.point = newVal.point || [];
-        member.value.agendasCommittee = newVal.agendas?.committees || [];
-        member.value.agendasMember = newVal.agendas?.members || [];
+        member.value.committeesData = newVal.committeesData || [];
+        member.value.participantsData = newVal.participantsData || [];
         member.value.projects = newVal.projects || [];
         member.value.aspirations = newVal.aspirations || [];
         member.value.manualPoints = newVal.manualPoints || [];
@@ -296,22 +296,24 @@ const pointAccordionItems = computed<AccordionItem[]>(() => {
     })) || [];
 });
 
-const getAgendasCommitteeByRange = (range: { start: Date; end: Date }): IAgenda[] => {
+const getAgendasCommitteeByRange = (range: { start: Date; end: Date }): any[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const agendas = member.value?.agendasCommittee?.filter((agenda) => {
-        const agendaDateStart = new Date(agenda.date.start);
-        const agendaDateEnd = new Date(agenda.date.end);
-        return agendaDateStart >= start && agendaDateEnd <= end;
+    const agendas = member.value?.committeesData?.filter((committee: any) => {
+        if (!committee.agendaId) return false;
+        const agendaDateStart = new Date(committee.agendaId.date.start);
+        const agendaDateEnd = new Date(committee.agendaId.date.end);
+        return agendaDateStart >= start && agendaDateEnd <= end && committee.approved;
     }) || [];
     return agendas;
 };
-const getAgendasMemberByRange = (range: { start: Date; end: Date }): IAgenda[] => {
+const getAgendasMemberByRange = (range: { start: Date; end: Date }): any[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const agendas = member.value?.agendasMember?.filter((agenda) => {
-        const agendaDateStart = new Date(agenda.date.start);
-        const agendaDateEnd = new Date(agenda.date.end);
+    const agendas = member.value?.participantsData?.filter((participant: any) => {
+        if (!participant.agendaId) return false;
+        const agendaDateStart = new Date(participant.agendaId.date.start);
+        const agendaDateEnd = new Date(participant.agendaId.date.end);
         return agendaDateStart >= start && agendaDateEnd <= end;
     }) || [];
     return agendas;
@@ -649,36 +651,24 @@ const breadcumbs = computed(() => [
                                                             v-if="getAgendasCommitteeByRange(member.point[index]!.range) && getAgendasCommitteeByRange(member.point[index]!.range).length > 0">
                                                             <h4 class="font-medium mb-2">{{ $ts('committee') }}</h4>
                                                             <div class="space-y-2">
-                                                                <div v-for="agenda, i in getAgendasCommitteeByRange(member.point[index]!.range)"
+                                                                <div v-for="committee, i in getAgendasCommitteeByRange(member.point[index]!.range)"
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-green-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ agenda.title }}</p>
+                                                                        <p class="font-medium">{{ committee.agendaId?.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
-                                                                            {{ agenda.at }}</p>
+                                                                            {{ committee.agendaId?.at }}</p>
                                                                     </div>
                                                                     <div class="flex items-center gap-2">
                                                                         <UBadge color="success" variant="subtle">
-                                                                            {{agenda.committees?.find((committee) =>
-                                                                                (committee.member as IMember).NIM ===
-                                                                                member?.NIM)?.job
-                                                                            }}
+                                                                            {{ committee.job }}
                                                                         </UBadge>
-                                                                        <UBadge :color="agenda.committees?.find((committee) =>
-                                                                            (committee.member as IMember).NIM === member?.NIM)?.visiting
-                                                                            ? 'success'
-                                                                            : 'error'">
-                                                                            {{
-                                                                                agenda.committees?.find((committee) =>
-                                                                                    (committee.member as IMember).NIM ===
-                                                                                    member?.NIM)?.visiting
-                                                                                    ? 'Telah Hadir'
-                                                                                    : 'Belum Hadir'
-                                                                            }}
+                                                                        <UBadge :color="committee.visiting ? 'success' : 'error'">
+                                                                            {{ committee.visiting ? 'Telah Hadir' : 'Belum Hadir' }}
                                                                         </UBadge>
                                                                         <UBadge color="neutral" variant="subtle">{{
-                                                                            agenda.configuration.committee.point }} Pts
+                                                                            committee.agendaId?.configuration?.committee?.point }} Pts
                                                                         </UBadge>
                                                                     </div>
                                                                 </div>
@@ -690,29 +680,21 @@ const breadcumbs = computed(() => [
                                                             <h4 class="font-medium mb-2">{{ $ts('participant') }}
                                                             </h4>
                                                             <div class="space-y-2">
-                                                                <div v-for="agenda, i in getAgendasMemberByRange(member.point[index]!.range)"
+                                                                <div v-for="participant, i in getAgendasMemberByRange(member.point[index]!.range)"
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-blue-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ agenda.title }}</p>
+                                                                        <p class="font-medium">{{ participant.agendaId?.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
-                                                                            {{ agenda.at }}</p>
+                                                                            {{ participant.agendaId?.at }}</p>
                                                                     </div>
                                                                     <div class="flex items-center gap-2">
-                                                                        <UBadge :color="agenda.participants?.find((participant) => (participant.member as IMember).NIM === member?.NIM)?.visiting
-                                                                            ? 'success'
-                                                                            : 'error'">
-                                                                            {{
-                                                                                agenda.participants?.find((participant) =>
-                                                                                    (participant.member as IMember).NIM ===
-                                                                                    member?.NIM)?.visiting
-                                                                                    ? 'Telah Hadir'
-                                                                                    : 'Belum Hadir'
-                                                                            }}
+                                                                        <UBadge :color="participant.visiting ? 'success' : 'error'">
+                                                                            {{ participant.visiting ? 'Telah Hadir' : 'Belum Hadir' }}
                                                                         </UBadge>
                                                                         <UBadge color="neutral" variant="subtle">{{
-                                                                            agenda.configuration.participant.point }}
+                                                                            participant.agendaId?.configuration?.participant?.point }}
                                                                             Pts
                                                                         </UBadge>
                                                                     </div>

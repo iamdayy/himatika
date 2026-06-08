@@ -30,36 +30,22 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
         });
       }
 
-      // Helper for Atomic Status Update
-      const updatePaymentStatus = async (
-        collectionField: "committees" | "participants",
-        status: string
-      ) => {
-        const setFields: any = {
-          [`${collectionField}.$.payment.status`]: status,
-        };
-
-        // Clear sensitive/temporary fields on success/cancel
-        if (status === "success" || status === "canceled") {
-          setFields[`${collectionField}.$.payment.expiry`] = null; // Use null for unsetting in Mongoose (or undefined if strict) - usually null safe
-          setFields[`${collectionField}.$.payment.va_number`] = "";
-        }
-        
-        // Use atomic updateOne with $set
-        return await AgendaModel.updateOne(
-          { [`${collectionField}._id`]: registeredId },
-          { $set: setFields }
-        );
-      };
-
       // 1. Handle SUCCESS (Settlement)
       if (transaction_status === "settlement" && fraud_status === "accept") {
-        // Try updating Committee
-        let result = await updatePaymentStatus("committees", "success");
-        
-        // If not found in committees, try Participants
+        const updateDoc = {
+          "payment.status": "success",
+          $unset: {
+            "payment.expiry": "",
+            "payment.va_number": ""
+          }
+        };
+
+        const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
+        let result = await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
         if (result.matchedCount === 0) {
-          result = await updatePaymentStatus("participants", "success");
+          result = await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
         }
 
         if (result.matchedCount === 0) {
@@ -73,32 +59,30 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
         transaction_status === "deny" ||
         transaction_status === "expire"
       ) {
-         // Try updating Committee first (Simple update)
-        let result = await updatePaymentStatus("committees", "canceled");
+        const updateDoc = {
+          "payment.status": "canceled",
+          $unset: {
+            "payment.expiry": "",
+            "payment.va_number": ""
+          }
+        };
+
+        const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
+        let result = await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
 
         if (result.matchedCount === 0) {
-            // Check Participant for Guest Deletion Logic
-            // We read ONLY the specific participant data to check 'guest' status
-            const agenda = await AgendaModel.findOne(
-                { "participants._id": registeredId },
-                { "participants.$": 1 } 
-            );
+            const participant = await ParticipantModel.findById(registeredId);
 
-            if (agenda && agenda.participants && agenda.participants[0]) {
-                const participant = agenda.participants[0];
+            if (participant) {
                 // Atomic Deletion for Guest
-                if ((participant as any).guest) {
-                    await AgendaModel.updateOne(
-                        { _id: agenda._id },
-                        { $pull: { participants: { _id: registeredId } } }
-                    );
+                if (participant.guest) {
+                    await ParticipantModel.deleteOne({ _id: registeredId });
                 } else {
                     // Atomic Update for Registered User
-                    await updatePaymentStatus("participants", "canceled");
+                    await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
                 }
-            } else {
-                 // Not found in either
-                 // Note: We don't throw 404 here usually for notifications to avoid Midtrans retries if it's already gone
             }
         }
       }

@@ -8,9 +8,16 @@ export default defineEventHandler(async (event): Promise<ILeaderboardResponse> =
   // Fetch active members
   // We need to populate all fields required for point calculation
   // Warning: This is resource intensive. For optimization, points should be cached in DB.
+  const { AgendaModel } = await import("~~/server/models/AgendaModel");
   const members = await MemberModel.find({ status: "active" })
-    .populate("agendasCommittee")
-    .populate("agendasMember")
+    .populate({
+      path: "committeesData",
+      populate: { path: "agendaId", model: AgendaModel }
+    })
+    .populate({
+      path: "participantsData",
+      populate: { path: "agendaId", model: AgendaModel }
+    })
     .populate("projects")
     .populate("aspirations")
     .populate({path:"manualPoints", model:PointModel})

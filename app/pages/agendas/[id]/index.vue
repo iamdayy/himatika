@@ -427,12 +427,12 @@ function formatCurrency(amount: number): string {
                                             'Panitia'
                                             : 'Peserta' }}</p>
                                         <UBadge
-                                            v-if="isRegistered === 'Participant' && (agenda.participants?.find((p) => (p.member as IMember)?.NIM === user?.member?.NIM)?.visiting)"
+                                            v-if="isRegistered === 'Participant' && agenda.myParticipant?.visiting"
                                             color="neutral" variant="solid" size="lg" class="mt-1 text-green-600">
                                             <UIcon name="i-heroicons-check-circle" class="mr-1" /> Sudah Hadir
                                         </UBadge>
                                         <UBadge
-                                            v-else-if="isRegistered === 'Committee' && (agenda.committees?.find((c) => (c.member as IMember)?.NIM === user?.member?.NIM)?.visiting)"
+                                            v-else-if="isRegistered === 'Committee' && agenda.myCommittee?.visiting"
                                             color="neutral" variant="solid" size="lg" class="mt-1 text-green-600">
                                             <UIcon name="i-heroicons-check-circle" class="mr-1" /> Sudah Hadir
                                         </UBadge>

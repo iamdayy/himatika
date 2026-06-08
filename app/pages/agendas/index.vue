@@ -449,14 +449,14 @@ const links = computed(() => [{
                                             <div class="flex items-center justify-between text-xs text-gray-500">
                                                 <div class="flex items-center gap-3">
                                                     <div class="flex items-center gap-1" :title="$ts('participant')"
-                                                        v-if="agenda.participants">
+                                                        v-if="agenda.participantsCount !== undefined">
                                                         <UIcon name="i-heroicons-user-group" class="w-3.5 h-3.5" />
-                                                        {{ agenda.participants.length }}
+                                                        {{ agenda.participantsCount }}
                                                     </div>
                                                     <div class="flex items-center gap-1" :title="$ts('committee')"
-                                                        v-if="agenda.committees">
+                                                        v-if="agenda.committeesCount !== undefined">
                                                         <UIcon name="i-heroicons-users" class="w-3.5 h-3.5" />
-                                                        {{ agenda.committees.length }}
+                                                        {{ agenda.committeesCount }}
                                                     </div>
                                                 </div>
                                                 <div class="text-primary-500 font-medium group-hover:underline">

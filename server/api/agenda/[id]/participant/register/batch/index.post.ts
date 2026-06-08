@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { IReqParticipantBatch } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
@@ -23,23 +24,34 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    ensureCommitteeOrOrganizer(agenda, user);
+    await ensureCommitteeOrOrganizer(agenda._id.toString(), user);
 
-    const updatedParticipants = agenda.participants?.map((participant) => {
-      if (body.participants.includes(participant._id?.toString() || "")) {
-        if (body.field === "payment") {
-          if (participant.payment) {
-            participant.payment.status = "success";
-          }
-        } else if (body.field === "visiting") {
-          participant.visiting = !participant.visiting;
-          participant.visitTime = participant.visiting ? new Date() : undefined;
-        }
+    const participants = await ParticipantModel.find({ _id: { $in: body.participants } });
+    
+    const bulkOps = participants.map((participant) => {
+      let updateDoc: any = {};
+      if (body.field === "payment") {
+        updateDoc = {
+          "payment.status": "success"
+        };
+      } else if (body.field === "visiting") {
+        const newVisiting = !participant.visiting;
+        updateDoc = {
+          visiting: newVisiting,
+          visitTime: newVisiting ? new Date() : null
+        };
       }
-      return participant;
+      return {
+        updateOne: {
+          filter: { _id: participant._id },
+          update: { $set: updateDoc }
+        }
+      };
     });
-    agenda.participants = updatedParticipants;
-    await agenda.save();
+
+    if (bulkOps.length > 0) {
+      await ParticipantModel.bulkWrite(bulkOps);
+    }
     return {
       statusCode: 200,
       statusMessage: "Participants updated successfully",

@@ -1,5 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
-import { MemberModel } from "~~/server/models/MemberModel"; // Pastikan import ini ada
+import { MemberModel } from "~~/server/models/MemberModel"; 
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
@@ -36,15 +37,18 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     // 3. Filter Duplikasi (Cek apakah sudah terdaftar di agenda ini)
-    const existingMemberIds =
-      agenda.participants?.map((p) => p.member?.toString()) || [];
+    const existingParticipants = await ParticipantModel.find({ agendaId: id });
+    const existingMemberIds = existingParticipants.map((p) => p.member?.toString());
+    
     let addedCount = 0;
+    const newParticipants: any[] = [];
 
     body.data.forEach((reqItem) => {
       const member = members.find((m) => m.NIM === reqItem.nim);
       // Jika member belum ada di participants, masukkan
       if (member && !existingMemberIds.includes(member.id.toString())) {
-        agenda.participants?.push({
+        newParticipants.push({
+          agendaId: id,
           member: member.id as any,
           payment: reqItem.payment || {
             status: "success",
@@ -58,7 +62,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       }
     });
 
-    await agenda.save();
+    if (newParticipants.length > 0) {
+      await ParticipantModel.insertMany(newParticipants);
+    }
 
     return {
       statusCode: 200,
