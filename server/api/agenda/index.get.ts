@@ -72,9 +72,9 @@ export default defineCachedEventHandler(
         };
       }
       if (sort && order) {
-        validateSortField("agenda", sort);
+        validateSortField("agenda", sort === "date" ? "date.start" : sort);
         sortOpt = {
-          [sort]: order === "asc" ? 1 : -1,
+          [sort === "date" ? "date.start" : sort]: order === "asc" ? 1 : -1,
         };
       }
       const length = await AgendaModel.countDocuments(query);
