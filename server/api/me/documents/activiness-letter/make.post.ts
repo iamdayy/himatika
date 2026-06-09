@@ -1,6 +1,7 @@
 import { ConfigModel } from "~~/server/models/ConfigModel";
 import { DocModel } from "~~/server/models/DocModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
+import { logAction } from "~~/server/utils/logger";
 import { IDoc, IMember, IPoint } from "~~/types";
 
 export default defineEventHandler(async (event) => {
@@ -18,14 +19,27 @@ export default defineEventHandler(async (event) => {
   if (!point) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Point data is required",
+      statusMessage: "point_data_required",
+    });
+  }
+
+  // Cek apakah dokumen sudah pernah dibuat untuk semester ini
+  const existingDoc = await DocModel.findOne({
+    uploader: user.member._id,
+    tags: { $all: ["Surat Keterangan Aktif", `Semester ${point.semester}`] }
+  });
+  
+  if (existingDoc) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "activiness_letter_already_generated"
     });
   }
 
   // 1. Get Config
   const configData = await ConfigModel.findOne().lean();
   if (!configData) {
-      throw createError({ statusCode: 404, statusMessage: "Config not found" });
+      throw createError({ statusCode: 404, statusMessage: "config_not_found" });
   }
 
   // 2. Get Organizer
@@ -47,7 +61,7 @@ export default defineEventHandler(async (event) => {
    .lean(); // Use lean for performance if we don't need mongoose methods
 
   if (!organizer) {
-      throw createError({ statusCode: 404, statusMessage: "Organizer not found for this period" });
+      throw createError({ statusCode: 404, statusMessage: "organizer_not_found" });
   }
 
   // 3. Generate Doc Number
@@ -66,13 +80,21 @@ export default defineEventHandler(async (event) => {
   const formattedNumber = (lastNumber + 1).toString().padStart(3, "0");
   const docNumber = `${formattedNumber}/II.3.AI/B01.01/02.A-1/S.Ket/${monthToRoman(new Date())}/${new Date().getFullYear()}`;
 
+  // Helper for finding positions accurately
+  const isChairman = (pos: string) => /^(Ketua|Ketua Umum|Ketua Himpunan|Chairman)$/i.test(pos);
+  const isSecretary = (pos: string) => /^(Sekretaris|Sekretaris Umum|Sekretaris I|Secretary)$/i.test(pos);
+  
+  const dailyManagement = organizer.dailyManagement;
+  const chairmanMember = dailyManagement.find((dm: any) => isChairman(dm.position))?.member as any;
+  const secretaryMember = dailyManagement.find((dm: any) => isSecretary(dm.position))?.member as any;
+
   // 4. Call Worker
   try {
       const result = await himatikaPdfWorker.generateActivinessLetter({
           member: user.member,
           point: point,
-          chairman: organizer.dailyManagement.find((dm: any) => dm.position.includes("Ketua") || dm.position.includes("Chairman"))?.member as IMember,
-          secretary: organizer.dailyManagement.find((dm: any) => dm.position.includes("Sekretaris") || dm.position.includes("Secretary"))?.member as IMember,
+          chairman: chairmanMember as IMember,
+          secretary: secretaryMember as IMember,
           docNumber: docNumber,
           period: `${organizer.period.start.getFullYear()} - ${organizer.period.end.getFullYear()}`,
           config: {
@@ -84,17 +106,12 @@ export default defineEventHandler(async (event) => {
       });
 
       // 5. Construct IDoc object
-      // Chairman & Secretary from Organizer
-      const dailyManagement = organizer.dailyManagement;
-      const chairman = dailyManagement.find((dm: any) => dm.position.includes("Ketua") || dm.position.includes("Chairman"))?.member as any;
-      const secretary = dailyManagement.find((dm: any) => dm.position.includes("Sekretaris") || dm.position.includes("Secretary"))?.member as any;
-
       const signs = [];
       
       const chairmanLoc = result.signatureLocations?.find((l: any) => l.role === 'Chairman');
-      if (chairman && chairmanLoc) {
+      if (chairmanMember && chairmanLoc) {
           signs.push({
-              user: chairman._id || chairman, // Handle both object and probable ID
+              user: chairmanMember._id || chairmanMember, // Handle both object and probable ID
               signed: false,
               as: "Ketua Umum",
               location: {
@@ -108,9 +125,9 @@ export default defineEventHandler(async (event) => {
       }
 
       const secretaryLoc = result.signatureLocations?.find((l: any) => l.role === 'Secretary');
-      if (secretary && secretaryLoc) {
+      if (secretaryMember && secretaryLoc) {
           signs.push({
-              user: secretary._id || secretary,
+              user: secretaryMember._id || secretaryMember,
               signed: false,
               as: "Sekretaris Umum",
               location: {
@@ -142,9 +159,17 @@ export default defineEventHandler(async (event) => {
           }]
       });
 
+      // Audit Log
+      await logAction({
+        action: "GENERATE_ACTIVINESS_LETTER",
+        event,
+        details: { docId: saved._id, semester: point.semester },
+        target: saved._id.toString()
+      });
+
       return {
           statusCode: 200,
-          statusMessage: "Document generated successfully",
+          statusMessage: "generate_activiness_letter_success",
           data: saved
       };
 
@@ -152,7 +177,7 @@ export default defineEventHandler(async (event) => {
       console.error(e);
       throw createError({
           statusCode: 500,
-          statusMessage: e.message || "Failed to generate document"
+          statusMessage: "failed_to_generate_activiness_letter"
       });
   }
 });
