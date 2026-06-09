@@ -364,6 +364,8 @@ export interface IAgendaConfiguration {
  * Represents an agenda with details, committee, and registration information.
  */
 export interface IAgenda {
+  myParticipant?: IParticipant;
+  myCommittee?: ICommittee;
   _id?: string | Types.ObjectId | unknown;
   title: string;
   category?: ICategory | Types.ObjectId | string;

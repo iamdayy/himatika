@@ -115,15 +115,10 @@ const isCertificateLoading = ref(false);
 const myCertificateDoc = ref<null | { _id: string; doc: string; signs: { signed: boolean }[] }>(null);
 
 const myParticipant = computed(() => {
-    if (!user.value || !agenda.value) return null;
+    if (!agenda.value) return null;
 
-    // Check Participant
-    const p = agenda.value.participants?.find((p: any) => (p.member?.NIM || p.member) === user.value?.member?.NIM);
-    if (p) return { ...p, type: 'participant' };
-
-    // Check Committee
-    const c = agenda.value.committees?.find((c: any) => (c.member?.NIM || c.member) === user.value?.member?.NIM);
-    if (c) return { ...c, type: 'committee' };
+    if (agenda.value.myParticipant) return { ...agenda.value.myParticipant, type: 'participant' };
+    if (agenda.value.myCommittee) return { ...agenda.value.myCommittee, type: 'committee' };
 
     return null;
 });
@@ -237,11 +232,7 @@ const downloadCertificate = () => {
 
 
 const navigateToRegisterParticipant = () => {
-    if (!user.value) {
-        router.push({ path: '/login', query: { redirect: route.fullPath } });
-    } else {
-        router.push(`/agendas/${id}/participant/register`);
-    }
+    router.push(`/agendas/${id}/participant/register`);
 };
 
 const navigateToRegisterCommittee = () => {

@@ -167,8 +167,24 @@ export default defineEventHandler(
       // Create Participant Record
       await ParticipantModel.create(newParticipantData);
 
-      // Send confirmation email
-      await sendConfirmationEmail(agenda, participantId, name, email);
+      // Send confirmation email via QStash
+      const { Client } = await import("@upstash/qstash");
+      const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+      
+      const config = useRuntimeConfig();
+      const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
+      
+      qstashClient.publishJSON({
+        url: webhookUrl,
+        body: {
+          type: "participant-registration",
+          agendaTitle: agenda.title,
+          agendaId: agenda._id,
+          participantId: participantId,
+          name: name,
+          email: email
+        }
+      }).catch((e) => console.error("Failed to publish to QStash", e));
 
       return {
         statusCode: 200,

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useQRCode } from '@vueuse/integrations/useQRCode';
-import type { ICategory, IMember } from '~~/types';
+import type { ICategory, IMember, IGuest } from '~~/types';
 import { type IAgendaResponse, type IParticipantResponse } from '~~/types/IResponse';
 
 const route = useRoute();
 const { $api, $ts } = useNuxtApp();
 const agendaId = route.params.id as string;
+const participantIdQuery = route.query.participantId as string | undefined;
 const { makeTicket } = useMakeDocs();
 
 // 1. Fetch Agenda Data & Registration Status
@@ -16,7 +17,9 @@ const { data: agenda, pending, error } = useAsyncData('agenda', () => $api<IAgen
     },
     default: () => null,
 });
-const { data: me, pending: mePending } = useAsyncData('registration', () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`), {
+const { data: me, pending: mePending } = useAsyncData('registration', () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
+    query: { participantId: participantIdQuery }
+}), {
     transform: (data) => {
         if (!data.data) return null;
         return data.data.participant;
@@ -46,9 +49,11 @@ const isQuestionsAnswered = computed(() => {
 });
 
 // Validasi jika belum terdaftar
-if (!me.value && !mePending.value) {
-    navigateTo(`/agendas/${agendaId}/participant/register`);
-}
+watch([me, mePending], ([newMe, isPending]) => {
+    if (!newMe && !isPending) {
+        navigateTo(`/agendas/${agendaId}/participant/register?participantId=${participantIdQuery || ''}`);
+    }
+}, { immediate: true });
 
 const bannerImage = computed(() => {
     if (agenda.value?.photos && agenda.value.photos.length > 0) {
@@ -97,11 +102,11 @@ const formatTime = (dateString: string) => {
 
 // --- ACTIONS ---
 const doPayment = () => {
-    navigateTo(`/agendas/${agendaId}/participant/${me.value?._id}/register?tab=payment&participantId=${me.value?._id}`);
+    navigateTo(`/agendas/${agendaId}/participant/register?tab=payment&participantId=${me.value?._id}`);
 };
 
 const doAnswer = () => {
-    navigateTo(`/agendas/${agendaId}/participant/${me.value?._id}/register?tab=answer_question&participantId=${me.value?._id}`);
+    navigateTo(`/agendas/${agendaId}/participant/register?tab=answer_question&participantId=${me.value?._id}`);
 };
 
 const isGeneratingPdf = ref(false);
@@ -282,12 +287,12 @@ definePageMeta({
                                         <div class="flex items-center gap-3">
                                             <div
                                                 class="w-8 h-8 rounded-full bg-linear-to-tr from-primary-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                                                {{ (me?.member as IMember)?.fullName?.charAt(0) || 'P' }}
+                                                {{ ((me?.member as IMember)?.fullName || (me?.guest as IGuest)?.fullName || 'Peserta').charAt(0).toUpperCase() }}
                                             </div>
                                             <div>
                                                 <p
                                                     class="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-1">
-                                                    {{ (me?.member as IMember)?.fullName || 'Peserta' }}
+                                                    {{ (me?.member as IMember)?.fullName || (me?.guest as IGuest)?.fullName || 'Peserta' }}
                                                 </p>
                                                 <p class="text-[10px] text-gray-500 font-mono">
                                                     ID: {{ (me?._id as string)?.slice(-8).toUpperCase() }}

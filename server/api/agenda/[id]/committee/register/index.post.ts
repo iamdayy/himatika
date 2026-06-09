@@ -107,36 +107,24 @@ export default defineEventHandler(
       // Fetch updated agenda to get details for email (or just use existing 'agenda' object which has title)
       // Note: 'agenda' object in memory is stale now regarding the new committee, but strictly for email text it's fine.
 
-      let sender = {
-        email: config.resend_from,
-        name: "Administrator",
-      };
-      const newMail = new Email({
-        recipientName: name,
-        emailTitle: `Agenda ${agenda.title} Registration Confirmation`,
-        heroTitle: `Agenda ${agenda.title} Registration Confirmation`,
-        heroSubtitle: `You have successfully registered for the agenda ${agenda.title}`,
-        heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}/committee/register/?committeeId=${committeeId}`,
-        heroButtonText: "View Registration Details",
-        contentTitle1: "Agenda Registration Confirmation",
-        contentParagraph1: `You have successfully registered for the agenda ${agenda.title}`,
-        contentParagraph2: `You can view the agenda details by clicking the button below.`,
-        contentTitle2: "Need help?",
-        contentListItems: [],
-        ctaTitle: "Need help?",
-        ctaSubtitle: "Contact us at",
-        ctaButtonLink: `${config.public.public_uri}/#contacts`,
-        ctaButtonText: "Contact Us",
-      });
-
-      // Send an email confirmation to the user
-      await sendEmail(
-        sender,
-        email,
-        "Agenda Registration Confirmation",
-        newMail.render(),
-        "agenda-registration",
-      );
+      // Publish email job to QStash
+      const { Client } = await import("@upstash/qstash");
+      const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+      
+      const config = useRuntimeConfig();
+      const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
+      
+      qstashClient.publishJSON({
+        url: webhookUrl,
+        body: {
+          type: "committee-registration",
+          agendaTitle: agenda.title,
+          agendaId: agenda._id,
+          committeeId: committeeId,
+          name: name,
+          email: email
+        }
+      }).catch((e) => console.error("Failed to publish to QStash", e));
 
       // Return success response
       return {

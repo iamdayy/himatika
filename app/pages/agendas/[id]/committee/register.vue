@@ -55,6 +55,7 @@ const agenda = computed<IAgenda | undefined>(() => agendaData.value?.data?.agend
 const committee = computed<ICommittee | undefined>(() => {
     if (!committeeData.value) return {
         _id: '',
+        agendaId: id,
         job: '',
         payment: {
             _id: '',
@@ -153,7 +154,6 @@ const jobAvailablesItems = computed(() => {
     return agenda.value?.configuration.committee.jobAvailables?.map((item) => ({
         label: item.label,
         value: item.label,
-        disabled: agenda.value?.committees ? agenda.value?.committees.filter(c => c.job === item.label && c.approved).length >= item.count : false,
     })) || [];
 });
 

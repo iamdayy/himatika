@@ -20,10 +20,7 @@ const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 
 const { data: user } = useAuth();
-// Redirect if not logged in
-if (!user.value) {
-    router.push({ path: '/login', query: { redirect: route.fullPath } });
-}
+// Redirect logic removed to allow Guest registration and ticket viewing
 
 const { data: agenda, refresh } = useAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`, {
     method: 'GET',
@@ -59,6 +56,7 @@ const participant = computed<IParticipant>(() => {
     }
     return {
         _id: '',
+        agendaId: id,
         payment: {
             _id: '',
             method: 'cash',
@@ -70,7 +68,7 @@ const participant = computed<IParticipant>(() => {
         },
         member: user.value?.member,
         guest: user.value?.guest as IGuest | undefined,
-    };
+    } as IParticipant;
 });
 const registrationId = computed(() => participantId || participant.value?._id || '');
 
@@ -114,17 +112,17 @@ const steps = computed<Step[]>(() => {
 });
 const activeStep = ref(0);
 
-const registerAs = ref(participant.value?.guest ? participant.value?.guest?.instance ? 'non-student' : 'student-guest' : 'student');
+const registerAs = ref((participant.value?.guest as IGuest | undefined) ? ((participant.value?.guest as IGuest | undefined)?.instance ? 'non-student' : 'student-guest') : (user.value ? 'student' : 'non-student'));
 const formRegistration = reactiveComputed(() => ({
-    registerAs: 'student',
-    fullName: (participant.value?.member as IMember)?.fullName || participant.value?.guest?.fullName || '',
-    email: (participant.value?.member as IMember)?.email || participant.value?.guest?.email || '',
-    phone: (participant.value?.member as IMember)?.phone || participant.value?.guest?.phone || '',
-    NIM: (participant.value?.member as IMember)?.NIM || participant.value?.guest?.NIM || 0,
-    class: (participant.value?.member as IMember)?.class || participant.value?.guest?.class || '',
-    semester: (participant.value?.member as IMember)?.semester || participant.value?.guest?.semester || 0,
-    prodi: participant.value?.guest?.prodi || '',
-    instance: participant.value?.guest?.instance || '',
+    registerAs: registerAs.value,
+    fullName: (participant.value?.member as IMember)?.fullName || (participant.value?.guest as IGuest | undefined)?.fullName || '',
+    email: (participant.value?.member as IMember)?.email || (participant.value?.guest as IGuest | undefined)?.email || '',
+    phone: (participant.value?.member as IMember)?.phone || (participant.value?.guest as IGuest | undefined)?.phone || '',
+    NIM: (participant.value?.member as IMember)?.NIM || (participant.value?.guest as IGuest | undefined)?.NIM || 0,
+    class: (participant.value?.member as IMember)?.class || (participant.value?.guest as IGuest | undefined)?.class || '',
+    semester: (participant.value?.member as IMember)?.semester || (participant.value?.guest as IGuest | undefined)?.semester || 0,
+    prodi: (participant.value?.guest as IGuest | undefined)?.prodi || '',
+    instance: (participant.value?.guest as IGuest | undefined)?.instance || '',
 }));
 const formPayment = reactiveComputed(() => ({
     method: participant.value?.payment?.method || 'bank_transfer',
@@ -144,11 +142,16 @@ const checkIfProdiIsInformatics = computed(() => {
     const prodi = formRegistration.prodi?.toLowerCase().replace(/\s+/g, '') ?? '';
     return ['informatics', 'informatika', 'computerscience', 'cs', 'it', 'informationtechnology'].includes(prodi);
 });
-const registerAsOptions = ref([
-    { label: $ts('student'), value: 'student' },
-    { label: $ts('non_student'), value: 'non-student' },
-    { label: $ts('student_guest'), value: 'student-guest' },
-]);
+const registerAsOptions = computed(() => {
+    const options = [
+        { label: $ts('non_student'), value: 'non-student' },
+        { label: $ts('student_guest'), value: 'student-guest' },
+    ];
+    if (user.value) {
+        options.unshift({ label: $ts('student'), value: 'student' });
+    }
+    return options;
+});
 const paymentMethods = ref<{ label: string; value: IPaymentMethod; icon: string; }[]>([
     { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
     { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
@@ -280,7 +283,7 @@ const onCancelPayment = async () => {
 const responsiveClasses = computed(() => ({
     label: isMobile.value ? 'text-xs' : 'text-base',
     input: isMobile.value ? 'text-xs' : 'text-base',
-    gridCols: isMobile.value ? 'grid-cols-1' : 'grid-cols-6',
+    gridCols: 'grid-cols-1 md:grid-cols-2',
     container: isMobile.value ? 'p-2' : 'p-3',
 }));
 
@@ -358,8 +361,7 @@ const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => 
     // confirmation: (value: string) => value ? null : $ts('confirmation_required'),
 }));
 const onCompleted = async () => {
-    // TODO: CREATE TICKET PAGE
-    router.push(`/agendas/${id}/participant`);
+    router.push(`/agendas/${id}/participant?participantId=${registrationId.value}`);
 }
 async function handleAnswer() {
     try {
@@ -402,13 +404,6 @@ onMounted(() => {
         } else {
             activeStep.value = 0;
         }
-        if (!participant.value?.guest && !participant.value?.member) {
-            toast.add({
-                title: 'You are not registered as a participant',
-                description: 'Please register first.',
-                color: 'error',
-            })
-        }
     }, 1000);
 
 });
@@ -436,7 +431,7 @@ watch(participant, (newValue) => {
                     <UAlert v-if="participant._id" color="success" :title="$ts('already_participant')"
                         :description="$ts('already_participant_desc')" class="mb-4"></UAlert>
                     <div class="flex space-x-4">
-                        <UFormField :label="$ts('register_as')" class="col-span-6 px-4"
+                        <UFormField :label="$ts('register_as')" class="px-4"
                             :error="errors.registerAs?.message">
                             <URadioGroup v-model="registerAs" :items="registerAsOptions"
                                 :disabled="user ? true : false" />
@@ -446,45 +441,45 @@ watch(participant, (newValue) => {
                     <div class="text-start">
                         <div class="space-y-4" v-if="registerAs">
                             <div :class="['grid gap-2 px-4', responsiveClasses.gridCols]">
-                                <UFormField class="col-span-6" :label="$ts('NIM')" v-if="registerAs !== 'non-student'"
+                                <UFormField :label="$ts('NIM')" v-if="registerAs !== 'non-student'"
                                     :error="errors.NIM?.message">
                                     <UInput v-model="formRegistration.NIM" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('name')" :error="errors.fullName?.message">
+                                <UFormField :label="$ts('name')" :error="errors.fullName?.message">
                                     <UInput v-model="formRegistration.fullName" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('email')" :error="errors.email?.message">
+                                <UFormField :label="$ts('email')" :error="errors.email?.message">
                                     <UInput v-model="formRegistration.email" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('phone')" :error="errors.phone?.message">
+                                <UFormField :label="$ts('phone')" :error="errors.phone?.message">
                                     <UInput v-model="formRegistration.phone" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('class')" v-if="registerAs !== 'non-student'"
+                                <UFormField :label="$ts('class')" v-if="registerAs !== 'non-student'"
                                     :error="errors.class?.message">
                                     <UInput v-model="formRegistration.class" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('semester')"
+                                <UFormField :label="$ts('semester')"
                                     v-if="registerAs !== 'non-student'" :error="errors.semester?.message">
                                     <UInput v-model="formRegistration.semester" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('prodi')"
+                                <UFormField :label="$ts('prodi')"
                                     v-if="registerAs !== 'non-student' && !user" :error="errors.prodi?.message">
                                     <UInput v-model="formRegistration.prodi" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <UFormField class="col-span-6" :label="$ts('instance')"
+                                <UFormField :label="$ts('instance')"
                                     v-if="registerAs === 'non-student' || registerAs === 'student-guest'"
                                     :error="errors.instance?.message">
                                     <UInput v-model="formRegistration.instance" :size="responsiveUISizes.input"
                                         :disabled="user ? true : false" />
                                 </UFormField>
-                                <p v-if="checkIfProdiIsInformatics" class="col-span-6 text-red-500 dark:text-red-400">**
+                                <p v-if="checkIfProdiIsInformatics" class="md:col-span-2 text-red-500 dark:text-red-400">**
                                     {{
                                         $ts('is_informatics_message') }} <ULink to="/register"
                                         class="text-blue-500 underline">{{
