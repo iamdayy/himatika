@@ -43,13 +43,52 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
         const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
         const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
 
-        let result = await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
-        if (result.matchedCount === 0) {
-          result = await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
+        let participantDoc: any = await CommitteeModel.findById(registeredId).populate("member").populate("guest");
+        let isCommittee = true;
+        if (!participantDoc) {
+          participantDoc = await ParticipantModel.findById(registeredId).populate("member").populate("guest");
+          isCommittee = false;
         }
 
-        if (result.matchedCount === 0) {
+        if (!participantDoc) {
              throw createError({ statusCode: 404, statusMessage: "ID Pendaftaran tidak ditemukan" });
+        }
+
+        if (participantDoc.payment?.status === "success") {
+            return {
+                statusCode: 200,
+                statusMessage: "Notification already processed. Ignored for idempotency",
+            };
+        }
+
+        if (isCommittee) {
+            await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
+        } else {
+            await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
+        }
+
+        const agenda = await AgendaModel.findById(participantDoc.agendaId);
+        if (agenda) {
+          const { Client } = await import("@upstash/qstash");
+          const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+          const config = useRuntimeConfig();
+          const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
+
+          const pName = participantDoc.member?.fullName || participantDoc.guest?.fullName || "Peserta";
+          const pEmail = participantDoc.member?.email || participantDoc.guest?.email || "";
+
+          qstashClient.publishJSON({
+            url: webhookUrl,
+            body: {
+              type: "payment-success",
+              agendaTitle: agenda.title,
+              agendaId: agenda._id,
+              participantId: registeredId,
+              name: pName,
+              email: pEmail,
+              amount: body.gross_amount,
+            }
+          }).catch((e) => console.error("Failed to publish to QStash", e));
         }
       } 
       

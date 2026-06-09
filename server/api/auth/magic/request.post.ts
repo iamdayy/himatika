@@ -23,35 +23,33 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Find member
+  // Find member or guest
+  let user: { email?: string; fullName: string; role: string; status?: string } | null = null;
+  
   const member = await MemberModel.findOne({ email });
-  if (!member) {
-    // Security: Don't reveal if email exists or not?
-    // But for this internal app, maybe it's fine to say "Email not found".
-    // Or just say "If the email is registered, a login link has been sent."
-    // Let's go with the vague message for security best practices, unless user UX demands otherwise.
-    // However, existing code in `signin.post.ts` explicitly throws "User not found".
-    // Let's stick to existing pattern or be slightly better.
-    // For now, let's return success even if not found to prevent enumeration, 
-    // BUT since this is likely an organizational app where members are public/known, maybe it doesn't matter.
-    // Implementation plan said: "If an email is not found in MemberModel, the login will be rejected."
-    // So if I return success here but don't send email, user waits forever.
-    // Let's check `request.post.ts` logic in my plan... 
-    // Actually, explicit error might be better for UX in this closed system.
+  if (member) {
+      user = { email: member.email, fullName: member.fullName, role: 'member', status: member.status };
+  } else {
+      const { GuestModel } = await import("~~/server/models/GuestModel");
+      const guest = await GuestModel.findOne({ email });
+      if (guest) {
+          user = { email: guest.email, fullName: guest.fullName, role: 'guest' };
+      }
+  }
+
+  if (!user) {
     throw createError({
       statusCode: 404,
-      statusMessage: "Email not found in member database.",
+      statusMessage: "Email not found in our database.",
     });
   }
 
-  if (member.status !== 'active' && member.status !== 'free') {
-      // Maybe block deleted/inactive?
-      // `signin.post.ts` doesn't seem to block login based on member status directly, 
-      // but `ensureAuth` might. `signin.post.ts` checks `user.verified`.
+  if (user.role === 'member' && user.status !== 'active' && user.status !== 'free') {
+      // Ignore
   }
 
   // Generate Magic Token
-  const magicToken = jwt.sign({ email: member.email, type: 'magic' }, getSecretKey(), {
+  const magicToken = jwt.sign({ email: user.email, type: 'magic', role: user.role }, getSecretKey(), {
     expiresIn: "15m", // 15 minutes
   });
 
@@ -59,14 +57,14 @@ export default defineEventHandler(async (event) => {
 
   // Prepare Email
   const mailContent = new Email({
-    recipientName: member.fullName,
+    recipientName: user.fullName,
     emailTitle: "Login to Himatika",
     heroTitle: "Magic Link Login",
     heroSubtitle: "Click the button below to log in to your Himatika account. This link is valid for 15 minutes.",
     heroButtonText: "Log In",
     heroButtonLink: magicLink,
     contentTitle1: "Login Request",
-    contentParagraph1: `A login request was received for your account associated with ${member.email}. If you did not request this, please ignore this email.`,
+    contentParagraph1: `A login request was received for your account associated with ${user.email}. If you did not request this, please ignore this email.`,
     ctaTitle: "Need Help?",
     ctaSubtitle: "Contact the administrator if you have issues.",
     ctaButtonText: "Contact Support",
@@ -76,7 +74,7 @@ export default defineEventHandler(async (event) => {
   // Send Email
   await sendEmail(
     { name: config.public.appname, email: config.resend_from },
-    member.email!,
+    user.email!,
     "Login to Himatika (Magic Link)",
     mailContent.render(),
     "auth"

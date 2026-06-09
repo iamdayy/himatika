@@ -43,16 +43,16 @@ if ((user.value as any)?.guest) {
 const { $pageGuide, $api } = useNuxtApp();
 
 const rankIcon = (rank: number, userNIM: number) => {
-    if (rank === 0) {
+    if (rank === 1) {
         return h('span', { class: 'text-xl' }, '🥇')
-    } else if (rank === 1) {
-        return h('span', { class: 'text-xl' }, '🥈')
     } else if (rank === 2) {
+        return h('span', { class: 'text-xl' }, '🥈')
+    } else if (rank === 3) {
         return h('span', { class: 'text-xl' }, '🥉')
     } else if (user.value?.member.NIM === userNIM) {
-        return h('span', { class: 'text-xl bg-primary-500 text-white px-2 py-1 rounded-full' }, '#' + (rank + 1))
+        return h('span', { class: 'text-xl bg-primary-500 text-white px-2 py-1 rounded-full' }, '#' + (rank))
     } else {
-        return h('span', { class: 'text-xl' }, '#' + (rank + 1))
+        return h('span', { class: 'text-xl' }, '#' + (rank))
     }
 }
 
@@ -245,7 +245,7 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
                         <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
@@ -258,7 +258,7 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 projectsMe.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="projectsMe.length || 0" :color="color" :max="data?.count || 100"
@@ -271,7 +271,7 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 aspirations.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"

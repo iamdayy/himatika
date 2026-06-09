@@ -84,7 +84,27 @@ export default defineEventHandler(async (event) => {
     memberData = participant.member as IMember;
   }
 
-  // 7. Return Data
+  // 7. Trigger Email Check-In via QStash
+  if (memberData && memberData.email) {
+    const { Client } = await import("@upstash/qstash");
+    const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+    const config = useRuntimeConfig();
+    const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
+
+    qstashClient.publishJSON({
+      url: webhookUrl,
+      body: {
+        type: "check-in-success",
+        agendaTitle: agenda.title,
+        agendaId: agenda._id.toString(),
+        name: memberData.fullName,
+        email: memberData.email,
+        visitTime: participant.visitAt.toISOString(),
+      }
+    }).catch((e) => console.error("Failed to publish check-in to QStash", e));
+  }
+
+  // 8. Return Data
   return {
     status: "success",
     role: roleFound,

@@ -309,8 +309,22 @@ function formatCurrency(amount: number): string {
 <template>
     <div class="min-h-screen space-y-2">
         <UBreadcrumb :items="links" />
-        <div v-if="pending" class="flex h-screen items-center justify-center">
-            <UIcon name="i-heroicons-arrow-path" class="animate-spin text-4xl text-primary" />
+        <div v-if="pending" class="flex flex-col gap-4 py-4 w-full">
+            <USkeleton class="h-[400px] lg:h-[500px] w-full rounded-2xl" />
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-4">
+                        <USkeleton class="h-8 w-1/3" />
+                        <USkeleton class="h-4 w-full" />
+                        <USkeleton class="h-4 w-5/6" />
+                        <USkeleton class="h-4 w-4/5" />
+                    </div>
+                    <div class="lg:col-span-1 space-y-4">
+                        <USkeleton class="h-48 w-full rounded-2xl" />
+                        <USkeleton class="h-32 w-full rounded-2xl" />
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div v-else-if="agenda" class="pb-20 md:pb-10 font-sans">

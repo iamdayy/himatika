@@ -117,20 +117,13 @@ const links = computed(() => [{
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :items="links" />
         <div class="space-y-8">
-
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $ts('title') }}</h1>
-                    <p class="text-gray-500 dark:text-gray-400">{{ $ts('description') }}</p>
-                </div>
-            </div>
-
             <div v-if="nearestAgenda"
-                class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-600 to-primary-800 dark:from-primary-900 dark:to-primary-950 shadow-xl text-white">
-                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl">
+                class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-500 to-primary-700 dark:from-primary-600 dark:to-primary-900 shadow-xl text-white">
+                <div
+                    class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-accent-4 opacity-30 rounded-full blur-3xl">
                 </div>
                 <div
-                    class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-yellow-400 opacity-20 rounded-full blur-2xl">
+                    class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-accent-3 opacity-30 rounded-full blur-2xl">
                 </div>
 
                 <div class="relative p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center">
@@ -172,9 +165,9 @@ const links = computed(() => [{
                         </div>
                     </div>
 
-                    <div class="flex-shrink-0">
-                        <UButton size="xl" color="primary" variant="solid" :to="`/agendas/${nearestAgenda._id}`"
-                            class="text-primary-700 font-bold px-8">
+                    <div class="flex-shrink-0 z-10">
+                        <UButton size="xl" color="neutral" variant="outline" :to="`/agendas/${nearestAgenda._id}`"
+                            class="text-white hover:text-white font-bold px-8 shadow-lg hover:shadow-xl transition-all duration-300">
                             {{ $ts('joinNow') }}
                         </UButton>
                     </div>
@@ -213,12 +206,12 @@ const links = computed(() => [{
                             </VCalendar>
                         </ClientOnly>
 
-                        <div class="mt-4 flex gap-4 text-xs justify-center">
-                            <div class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-accent-4"></span> {{ $ts('open') }}
+                        <div class="mt-4 flex gap-4 text-xs justify-center font-medium">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-accent-3 shadow-sm"></span> {{ $ts('open') }}
                             </div>
-                            <div class="flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-gray-400"></span> {{ $ts('closed') }}
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-gray-400 shadow-sm"></span> {{ $ts('closed') }}
                             </div>
                         </div>
                     </UCard>

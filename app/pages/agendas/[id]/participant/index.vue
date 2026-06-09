@@ -148,7 +148,6 @@ const links = computed(() => [{
 
 definePageMeta({
     layout: 'client',
-    auth: false,
 });
 </script>
 
@@ -157,9 +156,22 @@ definePageMeta({
         <UBreadcrumb :items="links" />
         <UCard class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center font-sans">
 
-            <div v-if="pending" class="flex flex-col items-center justify-center space-y-4">
-                <span class="loading loading-dots loading-lg text-primary"></span>
-                <p class="text-sm font-medium text-gray-500 animate-pulse">Memroses tiket Anda...</p>
+            <div v-if="pending" class="w-full max-w-md mx-auto space-y-4">
+                <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
+                    <USkeleton class="h-64 w-full rounded-none" />
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <USkeleton class="h-10 w-full" />
+                            <USkeleton class="h-10 w-full" />
+                            <USkeleton class="h-12 w-full col-span-2" />
+                        </div>
+                        <USkeleton class="h-48 w-full rounded-2xl" />
+                        <div class="flex gap-3">
+                            <USkeleton class="h-10 flex-1 rounded-xl" />
+                            <USkeleton class="h-10 flex-1 rounded-xl" />
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div v-else-if="error || !agenda" class="text-center max-w-md mx-auto">
@@ -254,14 +266,14 @@ definePageMeta({
                         </div>
 
                         <!-- Middle Section: Ticket Details (Rip Effect) -->
-                        <div class="relative bg-white dark:bg-gray-900">
+                        <div class="relative bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
                             <!-- Rip Circles -->
-                            <div class="absolute -top-3 -left-3 w-6 h-6 bg-gray-50 dark:bg-gray-900 rounded-full z-20">
+                            <div class="absolute -top-4 -left-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_-3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_-3px_-3px_5px_rgba(255,255,255,0.05)]">
                             </div>
-                            <div class="absolute -top-3 -right-3 w-6 h-6 bg-gray-50 dark:bg-gray-900 rounded-full z-20">
+                            <div class="absolute -top-4 -right-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_3px_-3px_5px_rgba(255,255,255,0.05)]">
                             </div>
                             <div
-                                class="absolute top-0 left-3 right-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 opacity-50">
+                                class="absolute top-0 left-4 right-4 border-t-[3px] border-dashed border-gray-300 dark:border-gray-700 opacity-60">
                             </div>
 
                             <div class="px-6 py-8">
@@ -304,7 +316,7 @@ definePageMeta({
 
                                 <!-- QR Code Section -->
                                 <div
-                                    class="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center relative group-hover:border-primary-200 transition-colors duration-300">
+                                    class="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center relative group-hover:border-primary-400 group-hover:shadow-[0_0_20px_rgba(0,141,211,0.15)] transition-all duration-500">
                                     <div class="bg-white p-3 rounded-xl shadow-sm mb-4">
                                         <img :src="qrCode" class="w-40 h-40 object-contain" alt="QR Code" />
                                     </div>
@@ -313,7 +325,7 @@ definePageMeta({
                                             masuk
                                         </p>
                                         <div v-if="me?.visiting"
-                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold mt-2 shadow-lg shadow-green-500/30 animate-pulse">
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold mt-2 shadow-[0_0_15px_rgba(34,197,94,0.6)] animate-pulse border border-green-400">
                                             <Icon name="i-heroicons-check-badge-solid" class="w-5 h-5" />
                                             TERVERIFIKASI HADIR
                                         </div>

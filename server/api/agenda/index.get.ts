@@ -90,32 +90,48 @@ export default defineCachedEventHandler(
       const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
       const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
       
-      const agendasWithCounts = await Promise.all(agendas.map(async (agenda) => {
-        const participantsCount = await ParticipantModel.countDocuments({ agendaId: agenda._id });
-        const committeesCount = await CommitteeModel.countDocuments({ agendaId: agenda._id });
-        
-        let myParticipant = undefined;
-        let myCommittee = undefined;
+      const agendaIds = agendas.map(a => a._id);
 
-        if (user?.member) {
-          const { MemberModel } = await import("~~/server/models/MemberModel");
-          const member = await MemberModel.findOne({ NIM: user.member.NIM });
-          if (member) {
-            myParticipant = await ParticipantModel.findOne({ agendaId: agenda._id, member: member._id }).lean();
-            myCommittee = await CommitteeModel.findOne({ agendaId: agenda._id, member: member._id }).lean();
-          }
-        } else if (user?.guest) {
-          myParticipant = await ParticipantModel.findOne({ agendaId: agenda._id, guest: user.guest._id }).lean();
+      const participantCounts = await ParticipantModel.aggregate([
+        { $match: { agendaId: { $in: agendaIds } } },
+        { $group: { _id: "$agendaId", count: { $sum: 1 } } }
+      ]);
+      const pCountMap = new Map(participantCounts.map(item => [item._id.toString(), item.count]));
+
+      const committeeCounts = await CommitteeModel.aggregate([
+        { $match: { agendaId: { $in: agendaIds } } },
+        { $group: { _id: "$agendaId", count: { $sum: 1 } } }
+      ]);
+      const cCountMap = new Map(committeeCounts.map(item => [item._id.toString(), item.count]));
+
+      const myParticipantsMap = new Map();
+      const myCommitteesMap = new Map();
+
+      if (user?.member) {
+        const { MemberModel } = await import("~~/server/models/MemberModel");
+        const member = await MemberModel.findOne({ NIM: user.member.NIM });
+        if (member) {
+          const myParticipants = await ParticipantModel.find({ agendaId: { $in: agendaIds }, member: member._id }).lean();
+          myParticipants.forEach((p: any) => myParticipantsMap.set(p.agendaId.toString(), p));
+
+          const myCommittees = await CommitteeModel.find({ agendaId: { $in: agendaIds }, member: member._id }).lean();
+          myCommittees.forEach((c: any) => myCommitteesMap.set(c.agendaId.toString(), c));
         }
+      } else if (user?.guest) {
+        const myParticipants = await ParticipantModel.find({ agendaId: { $in: agendaIds }, guest: user.guest._id }).lean();
+        myParticipants.forEach((p: any) => myParticipantsMap.set(p.agendaId.toString(), p));
+      }
 
+      const agendasWithCounts = agendas.map((agenda) => {
+        const agendaIdStr = agenda._id.toString();
         return {
           ...agenda.toObject(),
-          participantsCount,
-          committeesCount,
-          myParticipant,
-          myCommittee
+          participantsCount: pCountMap.get(agendaIdStr) || 0,
+          committeesCount: cCountMap.get(agendaIdStr) || 0,
+          myParticipant: myParticipantsMap.get(agendaIdStr) || undefined,
+          myCommittee: myCommitteesMap.get(agendaIdStr) || undefined
         };
-      }));
+      });
 
       if (!agendasWithCounts) {
         throw createError({

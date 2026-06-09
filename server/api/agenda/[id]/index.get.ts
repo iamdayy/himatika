@@ -2,7 +2,6 @@ import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { VideoModel } from "~~/server/models/VideoModel";
-import { IMember } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -16,7 +15,11 @@ export default defineEventHandler(async (event) => {
       }
     }
     // Fetch a single agenda by ID
-    const eventDataDoc = await AgendaModel.findById(id, {})
+    const eventDataDoc = await AgendaModel.findById(id)
+      .populate({
+        path: "category",
+        select: "_id title",
+      })
       .populate({
         path: "photos",
         model: PhotoModel,

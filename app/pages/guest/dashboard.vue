@@ -114,6 +114,8 @@ useHead({
     title: 'Guest Dashboard'
 });
 
+const { $api } = useNuxtApp();
+
 const { data: session, signOut } = useAuth();
 // Helper to type-guard/cast session data
 const guest = computed(() => (session.value as any)?.guest as IGuest | undefined);
@@ -123,7 +125,7 @@ const handleLogout = async () => {
 };
 
 // Fetch Agendas to show registered ones
-const { data: agendas } = await useAsyncData('guest-agendas', () => $fetch<IAgendaResponse>('/api/agenda'), {
+const { data: agendas } = await useAsyncData('guest-agendas', () => $api<IAgendaResponse>('/api/agenda'), {
     lazy: true,
     transform: (data) => {
         if (data.data) {

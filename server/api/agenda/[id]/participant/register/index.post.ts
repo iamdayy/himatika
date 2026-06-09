@@ -134,20 +134,35 @@ export default defineEventHandler(
         name = guest.fullName;
         email = guest.email;
         
-        // Find or create guest
-        let existingGuest = await GuestModel.findOne({ email: guest.email });
-        if (!existingGuest) {
-          existingGuest = await GuestModel.create({
-            fullName: guest.fullName,
-            email: guest.email,
-            phone: guest.phone,
-            instance: guest.instance,
-            NIM: guest.NIM,
-            prodi: guest.prodi,
-            class: guest.class,
-            semester: guest.semester,
+        const { MemberModel } = await import("~~/server/models/MemberModel");
+        const existingMember = await MemberModel.findOne({ email: guest.email });
+        
+        if (existingMember) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "Email ini terdaftar sebagai Mahasiswa (Member). Harap login terlebih dahulu.",
           });
         }
+        
+        let existingGuest = await GuestModel.findOne({ email: guest.email });
+        if (existingGuest) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "Email ini sudah terdaftar sebagai Guest. Harap login melalui Magic Link untuk mendaftar acara.",
+          });
+        }
+        
+        // If not found, create a new guest safely
+        existingGuest = await GuestModel.create({
+          fullName: guest.fullName,
+          email: guest.email,
+          phone: guest.phone,
+          instance: guest.instance,
+          NIM: guest.NIM,
+          prodi: guest.prodi,
+          class: guest.class,
+          semester: guest.semester,
+        });
         
         const isRegisteredParticipant = await ParticipantModel.exists({ agendaId: id, guest: existingGuest._id });
         if (isRegisteredParticipant) {

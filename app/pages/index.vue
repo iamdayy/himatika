@@ -59,18 +59,23 @@ useSeoMeta({
 <template>
     <div>
         <!-- Hero Section -->
-        <section class="w-full mx-auto mt-8">
-            <div class="text-center">
+        <section class="relative w-full mx-auto min-h-[70vh] flex flex-col justify-center overflow-hidden bg-gradient-to-br from-primary-500/5 via-transparent to-accent-4/5 dark:from-primary-500/10 dark:via-transparent dark:to-accent-4/10">
+            <!-- Glow background effect -->
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/20 dark:bg-primary-500/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-4/20 dark:bg-accent-4/10 rounded-full blur-3xl -z-10 animate-pulse delay-1000"></div>
+            
+            <div class="text-center px-4 z-10">
                 <NuxtImg provider="localProvider" src="/img/logo.png" alt="Logo"
-                    class="mx-auto my-2 w-36 md:w-full md:max-w-sm md:my-4 hero" format="webp" preload />
+                    class="mx-auto my-4 w-40 md:w-full md:max-w-md hero transition-transform duration-700 hover:scale-105" format="webp" preload />
 
                 <h1
-                    class="text-3xl font-bold tracking-tight text-gray-900 uppercase sm:text-4xl md:text-6xl lg:text-8xl hero title dark:text-gray-200">
+                    class="mt-6 text-4xl font-extrabold tracking-tight text-gray-900 uppercase sm:text-5xl md:text-7xl lg:text-8xl hero title dark:text-white drop-shadow-sm">
                     {{ config?.name }}</h1>
             </div>
         </section>
-        <section class="py-8 md:py-12" id="about">
-            <div class="grid grid-cols-1 gap-6 px-24 pt-2 md:grid-cols-3">
+        
+        <section class="py-16 md:py-24" id="about">
+            <div class="grid grid-cols-1 gap-6 px-4 md:px-12 lg:px-24 pt-2 md:grid-cols-3">
                 <StatCard v-if="statsData?.data?.members" :title="$ts('member')" :value="statsData?.data?.members"
                     suffix="+" :description="$ts('and_many_more')" />
                 <StatCard v-if="statsData?.data?.agenda" :title="$ts('agenda')" :value="statsData?.data?.agenda"
@@ -111,27 +116,27 @@ useSeoMeta({
         </section>
 
         <!-- About Section -->
-        <section class="py-8 md:py-12 about" id="about">
+        <section class="py-16 md:py-24 about" id="about">
             <About />
         </section>
-        <USeparator :label="$ts('news')" class="mt-8" />
+        <USeparator :label="$ts('news')" class="mt-8 mb-4" />
         <!-- News Section -->
-        <section class="pb-8 md:pb-12 about" id="news">
+        <section class="pb-16 md:pb-24 about" id="news">
             <News />
         </section>
 
         <!-- Events Section -->
-        <section class="py-8 md:py-12" id="events" data-aos="fade-right">
+        <section class="py-16 md:py-24" id="events" data-aos="fade-right">
             <Agenda />
         </section>
 
         <!-- Projects Section -->
-        <section class="py-8 md:py-12" id="projects" data-aos="zoom-in-up">
+        <section class="py-16 md:py-24" id="projects" data-aos="zoom-in-up">
             <Projects />
         </section>
-        <USeparator :label="$ts('contact')" class="my-8" />
+        <USeparator :label="$ts('contact')" class="my-12" />
         <!-- Contacts Sections -->
-        <section class="py-8 md:py-12" id="contacts" data-aos="zoom-in-up">
+        <section class="py-16 md:py-24" id="contacts" data-aos="zoom-in-up">
             <Contacts />
         </section>
         <UButton
@@ -144,16 +149,9 @@ useSeoMeta({
 
 
 <style scoped>
-@import url('https://fonts.cdnfonts.com/css/tw-cen-mt');
-
 /* Hero animation */
 .hero {
     animation: zoom-in-fade 2s ease-out;
-    /* font-family: 'Fira Code', monospace; */
-}
-
-.title {
-    font-family: 'Tw Cen MT', sans-serif;
 }
 
 .subtitle {

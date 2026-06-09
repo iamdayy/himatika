@@ -112,6 +112,15 @@ export default defineNuxtConfig({
             }
         }
     },
+    "/api/agenda/**/participant/register": {
+      security: {
+        rateLimiter: {
+          tokensPerInterval: 5,
+          interval: 60000,
+          headers: false,
+        },
+      },
+    },
 
     // 3. Halaman yang tidak pernah berubah (Static)
     "/login": { ssr: false },

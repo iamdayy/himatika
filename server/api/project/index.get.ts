@@ -16,7 +16,8 @@ type ISortable = {
  * @returns {Promise<Object>} An object containing project data or a list of projects.
  * @throws {H3Error} If the project is not found or if a system error occurs.
  */
-export default defineEventHandler(async (event): Promise<IProjectsResponse> => {
+export default defineCachedEventHandler(
+  async (event): Promise<IProjectsResponse> => {
   try {
     const {
       perPage,
@@ -105,4 +106,10 @@ export default defineEventHandler(async (event): Promise<IProjectsResponse> => {
       statusMessage: error.message || "An unexpected error occurred",
     };
   }
+},
+{
+  maxAge: 60 * 15,
+  name: "project-list-cache",
+  swr: true,
+  getKey: (event: any) => event.path,
 });
