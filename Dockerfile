@@ -1,9 +1,13 @@
-FROM oven/bun:1-alpine AS builder
+FROM node:24-alpine AS builder
+
+RUN apk add --no-cache libc6-compat gcompat
 
 WORKDIR /app
 
-COPY package.json bun.lock ./
-RUN bun install
+COPY package.json bun.lockb* ./
+
+RUN npm install -g bun
+RUN bun pm cache clear && bun install --frozen-lockfile
 
 COPY . .
 RUN bun run build
