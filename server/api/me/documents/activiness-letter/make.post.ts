@@ -29,20 +29,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2. Get Organizer
-  const periodStartYear = new Date(point.range.start).getFullYear();
-  let periodEndYear = new Date(point.range.end).getFullYear();
-  if (periodStartYear === periodEndYear) {
-      periodEndYear = periodStartYear + 1;
-  }
+  const pointStartDate = new Date(point.range.start);
+  const pointEndDate = new Date(point.range.end);
 
   const organizer = await OrganizerModel.findOne({ 
-    $expr: {
-            $and: [
-              { $gte: [{ $year: "$period.start" }, periodStartYear] },
-              { $lte: [{ $year: "$period.end" }, periodEndYear] },
-            ],
-          },
-   })
+    "period.start": { $lte: pointEndDate },
+    "period.end": { $gte: pointStartDate }
+  })
+   .sort({ "period.end": -1 })
    .populate({path: "dailyManagement.member", select: "fullName NIM"}) // Ensure members are populated
    .lean(); // Use lean for performance if we don't need mongoose methods
 
