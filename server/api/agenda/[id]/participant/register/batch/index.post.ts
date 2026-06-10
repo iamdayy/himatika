@@ -1,55 +1,65 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { IReqParticipantBatch } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
-    const organizer = event.context.organizer;
-    if (!user && !organizer) {
-      return {
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      };
-    }
+
     const { id } = event.context.params as { id: string };
     const body = await readBody<IReqParticipantBatch>(event);
     if (!body || !body.participants || !body.field) {
-      return {
+      throw createError({
         statusCode: 400,
         statusMessage: "Invalid request body",
-      };
+      });
     }
     const agenda = await AgendaModel.findById(id);
     if (!agenda) {
-      return {
+      throw createError({
         statusCode: 404,
         statusMessage: "Agenda not found",
-      };
+      });
     }
-    const updatedParticipants = agenda.participants?.map((participant) => {
-      if (body.participants.includes(participant._id?.toString() || "")) {
-        if (body.field === "payment") {
-          if (participant.payment) {
-            participant.payment.status = "success";
-          }
-        } else if (body.field === "visiting") {
-          participant.visiting = !participant.visiting;
-          participant.visitTime = participant.visiting ? new Date() : undefined;
-        }
+
+    await ensureCommitteeOrOrganizer(agenda._id.toString(), user);
+
+    const participants = await ParticipantModel.find({ _id: { $in: body.participants } });
+    
+    const bulkOps = participants.map((participant) => {
+      let updateDoc: any = {};
+      if (body.field === "payment") {
+        updateDoc = {
+          "payment.status": "success"
+        };
+      } else if (body.field === "visiting") {
+        const newVisiting = !participant.visiting;
+        updateDoc = {
+          visiting: newVisiting,
+          visitTime: newVisiting ? new Date() : null
+        };
       }
-      return participant;
+      return {
+        updateOne: {
+          filter: { _id: participant._id },
+          update: { $set: updateDoc }
+        }
+      };
     });
-    agenda.participants = updatedParticipants;
-    await agenda.save();
+
+    if (bulkOps.length > 0) {
+      await ParticipantModel.bulkWrite(bulkOps);
+    }
     return {
       statusCode: 200,
       statusMessage: "Participants updated successfully",
     };
   } catch (error: any) {
-    return {
-      statusCode: 500,
+    throw createError({
+      statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || error.message,
-    };
+    });
   }
 });

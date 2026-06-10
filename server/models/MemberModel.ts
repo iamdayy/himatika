@@ -130,8 +130,11 @@ const memberSchema = new Schema<IMemberSchema, MemberModel, MemberMethods>(
  * This is a placeholder and should be implemented based on your logic.
  */
 memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
-  const agendasCommittee = (this.agendasCommittee || [])
+  const agendasCommittee = (this.committeesData || [])
+    .filter((c: any) => c.approved === true && c.visiting === true)
+    .map((c: any) => c.agendaId)
     .filter((agenda: IAgenda) => {
+      if (!agenda || !agenda.date) return false;
       if (agenda.date.start < rangeDate.start) {
         return false; // Skip agendas before the start date
       }
@@ -145,15 +148,14 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
           agenda.date.end <= rangeDate.end
         );
       }
-    })
-    .filter(
-      (agenda: IAgenda) =>
-        agenda.committees?.find(
-          (c) => (c.member as IMember)?.NIM === this.NIM && c.visiting === false
-        ) === undefined
-    );
-  const agendasMember = (this.agendasMember || [])
+      return false;
+    });
+
+  const agendasMember = (this.participantsData || [])
+    .filter((p: any) => p.visiting === true)
+    .map((p: any) => p.agendaId)
     .filter((agenda: IAgenda) => {
+      if (!agenda || !agenda.date) return false;
       if (agenda.date.start < rangeDate.start) {
         return false; // Skip agendas before the start date
       }
@@ -167,13 +169,9 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
           agenda.date.end <= rangeDate.end
         );
       }
-    })
-    .filter(
-      (agenda: IAgenda) =>
-        agenda.participants?.find(
-          (r) => (r.member as IMember)?.NIM === this.NIM && r.visiting === false
-        ) === undefined
-    );
+      return false;
+    });
+
   const committeesAgenda =
     agendasCommittee?.reduce(
       (acc: number, agenda: IAgenda) =>
@@ -193,7 +191,8 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     if (!project.date) {
       return false; // Skip projects without a date
     }
-    if (rangeDate.start >= project.date && rangeDate.end <= project.date) {
+    const projectDate = new Date(project.date);
+    if (projectDate >= rangeDate.start && projectDate <= rangeDate.end) {
       return true; // Include projects that fall within the date range
     }
     // If both start and end dates are provided, check if the project
@@ -207,10 +206,11 @@ memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
     if (asp.archived) {
       return false; // Skip archived aspirations
     }
+    const aspDate = new Date(asp.createdAt!);
     if (
       asp.createdAt &&
-      rangeDate.start >= asp.createdAt &&
-      rangeDate.end <= asp.createdAt
+      aspDate >= rangeDate.start &&
+      aspDate <= rangeDate.end
     ) {
       return true; // Include aspirations that fall within the date range
     }
@@ -270,24 +270,37 @@ memberSchema.virtual("projects", {
 });
 
 /**
- * Virtual field to get the agendas associated with the member.
+ * Virtual field to get the participants associated with the member.
  */
-memberSchema.virtual("agendasMember", {
-  ref: "Agenda",
+memberSchema.virtual("participantsData", {
+  ref: "Participant",
   localField: "_id",
-  foreignField: "participants.member",
+  foreignField: "member",
 });
 
 /**
- * Virtual field to get the agendas associated with the committee.
+ * Virtual field to get the committees associated with the member.
  */
-memberSchema.virtual("agendasCommittee", {
-  ref: "Agenda",
+memberSchema.virtual("committeesData", {
+  ref: "Committee",
   localField: "_id",
-  foreignField: "committees.member",
-  match: {
-    "committees.approved": true,
-  },
+  foreignField: "member",
+});
+
+/**
+ * Virtual getter for agendasMember.
+ */
+memberSchema.virtual("agendasMember").get(function () {
+  if (!this.participantsData) return undefined;
+  return this.participantsData.map((p: any) => p.agendaId);
+});
+
+/**
+ * Virtual getter for agendasCommittee.
+ */
+memberSchema.virtual("agendasCommittee").get(function () {
+  if (!this.committeesData) return undefined;
+  return this.committeesData.filter((c: any) => c.approved).map((c: any) => c.agendaId);
 });
 
 memberSchema.virtual("agendas").get(function () {
@@ -432,7 +445,6 @@ memberSchema.pre("save", function () {
   if (this.isModified("semester")) {
     if (this.semester > 14) {
       this.status = "inactive";
-      this.save();
       return;
     }
   }

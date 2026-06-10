@@ -15,8 +15,8 @@ useHead({
 const searchQuery = ref('');
 const { $ts } = useI18n();
 const { token } = useAuth();
-const { data, refresh } = await useAsyncData(() => $fetch<IConfigResponse>("/api/config"));
-const { data: enscriptions, refresh: refreshEncriptions } = await useAsyncData(() => $fetch<IEncryptionsResponse>('/api/enscryption', {
+const { data, refresh, pending } = useLazyAsyncData(() => $fetch<IConfigResponse>("/api/config"));
+const { data: enscriptions, refresh: refreshEncriptions, pending: pendingEncriptions } = useLazyAsyncData(() => $fetch<IEncryptionsResponse>('/api/enscryption', {
     query: {
         search: searchQuery.value
     },
@@ -57,6 +57,25 @@ const Config = ref<IConfig>({
     mission: data.value?.data?.mission || [],
     carousels: data.value?.data?.carousels || [],
 });
+
+watch(data, (newData) => {
+    if (newData?.data) {
+        Config.value = {
+            dailyManagements: newData.data.dailyManagements || [],
+            enscriptActivinessLetter: newData.data.enscriptActivinessLetter || '',
+            minPoint: newData.data.minPoint || 0,
+            departments: newData.data.departments || [],
+            description: newData.data.description || '',
+            name: newData.data.name || '',
+            contact: newData.data.contact || { email: '', phone: '' },
+            address: newData.data.address || '',
+            socialMedia: newData.data.socialMedia || [{ name: '', url: '' }],
+            vision: newData.data.vision || '',
+            mission: newData.data.mission || [],
+            carousels: newData.data.carousels || [],
+        };
+    }
+}, { immediate: true });
 
 const notEditMode = ref(true);
 const isSaving = ref(false);
@@ -318,7 +337,13 @@ const links = computed(() => [{
                     {{ $ts('auto_save_enabled') }}
                 </div>
             </template>
-            <div class="px-2 py-6 space-y-2 md:py-12 md:px-8">
+            <div v-if="pending" class="px-2 py-6 space-y-6 md:py-12 md:px-8">
+                <div v-for="i in 5" :key="i" class="space-y-2">
+                    <USkeleton class="h-4 w-32" />
+                    <USkeleton class="h-10 w-full" />
+                </div>
+            </div>
+            <div v-else class="px-2 py-6 space-y-2 md:py-12 md:px-8">
                 <UFormField :label="$ts('name')">
                     <UInput name="name" v-model="Config.name" :size="responsiveUISizes.input"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />

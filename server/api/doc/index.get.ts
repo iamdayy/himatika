@@ -1,5 +1,6 @@
 import { SortOrder } from "mongoose";
 import { DocModel } from "~~/server/models/DocModel";
+import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda, IDoc, IDocGrouped, IMember, IProject } from "~~/types";
 import { IReqDocQuery } from "~~/types/IRequestPost";
 import { IDocResponse } from "~~/types/IResponse";
@@ -79,6 +80,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
       query.tags = { $in: JSON.parse(tags) };
     }
     if (sort && order) {
+      validateSortField("doc", sort);
       sortQuery = {
         [sort]: order == "asc" ? 1 : -1,
       };

@@ -6,7 +6,7 @@
                 <div class="p-6">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                         <!-- Avatar -->
-                        <div class="flex-shrink-0">
+                        <div class="shrink-0">
                             <NuxtImg provider="localProvider"
                                 :src="member.avatar || '/placeholder.svg?height=120&width=120'" :alt="member.fullName"
                                 class="ring-4 ring-white shadow-lg rounded-full max-w-[120px] max-h-[120px]"
@@ -165,7 +165,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
                                         $ts('generation')
-                                    }}</label>
+                                        }}</label>
                                     <p class="text-sm">{{ member.enteredYear || 'Not specified' }}</p>
                                 </div>
                             </div>
@@ -214,7 +214,7 @@
                                                     {{ member.point[index]!.semester
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{ member.point[index]!.point
-                                                    }} pts</UBadge>
+                                                }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -230,7 +230,7 @@
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{ member.point[index]!.activities.projects
-                                                        }}</div>
+                                                    }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project') }}
                                                     </div>
                                                 </div>
@@ -238,13 +238,13 @@
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.aspirations }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('aspiration')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
                                                         member.point[index]!.activities.manualPoints }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('achievement')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -272,17 +272,26 @@
                                                             v-if="getAgendasCommitteeByRange(member.point[index]!.range) && getAgendasCommitteeByRange(member.point[index]!.range).length > 0">
                                                             <h4 class="font-medium mb-2">{{ $ts('committee') }}</h4>
                                                             <div class="space-y-2">
-                                                                <div v-for="agenda, i in getAgendasCommitteeByRange(member.point[index]!.range)"
+                                                                <div v-for="committee, i in getAgendasCommitteeByRange(member.point[index]!.range)"
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-green-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ agenda.title }}</p>
+                                                                        <p class="font-medium">{{ committee.agendaId?.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
-                                                                            {{ agenda.at }}</p>
+                                                                            {{ committee.agendaId?.at }}</p>
                                                                     </div>
-                                                                    <UBadge color="success" variant="subtle">{{
-                                                                        $ts('committee') }}</UBadge>
+                                                                    <div class="flex items-center gap-2">
+                                                                        <UBadge color="success" variant="subtle">
+                                                                            {{ committee.job }}
+                                                                        </UBadge>
+                                                                        <UBadge :color="committee.visiting ? 'success' : 'error'">
+                                                                            {{ committee.visiting ? 'Telah Hadir' : 'Belum Hadir' }}
+                                                                        </UBadge>
+                                                                        <UBadge color="neutral" variant="subtle">{{
+                                                                            committee.agendaId?.configuration?.committee?.point }} Pts
+                                                                        </UBadge>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -292,17 +301,24 @@
                                                             <h4 class="font-medium mb-2">{{ $ts('participant') }}
                                                             </h4>
                                                             <div class="space-y-2">
-                                                                <div v-for="agenda, i in getAgendasMemberByRange(member.point[index]!.range)"
+                                                                <div v-for="participant, i in getAgendasMemberByRange(member.point[index]!.range)"
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-blue-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ agenda.title }}</p>
+                                                                        <p class="font-medium">{{ participant.agendaId?.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
-                                                                            {{ agenda.at }}</p>
+                                                                            {{ participant.agendaId?.at }}</p>
                                                                     </div>
-                                                                    <UBadge variant="subtle">{{ $ts('participant') }}
-                                                                    </UBadge>
+                                                                    <div class="flex items-center gap-2">
+                                                                        <UBadge :color="participant.visiting ? 'success' : 'error'">
+                                                                            {{ participant.visiting ? 'Telah Hadir' : 'Belum Hadir' }}
+                                                                        </UBadge>
+                                                                        <UBadge color="neutral" variant="subtle">{{
+                                                                            participant.agendaId?.configuration?.participant?.point }}
+                                                                            Pts
+                                                                        </UBadge>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -336,7 +352,7 @@
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                        }}</p>
+                                                                    }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -397,7 +413,7 @@
                                                             </h3>
                                                             <UBadge color="secondary" variant="subtle">{{
                                                                 getManualPointsByRange(member.point[index]!.range).length
-                                                                }}</UBadge>
+                                                            }}</UBadge>
                                                         </div>
                                                     </template>
                                                     <div class="p-6 space-y-4">
@@ -454,7 +470,7 @@ const toast = useToast();
 const EditMemberModal = overlay.create(ModalsMemberEdit);
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
-const { data: memberData } = await useAsyncData<IMemberResponse>('member', async () => {
+const { data: memberData } = useLazyAsyncData<IMemberResponse>('member', async () => {
     const NIM = useRoute().params.NIM as string
     return await $api(`/api/member`, {
         method: 'GET',
@@ -491,22 +507,24 @@ const pointAccordionItems = computed<AccordionItem[]>(() => {
         label: `Semester ${point.semester}`,
     })) || [];
 });
-const getAgendasCommitteeByRange = (range: { start: Date; end: Date }) => {
+const getAgendasCommitteeByRange = (range: { start: Date; end: Date }): any[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const agendas = member.value?.agendasCommittee?.filter(agenda => {
-        const agendaDateStart = new Date(agenda.date.start);
-        const agendaDateEnd = new Date(agenda.date.end);
-        return agendaDateStart >= start && agendaDateEnd <= end;
+    const agendas = member.value?.committeesData?.filter((committee: any) => {
+        if (!committee.agendaId) return false;
+        const agendaDateStart = new Date(committee.agendaId.date.start);
+        const agendaDateEnd = new Date(committee.agendaId.date.end);
+        return agendaDateStart >= start && agendaDateEnd <= end && committee.approved;
     }) || [];
     return agendas;
 };
-const getAgendasMemberByRange = (range: { start: Date; end: Date }) => {
+const getAgendasMemberByRange = (range: { start: Date; end: Date }): any[] => {
     const start = new Date(range.start);
     const end = new Date(range.end);
-    const agendas = member.value?.agendasMember?.filter(agenda => {
-        const agendaDateStart = new Date(agenda.date.start);
-        const agendaDateEnd = new Date(agenda.date.end);
+    const agendas = member.value?.participantsData?.filter((participant: any) => {
+        if (!participant.agendaId) return false;
+        const agendaDateStart = new Date(participant.agendaId.date.start);
+        const agendaDateEnd = new Date(participant.agendaId.date.end);
         return agendaDateStart >= start && agendaDateEnd <= end;
     }) || [];
     return agendas;

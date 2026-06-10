@@ -98,7 +98,7 @@ const perPage = ref(10);
 /**
  * Fetch data from API
  */
-const { data, pending, refresh } = await useLazyAsyncData('users', () => $api<IMessageResponse>('/api/message', {
+const { data, pending, refresh } = useLazyAsyncData('users', () => $api<IMessageResponse>('/api/message', {
     query: {
         search: search.value,
         page: page.value,

@@ -19,7 +19,7 @@ const ClaimModalComponent = overlay.create(ModalsAchievementClaim);
 const ConfirmationModalComponent = overlay.create(ModalsConfirmation);
 
 // Fetch data achievement dari API yang baru kita buat
-const { data: achievements, refresh, status } = await useAsyncData('achievement-me', () => $api<IPointLog[]>('/api/me/achievement'));
+const { data: achievements, refresh, status } = useLazyAsyncData('achievement-me', () => $api<IPointLog[]>('/api/me/achievement'));
 
 const links = [
     {

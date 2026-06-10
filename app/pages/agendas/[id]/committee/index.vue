@@ -9,7 +9,7 @@ const agendaId = route.params.id as string;
 const { makeTicket } = useMakeDocs();
 
 // 1. Fetch Agenda Data & Committee Status
-const { data: agenda, pending, error } = useAsyncData('agenda', () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
+const { data: agenda, pending, error } = useLazyAsyncData('agenda', () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
     transform: (data) => {
         if (!data.data) return null;
         return data.data.agenda;
@@ -17,7 +17,7 @@ const { data: agenda, pending, error } = useAsyncData('agenda', () => $api<IAgen
     default: () => null,
 });
 
-const { data: me, pending: mePending } = useAsyncData('committee-registration', () => $api<ICommitteeResponse>(`/api/agenda/${agendaId}/committee/me`), {
+const { data: me, pending: mePending } = useLazyAsyncData('committee-registration', () => $api<ICommitteeResponse>(`/api/agenda/${agendaId}/committee/me`), {
     transform: (data) => {
         if (!data.data) return null;
         return data.data.committee;
@@ -153,9 +153,22 @@ definePageMeta({
         <UBreadcrumb :items="links" />
         <UCard class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center font-sans">
 
-            <div v-if="pending" class="flex flex-col items-center justify-center space-y-4">
-                <span class="loading loading-dots loading-lg text-primary"></span>
-                <p class="text-sm font-medium text-gray-500 animate-pulse">Memroses data panitia...</p>
+            <div v-if="pending || mePending" class="w-full max-w-md mx-auto space-y-4">
+                <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
+                    <USkeleton class="h-64 w-full rounded-none" />
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <USkeleton class="h-10 w-full" />
+                            <USkeleton class="h-10 w-full" />
+                            <USkeleton class="h-12 w-full col-span-2" />
+                        </div>
+                        <USkeleton class="h-48 w-full rounded-2xl" />
+                        <div class="flex gap-3">
+                            <USkeleton class="h-10 flex-1 rounded-xl" />
+                            <USkeleton class="h-10 flex-1 rounded-xl" />
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div v-else-if="error || !agenda" class="text-center max-w-md mx-auto">

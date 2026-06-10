@@ -80,7 +80,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     default: () => []
 });
 const memberSearchTerm = ref('');
-const { data: members, status: memberstatus } = useAsyncData(() => $api<IMemberResponse>("/api/member", {
+const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData(() => $api<IMemberResponse>("/api/member", {
     method: 'GET',
     params: {
         search: memberSearchTerm.value,
@@ -186,6 +186,7 @@ const committeesStateRef = ref<ICommitteeState>({
         member: 0,
         approved: true,
         approvedAt: new Date(),
+        agendaId: 'new'
     },
 });
 const committeesState = reactiveComputed<ICommitteeState>(() => {
@@ -375,13 +376,14 @@ const initFromQuery = async () => {
             }
 
             // Map committees
-            if (agenda.committees && agenda.committees.length > 0) {
+            if (agenda.presences?.committees && agenda.presences.committees.length > 0) {
                 const newCommitteesState: ICommitteeState = {};
-                agenda.committees.forEach((c, index) => {
+                agenda.presences.committees.forEach((c: any, index: number) => {
                     // 1-based index for UI consistency if needed, or just use array index + 1
                     newCommitteesState[index + 1] = {
                         ...c,
                         member: typeof c.member === 'object' ? (c.member as any).NIM : c.member, // UI expects NIM for select menu value
+                        agendaId: c.agendaId || 'new'
                     };
                 });
                 committeesStateRef.value = newCommitteesState;
@@ -586,15 +588,13 @@ async function onSubmit() {
 };
 
 const addCommittee = () => {
-    const newIndex = Object.keys(committeesState).length + 1;
-    committeesStateRef.value = {
-        ...committeesState,
-        [newIndex]: {
-            job: '',
-            member: 0,
-            approved: true,
-            approvedAt: new Date(),
-        }
+    const newIndex = Object.keys(committeesStateRef.value).length + 1;
+    committeesStateRef.value[newIndex] = {
+        job: '',
+        member: 0,
+        approved: true,
+        approvedAt: new Date(),
+        agendaId: 'new'
     };
 };
 const removeCommittee = (index: number) => {

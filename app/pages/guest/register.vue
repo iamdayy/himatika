@@ -19,12 +19,7 @@ const schema = z.object({
     fullName: z.string().min(3, "Name is too short"),
     email: z.string().email("Invalid email"),
     phone: z.string().min(10, "Phone number is too short"),
-    instance: z.string().min(3, "Instance/School name is required"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+    instance: z.string().min(3, "Instance/School name is required")
 });
 
 type Schema = z.infer<typeof schema>;
@@ -34,8 +29,6 @@ const state = reactive<Schema>({
     email: "",
     phone: "",
     instance: "",
-    password: "",
-    confirmPassword: "",
 });
 
 const onSubmit = async (event: FormSubmitEvent<Schema>) => {
@@ -47,8 +40,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
                 fullName: state.fullName,
                 email: state.email,
                 phone: state.phone,
-                instance: state.instance,
-                password: state.password,
+                instance: state.instance
             },
         });
 
@@ -102,17 +94,6 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
                 <UFormField label="Instance / School" name="instance">
                     <UInput v-model="state.instance" color="neutral" variant="outline" :size="responsiveUISizes.input"
                         placeholder="University / High School Name" icon="heroicons-building-office-2" />
-                </UFormField>
-
-                <UFormField label="Password" name="password">
-                    <UInput v-model="state.password" color="neutral" variant="outline" :size="responsiveUISizes.input"
-                        type="password" placeholder="********" icon="heroicons-lock-closed" />
-                </UFormField>
-
-                <UFormField label="Confirm Password" name="confirmPassword">
-                    <UInput v-model="state.confirmPassword" color="neutral" variant="outline"
-                        :size="responsiveUISizes.input" type="password" placeholder="********"
-                        icon="heroicons-lock-closed" />
                 </UFormField>
 
                 <div class="pt-4">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { IAgendaResponse } from '~~/types/IResponse';
+import type { IMember } from '~~/types';
+import type { IAgendaResponse, IMemberResponse } from '~~/types/IResponse';
 
 
 
@@ -13,7 +14,7 @@ const id = route.params.id as string;
 const { $api, $ts } = useNuxtApp();
 const toast = useToast();
 
-const { data: agenda } = await useAsyncData('admin-agenda-detail',
+const { data: agenda, pending: pendingAgenda } = useLazyAsyncData('admin-agenda-detail',
     () => $api<IAgendaResponse>('/api/agenda', { query: { id } }), {
     transform: (data) => data.data?.agenda
 });
@@ -56,15 +57,14 @@ const createJob = (val: string) => {
 // --- MODE MEMBER (SEARCH) ---
 const selectedMember = ref<string | undefined>(undefined);
 const memberSearchTerm = ref('');
-const { data: members, pending } = useAsyncData('members-list', () => $api('/api/member/public', {
+const { data: members, pending } = useLazyAsyncData('members-list', () => $api<IMemberResponse>('/api/member/public', {
     query: {
         search: memberSearchTerm.value,
     }
 }), {
-    lazy: true,
     default: () => [],
     transform: (data) => {
-        const obj = data.data?.members?.map((member) => ({
+        const obj = data.data?.members?.map((member: IMember) => ({
             ...member,
             avatar: { src: member.avatar || '/img/profile-blank.png' },
             label: member.fullName,
@@ -110,8 +110,17 @@ const submit = async () => {
     <div class="space-y-6 mb-24">
         <UBreadcrumb :items="links" />
 
-
-        <UCard>
+        <div v-if="pendingAgenda" class="space-y-4">
+            <USkeleton class="h-10 w-1/4" />
+            <UCard>
+                <div class="space-y-4">
+                    <USkeleton class="h-8 w-full" />
+                    <USkeleton class="h-12 w-full" />
+                    <USkeleton class="h-48 w-full" />
+                </div>
+            </UCard>
+        </div>
+        <UCard v-else>
             <template #header>
                 <div class="flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tambah Panitia</h1>

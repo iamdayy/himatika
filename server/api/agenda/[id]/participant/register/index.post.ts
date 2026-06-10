@@ -90,69 +90,88 @@ export default defineEventHandler(
         });
       }
 
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const { GuestModel } = await import("~~/server/models/GuestModel");
+
       let participantId = new Types.ObjectId();
-      let updateQuery: any = {};
-      let conditionQuery: any = { _id: id };
       let email: string = "";
       let name: string = "";
+      
+      let newParticipantData: any = {
+        _id: participantId,
+        agendaId: id,
+      };
 
       if (user && user.member) {
         name = user.member.fullName;
         email = user.member.email;
-        // Condition: User must NOT be in participants list
-        conditionQuery["participants.member"] = { $ne: user.member._id };
         
-        updateQuery = {
-          $push: {
-            participants: {
-              _id: participantId,
-              member: user.member._id,
-            },
-          },
-        };
+        const isRegisteredCommittee = await CommitteeModel.exists({ agendaId: id, member: user.member._id });
+        const isRegisteredParticipant = await ParticipantModel.exists({ agendaId: id, member: user.member._id });
+        
+        if (isRegisteredCommittee || isRegisteredParticipant) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "You are already registered.",
+          });
+        }
+        newParticipantData.member = user.member._id;
       } else if (user && user.guest) {
-         // Authenticated Guest
          const g = user.guest;
          name = g.fullName;
          email = g.email;
-         // Condition: Guest account must NOT be in participants list (by email or ID?)
-         // Agenda stores `guest` schema embedded.
-         // Let's check by email in embedded guest schema.
-         conditionQuery["participants.guest.email"] = { $ne: g.email };
 
-         updateQuery = {
-          $push: {
-            participants: {
-              _id: participantId,
-              guest: g._id,
-            },
-          },
-        };
+         const isRegisteredParticipant = await ParticipantModel.exists({ agendaId: id, guest: g._id });
+         if (isRegisteredParticipant) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "You are already registered.",
+          });
+         }
+         newParticipantData.guest = g._id;
       } else if (guest) {
-        // Unauthenticated Guest (Legacy or specific flow?)
-        // If we want to allow unauthenticated guests to register by filling form?
         name = guest.fullName;
         email = guest.email;
-        // Condition: Guest NIM/Email must NOT be in participants list
-        conditionQuery["participants.guest.email"] = { $ne: guest.email };
-
-        updateQuery = {
-          $push: {
-            participants: {
-              _id: participantId,
-              guest: {
-                fullName: guest.fullName,
-                email: guest.email,
-                phone: guest.phone,
-                NIM: guest.NIM,
-                prodi: guest.prodi,
-                class: guest.class,
-                semester: guest.semester,
-                instance: guest.instance,
-              },
-            },
-          },
-        };
+        
+        const { MemberModel } = await import("~~/server/models/MemberModel");
+        const existingMember = await MemberModel.findOne({ email: guest.email });
+        
+        if (existingMember) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "Email ini terdaftar sebagai Mahasiswa (Member). Harap login terlebih dahulu.",
+          });
+        }
+        
+        let existingGuest = await GuestModel.findOne({ email: guest.email });
+        if (existingGuest) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "Email ini sudah terdaftar sebagai Guest. Harap login melalui Magic Link untuk mendaftar acara.",
+          });
+        }
+        
+        // If not found, create a new guest safely
+        existingGuest = await GuestModel.create({
+          fullName: guest.fullName,
+          email: guest.email,
+          phone: guest.phone,
+          instance: guest.instance,
+          NIM: guest.NIM,
+          prodi: guest.prodi,
+          class: guest.class,
+          semester: guest.semester,
+        });
+        
+        const isRegisteredParticipant = await ParticipantModel.exists({ agendaId: id, guest: existingGuest._id });
+        if (isRegisteredParticipant) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "You are already registered.",
+          });
+        }
+        newParticipantData.guest = existingGuest._id;
       } else {
         throw createError({
           statusCode: 400,
@@ -160,21 +179,27 @@ export default defineEventHandler(
         });
       }
 
-      // Execute atomic update
-      const result = await AgendaModel.updateOne(conditionQuery, updateQuery);
+      // Create Participant Record
+      await ParticipantModel.create(newParticipantData);
 
-      // Check if document was modified
-      if (result.modifiedCount === 0) {
-        // If 0, it means either:
-        // 1. Agenda not found (checked earlier, unlikely)
-        // 2. Condition failed (User already registered)
-        throw createError({
-          statusCode: 409,
-          statusMessage: "You are already registered or Agenda not found.",
-        });
-      }
-      // Send confirmation email
-      await sendConfirmationEmail(agenda, participantId, name, email);
+      // Send confirmation email via QStash
+      const { Client } = await import("@upstash/qstash");
+      const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+      
+      const config = useRuntimeConfig();
+      const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
+      
+      qstashClient.publishJSON({
+        url: webhookUrl,
+        body: {
+          type: "participant-registration",
+          agendaTitle: agenda.title,
+          agendaId: agenda._id,
+          participantId: participantId,
+          name: name,
+          email: email
+        }
+      }).catch((e) => console.error("Failed to publish to QStash", e));
 
       return {
         statusCode: 200,

@@ -34,6 +34,12 @@ export const useDashboardNavigation = () => {
           icon: "i-heroicons-clipboard-document-list",
           to: "/dashboard/aspirations",
         },
+        {
+          label: $ts("documentation"),
+          icon: "i-heroicons-document-text",
+          to: "https://docs.himatika-itsnupekalongan.com",
+          target: "_blank",
+        },
       ],
     ];
     if (isOrganizer.value) {

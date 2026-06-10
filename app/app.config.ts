@@ -12,7 +12,7 @@ export default defineAppConfig({
       variants: {
         variant: {
           soft: {
-            root: "bg-secondary-light/15 dark:bg-secondary-dark/25 backdrop-blur-sm ring-secondary-dark/10 dark:ring-secondary-light/10 shadow-xl rounded-xl",
+            root: "bg-secondary-light/15 dark:bg-secondary-dark/25 backdrop-blur-sm ring-secondary-dark/10 dark:ring-secondary-light/10 shadow-xl rounded-3xl transition-all duration-300",
           },
         },
       },
@@ -132,6 +132,9 @@ export default defineAppConfig({
       shadow: "shadow-md",
     },
     modal: {
+      slots: {
+        content: "rounded-3xl shadow-2xl",
+      },
       variants: {
         fullscreen: {
           false: {
@@ -139,9 +142,6 @@ export default defineAppConfig({
           },
         },
       },
-    },
-    container: {
-      constrained: "max-w-10xl",
     },
     navigationMenu: {
       variants: {
@@ -152,6 +152,9 @@ export default defineAppConfig({
       },
     },
     button: {
+      slots: {
+        base: "rounded-full transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0",
+      },
       variants: {
         variant: {
           outline:

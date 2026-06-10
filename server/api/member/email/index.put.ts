@@ -25,7 +25,15 @@ export default defineEventHandler(
         data: { message: "Invalid token", path: "token" },
       });
     }
-    console.log(user);
+
+    // Validate email format
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Error: Invalid email format",
+        data: { message: "Invalid email format", path: "email" },
+      });
+    }
 
     // Validate the request body
     const member = await MemberModel.findOne({ NIM: user.member.NIM });

@@ -214,7 +214,7 @@ const pagination = ref({
 /**
  * Fetch data from API
  */
-const { data, status, refresh } = await useLazyAsyncData('users', () => $api<IAspirationResponse>('/api/aspiration', {
+const { data, status, refresh } = useLazyAsyncData('users', () => $api<IAspirationResponse>('/api/aspiration', {
     query: {
         search: search.value,
         page: pagination.value.pageIndex,

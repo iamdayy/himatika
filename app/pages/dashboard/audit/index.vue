@@ -70,7 +70,7 @@ const page = ref(1);
 const pageCount = ref(20);
 
 // Use useAsyncData to fetch audit logs with pagination
-const { data, pending, refresh } = useAsyncData(() => $api('/api/audit', {
+const { data, pending, refresh } = useLazyAsyncData(() => $api('/api/audit', {
     query: {
         page: page,
         limit: pageCount

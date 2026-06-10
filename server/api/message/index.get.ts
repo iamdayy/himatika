@@ -1,5 +1,6 @@
 import { SortOrder } from "mongoose";
 import { MessageModel } from "~~/server/models/MessageModel";
+import { validateFilterByField, validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqMessageQuery } from "~~/types/IRequestPost";
 import { IMessageResponse } from "~~/types/IResponse";
 
@@ -16,12 +17,14 @@ export default defineEventHandler(async (event): Promise<IMessageResponse> => {
     };
     let sortOpt: ISortable = {};
     if (order && sort) {
+      validateSortField("message", sort);
       sortOpt[sort] = order as SortOrder;
     }
     if (search) {
       query.subject = { $regex: search, $options: "i" };
     }
     if (filterBy && filter) {
+      validateFilterByField("message", filterBy);
       query[filterBy] = filter;
     }
     const organizer = event.context.organizer;

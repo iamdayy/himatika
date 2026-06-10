@@ -6,6 +6,7 @@ import { IUserSchema } from "~~/types/ISchemas";
 import { AgendaModel } from "./AgendaModel";
 import { AspirationModel } from "./AspirationModel";
 import { DocModel } from "./DocModel";
+import "./GuestModel";
 import OrganizerModel from "./OrganizerModel";
 import { PointModel } from "./PointModel";
 import { ProjectModel } from "./ProjectModel";
@@ -67,28 +68,32 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
             model: ProjectModel,
           },
           {
-            path: "agendasMember",
-            model: AgendaModel,
-            select: "title date at description configuration -_id",
-            transform: (doc: IAgenda) => ({
-              title: doc.title,
-              date: doc.date,
-              at: doc.at,
-              description: doc.description,
-              configuration: doc.configuration,
-            }),
+            path: "participantsData",
+            populate: {
+              path: "agendaId",
+              select: "title date at description configuration participants -_id",
+              transform: (doc: IAgenda) => ({
+                title: doc.title,
+                date: doc.date,
+                at: doc.at,
+                description: doc.description,
+                configuration: doc.configuration,
+              }),
+            }
           },
           {
-            path: "agendasCommittee",
-            model: AgendaModel,
-            select: "title date at description configuration -_id",
-            transform: (doc: IAgenda) => ({
-              title: doc.title,
-              date: doc.date,
-              at: doc.at,
-              description: doc.description,
-              configuration: doc.configuration,
-            }),
+            path: "committeesData",
+            populate: {
+              path: "agendaId",
+              select: "title date at description configuration committees -_id",
+              transform: (doc: IAgenda) => ({
+                title: doc.title,
+                date: doc.date,
+                at: doc.at,
+                description: doc.description,
+                configuration: doc.configuration,
+              }),
+            }
           },
           {
             path: "aspirations",
@@ -134,7 +139,7 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
               if (doc) {
                 return {
                   role: doc.dailyManagement.find(
-                    (daily) => (daily.member as IMember | null)?.id == id
+                    (daily) => (daily.member as IMember | null)?.id == id,
                   )?.position,
                   period: doc.period,
                 };
@@ -161,17 +166,24 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
       ref: "Guest",
       unique: true,
       sparse: true,
-    }
+    },
   },
   {
     timestamps: true,
-  }
+    toJSON: {
+      virtuals: true,
+    },
+    toObject: {
+      virtuals: true,
+      getters: true,
+    },
+  },
 );
 
 /**
  * Pre-save middleware to hash the user's password before saving
  */
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   try {
     const salt = await bcrypt.genSalt(10);
@@ -187,7 +199,7 @@ userSchema.pre("save", async function (next) {
  */
 userSchema.methods.verifyPassword = async (
   fromBody: string,
-  fromDb: string
+  fromDb: string,
 ) => {
   try {
     const isMatch = await bcrypt.compare(fromBody, fromDb);

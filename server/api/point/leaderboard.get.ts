@@ -1,75 +1,30 @@
-import { BadgeModel } from "~~/server/models/BadgeModel";
-import { MemberModel } from "~~/server/models/MemberModel";
-import { PointModel } from "~~/server/models/PointModel";
-import { IBadge } from "~~/types";
+import { getTop5Leaderboard } from "~~/server/utils/leaderboard";
 import { ILeaderboardResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<ILeaderboardResponse> => {
-  // Fetch active members
-  // We need to populate all fields required for point calculation
-  // Warning: This is resource intensive. For optimization, points should be cached in DB.
-  const members = await MemberModel.find({ status: "active" })
-    .populate("agendasCommittee")
-    .populate("agendasMember")
-    .populate("projects")
-    .populate("aspirations")
-    .populate({path:"manualPoints", model:PointModel})
-    .populate({path:"badges", model:BadgeModel});
+  const semester = event.context.user.member.semester;
+  const nim = event.context.user.member.NIM;
 
-  let leaderboard = members
-    .map((member, index) => {
-      const pointsData = member.point;
-      let totalPoints = 0;
-      const semester = event.context.user.member.semester;
+  // Memanggil fungsi cache (akan mengeksekusi DB query hanya setiap 1 jam sekali per semester)
+  const cachedData = await getTop5Leaderboard(semester);
+  
+  let leaderboard = [...cachedData.top5];
+  
+  // Cari posisi 'me' (user saat ini) dari fullRank yang di-cache
+  const me = cachedData.fullRank.find((m) => m.nim == nim);
 
-      const pointThisSemester = pointsData?.filter((p) => p.semester == semester);
-      totalPoints = pointThisSemester?.reduce((sum, p) => sum + (p.point || 0), 0) || 0;
-
-      return {
-        _id: member._id,
-        number: index + 1,
-        fullName: member.fullName,
-        avatar: member.avatar,
-        nim: member.NIM,
-        points: totalPoints,
-        badges: member.badges as IBadge[],
-      };
-    })
-    .filter(m => m.points > 0)
-    .sort((a, b) => b.points - a.points)
-    .slice(0, 5);
-
-    const meRaw = members.find(
-      (member) => member.NIM == event.context.user.member.NIM
-    );
-    let me;
-    if (meRaw) {
-      let totalPoints = 0;
-      const semester = event.context.user.member.semester;
-      const pointThisSemester = meRaw.point?.filter((p) => p.semester == semester);
-      totalPoints = pointThisSemester?.reduce((sum, p) => sum + (p.point || 0), 0) || 0;
-        me = {
-        _id: meRaw._id,
-        number: members.findIndex((m) => m.NIM == meRaw.NIM) + 1,
-        fullName: meRaw.fullName,
-        avatar: meRaw.avatar,
-        nim: meRaw.NIM,
-        points: totalPoints,
-        badges: meRaw.badges as IBadge[],
-    };
-    }
-
-    if (me && !leaderboard.includes(me)) {
-      leaderboard = leaderboard.slice(0, 4);
-      leaderboard.push(me);
-    }
+  // Jika 'me' tidak ada di dalam top 5, tambahkan 'me' ke posisi ke-5 atau terakhir
+  if (me && !leaderboard.find((m) => m.nim == nim)) {
+    leaderboard = leaderboard.slice(0, 4);
+    leaderboard.push(me);
+  }
 
   return {
     statusCode: 200,
-    statusMessage: "Papan peringkat berhasil diambil",
+    statusMessage: "Papan peringkat berhasil diambil (dari Cache)",
     data: {
         leaderboard,
-        length: members.length,
+        length: cachedData.fullRank.length,
     },
   };
 });

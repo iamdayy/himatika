@@ -71,6 +71,7 @@ export interface IConfigSchema extends IConfig, Document {
 export interface IMemberSchema extends Omit<IMember, "id">, Document {
   createdAt: Date;
   updatedAt: Date;
+  organizersDepartmentCoordinator?: any;
 }
 
 export interface IGuestSchema extends Omit<IGuest, "_id">, Document {

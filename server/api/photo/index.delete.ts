@@ -24,24 +24,23 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "ID foto tidak disertakan",
       });
     }
-    const photo = await PhotoModel.findById(id);
-    // Delete the associated main image file if it exists
-    if (photo && photo.image) {
-      const mainImageKey = (photo.image as string).split("/").pop(); //Get only file name without domain;
-            await r2Client.send(
-              new DeleteObjectCommand({
-                Bucket: R2_BUCKET_NAME,
-                Key: mainImageKey,
-              })
-            );
-    }
+    const photo = await PhotoModel.findByIdAndDelete(id);
     if (!photo) {
       throw createError({
         statusCode: 404,
         statusMessage: "Foto tidak ditemukan",
       });
     }
-    await PhotoModel.findByIdAndDelete(id);
+    // Delete the associated main image file if it exists
+    if (photo.image) {
+      const mainImageKey = (photo.image as string).split("/").pop();
+      await r2Client.send(
+        new DeleteObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: mainImageKey,
+        })
+      );
+    }
     return { statusCode: 200, statusMessage: "Foto berhasil dihapus" };
   } catch (error: any) {
     return {

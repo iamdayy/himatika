@@ -16,10 +16,10 @@
                         </div>
                         <div class="flex flex-col gap-2 md:flex-row">
                             <USelectMenu v-model="selectedTags" :size="responsiveUISizes.select" :items="tags" multiple
-                                :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full md:w-48" />
+                                :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full md:w-48" :loading="pendingTags" />
                             <USelectMenu v-model="selectedCategory" :size="responsiveUISizes.select"
                                 :items="categoryOptions" option-attribute="title" by="title"
-                                :placeholder="$ts('filter_by', { key: 'category' })" multiple class="w-full md:w-48" />
+                                :placeholder="$ts('filter_by', { key: 'category' })" multiple class="w-full md:w-48" :loading="pendingCategories" />
                             <UButton color="primary" variant="ghost" icon="i-heroicons-arrow-path" @click="refresh()">
                             </UButton>
                         </div>
@@ -29,7 +29,23 @@
             </template>
             <!-- Search and Filter Section -->
             <div v-if="pending">
-                <USkeleton v-for="i in 10" :key="i" class="h-48" />
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
+                    <UCard v-for="i in 8" :key="i" :ui="{ root: 'overflow-hidden', body: 'p-0 sm:p-0 px-0 md:px-0' }">
+                        <USkeleton class="h-48 w-full rounded-none" />
+                        <div class="p-4 space-y-4">
+                            <USkeleton class="h-6 w-3/4" />
+                            <div class="flex items-center gap-2">
+                                <USkeleton class="h-4 w-8" />
+                                <USkeleton class="h-6 w-6 rounded-full" />
+                                <USkeleton class="h-6 w-6 rounded-full" />
+                            </div>
+                            <div class="flex gap-2">
+                                <USkeleton class="h-5 w-16 rounded-full" />
+                                <USkeleton class="h-5 w-16 rounded-full" />
+                            </div>
+                        </div>
+                    </UCard>
+                </div>
             </div>
             <div v-else-if="(data?.data?.news as INews[])?.length > 0">
                 <!-- Hero Section -->
@@ -213,12 +229,12 @@ const { $api } = useNuxtApp();
 const { $ts } = useI18n();
 const toast = useToast();
 
-const { data: dataTags } = useAsyncData('tags', () => $fetch<ITagsResponse>('/api/news/tags'));
+const { data: dataTags, pending: pendingTags } = useLazyAsyncData('tags', () => $fetch<ITagsResponse>('/api/news/tags'));
 const tags = computed(() => {
     return (dataTags.value?.data?.tags)
 })
 
-const { data: categoryOptions, refresh: refreshCategory } = useAsyncData('categories', () => $fetch<ICategoriesResponse>('/api/category'), {
+const { data: categoryOptions, refresh: refreshCategory, pending: pendingCategories } = useLazyAsyncData('categories', () => $fetch<ICategoriesResponse>('/api/category'), {
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
@@ -241,7 +257,7 @@ const sortOptions = [
 const page = ref(1);
 const perPage = ref(10);
 
-const { data, refresh, pending } = useAsyncData('news', () => $fetch<INewsResponse>('/api/news', {
+const { data, refresh, pending } = useLazyAsyncData('news', () => $fetch<INewsResponse>('/api/news', {
     query: {
         category: JSON.stringify(selectedCategory.value),
         tags: JSON.stringify(selectedTags.value),

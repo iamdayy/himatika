@@ -51,7 +51,7 @@ const archived = ref(false);
 /**
  * Fetch newss data
  */
-const { data, refresh, pending } = useAsyncData('admin-news', () => $api<INewsResponse>('/api/admin/news', {
+const { data, refresh, pending } = useLazyAsyncData('admin-news', () => $api<INewsResponse>('/api/admin/news', {
     query: {
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,
@@ -355,8 +355,8 @@ useSeoMeta({
                     </div>
                 </div>
             </template>
-            <div v-if="pending">
-                <USkeleton v-for="i in 10" :key="i" class="h-48" />
+            <div v-if="pending" class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                <USkeleton v-for="i in 6" :key="i" class="h-[20rem] rounded-xl" />
             </div>
             <div v-else-if="(data.data?.news as INews[])?.length > 0"
                 class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">

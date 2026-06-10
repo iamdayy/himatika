@@ -21,10 +21,6 @@ export const EncryptionSchema = new Schema<IEncryptionSchema>(
         tag: {
           type: String,
         },
-        key: {
-          type: String,
-          required: true,
-        },
       },
     },
     public_key: {

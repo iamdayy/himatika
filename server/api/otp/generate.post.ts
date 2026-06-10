@@ -13,19 +13,17 @@ export default defineEventHandler(
 
       const member = await MemberModel.findOne({ email, NIM });
       if (!member) {
-        if (type !== "Change Email") {
-          // Silent failure: return fake success to prevent user enumeration
-          const now = new Date();
-          const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
-          return {
-            statusCode: 200,
-            statusMessage: "Kode OTP telah dikirim ke email Anda",
-            data: {
-              email,
-              expiresAt: expiresAt.toString(),
-            },
-          };
-        }
+        // Silent failure for all types: return fake success to prevent user enumeration
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+        return {
+          statusCode: 200,
+          statusMessage: "Kode OTP telah dikirim ke email Anda",
+          data: {
+            email,
+            expiresAt: expiresAt.toString(),
+          },
+        };
       }
       const configuration = await ConfigModel.find().select("-id");
       const configUse = configuration[configuration.length - 1];
@@ -47,7 +45,7 @@ export default defineEventHandler(
       const t = await useTranslationServerMiddleware(event);
       const otp = await OTPModel.findOne({ email });
       if (otp) {
-        // otp.code = code;
+        otp.code = code;
         otp.expiresAt = expiresAt;
         await otp.save();
         linkTo = `${config.public.public_uri}${link}&code=${otp.code}&expiresAt=${otp.expiresAt}`;

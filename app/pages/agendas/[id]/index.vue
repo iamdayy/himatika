@@ -16,7 +16,7 @@ const router = useRouter();
 const toast = useToast()
 
 // Data Fetching
-const { data: agenda, pending, refresh } = await useAsyncData(`agenda-${id}`,
+const { data: agenda, pending, refresh } = useLazyAsyncData(`agenda-${id}`,
     () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda
 });
@@ -115,15 +115,10 @@ const isCertificateLoading = ref(false);
 const myCertificateDoc = ref<null | { _id: string; doc: string; signs: { signed: boolean }[] }>(null);
 
 const myParticipant = computed(() => {
-    if (!user.value || !agenda.value) return null;
+    if (!agenda.value) return null;
 
-    // Check Participant
-    const p = agenda.value.participants?.find((p: any) => (p.member?.NIM || p.member) === user.value?.member?.NIM);
-    if (p) return { ...p, type: 'participant' };
-
-    // Check Committee
-    const c = agenda.value.committees?.find((c: any) => (c.member?.NIM || c.member) === user.value?.member?.NIM);
-    if (c) return { ...c, type: 'committee' };
+    if (agenda.value.myParticipant) return { ...agenda.value.myParticipant, type: 'participant' };
+    if (agenda.value.myCommittee) return { ...agenda.value.myCommittee, type: 'committee' };
 
     return null;
 });
@@ -237,11 +232,7 @@ const downloadCertificate = () => {
 
 
 const navigateToRegisterParticipant = () => {
-    if (!user.value) {
-        router.push({ path: '/login', query: { redirect: route.fullPath } });
-    } else {
-        router.push(`/agendas/${id}/participant/register`);
-    }
+    router.push(`/agendas/${id}/participant/register`);
 };
 
 const navigateToRegisterCommittee = () => {
@@ -280,7 +271,7 @@ useSeoMeta({
 });
 
 // --- RELATED AGENDAS ---
-const { data: relatedAgendas } = useAsyncData('relatedAgendas',
+const { data: relatedAgendas, pending: pendingRelated } = useLazyAsyncData('relatedAgendas',
     () => $api<IAgendaResponse>('/api/agenda', {
         params: {
             category: (agenda.value?.category as ICategory)?._id,
@@ -318,8 +309,22 @@ function formatCurrency(amount: number): string {
 <template>
     <div class="min-h-screen space-y-2">
         <UBreadcrumb :items="links" />
-        <div v-if="pending" class="flex h-screen items-center justify-center">
-            <UIcon name="i-heroicons-arrow-path" class="animate-spin text-4xl text-primary" />
+        <div v-if="pending" class="flex flex-col gap-4 py-4 w-full">
+            <USkeleton class="h-[400px] lg:h-[500px] w-full rounded-2xl" />
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-4">
+                        <USkeleton class="h-8 w-1/3" />
+                        <USkeleton class="h-4 w-full" />
+                        <USkeleton class="h-4 w-5/6" />
+                        <USkeleton class="h-4 w-4/5" />
+                    </div>
+                    <div class="lg:col-span-1 space-y-4">
+                        <USkeleton class="h-48 w-full rounded-2xl" />
+                        <USkeleton class="h-32 w-full rounded-2xl" />
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div v-else-if="agenda" class="pb-20 md:pb-10 font-sans">
@@ -427,12 +432,12 @@ function formatCurrency(amount: number): string {
                                             'Panitia'
                                             : 'Peserta' }}</p>
                                         <UBadge
-                                            v-if="isRegistered === 'Participant' && (agenda.participants?.find((p) => (p.member as IMember)?.NIM === user?.member?.NIM)?.visiting)"
+                                            v-if="isRegistered === 'Participant' && agenda.myParticipant?.visiting"
                                             color="neutral" variant="solid" size="lg" class="mt-1 text-green-600">
                                             <UIcon name="i-heroicons-check-circle" class="mr-1" /> Sudah Hadir
                                         </UBadge>
                                         <UBadge
-                                            v-else-if="isRegistered === 'Committee' && (agenda.committees?.find((c) => (c.member as IMember)?.NIM === user?.member?.NIM)?.visiting)"
+                                            v-else-if="isRegistered === 'Committee' && agenda.myCommittee?.visiting"
                                             color="neutral" variant="solid" size="lg" class="mt-1 text-green-600">
                                             <UIcon name="i-heroicons-check-circle" class="mr-1" /> Sudah Hadir
                                         </UBadge>
@@ -593,8 +598,23 @@ function formatCurrency(amount: number): string {
             </div>
 
             <!-- Related Agendas Section -->
-            <div v-if="relatedAgendas && relatedAgendas.length > 0"
-                class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200 dark:border-gray-800 mt-12">
+        <div v-if="pendingRelated" class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200 dark:border-gray-800 mt-12">
+            <h2 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Agenda Terkait</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <UCard v-for="i in 3" :key="i" :ui="{ body: 'p-0', header: 'p-0', footer: 'p-4' }" class="h-full overflow-hidden">
+                    <USkeleton class="w-full aspect-video rounded-none" />
+                    <div class="p-4 space-y-3">
+                        <USkeleton class="h-6 w-3/4" />
+                        <div class="space-y-2">
+                            <USkeleton class="h-4 w-1/2" />
+                            <USkeleton class="h-4 w-2/3" />
+                        </div>
+                    </div>
+                </UCard>
+            </div>
+        </div>
+        <div v-else-if="relatedAgendas && relatedAgendas.length > 0"
+            class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200 dark:border-gray-800 mt-12">
                 <h2 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Agenda Terkait</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <NuxtLink v-for="related in relatedAgendas" :key="(related._id as string)"

@@ -2,6 +2,7 @@ import { SortOrder } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
 import { PointModel } from "~~/server/models/PointModel";
+import { validateFilterByField, validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
 import { IReqMemberQuery } from "~~/types/IRequestPost";
 import { IMemberResponse } from "~~/types/IResponse";
@@ -35,26 +36,32 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       const member = await MemberModel.findOne({ NIM })
         .select("-phone -address -religion -citizen -birth") // Exclude Sensitive PII
         .populate({
-          path: "agendasCommittee",
-          select: "title date at description configuration -_id",
-          transform: (doc: IAgenda) => ({
-            title: doc.title,
-            date: doc.date,
-            at: doc.at,
-            description: doc.description,
-            configuration: doc.configuration,
-          }),
+          path: "committeesData",
+          populate: {
+            path: "agendaId",
+            select: "title date at description configuration committees -_id",
+            transform: (doc: IAgenda) => ({
+              title: doc.title,
+              date: doc.date,
+              at: doc.at,
+              description: doc.description,
+              configuration: doc.configuration,
+            }),
+          }
         })
         .populate({
-          path: "agendasMember",
-          select: "title date at description configuration -_id",
-          transform: (doc: IAgenda) => ({
-            title: doc.title,
-            date: doc.date,
-            at: doc.at,
-            description: doc.description,
-            configuration: doc.configuration,
-          }),
+          path: "participantsData",
+          populate: {
+            path: "agendaId",
+            select: "title date at description configuration participants -_id",
+            transform: (doc: IAgenda) => ({
+              title: doc.title,
+              date: doc.date,
+              at: doc.at,
+              description: doc.description,
+              configuration: doc.configuration,
+            }),
+          }
         })
         .populate({
           path: "projects",
@@ -143,9 +150,11 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       query.status = { $nin: "deleted" };
     }
     if (order && sort) {
+      validateSortField("member", sort);
       sortOpt[sort] = order as SortOrder;
     }
     if (filter && filterBy) {
+      validateFilterByField("member", filterBy);
       query[filterBy] = filter;
     }
     if (NIM) {
@@ -181,26 +190,32 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
     // Fetch members with populated fields
     const members = await MemberModel.find(query)
       .populate({
-        path: "agendasCommittee",
-        select: "title date at description configuration -_id",
-        transform: (doc: IAgenda) => ({
-          title: doc.title,
-          date: doc.date,
-          at: doc.at,
-          description: doc.description,
-          configuration: doc.configuration,
-        }),
+        path: "committeesData",
+        populate: {
+          path: "agendaId",
+          select: "title date at description configuration committees -_id",
+          transform: (doc: IAgenda) => ({
+            title: doc.title,
+            date: doc.date,
+            at: doc.at,
+            description: doc.description,
+            configuration: doc.configuration,
+          }),
+        }
       })
       .populate({
-        path: "agendasMember",
-        select: "title date at description configuration -_id",
-        transform: (doc: IAgenda) => ({
-          title: doc.title,
-          date: doc.date,
-          at: doc.at,
-          description: doc.description,
-          configuration: doc.configuration,
-        }),
+        path: "participantsData",
+        populate: {
+          path: "agendaId",
+          select: "title date at description configuration participants -_id",
+          transform: (doc: IAgenda) => ({
+            title: doc.title,
+            date: doc.date,
+            at: doc.at,
+            description: doc.description,
+            configuration: doc.configuration,
+          }),
+        }
       })
       .populate({
         path: "projects",

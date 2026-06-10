@@ -7,21 +7,26 @@ export default defineCachedEventHandler(
       const user = event.context.user;
 
       const now = new Date();
+      let participantAgendaIds: any[] = [];
+      let committeeAgendaIds: any[] = [];
+
+      if (user && user.member) {
+        const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+        
+        const participants = await ParticipantModel.find({ member: user.member._id });
+        participantAgendaIds = participants.map((p) => p.agendaId);
+
+        const committees = await CommitteeModel.find({ member: user.member._id });
+        committeeAgendaIds = committees.map((c) => c.agendaId);
+      }
+
+      const excludedAgendaIds = [...participantAgendaIds, ...committeeAgendaIds];
+
       // Cari agenda terdekat yang belum diikuti oleh user
       const nearestAgenda = await AgendaModel.findOne({
         "date.start": { $gte: now },
-        $and: [
-          {
-            "participants.member": {
-              $ne: user ? user.member._id : null,
-            },
-          },
-          {
-            "committees.member": {
-              $ne: user ? user.member._id : null,
-            },
-          },
-        ],
+        _id: { $nin: excludedAgendaIds },
       }).sort({ "date.start": 1 });
       if (!nearestAgenda) {
         throw createError({

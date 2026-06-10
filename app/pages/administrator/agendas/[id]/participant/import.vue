@@ -210,7 +210,7 @@ const submitImport = async () => {
     }
 };
 
-const { data: agenda } = await useAsyncData('admin-agenda-detail',
+const { data: agenda, pending: pendingAgenda } = useLazyAsyncData('admin-agenda-detail',
     () => $api<IAgendaResponse>('/api/agenda', { query: { id } }), {
     transform: (data) => data.data?.agenda
 });
@@ -245,7 +245,17 @@ const links = computed(() => [{
 <template>
     <div class="mb-24 space-y-6">
         <UBreadcrumb :items="links" />
-        <UCard>
+        <div v-if="pendingAgenda" class="space-y-4">
+            <USkeleton class="h-10 w-1/4" />
+            <UCard>
+                <div class="space-y-4">
+                    <USkeleton class="h-8 w-full" />
+                    <USkeleton class="h-12 w-full" />
+                    <USkeleton class="h-48 w-full" />
+                </div>
+            </UCard>
+        </div>
+        <UCard v-else>
             <template #header>
                 <div class="flex justify-between items-center">
                     <h1 class="text-2xl font-bold">Import Peserta Massal</h1>
@@ -269,14 +279,14 @@ const links = computed(() => [{
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <UFormGroup label="Status Pembayaran (Default)">
-                        < v-model="paymentStatus" />
+                        <USwitch v-model="paymentStatus" />
                         <span class="ml-2 text-sm">{{ paymentStatus ? 'Lunas' : 'Belum Lunas' }}</span>
                     </UFormGroup>
                     <UFormGroup label="Metode Pembayaran (Default)">
                         <USelect v-model="paymentMethod" :options="paymentMethodOptions" />
                     </UFormGroup>
                     <UFormGroup label="Status Kehadiran (Default)">
-                        < v-model="isVisiting" />
+                        <USwitch v-model="isVisiting" />
                         <span class="ml-2 text-sm">{{ isVisiting ? 'Hadir' : 'Tidak Hadir' }}</span>
                     </UFormGroup>
                 </div>

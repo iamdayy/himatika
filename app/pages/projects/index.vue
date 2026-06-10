@@ -45,7 +45,7 @@ const sort = computed(() => {
 });
 const order = ref<string>("");
 const { data: user } = useAuth();
-const { data: projects, refresh: refreshProjects } = useAsyncData(
+const { data: projects, refresh: refreshProjects, pending } = useLazyAsyncData(
     "projects",
     () =>
         $api<IProjectsResponse>("/api/project", {
@@ -87,8 +87,8 @@ const { data: projects, refresh: refreshProjects } = useAsyncData(
 const isMobile = computed(() => width.value <= 768);
 const closeAlert = ref(false);
 
-const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/project/tags'));
-const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
+const { data: tagsData, pending: pendingTags } = useLazyAsyncData(() => $api<ITagsResponse>('/api/project/tags'));
+const { data: categoryOptions, refresh: refreshCategory, pending: pendingCategories } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
@@ -181,17 +181,49 @@ const links = computed(() => [{
                     </div>
                     <div class="flex flex-col gap-2 md:items-center md:flex-row">
                         <USelectMenu v-model="selectedTags" :items="tags" multiple
-                            :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full sm:w-44" />
+                            :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full sm:w-44" :loading="pendingTags" />
                         <USelectMenu v-model="selectedCategory" :items="categoryOptions" label-key="title"
                             value-key="value" :placeholder="$ts('filter_by', { key: 'category' })"
-                            class="w-full sm:w-44" />
+                            class="w-full sm:w-44" :loading="pendingCategories" />
                         <UButton :size="responsiveUISizes.button" color="primary" variant="ghost"
                             icon="i-heroicons-arrow-path" @click="refreshProjects()">
                         </UButton>
                     </div>
                 </div>
             </template>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div v-if="pending" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <UCard v-for="i in 8" :key="i">
+                    <template #header>
+                        <div class="flex items-center justify-between mb-2">
+                            <USkeleton class="h-5 w-16" />
+                            <USkeleton class="h-6 w-6 rounded-full" />
+                        </div>
+                        <USkeleton class="h-32 w-full rounded-lg" />
+                    </template>
+                    <div class="space-y-3">
+                        <USkeleton class="h-6 w-3/4" />
+                        <div class="flex gap-2">
+                            <USkeleton class="h-5 w-12 rounded-full" />
+                            <USkeleton class="h-5 w-12 rounded-full" />
+                        </div>
+                        <USkeleton class="h-4 w-32" />
+                        <USkeleton class="h-2 w-full" />
+                    </div>
+                    <template #footer>
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-1">
+                                <USkeleton class="h-3 w-16" />
+                                <USkeleton class="h-3 w-20" />
+                            </div>
+                            <div class="flex gap-1">
+                                <USkeleton class="h-6 w-6 rounded-full" />
+                                <USkeleton class="h-6 w-6 rounded-full" />
+                            </div>
+                        </div>
+                    </template>
+                </UCard>
+            </div>
+            <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <UCard v-for="project, i in projects.data" :key="i">
                     <template #header>
                         <div class="flex items-center justify-between mb-2">

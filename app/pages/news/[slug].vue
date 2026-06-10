@@ -15,7 +15,7 @@ const anonymous = ref(false);
 const isSubmitting = ref(false);
 
 const ip = await $fetch('/api/ip');
-const { data, refresh } = useAsyncData(() => $api<INewsResponse>('/api/news', {
+const { data, refresh, pending } = useLazyAsyncData(() => $api<INewsResponse>('/api/news', {
     query: {
         slug: route.params.slug
     }
@@ -103,8 +103,27 @@ const submitLikeComment = async (id?: string) => {
 
 </script>
 <template>
-    <div class="items-center justify-center mb-2" v-if="data?.data?.news">
-        <UBreadcrumb :links="links" />
+    <div class="items-center justify-center mb-2">
+        <div v-if="pending" class="space-y-4">
+            <USkeleton class="h-8 w-64 mb-4" />
+            <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
+                <template #header>
+                    <USkeleton class="h-12 w-3/4 mb-2" />
+                    <USkeleton class="h-6 w-1/4 mb-4" />
+                    <USkeleton class="h-6 w-32" />
+                </template>
+                <USkeleton class="h-96 w-full mb-6 rounded-lg" />
+                <div class="space-y-4">
+                    <USkeleton class="h-4 w-full" />
+                    <USkeleton class="h-4 w-5/6" />
+                    <USkeleton class="h-4 w-full" />
+                    <USkeleton class="h-4 w-4/5" />
+                    <USkeleton class="h-4 w-full" />
+                </div>
+            </UCard>
+        </div>
+        <div v-else-if="data?.data?.news">
+            <UBreadcrumb :links="links" />
         <UCard class="px-4 py-8 mt-2 md:px-8 md:py-12">
             <template #header>
                 <div class="flex flex-col gap-2">
@@ -224,6 +243,7 @@ const submitLikeComment = async (id?: string) => {
                     </div>
                 </template>
             </UCard>
+        </div>
         </div>
     </div>
 </template>

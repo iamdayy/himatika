@@ -1,22 +1,25 @@
 <script setup lang="ts">
 import { useQRCode } from '@vueuse/integrations/useQRCode';
-import type { ICategory, IMember } from '~~/types';
+import type { ICategory, IMember, IGuest } from '~~/types';
 import { type IAgendaResponse, type IParticipantResponse } from '~~/types/IResponse';
 
 const route = useRoute();
 const { $api, $ts } = useNuxtApp();
 const agendaId = route.params.id as string;
+const participantIdQuery = route.query.participantId as string | undefined;
 const { makeTicket } = useMakeDocs();
 
 // 1. Fetch Agenda Data & Registration Status
-const { data: agenda, pending, error } = useAsyncData('agenda', () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
+const { data: agenda, pending, error } = useLazyAsyncData('agenda', () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
     transform: (data) => {
         if (!data.data) return null;
         return data.data.agenda;
     },
     default: () => null,
 });
-const { data: me, pending: mePending } = useAsyncData('registration', () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`), {
+const { data: me, pending: mePending } = useLazyAsyncData('registration', () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
+    query: { participantId: participantIdQuery }
+}), {
     transform: (data) => {
         if (!data.data) return null;
         return data.data.participant;
@@ -46,9 +49,11 @@ const isQuestionsAnswered = computed(() => {
 });
 
 // Validasi jika belum terdaftar
-if (!me.value && !mePending.value) {
-    navigateTo(`/agendas/${agendaId}/participant/register`);
-}
+watch([me, mePending], ([newMe, isPending]) => {
+    if (!newMe && !isPending) {
+        navigateTo(`/agendas/${agendaId}/participant/register?participantId=${participantIdQuery || ''}`);
+    }
+}, { immediate: true });
 
 const bannerImage = computed(() => {
     if (agenda.value?.photos && agenda.value.photos.length > 0) {
@@ -97,11 +102,11 @@ const formatTime = (dateString: string) => {
 
 // --- ACTIONS ---
 const doPayment = () => {
-    navigateTo(`/agendas/${agendaId}/participant/${me.value?._id}/register?tab=payment&participantId=${me.value?._id}`);
+    navigateTo(`/agendas/${agendaId}/participant/register?tab=payment&participantId=${me.value?._id}`);
 };
 
 const doAnswer = () => {
-    navigateTo(`/agendas/${agendaId}/participant/${me.value?._id}/register?tab=answer_question&participantId=${me.value?._id}`);
+    navigateTo(`/agendas/${agendaId}/participant/register?tab=answer_question&participantId=${me.value?._id}`);
 };
 
 const isGeneratingPdf = ref(false);
@@ -143,7 +148,6 @@ const links = computed(() => [{
 
 definePageMeta({
     layout: 'client',
-    auth: false,
 });
 </script>
 
@@ -152,9 +156,22 @@ definePageMeta({
         <UBreadcrumb :items="links" />
         <UCard class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center font-sans">
 
-            <div v-if="pending" class="flex flex-col items-center justify-center space-y-4">
-                <span class="loading loading-dots loading-lg text-primary"></span>
-                <p class="text-sm font-medium text-gray-500 animate-pulse">Memroses tiket Anda...</p>
+            <div v-if="pending || mePending" class="w-full max-w-md mx-auto space-y-4">
+                <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
+                    <USkeleton class="h-64 w-full rounded-none" />
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <USkeleton class="h-10 w-full" />
+                            <USkeleton class="h-10 w-full" />
+                            <USkeleton class="h-12 w-full col-span-2" />
+                        </div>
+                        <USkeleton class="h-48 w-full rounded-2xl" />
+                        <div class="flex gap-3">
+                            <USkeleton class="h-10 flex-1 rounded-xl" />
+                            <USkeleton class="h-10 flex-1 rounded-xl" />
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div v-else-if="error || !agenda" class="text-center max-w-md mx-auto">
@@ -249,14 +266,14 @@ definePageMeta({
                         </div>
 
                         <!-- Middle Section: Ticket Details (Rip Effect) -->
-                        <div class="relative bg-white dark:bg-gray-900">
+                        <div class="relative bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
                             <!-- Rip Circles -->
-                            <div class="absolute -top-3 -left-3 w-6 h-6 bg-gray-50 dark:bg-gray-900 rounded-full z-20">
+                            <div class="absolute -top-4 -left-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_-3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_-3px_-3px_5px_rgba(255,255,255,0.05)]">
                             </div>
-                            <div class="absolute -top-3 -right-3 w-6 h-6 bg-gray-50 dark:bg-gray-900 rounded-full z-20">
+                            <div class="absolute -top-4 -right-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_3px_-3px_5px_rgba(255,255,255,0.05)]">
                             </div>
                             <div
-                                class="absolute top-0 left-3 right-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 opacity-50">
+                                class="absolute top-0 left-4 right-4 border-t-[3px] border-dashed border-gray-300 dark:border-gray-700 opacity-60">
                             </div>
 
                             <div class="px-6 py-8">
@@ -282,12 +299,12 @@ definePageMeta({
                                         <div class="flex items-center gap-3">
                                             <div
                                                 class="w-8 h-8 rounded-full bg-linear-to-tr from-primary-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                                                {{ (me?.member as IMember)?.fullName?.charAt(0) || 'P' }}
+                                                {{ ((me?.member as IMember)?.fullName || (me?.guest as IGuest)?.fullName || 'Peserta').charAt(0).toUpperCase() }}
                                             </div>
                                             <div>
                                                 <p
                                                     class="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-1">
-                                                    {{ (me?.member as IMember)?.fullName || 'Peserta' }}
+                                                    {{ (me?.member as IMember)?.fullName || (me?.guest as IGuest)?.fullName || 'Peserta' }}
                                                 </p>
                                                 <p class="text-[10px] text-gray-500 font-mono">
                                                     ID: {{ (me?._id as string)?.slice(-8).toUpperCase() }}
@@ -299,7 +316,7 @@ definePageMeta({
 
                                 <!-- QR Code Section -->
                                 <div
-                                    class="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center relative group-hover:border-primary-200 transition-colors duration-300">
+                                    class="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center relative group-hover:border-primary-400 group-hover:shadow-[0_0_20px_rgba(0,141,211,0.15)] transition-all duration-500">
                                     <div class="bg-white p-3 rounded-xl shadow-sm mb-4">
                                         <img :src="qrCode" class="w-40 h-40 object-contain" alt="QR Code" />
                                     </div>
@@ -308,7 +325,7 @@ definePageMeta({
                                             masuk
                                         </p>
                                         <div v-if="me?.visiting"
-                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold mt-2 shadow-lg shadow-green-500/30 animate-pulse">
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold mt-2 shadow-[0_0_15px_rgba(34,197,94,0.6)] animate-pulse border border-green-400">
                                             <Icon name="i-heroicons-check-badge-solid" class="w-5 h-5" />
                                             TERVERIFIKASI HADIR
                                         </div>
