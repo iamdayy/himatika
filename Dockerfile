@@ -4,7 +4,7 @@ RUN apk add --no-cache libc6-compat gcompat
 
 WORKDIR /app
 
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock ./
 
 RUN npm install -g bun
 RUN bun pm cache clear && bun install --frozen-lockfile
