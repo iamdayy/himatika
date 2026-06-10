@@ -68,7 +68,8 @@ useSeoMeta({
                 <NuxtImg provider="localProvider" src="/img/logo.png" alt="Logo"
                     class="mx-auto my-4 w-40 md:w-full md:max-w-md hero transition-transform duration-700 hover:scale-105" format="webp" preload />
 
-                <h1
+                <USkeleton v-if="pendingConfig" class="h-12 sm:h-16 md:h-24 lg:h-32 w-3/4 md:w-1/2 mx-auto mt-6 rounded-xl bg-gray-200 dark:bg-gray-800" />
+                <h1 v-else
                     class="mt-6 text-4xl font-extrabold tracking-tight text-gray-900 uppercase sm:text-5xl md:text-7xl lg:text-8xl hero title dark:text-white drop-shadow-sm">
                     {{ config?.name }}</h1>
             </div>
@@ -152,7 +153,7 @@ useSeoMeta({
         </section>
         <UButton
             class="fixed flex items-center justify-center text-4xl text-white duration-300 bg-blue-600 rounded-full w-14 h-14 z-90 bottom-10 right-8 drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-2xl hover:animate-bounce"
-            to="#contacts">
+            to="#contacts" aria-label="Go to contacts section">
             <UIcon name="i-heroicons-envelope" class="w-8 h-8 text-white" />
         </UButton>
     </div>

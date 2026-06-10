@@ -6,26 +6,31 @@ interface PageGuide {
   version: string;
 }
 
-class MyDatabase extends Dexie {
-  pageGuides!: Table<PageGuide>;
-
-  constructor() {
-    super("myDatabase");
-    this.version(1).stores({
-      pageGuides: "++id, page, version", // Primary key dan index
-    });
-  }
-}
+let db: any = null;
 
 export function useIndexedDB() {
-  const db = new MyDatabase();
+  if (import.meta.client && !db) {
+    class MyDatabase extends Dexie {
+      pageGuides!: Table<PageGuide>;
+
+      constructor() {
+        super("myDatabase");
+        this.version(1).stores({
+          pageGuides: "++id, page, version", // Primary key dan index
+        });
+      }
+    }
+    db = new MyDatabase();
+  }
 
   const storeGuideData = async (page: string, version: string) => {
+    if (!db) return;
     await db.pageGuides.where("page").equals(page).delete();
     await db.pageGuides.add({ page, version });
   };
 
   const getGuideData = async (page: string) => {
+    if (!db) return null;
     const data = await db.pageGuides.where("page").equals(page).last();
     return data;
   };

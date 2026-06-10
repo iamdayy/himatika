@@ -106,20 +106,20 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
             }
         } catch (memberError: any) {
             console.log(memberError);
-            // Custom error message to guide Guests
+            // Custom error message for Members
             throw {
                 data: {
-                    statusMessage: 'Akun tidak ditemukan. Jika Anda adalah Peserta Umum (Guest), harap gunakan fitur Use Magic Link.'
+                    statusMessage: memberError?.data?.statusMessage || memberError?.message || 'Akun tidak ditemukan. Pastikan Anda telah mendaftar sebagai Member.'
                 }
             };
         }
 
     } catch (error: any) {
         // ... err handling
-        form.value?.setErrors([error.data?.data || {}]);
+        form.value?.setErrors([error?.data?.data || {}]);
         toast.add({
             title: $ts('login_failed'),
-            description: error.data?.statusMessage || error.message || 'Login failed',
+            description: error?.data?.statusMessage || error?.message || 'Terjadi kesalahan pada sistem',
             color: 'error'
         });
     } finally {
@@ -131,13 +131,14 @@ const handleGoogleLogin = () => {
     window.location.href = '/api/auth/google/redirect';
 }
 
-const toggleMagicLink = () => {
-    isMagicLink.value = !isMagicLink.value;
-    if (isMagicLink.value) {
+const onChangeTab = (index: number) => {
+    if (index === 1) {
+        isMagicLink.value = true;
         useEmail.value = true; // Magic link requires email
         state.username = ""; // Clear username just in case
         state.password = "placeholder"; // Hack to bypass client-side validation if required
     } else {
+        isMagicLink.value = false;
         useEmail.value = false;
         state.password = "";
     }
@@ -208,18 +209,11 @@ onMounted(() => {
                     loading="lazy" />
             </div>
             <h4 class="my-4 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
-                isMagicLink ? 'Magic Login' : $ts('login') }}</h4>
+                isMagicLink ? 'Guest Login' : $ts('login') }}</h4>
 
-            <UForm ref="form" :state="state" @submit="onSubmit" class="px-2 mt-6 space-y-6">
+            <UTabs :items="[{ label: 'Member', key: 'member', icon: 'i-heroicons-user' }, { label: 'Guest', key: 'guest', icon: 'i-heroicons-users' }]" @change="onChangeTab" class="px-2 mt-4" />
 
-                <!-- Alert for Guests -->
-                <UAlert v-if="!isMagicLink"
-                    icon="heroicons-information-circle"
-                    color="primary"
-                    variant="soft"
-                    title="Peserta Umum (Guest)?"
-                    description="Silakan masuk melalui opsi 'Use Magic Link' di bawah."
-                />
+            <UForm ref="form" :state="state" @submit="onSubmit" class="px-2 mt-4 space-y-6">
 
                 <!-- Email input for Magic Link or Email Login -->
                 <UFormField v-if="useEmail || isMagicLink" id="email-login" label="Email" name="email">
@@ -245,10 +239,7 @@ onMounted(() => {
                     </div>
                 </UFormField>
 
-                <div class="flex justify-between text-sm">
-                    <UButton variant="link" :padded="false" color="neutral" @click="toggleMagicLink">
-                        {{ isMagicLink ? 'Use Password' : 'Use Magic Link' }}
-                    </UButton>
+                <div class="flex justify-end text-sm">
                     <NuxtLink v-if="!isMagicLink" to="/forgot-password"
                         class="font-semibold text-indigo-400 hover:text-indigo-500">
                         {{ $ts('forgot_password') }}?</NuxtLink>
@@ -258,7 +249,7 @@ onMounted(() => {
                 <div>
                     <UButton id="signin" type="submit" variant="solid" :size="responsiveUISizes.button" block
                         :loading="loading">
-                        {{ isMagicLink ? 'Send Login Link' : $ts('login') }}
+                        {{ isMagicLink ? 'Send Login Link (Email)' : $ts('login') }}
                     </UButton>
                 </div>
 

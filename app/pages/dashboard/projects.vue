@@ -335,7 +335,7 @@ onMounted(() => {
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
-                                <UBadge :label="(project.category as ICategory).title" color="secondary"
+                                <UBadge :label="(project.category as ICategory)?.title || 'Uncategorized'" color="secondary"
                                     variant="solid" />
                                 <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
                                     Completed

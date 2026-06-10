@@ -303,11 +303,11 @@ const color = computed(() => {
                         </template>
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                                (agendasMe?.committees?.length! + agendasMe?.members?.length!)
+                                (agendasMe?.committees?.length || 0) + (agendasMe?.members?.length || 0)
                                 }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
-                        <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
+                        <UProgress :model-value="(agendasMe?.committees?.length || 0) + (agendasMe?.members?.length || 0)"
                             :max="agendasCanMeRegistered?.length || 100" indicator />
                     </UCard>
                     <UCard class="w-full lg:w-1/3" id="card-projects">
@@ -349,12 +349,12 @@ const color = computed(() => {
                     </template>
                     <div class="flex items-center justify-between w-full mb-2">
                         <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                            memberProfile?.point?.find((p) => p.semester === memberProfile?.semester)?.point || 0}}
+                            (memberProfile?.point || [])?.find((p) => p.semester === memberProfile?.semester)?.point || 0}}
                         </h2>
                         <UIcon name="i-heroicons-arrow-trending-up" class="text-6xl" />
                     </div>
                     <UProgress
-                        :model-value="(memberProfile?.point?.find((p) => p.semester === memberProfile?.semester)?.point || 0)"
+                        :model-value="((memberProfile?.point || [])?.find((p) => p.semester === memberProfile?.semester)?.point || 0)"
                         :max="configData?.data.minPoint || 100" indicator />
                     <template #footer>
                         <div class="flex items-center justify-between w-full">
@@ -442,7 +442,7 @@ const color = computed(() => {
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
-                                <UBadge :label="(project.category as ICategory).title" color="info" variant="solid" />
+                                <UBadge :label="(project.category as ICategory)?.title || 'Uncategorized'" color="info" variant="solid" />
                                 <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
                                     Completed
                                 </UBadge>
