@@ -309,7 +309,7 @@ const pagination = ref({
 /**
  * Fetch data from API
  */
-const { data, pending, refresh } = await useLazyAsyncData('users', () => $api<IMemberResponse>('/api/member', {
+const { data, pending, refresh } = useLazyAsyncData('users', () => $api<IMemberResponse>('/api/member', {
     query: {
         search: search.value,
         page: pagination.value.pageIndex,

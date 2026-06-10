@@ -80,10 +80,22 @@ const editOptions = (doc: IDoc) => [
             <p>{{ $ts('gallery_document_description') }}</p>
         </template>
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-4" v-if="pending">
-            <div v-for="i in 4" :key="i" class="grid gap-4">
-                <div v-for="j in 2" :key="j" :style="{ height: `${Math.floor((Math.random() + 1) * 400)}px` }">
-                    <USkeleton class="min-w-full min-h-full rounded-lg" />
+        <div v-if="pending" class="space-y-6">
+            <div v-for="i in 3" :key="i" class="mb-4">
+                <div class="flex items-center justify-between p-2 border-b dark:border-gray-700">
+                    <USkeleton class="h-6 w-1/3" />
+                    <USkeleton class="h-6 w-20 rounded-full" />
+                </div>
+                <div v-for="j in 2" :key="`doc-${j}`" class="my-2">
+                    <div class="flex items-center justify-between w-full gap-4 p-4">
+                        <USkeleton class="h-6 w-1/2" />
+                        <USkeleton class="h-4 w-32" />
+                        <div class="flex gap-2">
+                            <USkeleton class="h-6 w-16 rounded-full" />
+                            <USkeleton class="h-6 w-16 rounded-full" />
+                        </div>
+                    </div>
+                    <hr class="h-px mt-4 bg-gray-200 border-0 dark:bg-gray-700">
                 </div>
             </div>
         </div>

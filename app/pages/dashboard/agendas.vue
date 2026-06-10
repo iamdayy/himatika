@@ -17,7 +17,7 @@ const router = useRouter();
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 // 1. Fetch Data Agenda
-const { data: agendas, pending } = await useAsyncData('user-agendas-calendar',
+const { data: agendas, pending } = useLazyAsyncData('user-agendas-calendar',
     () => $api<IAgendaMeResponse>('/api/me/agenda', {
         method: 'GET',
         query: {
@@ -37,7 +37,7 @@ const agendaIsPast = (agenda: IAgenda) => {
 };
 
 // 2. Fetch Agenda Terdekat (Nearest Open Agenda)
-const { data: nearestAgenda, pending: pendingNearestAgenda } = await useAsyncData('nearest-open-agenda',
+const { data: nearestAgenda, pending: pendingNearestAgenda } = useLazyAsyncData('nearest-open-agenda',
     () => $api<IAgendaResponse>('/api/agenda/nearest', {
         method: 'GET',
     }).then(res => res.data?.agenda || null)
@@ -117,7 +117,10 @@ const links = computed(() => [{
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :items="links" />
         <div class="space-y-8">
-            <div v-if="nearestAgenda"
+            <div v-if="pendingNearestAgenda" class="relative overflow-hidden rounded-3xl bg-gray-100 dark:bg-gray-800 shadow-xl h-48 md:h-56">
+                <USkeleton class="w-full h-full" />
+            </div>
+            <div v-else-if="nearestAgenda"
                 class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-500 to-primary-700 dark:from-primary-600 dark:to-primary-900 shadow-xl text-white">
                 <div
                     class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-accent-4 opacity-30 rounded-full blur-3xl">

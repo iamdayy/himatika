@@ -37,7 +37,7 @@ const ImageModal = overlay.create(ModalsImageOpen);
 const ActivinessLetterModal = overlay.create(ModalsProfileActivinessLetter);
 
 // Fetch Full Profile data because session is now Lite
-const { data: fullProfile, refresh: refreshProfile, pending: pendingProfile } = useAsyncData(() => $api<IMeResponse>('/api/me'), {
+const { data: fullProfile, refresh: refreshProfile, pending: pendingProfile } = useLazyAsyncData(() => $api<IMeResponse>('/api/me'), {
     transform: (data) => {
         if (data.statusCode === 200 && data.data) {
             return data.data.user;

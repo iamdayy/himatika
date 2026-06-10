@@ -27,7 +27,7 @@ const selectedTags = ref([]);
 const page = ref(1);
 const perPage = ref(9);
 
-const { data: dataTags } = useAsyncData('tags', () => $api<ITagsResponse>('/api/photo/tags'));
+const { data: dataTags, pending: pendingTags } = useLazyAsyncData('tags', () => $api<ITagsResponse>('/api/photo/tags'));
 const { data, error, pending, refresh } = useLazyAsyncData('photos', () => $api<IPhotoResponse>('/api/photo',
     {
         query: {
@@ -109,7 +109,7 @@ const links = computed(() => [{
                         placeholder="Search photos..." class="mb-4 md:mb-0 md:w-64" />
                     <div class="flex flex-row items-center gap-2">
                         <USelectMenu v-model="selectedTags" :items="tags" :size="responsiveUISizes.select" multiple
-                            placeholder="Filter by tags" class="w-full sm:w-48" />
+                            placeholder="Filter by tags" class="w-full sm:w-48" :loading="pendingTags" />
                         <UButton :size="responsiveUISizes.button" color="primary" variant="ghost"
                             icon="i-heroicons-arrow-path" @click="refresh()">
                         </UButton>

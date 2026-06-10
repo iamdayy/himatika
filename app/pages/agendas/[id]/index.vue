@@ -16,7 +16,7 @@ const router = useRouter();
 const toast = useToast()
 
 // Data Fetching
-const { data: agenda, pending, refresh } = await useAsyncData(`agenda-${id}`,
+const { data: agenda, pending, refresh } = useLazyAsyncData(`agenda-${id}`,
     () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda
 });
@@ -271,7 +271,7 @@ useSeoMeta({
 });
 
 // --- RELATED AGENDAS ---
-const { data: relatedAgendas } = useAsyncData('relatedAgendas',
+const { data: relatedAgendas, pending: pendingRelated } = useLazyAsyncData('relatedAgendas',
     () => $api<IAgendaResponse>('/api/agenda', {
         params: {
             category: (agenda.value?.category as ICategory)?._id,
@@ -598,8 +598,23 @@ function formatCurrency(amount: number): string {
             </div>
 
             <!-- Related Agendas Section -->
-            <div v-if="relatedAgendas && relatedAgendas.length > 0"
-                class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200 dark:border-gray-800 mt-12">
+        <div v-if="pendingRelated" class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200 dark:border-gray-800 mt-12">
+            <h2 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Agenda Terkait</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <UCard v-for="i in 3" :key="i" :ui="{ body: 'p-0', header: 'p-0', footer: 'p-4' }" class="h-full overflow-hidden">
+                    <USkeleton class="w-full aspect-video rounded-none" />
+                    <div class="p-4 space-y-3">
+                        <USkeleton class="h-6 w-3/4" />
+                        <div class="space-y-2">
+                            <USkeleton class="h-4 w-1/2" />
+                            <USkeleton class="h-4 w-2/3" />
+                        </div>
+                    </div>
+                </UCard>
+            </div>
+        </div>
+        <div v-else-if="relatedAgendas && relatedAgendas.length > 0"
+            class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-gray-200 dark:border-gray-800 mt-12">
                 <h2 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Agenda Terkait</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <NuxtLink v-for="related in relatedAgendas" :key="(related._id as string)"

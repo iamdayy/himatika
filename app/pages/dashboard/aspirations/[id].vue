@@ -1,5 +1,42 @@
 <template>
     <UContainer class="py-16">
+        <template v-if="pending">
+            <UCard>
+                <template #header>
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-1.5 gap-2 w-1/2">
+                            <USkeleton class="h-6 w-24 rounded-full" />
+                            <USkeleton class="h-8 w-3/4" />
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <USkeleton class="h-10 w-24 rounded-md" />
+                            <USkeleton class="h-10 w-24 rounded-md" />
+                        </div>
+                    </div>
+                </template>
+                <div class="space-y-6">
+                    <div>
+                        <USkeleton class="h-4 w-full mb-2" v-for="i in 3" :key="i" />
+                    </div>
+                    <USeparator />
+                    <div>
+                        <USkeleton class="h-6 w-32 mb-2" />
+                        <USkeleton class="h-4 w-48 mb-2" />
+                        <USkeleton class="h-4 w-32" />
+                    </div>
+                </div>
+                <template #footer>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <USkeleton class="h-8 w-8 rounded-full" />
+                            <USkeleton class="h-4 w-4" />
+                            <USkeleton class="h-8 w-8 rounded-full" />
+                        </div>
+                    </div>
+                </template>
+            </UCard>
+        </template>
+        <template v-else>
         <UCard>
             <template #header>
                 <div class="flex items-center justify-between">
@@ -243,6 +280,7 @@
                 </template>
             </UTabs>
         </UCard>
+        </template>
     </UContainer>
 </template>
 
@@ -301,7 +339,7 @@ const items = computed(() => [
 ]);
 const { $api } = useNuxtApp();
 const { $ts } = useI18n();
-const { data, refresh } = useLazyAsyncData<IAspirationResponse>('aspiration', () => $api(`api/aspiration`, {
+const { data, refresh, pending } = useLazyAsyncData<IAspirationResponse>('aspiration', () => $api(`api/aspiration`, {
     query: { id },
 }));
 const organizerStore = useOrganizerStore();

@@ -37,11 +37,11 @@ const isMobile = computed(() => width.value < 768);
 const activeStep = ref(0);
 
 // --- FETCH DATA ---
-const { data: agendaData } = useAsyncData(() => $api<IAgendaResponse>(`/api/agenda/${id}`, {
+const { data: agendaData, pending: pendingAgenda } = useLazyAsyncData(() => $api<IAgendaResponse>(`/api/agenda/${id}`, {
     method: 'GET',
 }));
 
-const { data: committeeData, refresh: refreshCommittee } = useAsyncData(() => $api<ICommitteeResponse>(`/api/agenda/${id}/committee/me`, {
+const { data: committeeData, refresh: refreshCommittee, pending: pendingCommittee } = useLazyAsyncData(() => $api<ICommitteeResponse>(`/api/agenda/${id}/committee/me`, {
     method: 'GET',
 }), {
     transform: (data) => {
@@ -74,7 +74,7 @@ const committee = computed<ICommittee | undefined>(() => {
 const registrationId = computed(() => committee.value?._id);
 
 // --- QUESTIONS ---
-const { data: questions } = useAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
+const { data: questions, pending: pendingQuestions } = useLazyAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/committee/question/answer/${registrationId.value}`, {
     method: 'GET',
 }), {
     transform: (data) => data.data?.answers,
@@ -306,7 +306,18 @@ onMounted(() => {
 <template>
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :links="links" />
-        <CoreStepper :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
+        <div v-if="pendingAgenda || pendingCommittee" class="mt-4">
+            <USkeleton class="w-full h-12 mb-6" />
+            <UCard>
+                <div class="space-y-4">
+                    <USkeleton class="h-8 w-1/4 mb-4" />
+                    <USkeleton class="h-10 w-full" />
+                    <USkeleton class="h-10 w-full" />
+                    <USkeleton class="h-10 w-full" />
+                </div>
+            </UCard>
+        </div>
+        <CoreStepper v-else :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
             :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
 
             <template #default="{ step, errors }">
@@ -327,7 +338,10 @@ onMounted(() => {
                 </div>
 
                 <div v-else-if="step?.id === 'answer_question'">
-                    <div class="space-y-4">
+                    <div v-if="pendingQuestions" class="space-y-4">
+                        <USkeleton class="h-16 w-full" v-for="i in 3" :key="i" />
+                    </div>
+                    <div v-else class="space-y-4">
                         <CoreQuestion v-for="(question, index) in questions" :key="index" :question="question.question"
                             v-model="question.answer" />
                     </div>

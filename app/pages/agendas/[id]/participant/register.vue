@@ -23,12 +23,12 @@ const isMobile = computed(() => width.value < 768);
 const { data: user } = useAuth();
 // Redirect logic removed to allow Guest registration and ticket viewing
 
-const { data: agenda, refresh } = useAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`, {
+const { data: agenda, refresh, pending: pendingAgenda } = useLazyAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`, {
     method: 'GET',
 }), {
     transform: (data) => data.data?.agenda,
 });
-const { data: participantData, refresh: refreshParticipant } = useAsyncData(() => $api<IParticipantResponse>(`/api/agenda/${id}/participant/me`, {
+const { data: participantData, refresh: refreshParticipant, pending: pendingParticipant } = useLazyAsyncData(() => $api<IParticipantResponse>(`/api/agenda/${id}/participant/me`, {
     method: 'GET',
     query: {
         participantId: participantId.value || undefined,
@@ -74,7 +74,7 @@ const participant = computed<IParticipant>(() => {
 });
 const registrationId = computed(() => participantId.value || participant.value?._id || '');
 
-const { data: questions, refresh: refreshQuestions } = useAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
+const { data: questions, refresh: refreshQuestions, pending: pendingQuestions } = useLazyAsyncData(() => $api<IAnswersResponse>(`/api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
     method: 'GET',
 }), {
     transform: (data) => {
@@ -461,7 +461,18 @@ watch(participant, (newValue) => {
 <template>
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :items="links" />
-        <CoreStepper :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
+        <div v-if="pendingAgenda || pendingParticipant" class="mt-4">
+            <USkeleton class="w-full h-12 mb-6" />
+            <UCard>
+                <div class="space-y-4">
+                    <USkeleton class="h-8 w-1/4 mb-4" />
+                    <USkeleton class="h-10 w-full" />
+                    <USkeleton class="h-10 w-full" />
+                    <USkeleton class="h-10 w-full" />
+                </div>
+            </UCard>
+        </div>
+        <CoreStepper v-else :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
             :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
             <template #default="{ step, errors }">
                 <div v-if="step?.id === 'registration'">
@@ -533,7 +544,10 @@ watch(participant, (newValue) => {
                     </div>
                 </div>
                 <div v-else-if="step?.id === 'answer_question'">
-                    <div class="space-y-4">
+                    <div v-if="pendingQuestions" class="space-y-4">
+                        <USkeleton class="h-16 w-full" v-for="i in 3" :key="i" />
+                    </div>
+                    <div v-else class="space-y-4">
                         <CoreQuestion v-for="(question, index) in questions" :key="index" :question="question.question"
                             v-model="question.answer" />
                     </div>

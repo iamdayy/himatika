@@ -10,14 +10,14 @@ const participantIdQuery = route.query.participantId as string | undefined;
 const { makeTicket } = useMakeDocs();
 
 // 1. Fetch Agenda Data & Registration Status
-const { data: agenda, pending, error } = useAsyncData('agenda', () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
+const { data: agenda, pending, error } = useLazyAsyncData('agenda', () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
     transform: (data) => {
         if (!data.data) return null;
         return data.data.agenda;
     },
     default: () => null,
 });
-const { data: me, pending: mePending } = useAsyncData('registration', () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
+const { data: me, pending: mePending } = useLazyAsyncData('registration', () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
     query: { participantId: participantIdQuery }
 }), {
     transform: (data) => {
@@ -156,7 +156,7 @@ definePageMeta({
         <UBreadcrumb :items="links" />
         <UCard class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center font-sans">
 
-            <div v-if="pending" class="w-full max-w-md mx-auto space-y-4">
+            <div v-if="pending || mePending" class="w-full max-w-md mx-auto space-y-4">
                 <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
                     <USkeleton class="h-64 w-full rounded-none" />
                     <div class="p-6 space-y-6">

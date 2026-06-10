@@ -13,8 +13,8 @@ definePageMeta({
 /**
  *  Data fetching and reactive properties
  */
-const { data: statsData } = useFetch<IStatsResponse>('/api/stats');
-const { data: dataConfig } = useFetch<IConfigResponse>('/api/config', {
+const { data: statsData, pending: pendingStats } = useFetch<IStatsResponse>('/api/stats');
+const { data: dataConfig, pending: pendingConfig } = useFetch<IConfigResponse>('/api/config', {
     key: 'config-state',
     lazy: false,
     server: true,
@@ -76,18 +76,29 @@ useSeoMeta({
         
         <section class="py-16 md:py-24" id="about">
             <div class="grid grid-cols-1 gap-6 px-4 md:px-12 lg:px-24 pt-2 md:grid-cols-3">
-                <StatCard v-if="statsData?.data?.members" :title="$ts('member')" :value="statsData?.data?.members"
-                    suffix="+" :description="$ts('and_many_more')" />
-                <StatCard v-if="statsData?.data?.agenda" :title="$ts('agenda')" :value="statsData?.data?.agenda"
-                    suffix="+" :description="$ts('and_many_more')" />
-                <StatCard v-if="statsData?.data?.projects" :title="$ts('project')" :value="statsData?.data?.projects"
-                    suffix="+" :description="$ts('and_many_more')" />
-
+                <template v-if="pendingStats">
+                    <UCard v-for="i in 3" :key="i" class="text-center">
+                        <USkeleton class="h-8 w-24 mx-auto mb-4" />
+                        <USkeleton class="h-10 w-16 mx-auto mb-2" />
+                        <USkeleton class="h-4 w-32 mx-auto" />
+                    </UCard>
+                </template>
+                <template v-else>
+                    <StatCard v-if="statsData?.data?.members" :title="$ts('member')" :value="statsData?.data?.members"
+                        suffix="+" :description="$ts('and_many_more')" />
+                    <StatCard v-if="statsData?.data?.agenda" :title="$ts('agenda')" :value="statsData?.data?.agenda"
+                        suffix="+" :description="$ts('and_many_more')" />
+                    <StatCard v-if="statsData?.data?.projects" :title="$ts('project')" :value="statsData?.data?.projects"
+                        suffix="+" :description="$ts('and_many_more')" />
+                </template>
             </div>
         </section>
         <!-- carousel Section -->
         <section class="py-8 md:py-12 carousel" id="carousel">
-            <UCarousel ref="carouselRef" v-slot="{ item, index }" :items="randomPhotos"
+            <div v-if="pendingConfig" class="px-4 md:px-12 lg:px-24">
+                <USkeleton class="w-full h-[400px] rounded-xl" />
+            </div>
+            <UCarousel v-else ref="carouselRef" v-slot="{ item, index }" :items="randomPhotos"
                 next-icon="i-lucide-chevron-right" prev-icon="i-lucide-chevron-left"
                 :prev="{ variant: 'ghost', size: responsiveUISizes.button, }"
                 :next="{ variant: 'ghost', size: responsiveUISizes.button, }" :ui="{

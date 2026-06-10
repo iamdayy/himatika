@@ -118,6 +118,13 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
                 // Atomic Deletion for Guest
                 if (participant.guest) {
                     await ParticipantModel.deleteOne({ _id: registeredId });
+                    
+                    // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
+                    const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
+                    if (otherParticipationsCount === 0) {
+                        const { GuestModel } = await import("~~/server/models/GuestModel");
+                        await GuestModel.deleteOne({ _id: participant.guest });
+                    }
                 } else {
                     // Atomic Update for Registered User
                     await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);

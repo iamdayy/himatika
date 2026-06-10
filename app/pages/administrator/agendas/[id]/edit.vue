@@ -37,7 +37,7 @@ const isMobile = computed(() => width.value < 768);
 
 const { id } = route.params as { id: string };
 
-const { data: agenda } = useAsyncData(`agenda-${id}`, async () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
+const { data: agenda, pending: pendingAgenda } = useLazyAsyncData(`agenda-${id}`, async () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda,
 });
 
@@ -80,7 +80,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     default: () => []
 });
 const memberSearchTerm = ref('');
-const { data: members, status: memberstatus } = useAsyncData("members", () => $api<IMemberResponse>("/api/member", {
+const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData("members", () => $api<IMemberResponse>("/api/member", {
     method: 'GET',
     params: {
         search: memberSearchTerm.value,
@@ -180,7 +180,9 @@ const state = reactive<IReqAgenda>({
     },
     enableSubscription: false,
     configuration: configurationState,
-    committees: []
+    presences: {
+        committees: []
+    }
 });
 
 const committeesStateRef = ref<ICommitteeState>({});
@@ -237,12 +239,13 @@ watch(agenda, (newAgenda) => {
         }
 
         // Update Committees
-        if (newAgenda.committees) {
+        if (newAgenda.presences?.committees) {
             const committees: ICommitteeState = {};
-            newAgenda.committees.forEach((committee, index) => {
+            newAgenda.presences.committees.forEach((committee: any, index: number) => {
                 committees[index + 1] = {
                     ...committee,
                     member: (committee.member as IMember)?.NIM || 0,
+                    agendaId: committee.agendaId || id
                 };
             });
             committeesStateRef.value = committees;
@@ -253,6 +256,7 @@ watch(agenda, (newAgenda) => {
                     member: 0,
                     approved: true,
                     approvedAt: new Date(),
+                    agendaId: id
                 },
             };
         }
@@ -264,6 +268,7 @@ watch(agenda, (newAgenda) => {
                 member: 0,
                 approved: true,
                 approvedAt: new Date(),
+                agendaId: id
             },
         };
     }
@@ -274,49 +279,34 @@ const committeesState = reactiveComputed<ICommitteeState>(() => {
 });
 
 const addCommittee = () => {
-    const newIndex = (Object.keys(committeesStateRef.value).length) + 1;
-    committeesStateRef.value[newIndex] = {
+    const currentCount = Object.keys(committeesStateRef.value).length;
+    committeesStateRef.value[currentCount + 1] = {
         job: '',
         member: 0,
         approved: true,
         approvedAt: new Date(),
+        agendaId: id as string
     };
 };
 
 const removeCommittee = (keyToRemove: number) => {
     const { [keyToRemove]: removed, ...remaining } = committeesStateRef.value;
     const reindexedCommittees: ICommitteeState = {};
-    Object.values(remaining).forEach((committee, i) => {
+    Object.values(remaining).forEach((committee: ICommittee, i: number) => {
         reindexedCommittees[i + 1] = committee;
     });
     committeesStateRef.value = reindexedCommittees;
 };
 
-// Ensure state committees property is updated when committeesStateRef changes (via computed property access or separate sync?)
-// state.committees is in the reactive object, but we need to keep it in sync for submission.
-// simpler: allow state.committees to be a getter or sync it before submit?
-// The original code had `committees: Object.values(committeesState)...` inside reactiveComputed.
-// If state is now plain reactive, we should probably make `committees` a computed property or update it before submit.
-// Or we can use a watcher to sync committeesStateRef to state.committees
-// OR simpler: just construct the payload at submit time and don't worry about keeping state.committees strictly in sync 
-// if it's only used for submission.
-// However, the `state` object is passed to `steps` which might use it?
-// Step 4 uses `state`? No, Step 4 has empty formData.
-// Checking `onSubmit`: `body: state`
-// So `state` MUST contain the correct data at submission.
-// We can use a computed property for `committees` inside `state` if `state` was a `reactive` wrapping a reference, 
-// but `reactive` unwraps specific refs.
-// Better: keep `committees` in `state` updated.
-
 watch(committeesStateRef, () => {
-    state.committees = Object.values(committeesStateRef.value).map((committee) => {
-        return {
-            job: committee.job,
-            member: committee.member as number,
-            approved: committee.approved,
-            approvedAt: committee.approvedAt,
-        };
-    });
+    state.presences = {
+        committees: Object.values(committeesStateRef.value).filter(
+            (committee: ICommittee) => committee.member !== 0
+        ).map((c: ICommittee) => ({
+            ...c,
+            agendaId: id as string
+        }))
+    };
 }, { deep: true });
 const stateRules = reactiveComputed<FieldValidationRules<IAgenda>>(() => ({
     title: (value) => {
@@ -702,7 +692,18 @@ const links = computed(() => [
 <template>
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :items="links" />
-        <CoreStepper class="mt-2" :steps="steps" v-model="tab" :prev-button-text="$ts('previous')"
+
+        <div v-if="pendingAgenda" class="space-y-4 mt-6">
+            <USkeleton class="h-12 w-full" />
+            <UCard>
+                <div class="space-y-4">
+                    <USkeleton class="h-10 w-full" />
+                    <USkeleton class="h-10 w-1/2" />
+                    <USkeleton class="h-32 w-full" />
+                </div>
+            </UCard>
+        </div>
+        <CoreStepper v-else class="mt-2" :steps="steps" v-model="tab" :prev-button-text="$ts('previous')"
             :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
             <template #default="{ step, errors }">
                 <div v-if="step?.id === 'step1'">

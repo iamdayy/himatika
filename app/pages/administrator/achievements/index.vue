@@ -27,7 +27,7 @@ const statusOptions = computed<SelectItem[]>(() => [
 ]);
 
 // Fetch Pending Requests
-const { data: requests, refresh, pending } = await useAsyncData('pending-achievements',
+const { data: requests, refresh, pending } = useLazyAsyncData('pending-achievements',
     () => $api<any>('/api/admin/achievement', {
         query: { status: status.value }
     }),
@@ -124,8 +124,17 @@ const links = computed(() => [{
             </template>
             <div class="space-y-6 mb-24">
 
-                <div v-if="pending" class="text-center py-10">
-                    <UIcon name="i-heroicons-arrow-path" class="animate-spin text-2xl" />
+                <div v-if="pending" class="space-y-4">
+                    <UCard v-for="i in 3" :key="i">
+                        <div class="flex flex-col md:flex-row gap-4 items-start">
+                            <USkeleton class="w-full md:w-48 h-32 rounded-lg" />
+                            <div class="flex-1 space-y-2">
+                                <USkeleton class="h-6 w-1/3" />
+                                <USkeleton class="h-4 w-1/4" />
+                                <USkeleton class="h-16 w-full mt-2" />
+                            </div>
+                        </div>
+                    </UCard>
                 </div>
 
                 <div v-else-if="requests?.length === 0"

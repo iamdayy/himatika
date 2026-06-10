@@ -60,7 +60,19 @@
                         </div>
                     </template>
 
-                    <div v-if="registeredAgendas.length > 0" class="space-y-4">
+                    <div v-if="pendingAgendas" class="space-y-4">
+                        <div v-for="i in 3" :key="i" class="flex items-center justify-between p-4 border rounded-lg">
+                            <div class="flex items-center gap-4">
+                                <USkeleton class="w-12 h-12 rounded-lg" />
+                                <div>
+                                    <USkeleton class="h-6 w-48 mb-2" />
+                                    <USkeleton class="h-4 w-32" />
+                                </div>
+                            </div>
+                            <USkeleton class="h-6 w-20 rounded-full" />
+                        </div>
+                    </div>
+                    <div v-else-if="registeredAgendas.length > 0" class="space-y-4">
                         <div v-for="agenda in registeredAgendas" :key="(agenda._id as string)"
                             class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                             @click="navigateTo(`/agendas/${agenda._id}`)">
@@ -125,8 +137,7 @@ const handleLogout = async () => {
 };
 
 // Fetch Agendas to show registered ones
-const { data: agendas } = await useAsyncData('guest-agendas', () => $api<IAgendaResponse>('/api/agenda'), {
-    lazy: true,
+const { data: agendas, pending: pendingAgendas } = useLazyAsyncData('guest-agendas', () => $api<IAgendaResponse>('/api/agenda'), {
     transform: (data) => {
         if (data.data) {
             return data.data.agendas;

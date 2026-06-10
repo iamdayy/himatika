@@ -20,7 +20,7 @@ const ImageAddComp = overlay.create(ModalsImageAdd);
 const ImageOpenComp = overlay.create(ModalsImageOpen);
 const ConfirmComp = overlay.create(ModalsConfirmation);
 
-const { data, refresh } = useAsyncData(() => $api<IProjectsResponse>(`/api/project`, {
+const { data, refresh, pending } = useLazyAsyncData(() => $api<IProjectsResponse>(`/api/project`, {
     query: {
         id: route.params.id
     }
@@ -151,7 +151,19 @@ const links = computed(() => [{
 <template>
     <div class="items-center justify-center mb-24">
         <UBreadcrumb :links="links" />
-        <div v-if="project">
+        <div v-if="pending" class="w-full mt-2 space-y-4">
+            <USkeleton class="w-full h-64 rounded-xl" />
+            <UCard>
+                <USkeleton class="w-1/2 h-8 mb-6" />
+                <div class="space-y-4">
+                    <USkeleton class="w-full h-4" />
+                    <USkeleton class="w-5/6 h-4" />
+                    <USkeleton class="w-full h-4" />
+                    <USkeleton class="w-4/5 h-4" />
+                </div>
+            </UCard>
+        </div>
+        <div v-else-if="project">
             <UCard class="mt-2" :ui="{ header: 'p-0 sm:p-0', root: 'overflow-hidden' }">
                 <template #header>
                     <NuxtImg provider="localProvider" :src="project.image as string" :alt="project.title" size="3xl"
@@ -294,11 +306,7 @@ const links = computed(() => [{
                 </template>
             </UCard>
         </div>
-        <UCard v-else>
-            <USkeleton class="w-full h-64 mb-4" />
-            <USkeleton class="w-3/4 h-8 mb-4" />
-            <USkeleton class="w-full h-4 mb-2" v-for="i in 5" :key="i" />
-        </UCard>
+
         <ModalsConfirmation v-model="modalConfirmation" @confirm="deletePhoto(photoId)" title="Delete Photo"
             body='Are you sure you want to delete this photo?' />
     </div>

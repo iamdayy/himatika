@@ -32,7 +32,7 @@ const selectedTags = ref<string[]>([]);
 
 // const { agendas, refreshAgendas, page, perPage, sort, order, upcomingOnly, agendasCount, search, selectedCategory, selectedTags } = useAgendas();
 
-const { data: agendas, refresh: refreshAgendas } = useLazyAsyncData("agendas", () => $api<IAgendaResponse>('/api/agenda', {
+const { data: agendas, refresh: refreshAgendas, pending } = useLazyAsyncData("agendas", () => $api<IAgendaResponse>('/api/agenda', {
     method: 'GET',
     query: {
         page: page.value,
@@ -63,14 +63,14 @@ const { data: agendas, refresh: refreshAgendas } = useLazyAsyncData("agendas", (
 const showPaidOnly = ref(false);
 const showFreeOnly = ref(false);
 const viewMode = ref<'list' | 'grid'>('grid');
-const { data: tags } = useAsyncData('tags', () => $fetch<ITagsResponse>('/api/agenda/tags'), {
+const { data: tags, pending: pendingTags } = useLazyAsyncData('tags', () => $fetch<ITagsResponse>('/api/agenda/tags'), {
     transform: (data) => {
         const tags = data.data?.tags || [];
         return tags;
     },
     default: () => []
 });
-const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $fetch<ICategoriesResponse>('/api/category', {
+const { data: categoryOptions, refresh: refreshCategory, pending: pendingCategories } = useLazyAsyncData(() => $fetch<ICategoriesResponse>('/api/category', {
     method: 'GET',
 }), {
     transform: (data) => {
@@ -290,10 +290,10 @@ const links = computed(() => [{
                                 <USelectMenu v-model="selectedCategory" :size="responsiveUISizes.select"
                                     :items="categoryOptions" value-key="value" label-key="title"
                                     :placeholder="$ts('filter_by', { key: 'category' })" class="min-w-[150px]"
-                                    icon="i-heroicons-tag" />
+                                    icon="i-heroicons-tag" :loading="pendingCategories" />
                                 <USelectMenu v-model="selectedTags" :size="responsiveUISizes.select" :items="tags"
                                     multiple :placeholder="$ts('filter_by', { key: 'tags' })" class="min-w-[150px]"
-                                    icon="i-heroicons-hashtag" />
+                                    icon="i-heroicons-hashtag" :loading="pendingTags" />
                                 <UPopover :popper="{ placement: 'bottom-start' }">
                                     <UButton icon="i-heroicons-adjustments-horizontal" color="neutral" variant="soft"
                                         :label="$ts('filter') || 'Filter'" />
@@ -354,7 +354,55 @@ const links = computed(() => [{
             </template>
             <!-- Agendas List -->
             <div class="space-y-12">
-                <template v-if="agendas.count > 0">
+                <template v-if="pending">
+                    <!-- Grid View Skeleton -->
+                    <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <UCard v-for="i in 6" :key="i" :ui="{ body: 'p-0', header: 'p-0', footer: 'p-4' }" class="h-full overflow-hidden">
+                            <USkeleton class="w-full aspect-video rounded-none" />
+                            <div class="p-4 space-y-3">
+                                <USkeleton class="h-6 w-3/4" />
+                                <div class="space-y-2">
+                                    <USkeleton class="h-4 w-1/2" />
+                                    <USkeleton class="h-4 w-2/3" />
+                                </div>
+                                <div class="flex gap-2">
+                                    <USkeleton class="h-5 w-12 rounded-full" />
+                                    <USkeleton class="h-5 w-12 rounded-full" />
+                                </div>
+                            </div>
+                            <template #footer>
+                                <div class="flex items-center justify-between">
+                                    <USkeleton class="h-4 w-16" />
+                                    <USkeleton class="h-4 w-16" />
+                                </div>
+                            </template>
+                        </UCard>
+                    </div>
+                    <!-- List View Skeleton -->
+                    <div v-else class="space-y-4">
+                        <UCard v-for="i in 6" :key="i" :ui="{ body: 'p-0' }" class="overflow-hidden">
+                            <div class="flex flex-col sm:flex-row h-full sm:h-48">
+                                <USkeleton class="w-full sm:w-64 h-48 sm:h-auto shrink-0 rounded-none" />
+                                <div class="flex-1 p-4 sm:p-5 flex flex-col justify-between">
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-start">
+                                            <USkeleton class="h-6 w-1/3" />
+                                            <USkeleton class="h-5 w-16 rounded-full" />
+                                        </div>
+                                        <USkeleton class="h-4 w-full" />
+                                        <USkeleton class="h-4 w-3/4" />
+                                        <USkeleton class="h-4 w-1/2" />
+                                    </div>
+                                    <div class="flex justify-between items-center mt-4">
+                                        <USkeleton class="h-6 w-20" />
+                                        <USkeleton class="h-6 w-20" />
+                                    </div>
+                                </div>
+                            </div>
+                        </UCard>
+                    </div>
+                </template>
+                <template v-else-if="agendas.count > 0">
                     <div v-for="(year, yearIndex) in Object.keys(groupedAgendas).sort((a, b) => order == 'asc' ? parseInt(a) - parseInt(b) : parseInt(b) - parseInt(a))"
                         :key="yearIndex">
 

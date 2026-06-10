@@ -470,7 +470,7 @@ const toast = useToast();
 const EditMemberModal = overlay.create(ModalsMemberEdit);
 const organizerStore = useOrganizerStore();
 const { isOrganizer } = storeToRefs(organizerStore);
-const { data: memberData } = await useAsyncData<IMemberResponse>('member', async () => {
+const { data: memberData, pending } = useLazyAsyncData<IMemberResponse>('member', async () => {
     const NIM = useRoute().params.NIM as string
     return await $api(`/api/member`, {
         method: 'GET',
