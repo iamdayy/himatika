@@ -298,16 +298,44 @@ onMounted(() => {
                 </div>
             </template>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <div v-if="pendingProjects" class="flex items-center justify-center">
-                    <USkeleton class="w-full h-16" />
-                    <USkeleton class="w-full h-14" />
-                    <USkeleton class="w-full h-12" />
-                </div>
+                <template v-if="pendingProjects">
+                    <UCard v-for="i in 3" :key="i">
+                        <template #header>
+                            <div class="flex items-center justify-between mb-2">
+                                <USkeleton class="h-6 w-20 rounded-full" />
+                                <USkeleton class="h-6 w-6 rounded-md" />
+                            </div>
+                            <USkeleton class="w-full h-48 rounded-lg" />
+                        </template>
+                        <div class="space-y-2">
+                            <USkeleton class="h-6 w-3/4" />
+                            <div class="flex gap-2">
+                                <USkeleton class="h-4 w-12 rounded-full" v-for="j in 2" :key="j" />
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <USkeleton class="h-4 w-4 rounded-full" />
+                                <USkeleton class="h-4 w-24" />
+                            </div>
+                            <USkeleton class="h-2 w-full mt-4" />
+                        </div>
+                        <template #footer>
+                            <div class="flex items-center justify-between">
+                                <div class="space-y-2">
+                                    <USkeleton class="h-4 w-32" />
+                                    <div class="flex -space-x-2">
+                                        <USkeleton class="h-8 w-8 rounded-full" v-for="j in 3" :key="j" />
+                                    </div>
+                                </div>
+                                <USkeleton class="h-6 w-6 rounded-md" />
+                            </div>
+                        </template>
+                    </UCard>
+                </template>
                 <UCard v-for="project, i in projects.data" :id="`card-${i}`" :key="i" v-else>
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
-                                <UBadge :label="(project.category as ICategory).title" color="secondary"
+                                <UBadge :label="(project.category as ICategory)?.title || 'Uncategorized'" color="secondary"
                                     variant="solid" />
                                 <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
                                     Completed

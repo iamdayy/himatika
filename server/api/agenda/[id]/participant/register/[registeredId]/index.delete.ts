@@ -17,6 +17,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       };
     }
 
+    const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+    const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
     const agenda = await AgendaModel.findById(id);
     let fullName = "";
     if (!agenda) {
@@ -25,38 +28,40 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Agenda not found",
       };
     }
-    const participant = agenda?.participants?.find(
-      (r) => r._id?.toString() === registeredId
-    );
-    if (!participant) {
+    
+    const participant = await ParticipantModel.findById(registeredId).populate("member").populate("guest");
+    if (!participant || participant.agendaId.toString() !== id) {
       return {
         statusCode: 404,
         statusMessage: "Participant not found",
       };
     }
+
     if (participant.guest) {
-      fullName = participant.guest.fullName;
+      fullName = (participant.guest as any).fullName;
     } else if (participant.member) {
-      fullName = (participant.member as IMember)?.fullName;
+      fullName = (participant.member as IMember).fullName;
     }
+
     if (participant.member && user.member) {
-      meIsParticipant =
-        (participant.member as IMember)?.NIM === user.member?.NIM;
+      meIsParticipant = (participant.member as IMember).NIM === user.member.NIM;
     }
-    const isCommittee = agenda.committees?.find(
-      (c) => (c.member as IMember)?.NIM === user.member?.NIM
-    );
-    if (!isCommittee && !meIsParticipant && !user.member.organizer) {
+
+    const isCommittee = await CommitteeModel.exists({
+      agendaId: id,
+      member: user.member?._id
+    });
+
+    if (!isCommittee && !meIsParticipant && !user.member?.organizer) {
       return {
         statusCode: 401,
         statusMessage:
-          "Cannot delete other's participant or yaourself when you are not committee or the organizer",
+          "Cannot delete other's participant or yourself when you are not committee or the organizer",
       };
     }
-    agenda.participants = agenda.participants?.filter(
-      (r) => r._id?.toString() !== registeredId
-    );
-    await agenda.save();
+    
+    await ParticipantModel.findByIdAndDelete(registeredId);
+    
     return {
       statusCode: 200,
       statusMessage: "Success deleted " + fullName + " from participant",

@@ -54,26 +54,38 @@ export default defineEventHandler(async (event): Promise<IAgendaMeResponse> => {
       };
     }
 
+    const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+    const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
+    const participants = await ParticipantModel.find({ member: member._id });
+    const participantAgendaIds = participants.map(p => p.agendaId);
+
+    const committees = await CommitteeModel.find({ member: member._id, approved: true });
+    const committeeAgendaIds = committees.map(c => c.agendaId);
+
     const agendasparticipants = await AgendaModel.find({
-      "participants.member": member._id,
+      _id: { $in: participantAgendaIds },
       ...query,
     })
       .skip(skip)
       .limit(limit)
       .sort(sortOpt);
+      
     const agendasparticipantsCount = await AgendaModel.countDocuments({
-      "participants.member": member._id,
+      _id: { $in: participantAgendaIds },
       ...query,
     });
+    
     const agendascommittees = await AgendaModel.find({
-      "committees.member": member._id,
+      _id: { $in: committeeAgendaIds },
       ...query,
     })
       .skip(skip)
       .limit(limit)
       .sort(sortOpt);
+      
     const agendascommitteesCount = await AgendaModel.countDocuments({
-      "committees.member": member._id,
+      _id: { $in: committeeAgendaIds },
       ...query,
     });
 

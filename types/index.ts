@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import type { Types } from "mongoose";
 /**
  * Defines the possible roles for users in the system.
  */
@@ -124,6 +124,8 @@ export interface IMember {
   organizersDailyManagement?: IOrganizer[];
   organizersDepartmentCoordinator?: IOrganizer[];
   organizersDepartmentMembers?: IOrganizer[];
+  participantsData?: any[];
+  committeesData?: any[];
 }
 
 export interface IGuest {
@@ -208,6 +210,7 @@ export interface IOrganizer {
  */
 export interface ICommittee {
   _id?: string | Types.ObjectId;
+  agendaId: string | Types.ObjectId;
   job: string;
   member: Partial<IMember> | string | number | Types.ObjectId | undefined;
   approved: boolean;
@@ -254,8 +257,9 @@ export interface IPayment {
  */
 export interface IParticipant {
   _id?: string | Types.ObjectId;
+  agendaId: string | Types.ObjectId;
   member?: Types.ObjectId | Partial<IMember> | number;
-  guest?: IGuest;
+  guest?: IGuest | Types.ObjectId;
   visiting?: boolean;
   visitAt?: string;
   visitTime?: Date;
@@ -369,8 +373,6 @@ export interface IAgenda {
   atLink: string;
   description: string;
   configuration: IAgendaConfiguration;
-  committees?: ICommittee[];
-  participants?: IParticipant[];
   presences?: {
     committees?: ICommittee[];
     participants?: IParticipant[];
@@ -383,6 +385,11 @@ export interface IAgenda {
   photos?: IPhoto[];
   videos?: IVideo[];
   docs?: IDoc[];
+  certificates?: string[] | Types.ObjectId[] | IDoc[];
+  participantsCount?: number;
+  committeesCount?: number;
+  myParticipant?: IParticipant;
+  myCommittee?: ICommittee;
 }
 
 /**

@@ -1,74 +1,65 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
-  const { id, registeredId } = event.context.params as {
-    id: string;
-    registeredId: string;
-  };
   try {
+    const user = event.context.user;
+    const { id, registeredId } = event.context.params as {
+      id: string;
+      registeredId: string;
+    };
+
+    const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
     // Find the agenda by ID
     const agenda = await AgendaModel.findById(id);
     if (!agenda) {
-      return {
+      throw createError({
         statusCode: 404,
         statusMessage: "Agenda not found",
-      };
+      });
     }
-    // Find the committee user by ID
-    const committee = agenda.committees?.find(
-      (reg) => reg._id?.toString() === registeredId
-    );
-    if (!committee) {
-      return {
+
+    // Only committee or organizer can manually mark payment
+    await ensureCommitteeOrOrganizer(agenda._id.toString(), user);
+
+    // Find the registered user by ID
+    const committee = await CommitteeModel.findById(registeredId);
+    if (!committee || committee.agendaId.toString() !== id) {
+      throw createError({
         statusCode: 404,
         statusMessage: "Committee user not found",
-      };
+      });
     }
+
     if (!committee.payment) {
-      return {
+      throw createError({
         statusCode: 400,
         statusMessage: "Payment data not found",
-      };
+      });
     }
-    // Check if the payment method is valid
-    if (committee.payment.method === "transfer") {
-      return {
-        statusCode: 400,
-        statusMessage: "Invalid payment method",
-      };
-    }
+
     // Check if the payment method is already paid
     if (committee.payment.status === "success") {
-      return {
+      throw createError({
         statusCode: 400,
         statusMessage: "Payment already completed",
-      };
-    }
-    if (typeof committee.payment !== "object") {
-      committee.payment = {
-        status: "pending",
-        type: "other",
-        method: "cash",
-        time: new Date(),
-      };
+      });
     }
     committee.payment.status = "success";
     committee.payment.method = "cash";
     committee.payment.time = new Date();
 
-    await agenda.save();
+    await committee.save();
     return {
       statusCode: 200,
-      statusMessage: "Payment link created",
-      // data: {
-      //   payment_link: registered.paymentLink,
-      // },
+      statusMessage: "Payment marked as success",
     };
   } catch (error: any) {
-    return {
-      statusCode: 500,
+    throw createError({
+      statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || error.message,
-    };
+    });
   }
 });

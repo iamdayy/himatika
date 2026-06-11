@@ -10,7 +10,7 @@ const toast = useToast();
 const overlay = useOverlay();
 
 
-const { data: agenda, refresh } = useAsyncData('agenda', async () => $api<IAgendaResponse>('/api/agenda', {
+const { data: agenda, refresh, pending } = useLazyAsyncData('agenda', async () => $api<IAgendaResponse>('/api/agenda', {
     query: {
         id
     }
@@ -83,7 +83,13 @@ definePageMeta({
                 </div>
             </template>
 
-            <div class="p-2 space-y-2">
+            <div v-if="pending" class="p-4 space-y-4">
+                <USkeleton class="h-8 w-1/4" />
+                <USkeleton class="h-4 w-1/2" />
+                <USkeleton class="h-32 w-full mt-4" />
+                <USkeleton class="h-32 w-full mt-4" />
+            </div>
+            <div v-else class="p-2 space-y-2">
                 <CoreQuestion v-for="(question, index) in questionsState" :key="index" :question="question"
                     @update="refresh" is-editing type="committee" />
                 <UButton icon="i-heroicons-plus" color="neutral" variant="subtle" @click="addNewQuestion()" block

@@ -202,6 +202,15 @@ const links = computed(() => [{
                         icon="i-heroicons-arrow-path" @click="refreshOrganizers()" />
                 </div>
             </template>
+            <template v-if="pendingOrganizers">
+                <div class="space-y-8">
+                    <USkeleton class="w-48 h-8 mx-auto my-4" />
+                    <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+                        <USkeleton v-for="i in 2" :key="i" class="w-[180px] md:w-[240px] h-[320px] md:h-[420px] mx-auto rounded-3xl" />
+                    </div>
+                </div>
+            </template>
+            <template v-else>
             <div>
                 <div class="flex items-center justify-between w-full gap-2">
                     <h1
@@ -294,6 +303,7 @@ const links = computed(() => [{
                     </UTabs>
                 </template>
             </UTabs>
+            </template>
         </UCard>
     </div>
 </template>

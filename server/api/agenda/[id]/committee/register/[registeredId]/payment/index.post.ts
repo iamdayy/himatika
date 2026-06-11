@@ -48,51 +48,50 @@ export default defineEventHandler(
       }
 
       // ✅ UBAH DISINI: Mencari di array committees
-      const committee = agenda.committees?.find(
-        (r) => r._id?.toString() === registeredId
-      );
-
-      if (!committee) {
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const committee = await CommitteeModel.findById(registeredId).populate("member");
+      if (!committee || committee.agendaId.toString() !== id) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Committee registration not found",
+          statusMessage: "Committee not found",
         });
       }
-
       if (committee.payment?.status === "success") {
         throw createError({
           statusCode: 400,
           statusMessage: "Payment already completed",
         });
       }
-
       if (
         committee.payment?.status === "pending" &&
-        committee.payment?.expiry &&
-        new Date(committee.payment.expiry) >= new Date()
+        new Date(committee.payment?.expiry as Date) >= new Date()
       ) {
         return {
           statusCode: 200,
           statusMessage: "Payment found",
-          data: { payment: committee.payment },
+          data: {
+            payment: committee.payment,
+          },
         };
       }
+      // --- LOGIC HARGA BARU ---
+      const ticketPrice = agenda.configuration?.committee?.amount || 0;
 
-      // ✅ UBAH DISINI: Mengambil harga dari konfigurasi committee
-      const ticketPrice = agenda.configuration.committee.amount || 0;
-
-      // Hitung Admin Fee
+      // Hitung Admin Fee berdasarkan tipe pembayaran yang dipilih user
       const adminFee = calculateAdminFee(ticketPrice, body.payment_method);
+
+      // Total yang harus dibayar user ke Midtrans
       const totalAmount = ticketPrice + adminFee;
 
+      // Validasi agar total tidak 0 atau negatif
       if (totalAmount <= 0) {
+        // Jika gratis (Rp 0), mungkin langsung bypass status success?
+        // Tapi disini kita throw error dulu
         throw createError({
           statusCode: 400,
           statusMessage: "Invalid payment amount",
         });
       }
-
-      // Request ke Midtrans
       const payment = await createCharge({
         payment_type: body.payment_method,
         bank_transfer: {
@@ -101,40 +100,29 @@ export default defineEventHandler(
         credit_card: body.credit_card,
         transaction_details: {
           order_id: registeredId,
-          gross_amount: totalAmount, // ✅ Total + Admin
+          gross_amount: totalAmount,
         },
         customer_details: {
-          first_name:
-            typeof committee.member === "object"
-              ? (committee.member as IMember).fullName
-              : "Committee Member",
-          email:
-            typeof committee.member === "object"
-              ? (committee.member as IMember).email
-              : "committee@example.com",
-          phone:
-            typeof committee.member === "object"
-              ? (committee.member as IMember).phone || "0800000000"
-              : "0800000000",
+          first_name: committee.member ? (committee.member as IMember).fullName : "",
+          email: committee.member ? (committee.member as IMember).email : "",
+          phone: committee.member ? (committee.member as IMember).phone || "" : "",
         },
       });
-
-      // Simpan ke Database
+      // ✅ UPDATE: Logic penyimpanan ke DB
       committee.payment = {
         ...committee.payment,
         status: "pending",
-        // Mapping Method Baru
         method: body.payment_method,
-
         order_id: payment.order_id,
         transaction_id: payment.transaction_id,
         expiry: new Date(payment.expiry_time),
         time: new Date(payment.transaction_time),
         bank: payment.va_numbers?.[0]?.bank || body.bank_transfer || "midtrans",
         va_number: payment.va_numbers?.[0]?.va_number || "",
+        qris_png: payment.actions?.[1]?.url,
       };
 
-      await agenda.save();
+      await committee.save();
 
       return {
         statusCode: 200,

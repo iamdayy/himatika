@@ -230,8 +230,8 @@ const responsiveUISizes = useResponsiveUiSizes();
                         <!-- Stats -->
                         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-300">
                             <div class="flex items-center gap-4">
-                                <span>{{ agenda.committees?.length || 0 }} {{ $ts('committee') }}</span>
-                                <span>{{ agenda.participants?.length || 0 }} {{ $ts('participant') }}</span>
+                                <span>{{ agenda.committeesCount || 0 }} {{ $ts('committee') }}</span>
+                                <span>{{ agenda.participantsCount || 0 }} {{ $ts('participant') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <UBadge v-if="agenda.configuration.participant.pay" color="error" variant="soft"
@@ -331,12 +331,12 @@ const responsiveUISizes = useResponsiveUiSizes();
                                     <div class="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-300">
                                         <div class="flex items-center gap-1">
                                             <UIcon name="i-heroicons-users" class="w-4 h-4" />
-                                            <span>{{ agenda.committees?.length || 0 }} {{ $ts('committee') }}</span>
+                                            <span>{{ agenda.committeesCount || 0 }} {{ $ts('committee') }}</span>
                                         </div>
                                         <div class="flex items-center gap-1">
                                             <UIcon name="i-heroicons-user-group" class="w-4 h-4" />
-                                            <span>{{ agenda.participants?.length || 0 }} {{ $ts('participant')
-                                                }}</span>
+                                            <span>{{ agenda.participantsCount || 0 }} {{ $ts('participant')
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>

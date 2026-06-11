@@ -72,13 +72,14 @@ export default defineCachedEventHandler(
         };
       }
       if (sort && order) {
-        validateSortField("agenda", sort);
+        validateSortField("agenda", sort === "date" ? "date.start" : sort);
         sortOpt = {
-          [sort]: order === "asc" ? 1 : -1,
+          [sort === "date" ? "date.start" : sort]: order === "asc" ? 1 : -1,
         };
       }
       const length = await AgendaModel.countDocuments(query);
       const agendas = await AgendaModel.find(query)
+        .select('title date category at configuration tags description')
         .populate({
           path: "photos",
           model: PhotoModel,
@@ -86,7 +87,53 @@ export default defineCachedEventHandler(
         .skip(skip || 0)
         .limit(limit || 0)
         .sort(sortOpt);
-      if (!agendas) {
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      
+      const agendaIds = agendas.map(a => a._id);
+
+      const participantCounts = await ParticipantModel.aggregate([
+        { $match: { agendaId: { $in: agendaIds } } },
+        { $group: { _id: "$agendaId", count: { $sum: 1 } } }
+      ]);
+      const pCountMap = new Map(participantCounts.map(item => [item._id.toString(), item.count]));
+
+      const committeeCounts = await CommitteeModel.aggregate([
+        { $match: { agendaId: { $in: agendaIds } } },
+        { $group: { _id: "$agendaId", count: { $sum: 1 } } }
+      ]);
+      const cCountMap = new Map(committeeCounts.map(item => [item._id.toString(), item.count]));
+
+      const myParticipantsMap = new Map();
+      const myCommitteesMap = new Map();
+
+      if (user?.member) {
+        const { MemberModel } = await import("~~/server/models/MemberModel");
+        const member = await MemberModel.findOne({ NIM: user.member.NIM });
+        if (member) {
+          const myParticipants = await ParticipantModel.find({ agendaId: { $in: agendaIds }, member: member._id }).lean();
+          myParticipants.forEach((p: any) => myParticipantsMap.set(p.agendaId.toString(), p));
+
+          const myCommittees = await CommitteeModel.find({ agendaId: { $in: agendaIds }, member: member._id }).lean();
+          myCommittees.forEach((c: any) => myCommitteesMap.set(c.agendaId.toString(), c));
+        }
+      } else if (user?.guest) {
+        const myParticipants = await ParticipantModel.find({ agendaId: { $in: agendaIds }, guest: user.guest._id }).lean();
+        myParticipants.forEach((p: any) => myParticipantsMap.set(p.agendaId.toString(), p));
+      }
+
+      const agendasWithCounts = agendas.map((agenda) => {
+        const agendaIdStr = agenda._id.toString();
+        return {
+          ...agenda.toObject(),
+          participantsCount: pCountMap.get(agendaIdStr) || 0,
+          committeesCount: cCountMap.get(agendaIdStr) || 0,
+          myParticipant: myParticipantsMap.get(agendaIdStr) || undefined,
+          myCommittee: myCommitteesMap.get(agendaIdStr) || undefined
+        };
+      });
+
+      if (!agendasWithCounts) {
         throw createError({
           statusCode: 400,
           message: "No agendas found",
@@ -96,7 +143,7 @@ export default defineCachedEventHandler(
         statusCode: 200,
         statusMessage: "Agendas found",
         data: {
-          agendas,
+          agendas: agendasWithCounts,
           length,
         },
       };

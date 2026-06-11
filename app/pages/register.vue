@@ -67,6 +67,9 @@ const SendOTPCode = async () => {
         });
         if (response.statusCode == 200) {
             OTPForm.expiresAt = response.data?.expiresAt || "";
+            if (import.meta.client) {
+                sessionStorage.setItem('otpExpiresAt', OTPForm.expiresAt);
+            }
             toast.add({ title: $ts("otp_send_success"), color: "success" });
         }
     } catch (error: any) {
@@ -109,8 +112,10 @@ const register = async (): Promise<boolean | FormError> => {
             return false;
         }
     } catch (error: any) {
-        toast.add({ title: error.data.data.message, color: "error" });
-        return { path: error.data.data.path, message: error.data.data.message };
+        const errMsg = error?.data?.data?.message || 'Terjadi kesalahan pada sistem';
+        const errPath = error?.data?.data?.path || 'server';
+        toast.add({ title: errMsg, color: "error" });
+        return { path: errPath, message: errMsg };
     } finally {
         loading.value = false;
     }
@@ -183,7 +188,7 @@ const verifyNIM = async (): Promise<true | FormError> => {
         }
     } catch (error: any) {
         toast.add({ title: $ts("verification_nim_failed"), description: $ts('verification_nim_failed_desc'), color: "error" });
-        return { path: error.data.data.path, message: error.data.data.message };
+        return { path: error?.data?.data?.path || 'NIM', message: error?.data?.data?.message || 'Verifikasi gagal' };
     }
 };
 const verifyNIMFormRules = reactiveComputed<FieldValidationRules>(() => ({
@@ -330,6 +335,10 @@ function formatTime(ms: number) {
 }
 
 onMounted(() => {
+    if (import.meta.client && sessionStorage.getItem('otpExpiresAt')) {
+        OTPForm.expiresAt = sessionStorage.getItem('otpExpiresAt') as string;
+    }
+
     const steps: DriveStep[] = [
         {
             element: "#NIM",

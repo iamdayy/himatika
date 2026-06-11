@@ -60,7 +60,19 @@
                         </div>
                     </template>
 
-                    <div v-if="registeredAgendas.length > 0" class="space-y-4">
+                    <div v-if="pendingAgendas" class="space-y-4">
+                        <div v-for="i in 3" :key="i" class="flex items-center justify-between p-4 border rounded-lg">
+                            <div class="flex items-center gap-4">
+                                <USkeleton class="w-12 h-12 rounded-lg" />
+                                <div>
+                                    <USkeleton class="h-6 w-48 mb-2" />
+                                    <USkeleton class="h-4 w-32" />
+                                </div>
+                            </div>
+                            <USkeleton class="h-6 w-20 rounded-full" />
+                        </div>
+                    </div>
+                    <div v-else-if="registeredAgendas.length > 0" class="space-y-4">
                         <div v-for="agenda in registeredAgendas" :key="(agenda._id as string)"
                             class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                             @click="navigateTo(`/agendas/${agenda._id}`)">
@@ -114,6 +126,8 @@ useHead({
     title: 'Guest Dashboard'
 });
 
+const { $api } = useNuxtApp();
+
 const { data: session, signOut } = useAuth();
 // Helper to type-guard/cast session data
 const guest = computed(() => (session.value as any)?.guest as IGuest | undefined);
@@ -123,8 +137,7 @@ const handleLogout = async () => {
 };
 
 // Fetch Agendas to show registered ones
-const { data: agendas } = await useAsyncData('guest-agendas', () => $fetch<IAgendaResponse>('/api/agenda'), {
-    lazy: true,
+const { data: agendas, pending: pendingAgendas } = useLazyAsyncData('guest-agendas', () => $api<IAgendaResponse>('/api/agenda'), {
     transform: (data) => {
         if (data.data) {
             return data.data.agendas;
@@ -137,21 +150,7 @@ const registeredAgendas = computed(() => {
     if (!agendas.value) return [];
     if (!guest.value) return [];
 
-    return agendas.value.filter(agenda => {
-        // Check if guest is in participants
-        // Need to handle populated or unpopulated cases if possible, but mainly relying on the fact that we might just check IDs if structure allows
-        // Step 1004 showed useAgendas logic for `isRegistered`.
-        // Let's manually check participants array using the guest ID/Email
-
-        return agenda.participants?.some(p => {
-            const pGuest = p.guest as any; // Could be object or ID
-            const pGuestId = pGuest?._id || pGuest;
-            const pGuestEmail = pGuest?.email;
-
-            return (pGuestId && pGuestId.toString() === guest.value?._id?.toString()) ||
-                (pGuestEmail && pGuestEmail === guest.value?.email);
-        });
-    });
+    return agendas.value.filter(agenda => !!agenda.myParticipant);
 });
 
 </script>

@@ -6,6 +6,12 @@ const config = useRuntimeConfig();
 // let cachedConnection: any = null;
 
 export default defineNitroPlugin(async () => {
+  // @ts-ignore
+  if (import.meta.prerender || process.env.npm_lifecycle_event === "build") {
+    console.log("Skipping DB connection during build/prerender phase.");
+    return;
+  }
+
   // if (cachedConnection && mongoose.connection.readyState === 1) {
   //   return; // Gunakan koneksi yang sudah ada
   // }

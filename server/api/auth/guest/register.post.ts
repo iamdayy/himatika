@@ -2,9 +2,9 @@ import { GuestModel } from "~~/server/models/GuestModel";
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
-    const { fullName, email, phone, instance, password } = body;
+    const { fullName, email, phone, instance } = body;
 
-    if (!fullName || !email || !password || !phone || !instance) {
+    if (!fullName || !email || !phone || !instance) {
         throw createError({
             statusCode: 400,
             statusMessage: "All fields are required",
@@ -32,9 +32,7 @@ export default defineEventHandler(async (event) => {
             fullName,
             email,
             phone,
-            instance,
-            password 
-            // password hashing handled by pre-save hook in GuestModel
+            instance
         });
 
         return {

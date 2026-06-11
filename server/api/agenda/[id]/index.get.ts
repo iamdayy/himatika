@@ -2,7 +2,6 @@ import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { VideoModel } from "~~/server/models/VideoModel";
-import { IMember } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -16,7 +15,11 @@ export default defineEventHandler(async (event) => {
       }
     }
     // Fetch a single agenda by ID
-    const eventData = await AgendaModel.findById(id, {})
+    const eventDataDoc = await AgendaModel.findById(id)
+      .populate({
+        path: "category",
+        select: "_id title",
+      })
       .populate({
         path: "photos",
         model: PhotoModel,
@@ -42,46 +45,83 @@ export default defineEventHandler(async (event) => {
         },
         model: DocModel,
       })
-      .exec();
+      .lean(); // Use lean to allow attaching properties
 
-    if (!eventData) {
+    if (!eventDataDoc) {
       throw createError({
         statusCode: 404,
         statusMessage: "Agenda not found",
       });
     }
 
-    if (!roles.includes(eventData.configuration.canSee as string)) {
+    if (!roles.includes(eventDataDoc.configuration.canSee as string)) {
       throw createError({
         statusCode: 403,
         statusMessage: "You do not have permission to view this agenda",
       });
     }
 
+    let participants: any[] = [];
+    let committees: any[] = [];
+
     // Permission to see participants
-    if (!roles.includes(eventData.configuration.canSeeRegistered as string)) {
-      eventData.participants = [];
+    if (roles.includes(eventDataDoc.configuration.canSeeRegistered as string) || roles.includes("Organizer")) {
+      // Import at the top dynamically or use global models
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      participants = await ParticipantModel.find({ agendaId: id }).lean();
     }
+    
+    const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+    let fetchedCommittees = await CommitteeModel.find({ agendaId: id }).lean();
+
     // filter committee not approved if user is not committee or organizer
-    if (
-      !event.context.organizer ||
-      !eventData.committees?.some(
-        (c) =>
-          (c.member as IMember | undefined)?.NIM === user?.member.NIM &&
-          c.approved
-      )
-    ) {
-      eventData.committees = eventData.committees?.filter(
-        (member) =>
+    const isMeCommitteeAndApproved = fetchedCommittees.some(
+      (c: any) =>
+        c.member?.NIM === user?.member?.NIM && c.approved
+    );
+
+    if (!event.context.organizer && !isMeCommitteeAndApproved) {
+      committees = fetchedCommittees.filter(
+        (member: any) =>
           member.approved ||
-          (member.member as IMember | undefined)?.NIM === user?.member.NIM
+          member.member?.NIM === user?.member?.NIM
       );
+    } else {
+      committees = fetchedCommittees;
     }
+
+    let myParticipant = undefined;
+    let myCommittee = undefined;
+
+    if (user?.member) {
+      const { MemberModel } = await import("~~/server/models/MemberModel");
+      const member = await MemberModel.findOne({ NIM: user.member.NIM });
+      if (member) {
+        const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+        myParticipant = await ParticipantModel.findOne({ agendaId: id, member: member._id }).lean();
+        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+        myCommittee = await CommitteeModel.findOne({ agendaId: id, member: member._id }).lean();
+      }
+    } else if (user?.guest) {
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      myParticipant = await ParticipantModel.findOne({ agendaId: id, guest: user.guest._id }).lean();
+    }
+
+    const agenda = {
+      ...eventDataDoc,
+      participants,
+      committees,
+      participantsCount: participants.length,
+      committeesCount: committees.length,
+      myParticipant,
+      myCommittee
+    };
+
     return {
       statusCode: 200,
       statusMessage: "Agenda found",
       data: {
-        agenda: eventData,
+        agenda,
       },
     };
   } catch (error: any) {

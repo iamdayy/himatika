@@ -3,7 +3,8 @@ import { ModalsConfirmation, ModalsReqruitmentAdd, ModalsReqruitmentEdit } from 
 import type { TabsItem } from '@nuxt/ui';
 import QRCode from 'qrcode';
 import type { ICategory, IReqruitment } from '~~/types';
-import type { IAgendaResponse } from '~~/types/IResponse';
+import type { IAgendaResponse, IResponse } from '~~/types/IResponse';
+import type { IParticipant, ICommittee } from '~~/types';
 
 definePageMeta({
     layout: 'dashboard',
@@ -18,7 +19,7 @@ const toast = useToast();
 const qrCodeUrl = ref('');
 
 // --- DATA FETCHING ---
-const { data: agenda, pending, refresh } = await useAsyncData('admin-agenda-detail',
+const { data: agenda, pending, refresh } = useLazyAsyncData('admin-agenda-detail',
     () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda
 });
@@ -26,20 +27,20 @@ const { data: agenda, pending, refresh } = await useAsyncData('admin-agenda-deta
 // --- STATISTIK COMPUTED ---
 const stats = computed(() => {
     if (!agenda.value) return [];
-    const participants = agenda.value.participants || [];
-    const committees = agenda.value.committees || [];
+    const participants = agenda.value.presences?.participants || [];
+    const committees = agenda.value.presences?.committees || [];
 
     const totalParticipants = participants.length;
-    const paidParticipants = participants.filter(p => p.payment?.status === 'success').length;
+    const paidParticipants = participants.filter((p: IParticipant) => p.payment?.status === 'success').length;
     const totalCommittees = committees.length;
-    const approvedCommittees = committees.filter(c => c.approved).length;
+    const approvedCommittees = committees.filter((c: ICommittee) => c.approved).length;
 
     const incomeParticipant = participants
-        .filter(p => p.payment?.status === 'success')
-        .reduce((sum, p) => sum + (agenda.value?.configuration.participant.amount || 0), 0);
+        .filter((p: IParticipant) => p.payment?.status === 'success')
+        .reduce((sum: number, p: IParticipant) => sum + (agenda.value?.configuration.participant.amount || 0), 0);
     const incomeCommittee = committees
-        .filter(c => c.payment?.status === 'success')
-        .reduce((sum, c) => sum + (agenda.value?.configuration.committee.amount || 0), 0);
+        .filter((c: ICommittee) => c.payment?.status === 'success')
+        .reduce((sum: number, c: ICommittee) => sum + (agenda.value?.configuration.committee.amount || 0), 0);
 
     return [
         { label: 'Total Peserta', value: totalParticipants, desc: `${paidParticipants} Lunas`, icon: 'i-heroicons-users', color: 'blue' },
@@ -269,12 +270,15 @@ const saveConfig = async () => {
                 certificate: agenda.value.configuration.certificate
             },
             // Mapping committees agar sesuai schema API
-            committees: agenda.value.committees?.map((c: any) => ({
-                job: c.job,
-                member: c.member?.NIM || c.member,
-                approved: c.approved,
-                approvedAt: c.approvedAt
-            })) || []
+            presences: {
+                committees: agenda.value.presences?.committees?.map((c: any) => ({
+                    job: c.job,
+                    member: c.member?.NIM || c.member,
+                    approved: c.approved,
+                    approvedAt: c.approvedAt,
+                    agendaId: c.agendaId
+                })) || []
+            }
         };
 
         await $api('/api/agenda', {

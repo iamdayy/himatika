@@ -11,7 +11,7 @@ const { $api, $ts } = useNuxtApp();
 const toast = useToast();
 const sizes = useResponsiveUiSizes();
 
-const { data: agenda } = await useAsyncData('admin-agenda-detail',
+const { data: agenda, pending: pendingAgenda } = useLazyAsyncData('admin-agenda-detail',
     () => $api<IAgendaResponse>('/api/agenda', { query: { id } }), {
     transform: (data) => data.data?.agenda
 });
@@ -222,7 +222,17 @@ const submitImport = async () => {
 <template>
     <div class="mb-24 space-y-6">
         <UBreadcrumb :items="links" />
-        <UCard>
+        <div v-if="pendingAgenda" class="space-y-4">
+            <USkeleton class="h-10 w-1/4" />
+            <UCard>
+                <div class="space-y-4">
+                    <USkeleton class="h-8 w-full" />
+                    <USkeleton class="h-12 w-full" />
+                    <USkeleton class="h-48 w-full" />
+                </div>
+            </UCard>
+        </div>
+        <UCard v-else>
             <template #header>
                 <div class="flex justify-between items-center">
                     <h1 class="text-2xl font-bold">Import Panitia Massal</h1>

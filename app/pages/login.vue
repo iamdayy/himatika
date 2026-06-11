@@ -90,7 +90,7 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
         // 2. If 401, Try Guest Login (only if username resembles email)
 
         try {
-            // Attempt Member Login first
+            // Attempt Member Login
             if (useEmail.value) {
                 console.log('Member Login');
                 await signIn({
@@ -98,86 +98,28 @@ const onSubmit = async (event: FormSubmitEvent<LoginSchema>) => {
                     password: event.data.password
                 }, { callbackUrl: previousUrl ? previousUrl : '/profile', redirect: true });
             } else {
-                console.log('Guest Login');
+                console.log('Member Login via Username');
                 await signIn({
                     username: event.data.username,
                     password: event.data.password
                 }, { callbackUrl: previousUrl ? previousUrl : '/profile', redirect: true });
             }
-            // If successful
-            // if (redirectUrl) {
-            //     window.location.replace(redirectUrl);
-            // } else {
-            //     // Default member redirect
-            //     window.location.replace('/profile');
-            // }
         } catch (memberError: any) {
             console.log(memberError);
-            // If Member login failed, check if we should try Guest login
-            // Only try if the credential looks like an email (Guest username is email)
-            const credential = useEmail.value ? event.data.email : event.data.username;
-            const isEmail = credential.includes('@');
-
-            if (isEmail) {
-                try {
-                    // Manual fetch for guest login because `signIn` from nuxt-auth might be configured for single provider
-                    // But we can use a custom endpoint.
-                    // IMPORTANT: `signIn` uses `local` provider by default which points to `signin.post.ts`.
-                    // We created `api/auth/guest/login.post.ts`. 
-                    // We can't easily switch provider in `signIn` without config.
-                    // So we call the endpoint directly and then set the token.
-
-                    const guestResponse = await $fetch<{ token: string, refreshToken: string }>('/api/auth/guest/login', {
-                        method: 'POST',
-                        body: { email: credential, password: event.data.password }
-                    });
-                    console.log(guestResponse);
-
-                    // If successful, we need to set the token manually in the auth state
-                    // nuxt-auth might have a `data` or `token` setter.
-                    // Or we just reload/redirect because the backend `guest/login` should set the HttpOnly cookie? 
-                    // Wait, our `login.post.ts` returns token. We rely on client to set it? 
-                    // `signIn` does this automatically.
-                    // The `signin.post.ts` sets a session in DB.
-                    // `guest/login.post.ts` ALSO sets a session in DB using `setSession`.
-                    // The client needs to receive the token to put in header? 
-                    // Our `authHelper` checks Header `Authorization: Bearer ...`.
-                    // So specific client side logic is needed to store this token.
-                    // But `useAuth` from `@sidebase/nuxt-auth` expects the `local` provider pattern.
-
-                    // ALTERNATIVE: Modify `signin.post.ts` to handle BOTH? 
-                    // User requested "Separation". 
-                    // But for `login.vue` using `signIn`, it expects one endpoint.
-                    // Let's manually handle guest login here:
-
-                    const { token } = guestResponse;
-                    console.log(token);
-                    const { data, setToken } = useAuthState();
-                    setToken(token); // This might be enough to trick existing auth state if it uses `token` property
-
-                    // Typically `signIn` handles token storage (cookies/localstorage).
-                    // We need to store it manually if we bypass signIn.
-                    const tokenCookie = useCookie('auth:token');
-                    tokenCookie.value = token;
-
-                    // Redirect
-                    window.location.replace('/guest/dashboard');
-                    return;
-
-                } catch (guestError) {
-                    // Both failed, throw original error or guest error?
-                    throw memberError; // Throw member error to keep it simple, or custom message
+            // Custom error message for Members
+            throw {
+                data: {
+                    statusMessage: memberError?.data?.statusMessage || memberError?.message || 'Akun tidak ditemukan. Pastikan Anda telah mendaftar sebagai Member.'
                 }
-            }
-            throw memberError;
+            };
         }
 
     } catch (error: any) {
         // ... err handling
-        form.value?.setErrors([error.data?.data || {}]);
+        form.value?.setErrors([error?.data?.data || {}]);
         toast.add({
             title: $ts('login_failed'),
-            description: error.data?.statusMessage || error.message || 'Login failed',
+            description: error?.data?.statusMessage || error?.message || 'Terjadi kesalahan pada sistem',
             color: 'error'
         });
     } finally {
@@ -189,19 +131,22 @@ const handleGoogleLogin = () => {
     window.location.href = '/api/auth/google/redirect';
 }
 
-const toggleMagicLink = () => {
-    isMagicLink.value = !isMagicLink.value;
-    if (isMagicLink.value) {
+const selectedTab = ref(0);
+
+watch(selectedTab, (index: any) => {
+    const isGuest = index === 1 || index === '1' || index?.key === 'guest';
+    if (isGuest) {
+        isMagicLink.value = true;
         useEmail.value = true; // Magic link requires email
         state.username = ""; // Clear username just in case
         state.password = "placeholder"; // Hack to bypass client-side validation if required
     } else {
+        isMagicLink.value = false;
         useEmail.value = false;
         state.password = "";
     }
     form.value?.clear();
-}
-
+});
 
 // Set page head metadata
 useHead({
@@ -266,9 +211,11 @@ onMounted(() => {
                     loading="lazy" />
             </div>
             <h4 class="my-4 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
-                isMagicLink ? 'Magic Login' : $ts('login') }}</h4>
+                isMagicLink ? 'Guest Login' : $ts('login') }}</h4>
 
-            <UForm ref="form" :state="state" @submit="onSubmit" class="px-2 mt-6 space-y-6">
+            <UTabs v-model="selectedTab" :items="[{ label: 'Member', key: 'member', icon: 'i-heroicons-user' }, { label: 'Guest', key: 'guest', icon: 'i-heroicons-users' }]" class="px-2 mt-4" />
+
+            <UForm ref="form" :state="state" @submit="onSubmit" class="px-2 mt-4 space-y-6">
 
                 <!-- Email input for Magic Link or Email Login -->
                 <UFormField v-if="useEmail || isMagicLink" id="email-login" label="Email" name="email">
@@ -294,10 +241,7 @@ onMounted(() => {
                     </div>
                 </UFormField>
 
-                <div class="flex justify-between text-sm">
-                    <UButton variant="link" :padded="false" color="neutral" @click="toggleMagicLink">
-                        {{ isMagicLink ? 'Use Password' : 'Use Magic Link' }}
-                    </UButton>
+                <div class="flex justify-end text-sm">
                     <NuxtLink v-if="!isMagicLink" to="/forgot-password"
                         class="font-semibold text-indigo-400 hover:text-indigo-500">
                         {{ $ts('forgot_password') }}?</NuxtLink>
@@ -307,7 +251,7 @@ onMounted(() => {
                 <div>
                     <UButton id="signin" type="submit" variant="solid" :size="responsiveUISizes.button" block
                         :loading="loading">
-                        {{ isMagicLink ? 'Send Login Link' : $ts('login') }}
+                        {{ isMagicLink ? 'Send Login Link (Email)' : $ts('login') }}
                     </UButton>
                 </div>
 

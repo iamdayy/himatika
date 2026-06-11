@@ -43,16 +43,16 @@ if ((user.value as any)?.guest) {
 const { $pageGuide, $api } = useNuxtApp();
 
 const rankIcon = (rank: number, userNIM: number) => {
-    if (rank === 0) {
+    if (rank === 1) {
         return h('span', { class: 'text-xl' }, '🥇')
-    } else if (rank === 1) {
-        return h('span', { class: 'text-xl' }, '🥈')
     } else if (rank === 2) {
+        return h('span', { class: 'text-xl' }, '🥈')
+    } else if (rank === 3) {
         return h('span', { class: 'text-xl' }, '🥉')
     } else if (user.value?.member.NIM === userNIM) {
-        return h('span', { class: 'text-xl bg-primary-500 text-white px-2 py-1 rounded-full' }, '#' + (rank + 1))
+        return h('span', { class: 'text-xl bg-primary-500 text-white px-2 py-1 rounded-full' }, '#' + (rank))
     } else {
-        return h('span', { class: 'text-xl' }, '#' + (rank + 1))
+        return h('span', { class: 'text-xl' }, '#' + (rank))
     }
 }
 
@@ -112,12 +112,12 @@ const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
  * Get user stats
  */
 const statsStore = useStatsStore();
-await useAsyncData('dashboard-stats', async () => {
+const { pending: pendingStats } = useLazyAsyncData('dashboard-stats', async () => {
     await statsStore.init();
     return true; // Return sesuatu agar useAsyncData tahu proses selesai
 });
 const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations, memberProfile } = storeToRefs(statsStore);
-const { data } = useAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
+const { data: projectsData, pending: pendingProjects } = useLazyAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
     transform: (data) => ({
         data: data.data?.projects || [],
         count: data.data?.length || 0
@@ -127,7 +127,7 @@ const toast = useToast();
 const overlay = useOverlay();
 const { width } = useWindowSize();
 const { links } = useDashboardNavigation();
-const { data: configData } = useAsyncData(() => $api('/api/config'));
+const { data: configData, pending: pendingConfig } = useLazyAsyncData('config', () => $api('/api/config'));
 
 
 
@@ -207,7 +207,66 @@ const color = computed(() => {
 <template>
     <div>
         <UBreadcrumb :items="[{ label: 'Dashboard', icon: 'i-heroicons-home' }]" class="ms-4" />
-        <div class="flex flex-col w-full mt-2 md:flex-row md:space-y-0 md:space-x-6">
+        
+        <div v-if="pendingStats || pendingProjects || pendingConfig" class="flex flex-col w-full mt-2 md:flex-row md:space-y-0 md:space-x-6">
+            <!-- Sidebar Skeleton -->
+            <div class="flex-col hidden w-full md:flex md:w-1/3 lg:w-1/4">
+                <UCard class="flex-1 w-full h-screen">
+                    <template #header>
+                        <div class="flex items-center w-full gap-6">
+                            <USkeleton class="w-16 h-16 rounded-full lg:w-24 lg:h-24" />
+                            <div class="space-y-2">
+                                <USkeleton class="h-6 w-32" />
+                                <USkeleton class="h-4 w-24" />
+                            </div>
+                        </div>
+                    </template>
+                    <div class="space-y-4">
+                        <USkeleton class="h-10 w-full" v-for="i in 6" :key="i" />
+                    </div>
+                </UCard>
+            </div>
+            
+            <!-- Main Content Skeleton -->
+            <div class="w-full space-y-6 md:w-2/3 lg:w-3/4">
+                <!-- Stats Grid -->
+                <div class="flex flex-col w-full gap-2 lg:flex-row">
+                    <UCard class="w-full lg:w-1/3" v-for="i in 3" :key="i">
+                        <template #header>
+                            <USkeleton class="h-6 w-24" />
+                        </template>
+                        <div class="flex items-center justify-between w-full mb-2">
+                            <USkeleton class="h-10 w-16" />
+                            <USkeleton class="h-12 w-12 rounded-full" />
+                        </div>
+                        <USkeleton class="h-2 w-full mt-4" />
+                    </UCard>
+                </div>
+                
+                <!-- Point Card -->
+                <UCard class="w-full">
+                    <template #header>
+                        <div class="flex justify-between w-full">
+                            <USkeleton class="h-6 w-24" />
+                            <USkeleton class="h-8 w-24" />
+                        </div>
+                    </template>
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <USkeleton class="h-10 w-16" />
+                        <USkeleton class="h-12 w-12 rounded-full" />
+                    </div>
+                    <USkeleton class="h-2 w-full mt-4" />
+                    <template #footer>
+                        <div class="space-y-4">
+                            <USkeleton class="h-10 w-full" v-for="i in 3" :key="i" />
+                        </div>
+                    </template>
+                </UCard>
+            </div>
+        </div>
+
+        <div v-else>
+            <div class="flex flex-col w-full mt-2 md:flex-row md:space-y-0 md:space-x-6">
             <div class="flex-col hidden w-full md:flex md:w-1/3 lg:w-1/4">
                 <UCard class="flex-1 w-full overflow-auto text-wrap">
                     <template #header>
@@ -244,11 +303,11 @@ const color = computed(() => {
                         </template>
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                                (agendasMe?.committees?.length! + agendasMe?.members?.length!)
-                            }}</h2>
+                                (agendasMe?.committees?.length || 0) + (agendasMe?.members?.length || 0)
+                                }}</h2>
                             <UIcon name="i-heroicons-calendar" class="text-6xl" />
                         </div>
-                        <UProgress :model-value="(agendasMe?.committees?.length! + agendasMe?.members?.length!) || 0"
+                        <UProgress :model-value="(agendasMe?.committees?.length || 0) + (agendasMe?.members?.length || 0)"
                             :max="agendasCanMeRegistered?.length || 100" indicator />
                     </UCard>
                     <UCard class="w-full lg:w-1/3" id="card-projects">
@@ -258,10 +317,10 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 projectsMe.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
-                        <UProgress :model-value="projectsMe.length || 0" :color="color" :max="data?.count || 100"
+                        <UProgress :model-value="projectsMe?.length || 0" :color="color" :max="projectsData?.count || 100"
                             indicator />
                     </UCard>
                     <UCard class="w-full lg:w-1/3" id="card-projects">
@@ -271,7 +330,7 @@ const color = computed(() => {
                         <div class="flex items-center justify-between w-full mb-2">
                             <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
                                 aspirations.length
-                            }}</h2>
+                                }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
                         <UProgress :model-value="Math.ceil(aspirations.length / 5) || 0"
@@ -290,12 +349,12 @@ const color = computed(() => {
                     </template>
                     <div class="flex items-center justify-between w-full mb-2">
                         <h2 class="text-3xl text-gray-700 text-bold dark:text-gray-400">{{
-                            memberProfile?.point?.find((p) => p.semester === memberProfile?.semester)?.point || 0}}
+                            (memberProfile?.point || [])?.find((p) => p.semester === memberProfile?.semester)?.point || 0}}
                         </h2>
                         <UIcon name="i-heroicons-arrow-trending-up" class="text-6xl" />
                     </div>
                     <UProgress
-                        :model-value="(memberProfile?.point?.find((p) => p.semester === memberProfile?.semester)?.point || 0)"
+                        :model-value="((memberProfile?.point || [])?.find((p) => p.semester === memberProfile?.semester)?.point || 0)"
                         :max="configData?.data.minPoint || 100" indicator />
                     <template #footer>
                         <div class="flex items-center justify-between w-full">
@@ -383,7 +442,7 @@ const color = computed(() => {
                     <template #header>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
-                                <UBadge :label="(project.category as ICategory).title" color="info" variant="solid" />
+                                <UBadge :label="(project.category as ICategory)?.title || 'Uncategorized'" color="info" variant="solid" />
                                 <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
                                     Completed
                                 </UBadge>
@@ -452,6 +511,7 @@ const color = computed(() => {
                     <UIcon name="i-heroicons-qr-code" class="w-16 h-16 text-white" />
                 </UButton>
             </UTooltip>
+        </div>
         </div>
     </div>
 </template>
