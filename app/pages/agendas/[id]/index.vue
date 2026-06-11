@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import { type ICategory, type IMember } from '~~/types';
-import { type IAgendaResponse } from '~~/types/IResponse';
+import type { ICategory, IMember } from '~~/types';
+import type { IAgendaResponse } from '~~/types/IResponse';
 
 // Page Meta
 definePageMeta({

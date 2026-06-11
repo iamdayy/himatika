@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import type { Types } from "mongoose";
 /**
  * Defines the possible roles for users in the system.
  */
