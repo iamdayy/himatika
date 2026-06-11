@@ -1,7 +1,6 @@
-FROM node:24-alpine AS builder
+FROM node:24-slim AS builder
 
-RUN apk add --no-cache libc6-compat gcompat && \
-    npm install -g bun
+RUN npm install -g bun
 
 WORKDIR /app
 
@@ -12,7 +11,7 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-FROM node:24-alpine
+FROM node:24-slim
 
 WORKDIR /app
 
