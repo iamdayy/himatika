@@ -143,7 +143,7 @@ export default defineNuxtConfig({
     client: false,
   },
   ssr: true,
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV !== "production" },
   runtimeConfig: {
     encryptionKey: process.env.ENCRYPTION_KEY,
     jwtSecret: process.env.JWT_SECRET,

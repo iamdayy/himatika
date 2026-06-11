@@ -109,7 +109,7 @@ const formatTime = (dateString: string) => {
 
 // --- ACTIONS ---
 const doPayment = () => {
-    navigateTo(`/agendas/${agendaId}/participant/register?tab=payment&participantId=${me.value?._id}`);
+    navigateTo(`/agendas/${agendaId}/participant/register?tab=select_payment&participantId=${me.value?._id}`);
 };
 
 const doAnswer = () => {

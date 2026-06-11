@@ -359,7 +359,10 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
 });
 const validationRulePayment: FieldValidationRules = reactiveComputed(() => ({
     method: (value: string) => value ? null : { message: $ts('payment_method_required'), path: 'method' },
-    bank: (value: string) => value ? null : { message: $ts('bank_required'), path: 'bank' },
+    bank: (value: string) => {
+        if (formPayment.method !== 'bank_transfer') return null;
+        return value ? null : { message: $ts('bank_required'), path: 'bank' };
+    },
 }));
 const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => ({
     status: (value: string) => formPayment.method !== 'cash' ? (value ? null : { message: $ts('confirmation_required'), path: 'status' }) : null,
@@ -369,6 +372,11 @@ const onCompleted = async () => {
     draftRegistration.value = {
         registerAs: '', fullName: '', email: '', phone: '', NIM: 0, class: '', semester: 0, prodi: '', instance: ''
     }; // clear draft
+    const needsPayment = Boolean(agenda.value?.configuration?.participant?.pay || agenda.value?.configuration?.committee?.pay);
+    if (needsPayment) {
+        router.push(`/agendas/${id}/participant/register?tab=select_payment&participantId=${registrationId.value}`);
+        return;
+    }
     router.push(`/agendas/${id}/participant?participantId=${registrationId.value}`);
 }
 async function handleAnswer() {
@@ -409,8 +417,6 @@ onMounted(() => {
         };
         if (tab && typeof tab === 'string' && stepMap[tab] !== undefined && stepMap[tab] >= 0) {
             activeStep.value = stepMap[tab];
-        } else {
-            activeStep.value = 0;
         }
     }, 1000);
 
