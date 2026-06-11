@@ -131,8 +131,11 @@ const handleGoogleLogin = () => {
     window.location.href = '/api/auth/google/redirect';
 }
 
-const onChangeTab = (index: number) => {
-    if (index === 1) {
+const selectedTab = ref(0);
+
+watch(selectedTab, (index: any) => {
+    const isGuest = index === 1 || index === '1' || index?.key === 'guest';
+    if (isGuest) {
         isMagicLink.value = true;
         useEmail.value = true; // Magic link requires email
         state.username = ""; // Clear username just in case
@@ -143,8 +146,7 @@ const onChangeTab = (index: number) => {
         state.password = "";
     }
     form.value?.clear();
-}
-
+});
 
 // Set page head metadata
 useHead({
@@ -211,7 +213,7 @@ onMounted(() => {
             <h4 class="my-4 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
                 isMagicLink ? 'Guest Login' : $ts('login') }}</h4>
 
-            <UTabs :items="[{ label: 'Member', key: 'member', icon: 'i-heroicons-user' }, { label: 'Guest', key: 'guest', icon: 'i-heroicons-users' }]" @change="onChangeTab" class="px-2 mt-4" />
+            <UTabs v-model="selectedTab" :items="[{ label: 'Member', key: 'member', icon: 'i-heroicons-user' }, { label: 'Guest', key: 'guest', icon: 'i-heroicons-users' }]" class="px-2 mt-4" />
 
             <UForm ref="form" :state="state" @submit="onSubmit" class="px-2 mt-4 space-y-6">
 
