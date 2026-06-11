@@ -402,7 +402,14 @@ export default defineNuxtConfig({
       enableOnWindowFocus: false,
     },
   },
+  telemetry: false,
   vite: {
     plugins: [tailwindcss() as any],
+    build: {
+      sourcemap: false,
+    },
+    css: {
+      devSourcemap: false,
+    },
   },
 });

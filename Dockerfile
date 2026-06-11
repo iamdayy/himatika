@@ -1,13 +1,13 @@
 FROM node:24-alpine AS builder
 
-RUN apk add --no-cache libc6-compat gcompat
+RUN apk add --no-cache libc6-compat gcompat && \
+    npm install -g bun
 
 WORKDIR /app
 
 COPY package.json bun.lock ./
 
-RUN npm install -g bun
-RUN bun pm cache clear && bun install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 COPY . .
 RUN bun run build
