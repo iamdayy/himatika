@@ -1,6 +1,13 @@
 {
     "generate_activiness_letter_info": "Setidaknya Anda membutuhkan {point} poin untuk generate Surat Keaktifan.",
     "generate_activiness_letter_error": "Surat Keaktifan hanya dapat di-generate 4 bulan sekali. Silakan coba lagi nanti.",
+    "point_data_required": "Data poin semester tidak ditemukan. Pastikan Anda telah memilih semester yang valid.",
+    "activiness_letter_already_generated": "Gagal: Surat Keterangan Aktif untuk semester ini sudah pernah Anda buat sebelumnya.",
+    "config_not_found": "Konfigurasi sistem (Config) belum diatur oleh Administrator.",
+    "organizer_not_found": "Data Kepengurusan (Organizer) untuk periode ini belum tersedia. Silakan hubungi Administrator.",
+    "failed_to_create_sign": "Gagal menyimpan data tanda tangan elektronik ke dalam sistem.",
+    "sign_location_not_found": "Lokasi penempatan tanda tangan tidak ditemukan pada dokumen ini.",
+    "failed_to_process_pdf": "Gagal menyematkan tanda tangan ke dalam file PDF. Pastikan Worker sedang berjalan.",
     "generate_activiness_letter_failed": "Gagal meng-generate Surat Keaktifan. Silakan coba lagi.",
     "generate_activiness_letter_success": "Surat Keaktifan berhasil di-generate.",
     "generate_activiness_letter_loading": "Sedang meng-generate Surat Keaktifan...",

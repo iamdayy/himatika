@@ -5,6 +5,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import SignModel from "~~/server/models/SignModel";
 import { decrypt } from "~~/server/utils/encrypt";
 import { signData } from "~~/server/utils/encryption";
+import { logAction } from "~~/server/utils/logger";
 import { IMember, IRequestSign, ISign, ITrail } from "~~/types";
 import { IReqSignDocument } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
@@ -70,7 +71,7 @@ export default defineEventHandler(
       if (!sign) {
         return {
           statusCode: 500,
-          statusMessage: "Failed to create sign",
+          statusMessage: "failed_to_create_sign",
         };
       }
       const doc = await DocModel.findById(
@@ -127,7 +128,7 @@ export default defineEventHandler(
       if (!doc.signs[indexSign]!.location) {
         return {
           statusCode: 404,
-          statusMessage: "Location not found",
+          statusMessage: "sign_location_not_found",
         };
       }
 
@@ -154,12 +155,21 @@ export default defineEventHandler(
       if (!signedDocUrl) {
         return {
           statusCode: 500,
-          statusMessage: "Failed to process PDF",
+          statusMessage: "failed_to_process_pdf",
         };
       }
 
       doc.doc = signedDocUrl;
       await doc.save();
+      
+      // Audit Log
+      await logAction({
+        action: "SIGN_DOCUMENT",
+        event,
+        details: { docId: doc._id, signId: sign._id },
+        target: doc._id.toString()
+      });
+
       return {
         statusCode: 200,
         statusMessage: "Sign created successfully",
