@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useQRCode } from '@vueuse/integrations/useQRCode';
-import type { ICategory, IMember, IGuest } from '~~/types';
+import type { ICategory, IGuest, IMember } from '~~/types';
 import { type IAgendaResponse, type IParticipantResponse } from '~~/types/IResponse';
 
 const route = useRoute();
 const { $api, $ts } = useNuxtApp();
 const agendaId = route.params.id as string;
-const participantIdQuery = route.query.participantId as string | undefined;
+const participantIdFromCookie = useCookie(`agenda-participant-${agendaId}`);
+const participantIdQuery = route.query.participantId as string || participantIdFromCookie.value;
 const { makeTicket } = useMakeDocs();
 
 // 1. Fetch Agenda Data & Registration Status
@@ -22,6 +23,10 @@ const { data: me, pending: mePending } = useLazyAsyncData('registration', () => 
 }), {
     transform: (data) => {
         if (!data.data) return null;
+        // Simpan participantId ke cookie jika ada
+        if (data.data.participant._id) {
+            participantIdFromCookie.value = data.data.participant._id as string;
+        }
         return data.data.participant;
     },
     default: () => null,
@@ -51,7 +56,9 @@ const isQuestionsAnswered = computed(() => {
 // Validasi jika belum terdaftar
 watch([me, mePending], ([newMe, isPending]) => {
     if (!newMe && !isPending) {
-        navigateTo(`/agendas/${agendaId}/participant/register?participantId=${participantIdQuery || ''}`);
+        // Hapus cookie jika pendaftaran tidak valid/ditemukan
+        participantIdFromCookie.value = null;
+        navigateTo(`/agendas/${agendaId}/participant/register?participantId=${route.query.participantId || ''}`);
     }
 }, { immediate: true });
 
@@ -102,7 +109,7 @@ const formatTime = (dateString: string) => {
 
 // --- ACTIONS ---
 const doPayment = () => {
-    navigateTo(`/agendas/${agendaId}/participant/register?tab=payment&participantId=${me.value?._id}`);
+    navigateTo(`/agendas/${agendaId}/participant/register?tab=select_payment&participantId=${me.value?._id}`);
 };
 
 const doAnswer = () => {
@@ -268,9 +275,11 @@ definePageMeta({
                         <!-- Middle Section: Ticket Details (Rip Effect) -->
                         <div class="relative bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
                             <!-- Rip Circles -->
-                            <div class="absolute -top-4 -left-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_-3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_-3px_-3px_5px_rgba(255,255,255,0.05)]">
+                            <div
+                                class="absolute -top-4 -left-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_-3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_-3px_-3px_5px_rgba(255,255,255,0.05)]">
                             </div>
-                            <div class="absolute -top-4 -right-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_3px_-3px_5px_rgba(255,255,255,0.05)]">
+                            <div
+                                class="absolute -top-4 -right-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_3px_-3px_5px_rgba(255,255,255,0.05)]">
                             </div>
                             <div
                                 class="absolute top-0 left-4 right-4 border-t-[3px] border-dashed border-gray-300 dark:border-gray-700 opacity-60">
@@ -299,12 +308,14 @@ definePageMeta({
                                         <div class="flex items-center gap-3">
                                             <div
                                                 class="w-8 h-8 rounded-full bg-linear-to-tr from-primary-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
-                                                {{ ((me?.member as IMember)?.fullName || (me?.guest as IGuest)?.fullName || 'Peserta').charAt(0).toUpperCase() }}
+                                                {{ ((me?.member as IMember)?.fullName || (me?.guest as IGuest)?.fullName
+                                                    || 'Peserta').charAt(0).toUpperCase() }}
                                             </div>
                                             <div>
                                                 <p
                                                     class="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-1">
-                                                    {{ (me?.member as IMember)?.fullName || (me?.guest as IGuest)?.fullName || 'Peserta' }}
+                                                    {{ (me?.member as IMember)?.fullName || (me?.guest as
+                                                        IGuest)?.fullName || 'Peserta' }}
                                                 </p>
                                                 <p class="text-[10px] text-gray-500 font-mono">
                                                     ID: {{ (me?._id as string)?.slice(-8).toUpperCase() }}

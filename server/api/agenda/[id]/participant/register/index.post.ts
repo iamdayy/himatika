@@ -18,7 +18,7 @@ async function sendConfirmationEmail(
   agenda: IAgenda,
   participantId: Types.ObjectId,
   name: string,
-  email: string
+  email: string,
 ) {
   const config = useRuntimeConfig();
   const sender = {
@@ -53,7 +53,7 @@ async function sendConfirmationEmail(
     email,
     "Agenda Registration Confirmation",
     newMail.render(),
-    "agenda-registration"
+    "agenda-registration",
   );
 }
 
@@ -64,9 +64,10 @@ export default defineEventHandler(
       const { id } = ev.context.params as { id: string };
       const user = ev.context.user;
 
+      // Allow registration if guest data is provided, even without a user context
       if (!user && !guest) {
         throw createError({
-          statusCode: 400,
+          statusCode: 401, // Changed from 400 to 401 for clarity
           statusMessage: "Authentication or guest data is required.",
         });
       }
@@ -79,25 +80,28 @@ export default defineEventHandler(
         });
       }
 
-      const canRegister = agenda.canMeRegisterAsParticipant(
-        user as IUser | undefined
-      );
-      if (!canRegister) {
-        throw createError({
-          statusCode: 403,
-          statusMessage:
-            "You do not have permission to register for this agenda.",
-        });
+      // Bypass permission check for guest registrations
+      if (user) {
+        const canRegister = agenda.canMeRegisterAsParticipant(user as IUser);
+        if (!canRegister) {
+          throw createError({
+            statusCode: 403,
+            statusMessage:
+              "You do not have permission to register for this agenda.",
+          });
+        }
       }
 
-      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
-      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const { ParticipantModel } =
+        await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } =
+        await import("~~/server/models/CommitteeModel");
       const { GuestModel } = await import("~~/server/models/GuestModel");
 
       let participantId = new Types.ObjectId();
       let email: string = "";
       let name: string = "";
-      
+
       let newParticipantData: any = {
         _id: participantId,
         agendaId: id,
@@ -106,10 +110,16 @@ export default defineEventHandler(
       if (user && user.member) {
         name = user.member.fullName;
         email = user.member.email;
-        
-        const isRegisteredCommittee = await CommitteeModel.exists({ agendaId: id, member: user.member._id });
-        const isRegisteredParticipant = await ParticipantModel.exists({ agendaId: id, member: user.member._id });
-        
+
+        const isRegisteredCommittee = await CommitteeModel.exists({
+          agendaId: id,
+          member: user.member._id,
+        });
+        const isRegisteredParticipant = await ParticipantModel.exists({
+          agendaId: id,
+          member: user.member._id,
+        });
+
         if (isRegisteredCommittee || isRegisteredParticipant) {
           throw createError({
             statusCode: 409,
@@ -118,40 +128,47 @@ export default defineEventHandler(
         }
         newParticipantData.member = user.member._id;
       } else if (user && user.guest) {
-         const g = user.guest;
-         name = g.fullName;
-         email = g.email;
+        const g = user.guest;
+        name = g.fullName;
+        email = g.email;
 
-         const isRegisteredParticipant = await ParticipantModel.exists({ agendaId: id, guest: g._id });
-         if (isRegisteredParticipant) {
+        const isRegisteredParticipant = await ParticipantModel.exists({
+          agendaId: id,
+          guest: g._id,
+        });
+        if (isRegisteredParticipant) {
           throw createError({
             statusCode: 409,
             statusMessage: "You are already registered.",
           });
-         }
-         newParticipantData.guest = g._id;
+        }
+        newParticipantData.guest = g._id;
       } else if (guest) {
         name = guest.fullName;
         email = guest.email;
-        
+
         const { MemberModel } = await import("~~/server/models/MemberModel");
-        const existingMember = await MemberModel.findOne({ email: guest.email });
-        
+        const existingMember = await MemberModel.findOne({
+          email: guest.email,
+        });
+
         if (existingMember) {
           throw createError({
             statusCode: 409,
-            statusMessage: "Email ini terdaftar sebagai Mahasiswa (Member). Harap login terlebih dahulu.",
+            statusMessage:
+              "Email ini terdaftar sebagai Mahasiswa (Member). Harap login terlebih dahulu.",
           });
         }
-        
+
         let existingGuest = await GuestModel.findOne({ email: guest.email });
         if (existingGuest) {
           throw createError({
             statusCode: 409,
-            statusMessage: "Email ini sudah terdaftar sebagai Guest. Harap login melalui Magic Link untuk mendaftar acara.",
+            statusMessage:
+              "Email ini sudah terdaftar sebagai Guest. Harap login melalui Magic Link untuk mendaftar acara.",
           });
         }
-        
+
         // If not found, create a new guest safely
         existingGuest = await GuestModel.create({
           fullName: guest.fullName,
@@ -163,8 +180,11 @@ export default defineEventHandler(
           class: guest.class,
           semester: guest.semester,
         });
-        
-        const isRegisteredParticipant = await ParticipantModel.exists({ agendaId: id, guest: existingGuest._id });
+
+        const isRegisteredParticipant = await ParticipantModel.exists({
+          agendaId: id,
+          guest: existingGuest._id,
+        });
         if (isRegisteredParticipant) {
           throw createError({
             statusCode: 409,
@@ -175,7 +195,8 @@ export default defineEventHandler(
       } else {
         throw createError({
           statusCode: 400,
-          statusMessage: "Invalid registration data. Please login or provide guest details.",
+          statusMessage:
+            "Invalid registration data. Please login or provide guest details.",
         });
       }
 
@@ -184,22 +205,26 @@ export default defineEventHandler(
 
       // Send confirmation email via QStash
       const { Client } = await import("@upstash/qstash");
-      const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
-      
+      const qstashClient = new Client({
+        token: process.env.QSTASH_TOKEN || "",
+      });
+
       const config = useRuntimeConfig();
       const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
-      
-      qstashClient.publishJSON({
-        url: webhookUrl,
-        body: {
-          type: "participant-registration",
-          agendaTitle: agenda.title,
-          agendaId: agenda._id,
-          participantId: participantId,
-          name: name,
-          email: email
-        }
-      }).catch((e) => console.error("Failed to publish to QStash", e));
+
+      qstashClient
+        .publishJSON({
+          url: webhookUrl,
+          body: {
+            type: "participant-registration",
+            agendaTitle: agenda.title,
+            agendaId: agenda._id,
+            participantId: participantId,
+            name: name,
+            email: email,
+          },
+        })
+        .catch((e) => console.error("Failed to publish to QStash", e));
 
       return {
         statusCode: 200,
@@ -217,5 +242,5 @@ export default defineEventHandler(
           "An unexpected error occurred during agenda registration.",
       });
     }
-  }
+  },
 );
