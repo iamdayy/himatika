@@ -61,7 +61,7 @@ const registrationId = computed(() => participantId.value || participant.value?.
 
 const { data: questions, refresh: refreshQuestions, pending: pendingQuestions } = useLazyAsyncData('questions', () => {
     const currentRegistrationId = registrationId.value;
-    if (!currentRegistrationId) return Promise.resolve({ data: { answers: [], statusCode: 200, statusMessage: 'OK' } } as IAnswersResponse);
+    if (!currentRegistrationId) return Promise.resolve({ data: { answers: [], statusCode: 200, statusMessage: 'OK' } } as unknown as IAnswersResponse);
     return $api<IAnswersResponse>(`/api/agenda/${id}/participant/question/answer/${currentRegistrationId}`, {
         method: 'GET',
     })
