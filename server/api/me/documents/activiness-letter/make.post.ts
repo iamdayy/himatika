@@ -15,10 +15,10 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const point = body.point as IPoint;
 
-  if (!point) {
+  if (!point || !point.range || !point.range.start || !point.range.end) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Point data is required",
+      statusMessage: "Point data (and range) is required",
     });
   }
 
@@ -60,35 +60,49 @@ export default defineEventHandler(async (event) => {
   const formattedNumber = (lastNumber + 1).toString().padStart(3, "0");
   const docNumber = `${formattedNumber}/II.3.AI/B01.01/02.A-1/S.Ket/${monthToRoman(new Date())}/${new Date().getFullYear()}`;
 
+  // Find chairman and secretary carefully
+  const dailyManagement = organizer.dailyManagement || [];
+  const chairman = dailyManagement.find((dm: any) => dm?.position?.includes("Ketua") || dm?.position?.includes("Chairman"))?.member as any;
+  const secretary = dailyManagement.find((dm: any) => dm?.position?.includes("Sekretaris") || dm?.position?.includes("Secretary"))?.member as any;
+
+  if (!chairman || !chairman._id || !chairman.fullName || !chairman.NIM) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Data Ketua Umum tidak lengkap atau belum ditentukan pada periode kepengurusan ini",
+    });
+  }
+
+  if (!secretary || !secretary._id || !secretary.fullName || !secretary.NIM) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Data Sekretaris Umum tidak lengkap atau belum ditentukan pada periode kepengurusan ini",
+    });
+  }
+
   // 4. Call Worker
   try {
       const result = await himatikaPdfWorker.generateActivinessLetter({
           member: user.member,
           point: point,
-          chairman: organizer.dailyManagement.find((dm: any) => dm.position.includes("Ketua") || dm.position.includes("Chairman"))?.member as IMember,
-          secretary: organizer.dailyManagement.find((dm: any) => dm.position.includes("Sekretaris") || dm.position.includes("Secretary"))?.member as IMember,
+          chairman: chairman,
+          secretary: secretary,
           docNumber: docNumber,
-          period: `${organizer.period.start.getFullYear()} - ${organizer.period.end.getFullYear()}`,
+          period: `${organizer.period?.start?.getFullYear() || new Date().getFullYear()} - ${organizer.period?.end?.getFullYear() || new Date().getFullYear()}`,
           config: {
-            name: configData.name,
-            address: configData.address,
-            phone: configData.contact.phone,
-            email: configData.contact.email
+            name: configData.name || "Himatika",
+            address: configData.address || "Sekretariat Himatika",
+            phone: configData.contact?.phone || "-",
+            email: configData.contact?.email || "-"
           }
       });
 
       // 5. Construct IDoc object
-      // Chairman & Secretary from Organizer
-      const dailyManagement = organizer.dailyManagement;
-      const chairman = dailyManagement.find((dm: any) => dm.position.includes("Ketua") || dm.position.includes("Chairman"))?.member as any;
-      const secretary = dailyManagement.find((dm: any) => dm.position.includes("Sekretaris") || dm.position.includes("Secretary"))?.member as any;
-
       const signs = [];
       
       const chairmanLoc = result.signatureLocations?.find((l: any) => l.role === 'Chairman');
-      if (chairman && chairmanLoc) {
+      if (chairman && chairman._id && chairmanLoc) {
           signs.push({
-              user: chairman._id || chairman, // Handle both object and probable ID
+              user: chairman._id,
               signed: false,
               as: "Ketua Umum",
               location: {
@@ -102,9 +116,9 @@ export default defineEventHandler(async (event) => {
       }
 
       const secretaryLoc = result.signatureLocations?.find((l: any) => l.role === 'Secretary');
-      if (secretary && secretaryLoc) {
+      if (secretary && secretary._id && secretaryLoc) {
           signs.push({
-              user: secretary._id || secretary,
+              user: secretary._id,
               signed: false,
               as: "Sekretaris Umum",
               location: {
