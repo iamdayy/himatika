@@ -23,12 +23,12 @@ const isMobile = computed(() => width.value < 768);
 const { data: user } = useAuth();
 // Redirect logic removed to allow Guest registration and ticket viewing
 
-const { data: agenda, refresh, pending: pendingAgenda } = useLazyAsyncData('agenda', async () => $api<IAgendaResponse>(`/api/agenda/${id}`, {
+const { data: agenda, refresh, pending: pendingAgenda } = useLazyAsyncData(`agenda-${id}`, async () => $api<IAgendaResponse>(`/api/agenda/${id}`, {
     method: 'GET',
 }), {
     transform: (data) => data.data?.agenda,
 });
-const { data: participantData, refresh: refreshParticipant, pending: pendingParticipant } = useLazyAsyncData('participantData', () => {
+const { data: participantData, refresh: refreshParticipant, pending: pendingParticipant } = useLazyAsyncData(`participantData-${id}`, () => {
     const currentParticipantId = participantId.value;
     if (!currentParticipantId) return Promise.resolve({ data: { participant: null } } as any);
     return $api<IParticipantResponse>(`/api/agenda/${id}/participant/me`, {
@@ -54,12 +54,12 @@ const participant = computed<IParticipant>(() => {
         agendaId: id,
         payment: undefined,
         member: user.value?.member,
-        guest: undefined,
+        guest: user.value?.guest,
     } as IParticipant;
 });
 const registrationId = computed(() => participantId.value || participant.value?._id || '');
 
-const { data: questions, refresh: refreshQuestions, pending: pendingQuestions } = useLazyAsyncData('questions', () => {
+const { data: questions, refresh: refreshQuestions, pending: pendingQuestions } = useLazyAsyncData(`questions-${id}`, () => {
     const currentRegistrationId = registrationId.value;
     if (!currentRegistrationId) return Promise.resolve({ data: { answers: [], statusCode: 200, statusMessage: 'OK' } } as unknown as IAnswersResponse);
     return $api<IAnswersResponse>(`/api/agenda/${id}/participant/question/answer/${currentRegistrationId}`, {
@@ -191,7 +191,7 @@ const FEES = {
 };
 
 const priceSummary = computed(() => {
-    const basePrice = agenda.value?.configuration.participant.amount || 0;
+    const basePrice = agenda.value?.configuration?.participant?.amount || 0;
     let adminFee = 0;
 
     if (formPayment.method === 'bank_transfer') {
@@ -269,7 +269,7 @@ const payment = async (): Promise<boolean | FormError> => {
         return false;
     }
     try {
-        const { data, statusCode } = await $fetch<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${RegistrationId}/payment`, {
+        const { data, statusCode } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${RegistrationId}/payment`, {
             method: 'POST',
             body: {
                 payment_method: formPayment.method,
@@ -391,7 +391,7 @@ async function handleAnswer() {
         });
 
         formData.append('answers', JSON.stringify(answersPayload));
-        const response = await $api<IResponse & { data: string }>(`api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
+        const response = await $api<IResponse & { data: string }>(`/api/agenda/${id}/participant/question/answer/${registrationId.value}`, {
             method: 'POST',
             body: formData,
         });
@@ -407,7 +407,8 @@ async function handleAnswer() {
     }
 }
 onMounted(() => {
-    setTimeout(() => {
+    watchEffect(() => {
+        if (pendingAgenda.value || pendingParticipant.value) return;
         const stepMap: Record<string, number> = {
             'register': 0,
             'answer_question': steps.value.findIndex(s => s.id === 'answer_question'),
@@ -415,18 +416,19 @@ onMounted(() => {
             'payment': steps.value.findIndex(s => s.id === 'payment'),
             'success': steps.value.findIndex(s => s.id === 'success'),
         };
-        if (tab && typeof tab === 'string' && stepMap[tab] !== undefined && stepMap[tab] >= 0) {
-            activeStep.value = stepMap[tab];
+        if (tab.value && typeof tab.value === 'string') {
+            const targetStep = stepMap[tab.value];
+            if (targetStep !== undefined && targetStep >= 0) {
+                activeStep.value = targetStep;
+            }
         }
-    }, 1000);
-
+    });
 });
 watch(participant, (newValue) => {
-    if (!newValue?.guest && !newValue?.member) {
-        const route = useRoute();
-        route.query = {
-            participantId: '',
-        }
+    // Hanya tampilkan error jika data participant sudah selesai diload namun tidak ada id
+    if (!pendingParticipant.value && participantId.value && !newValue?._id) {
+        const router = useRouter();
+        router.replace({ query: { ...route.query, participantId: undefined } });
         toast.add({
             title: $ts('failed'),
             description: $ts('participant_not_found'),

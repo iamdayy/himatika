@@ -32,7 +32,7 @@ async function sendConfirmationEmail(
     emailTitle: `Pendaftaran Agenda ${agenda.title} Berhasil!`,
     heroTitle: `Selamat, Anda Terdaftar!`,
     heroSubtitle: `Anda telah berhasil terdaftar dalam agenda "${agenda.title}". Kami sangat senang Anda bergabung!`,
-    heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}/participant/register/?participantId=${participantId}`,
+    heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}/participant/?participantId=${participantId}`,
     heroButtonText: "Lihat Detail Pendaftaran",
     contentTitle1: "Detail Pendaftaran Anda",
     contentParagraph1: `Berikut adalah QR Code unik Anda untuk agenda "${agenda.title}". Mohon simpan dan tunjukkan QR Code ini saat registrasi ulang di lokasi acara.`,
