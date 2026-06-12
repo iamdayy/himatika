@@ -66,10 +66,10 @@ watch([me, mePending, agenda, pending, meError, error], ([newMe, isMePending, ne
         if (!isMePending && isParticipantNotFound) {
             // Hapus cookie jika pendaftaran tidak valid/ditemukan
             participantIdFromCookie.value = null;
-            navigateTo(`/agendas/${agendaId}/participant/register?participantId=${route.query.participantId || ''}`);
+            navigateTo(`/agendas/${agendaId}/participant/register?tab=register&participantId=${route.query.participantId || ''}`);
         }
     }
-}, { immediate: true });
+});
 
 const bannerImage = computed(() => {
     if (agenda.value?.photos && agenda.value.photos.length > 0) {

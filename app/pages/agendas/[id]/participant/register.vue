@@ -84,8 +84,8 @@ const steps = computed<Step[]>(() => {
     const steps: Step[] = [
         { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value._id ? nextToAnswerQuestion : register },
         { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
-        { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formPayment, validationRules: validationRulePayment, onNext: formPayment.method !== 'cash' ? payment : undefined },
-        { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formConfirmation, validationRules: validationRuleConfirmation },
+        { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formSelectPayment, validationRules: validationRuleSelectPayment, onNext: formSelectPayment.method !== 'cash' ? payment : undefined },
+        { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formPayment, validationRules: validationRuleConfirmation },
         { id: 'success', label: $ts('success'), title: $ts('success'), formData: {} }
     ];
     return steps.filter(step => {
@@ -144,7 +144,7 @@ watch(participantData, (p) => {
 watch(formRegistration, (val) => {
     draftRegistration.value = { ...val };
 }, { deep: true });
-const formPayment = reactiveComputed(() => ({
+const formSelectPayment = reactiveComputed(() => ({
     method: participant.value?.payment?.method || 'bank_transfer',
     status: participant.value?.payment?.status || 'pending',
     order_id: participant.value?.payment?.order_id || '',
@@ -155,8 +155,8 @@ const formPayment = reactiveComputed(() => ({
     expiry: participant.value?.payment?.expiry || new Date(),
     qris_png: participant.value?.payment?.qris_png || '',
 }));
-const formConfirmation = reactiveComputed(() => ({
-    status: formPayment.status || 'pending',
+const formPayment = reactiveComputed(() => ({
+    status: formSelectPayment.status || 'pending',
 }));
 const checkIfProdiIsInformatics = computed(() => {
     const prodi = formRegistration.prodi?.toLowerCase().replace(/\s+/g, '') ?? '';
@@ -194,11 +194,11 @@ const priceSummary = computed(() => {
     const basePrice = agenda.value?.configuration?.participant?.amount || 0;
     let adminFee = 0;
 
-    if (formPayment.method === 'bank_transfer') {
+    if (formSelectPayment.method === 'bank_transfer') {
         adminFee = FEES.VA;
-    } else if (formPayment.method === 'qris') {
+    } else if (formSelectPayment.method === 'qris') {
         adminFee = Math.ceil(basePrice * FEES.QRIS);
-    } else if (formPayment.method === 'cash') {
+    } else if (formSelectPayment.method === 'cash') {
         adminFee = FEES.Cash;
     }
 
@@ -272,11 +272,12 @@ const payment = async (): Promise<boolean | FormError> => {
         const { data, statusCode } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${RegistrationId}/payment`, {
             method: 'POST',
             body: {
-                payment_method: formPayment.method,
-                bank_transfer: formPayment.bank,
+                payment_method: formSelectPayment.method,
+                bank_transfer: formSelectPayment.bank,
             } as IPaymentBody
         });
         if (statusCode === 200 && data) {
+            router.replace({ query: { ...route.query, tab: 'payment' } })
             refreshParticipant();
             return true;
         } else {
@@ -310,11 +311,6 @@ const responsiveClasses = computed(() => ({
     input: isMobile.value ? 'text-xs' : 'text-base',
     gridCols: 'grid-cols-1 md:grid-cols-2',
     container: isMobile.value ? 'p-2' : 'p-3',
-}));
-
-const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
-    button: isMobile.value ? 'xs' : 'md',
-    input: isMobile.value ? 'xs' : 'md',
 }));
 
 const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => {
@@ -357,26 +353,20 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
 
     return rules;
 });
-const validationRulePayment: FieldValidationRules = reactiveComputed(() => ({
+const validationRuleSelectPayment: FieldValidationRules = reactiveComputed(() => ({
     method: (value: string) => value ? null : { message: $ts('payment_method_required'), path: 'method' },
     bank: (value: string) => {
-        if (formPayment.method !== 'bank_transfer') return null;
+        if (formSelectPayment.method !== 'bank_transfer') return null;
         return value ? null : { message: $ts('bank_required'), path: 'bank' };
     },
 }));
 const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => ({
-    status: (value: string) => formPayment.method !== 'cash' ? (value ? null : { message: $ts('confirmation_required'), path: 'status' }) : null,
-    // confirmation: (value: string) => value ? null : $ts('confirmation_required'),
+    status: (value: string) => formSelectPayment.method !== 'cash' ? (value ? null : { message: $ts('confirmation_required'), path: 'status' }) : null,
 }));
 const onCompleted = async () => {
     draftRegistration.value = {
         registerAs: '', fullName: '', email: '', phone: '', NIM: 0, class: '', semester: 0, prodi: '', instance: ''
     }; // clear draft
-    const needsPayment = Boolean(agenda.value?.configuration?.participant?.pay || agenda.value?.configuration?.committee?.pay);
-    if (needsPayment) {
-        router.push(`/agendas/${id}/participant/register?tab=select_payment&participantId=${registrationId.value}`);
-        return;
-    }
     router.push(`/agendas/${id}/participant?participantId=${registrationId.value}`);
 }
 async function handleAnswer() {
@@ -406,29 +396,44 @@ async function handleAnswer() {
         return false;
     }
 }
+const isInitialized = ref(false);
+
+const syncTabToStep = (tabValue: string | undefined) => {
+    if (!tabValue || typeof tabValue !== 'string') return;
+    const stepMap: Record<string, number> = {
+        'register': 0,
+        'answer_question': steps.value.findIndex(s => s.id === 'answer_question'),
+        'select_payment': steps.value.findIndex(s => s.id === 'select_payment'),
+        'payment': steps.value.findIndex(s => s.id === 'payment'),
+        'success': steps.value.findIndex(s => s.id === 'success'),
+    };
+    const targetStep = stepMap[tabValue];
+    if (targetStep !== undefined && targetStep >= 0 && activeStep.value !== targetStep) {
+        activeStep.value = targetStep;
+    }
+};
+
 onMounted(() => {
     watchEffect(() => {
-        if (pendingAgenda.value || pendingParticipant.value) return;
-        const stepMap: Record<string, number> = {
-            'register': 0,
-            'answer_question': steps.value.findIndex(s => s.id === 'answer_question'),
-            'select_payment': steps.value.findIndex(s => s.id === 'select_payment'),
-            'payment': steps.value.findIndex(s => s.id === 'payment'),
-            'success': steps.value.findIndex(s => s.id === 'success'),
-        };
-        if (tab.value && typeof tab.value === 'string') {
-            const targetStep = stepMap[tab.value];
-            if (targetStep !== undefined && targetStep >= 0) {
-                activeStep.value = targetStep;
-            }
-        }
+        if (pendingAgenda.value || pendingParticipant.value || isInitialized.value) return;
+        isInitialized.value = true;
+        syncTabToStep(tab.value);
     });
+});
+
+watch(tab, (newTab) => {
+    syncTabToStep(newTab);
+});
+
+watch(activeStep, (newIndex) => {
+    const step = steps.value[newIndex];
+    if (step && step.id !== tab.value) {
+        router.replace({ query: { ...route.query, tab: step.id } });
+    }
 });
 watch(participant, (newValue) => {
     // Hanya tampilkan error jika data participant sudah selesai diload namun tidak ada id
     if (!pendingParticipant.value && participantId.value && !newValue?._id) {
-        const router = useRouter();
-        router.replace({ query: { ...route.query, participantId: undefined } });
         toast.add({
             title: $ts('failed'),
             description: $ts('participant_not_found'),
@@ -544,8 +549,8 @@ watch(participant, (newValue) => {
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div v-for="option in paymentMethods" :key="option.value"
                                     class="border rounded-lg p-4 cursor-pointer transition-all hover:border-primary-500"
-                                    :class="formPayment.method === option.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-2 ring-primary-500' : 'border-gray-200 dark:border-gray-700'"
-                                    @click="formPayment.method = option.value; formPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
+                                    :class="formSelectPayment.method === option.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-2 ring-primary-500' : 'border-gray-200 dark:border-gray-700'"
+                                    @click="formSelectPayment.method = option.value; formSelectPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
                                     <div class="flex items-center gap-3">
                                         <UIcon :name="option.icon" class="w-6 h-6 text-primary-500" />
                                         <span class="font-medium">{{ option.label }}</span>
@@ -553,14 +558,14 @@ watch(participant, (newValue) => {
                                 </div>
                             </div>
 
-                            <div v-if="formPayment.method === 'bank_transfer'" class="animate-fade-in">
+                            <div v-if="formSelectPayment.method === 'bank_transfer'" class="animate-fade-in">
                                 <UFormField label="Select Bank" help="Choose your preferred bank for Virtual Account">
-                                    <URadioGroup v-model="formPayment.bank" :items="vaBanks"
+                                    <URadioGroup v-model="formSelectPayment.bank" :items="vaBanks"
                                         class="grid grid-cols-2 gap-2" :ui="{ fieldset: 'w-full' }" />
                                 </UFormField>
                             </div>
 
-                            <div v-if="formPayment.method !== 'cash'"
+                            <div v-if="formSelectPayment.method !== 'cash'"
                                 class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-6">
                                 <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-3">Payment Summary</h4>
                                 <div class="space-y-2 text-sm">
@@ -594,7 +599,7 @@ watch(participant, (newValue) => {
                     </div>
                 </div>
                 <div v-else-if="step?.id === 'payment'">
-                    <PaymentDetail :amount="agenda?.configuration.participant.amount" :payment="formPayment"
+                    <PaymentDetail :amount="agenda?.configuration.participant.amount" :payment="formSelectPayment"
                         @cancel="onCancelPayment" />
                 </div>
                 <div v-else-if="step?.id === 'success'">
