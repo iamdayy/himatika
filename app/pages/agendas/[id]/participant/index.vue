@@ -6,7 +6,7 @@ import { type IAgendaResponse, type IParticipantResponse } from '~~/types/IRespo
 const route = useRoute();
 const { $api, $ts } = useNuxtApp();
 const agendaId = route.params.id as string;
-const participantIdFromCookie = useCookie(`agenda-participant-${agendaId}`);
+const participantIdFromCookie = useCookie(`agenda-participant-${agendaId}`, { maxAge: 60 * 60 * 24 * 30 });
 const participantIdQuery = route.query.participantId as string || participantIdFromCookie.value;
 const { makeTicket } = useMakeDocs();
 
@@ -164,6 +164,7 @@ const links = computed(() => [{
 
 definePageMeta({
     layout: 'client',
+    auth: false
 });
 </script>
 

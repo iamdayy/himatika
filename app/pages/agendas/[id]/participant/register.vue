@@ -237,6 +237,8 @@ const register = async (): Promise<boolean | FormError> => {
         });
         if (statusCode === 200 && data) {
             if (!user.value && (data as any).participantId) {
+                const pCookie = useCookie(`agenda-participant-${id}`, { maxAge: 60 * 60 * 24 * 30 });
+                pCookie.value = (data as any).participantId;
                 router.replace({ query: { ...route.query, participantId: (data as any).participantId, tab: agenda.value?.configuration?.participant?.questions && agenda.value?.configuration?.participant?.questions.length > 0 ? 'answer_question' : 'select_payment' } });
             }
             refreshParticipant();
