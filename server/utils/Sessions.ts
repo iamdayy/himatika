@@ -73,7 +73,7 @@ export const checkSession = async (payload: string) => {
             { path: 'organizersDepartmentCoordinator' },
             { path: 'organizersDepartmentMembers' },
           ],
-          select: "NIM fullName avatar email organizer status semester class sex",
+          select: "NIM fullName avatar email organizer status semester class sex phone",
           options: { autopopulate: false }, 
         })
         .populate({

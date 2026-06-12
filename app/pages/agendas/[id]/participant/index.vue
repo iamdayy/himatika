@@ -245,9 +245,9 @@ definePageMeta({
                 </div>
 
                 <!-- Ticket Card -->
-                <div v-else class="relative group">
-                    <!-- Clean design without glow effects -->
-                    <div class="relative bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
+                <div class="relative group perspective-1000">
+                    <!-- Clean design with glassmorphism and subtle glow -->
+                    <div class="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-2xl rounded-4xl shadow-2xl overflow-hidden ring-1 ring-gray-200/50 dark:ring-gray-700/50 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,141,211,0.3)] transition-all duration-700 ease-out">
 
                         <!-- Top Section: Visual & Header -->
                         <div class="h-64 relative bg-gray-900">
@@ -283,7 +283,7 @@ definePageMeta({
                         </div>
 
                         <!-- Middle Section: Ticket Details (Rip Effect) -->
-                        <div class="relative bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+                        <div class="relative bg-white/60 dark:bg-gray-900/40 border-t border-gray-100/50 dark:border-gray-800/50 backdrop-blur-xl">
                             <!-- Rip Circles -->
                             <div
                                 class="absolute -top-4 -left-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_-3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_-3px_-3px_5px_rgba(255,255,255,0.05)]">
@@ -337,21 +337,21 @@ definePageMeta({
 
                                 <!-- QR Code Section -->
                                 <div
-                                    class="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center relative group-hover:border-primary-400 group-hover:shadow-[0_0_20px_rgba(0,141,211,0.15)] transition-all duration-500">
-                                    <div class="bg-white p-3 rounded-xl shadow-sm mb-4">
-                                        <img :src="qrCode" class="w-40 h-40 object-contain" alt="QR Code" />
+                                    class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/80 dark:to-gray-900/80 rounded-3xl p-6 ring-1 ring-gray-200/50 dark:ring-gray-700/50 shadow-inner flex flex-col items-center justify-center relative group-hover:ring-primary-500/50 group-hover:shadow-[0_0_30px_rgba(0,141,211,0.15)] transition-all duration-500">
+                                    <div class="bg-white p-3 rounded-2xl shadow-[0_8px_24px_-8px_rgba(0,0,0,0.15)] mb-4 transition-transform duration-500 group-hover:scale-105">
+                                        <img :src="qrCode" class="w-40 h-40 object-contain mix-blend-multiply" alt="QR Code" />
                                     </div>
                                     <div class="text-center">
                                         <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-1">Scan saat
                                             masuk
                                         </p>
                                         <div v-if="me?.visiting"
-                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold mt-2 shadow-[0_0_15px_rgba(34,197,94,0.6)] animate-pulse border border-green-400">
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-400 text-white text-sm font-bold mt-2 shadow-[0_0_20px_rgba(34,197,94,0.4)] animate-pulse ring-1 ring-green-400/50">
                                             <Icon name="i-heroicons-check-badge-solid" class="w-5 h-5" />
                                             TERVERIFIKASI HADIR
                                         </div>
                                         <div v-else
-                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-bold mt-2 border border-gray-200 dark:border-gray-700">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-500 dark:text-gray-400 text-xs font-bold mt-2 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">
                                             <Icon name="i-heroicons-clock" class="w-4 h-4" />
                                             Belum Check-in
                                         </div>
@@ -363,7 +363,7 @@ definePageMeta({
 
                         <!-- Footer Actions -->
                         <div
-                            class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 flex gap-3 border-t border-gray-100 dark:border-gray-800">
+                            class="bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-4 flex gap-3 border-t border-gray-100/50 dark:border-gray-800/50">
                             <UButton @click="downloadTicket" :loading="isGeneratingPdf" color="neutral" variant="solid"
                                 class="flex-1 justify-center font-bold" icon="i-heroicons-arrow-down-tray">
                                 Unduh Tiket (PDF)

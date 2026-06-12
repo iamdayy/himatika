@@ -1,5 +1,6 @@
 import { Receiver } from "@upstash/qstash";
 import Email from "~~/server/utils/mailTemplate";
+import { sendEmail } from "~~/server/utils/mailer";
 
 export default defineEventHandler(async (event) => {
   const signature = getHeader(event, "upstash-signature");
@@ -26,169 +27,160 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: err.message });
   }
 
-  // Parse the verified body
   const payload = JSON.parse(rawBody || "{}");
+  const config = useRuntimeConfig();
+  const sender = {
+    email: config.resend_from,
+    name: "Himatika Event Management",
+  };
   
   if (payload.type === "participant-registration") {
     const { agendaTitle, agendaId, participantId, name, email } = payload;
-    const config = useRuntimeConfig();
-    let sender = {
-      email: config.resend_from,
-      name: "Himatika Event Organizer",
-    };
     const newMail = new Email({
       recipientName: name,
-      emailTitle: `Pendaftaran Berhasil: ${agendaTitle}`,
-      heroTitle: `Pendaftaran Berhasil! 🎉`,
-      heroSubtitle: `Pendaftaran Anda untuk acara "${agendaTitle}" telah berhasil dikonfirmasi.`,
+      emailTitle: `Konfirmasi Pendaftaran: ${agendaTitle}`,
+      heroTitle: `Pendaftaran Berhasil Diverifikasi`,
+      heroSubtitle: `Pendaftaran Anda untuk agenda "${agendaTitle}" telah tercatat dalam sistem kami.`,
       heroButtonLink: `${config.public.public_uri}/agendas/${agendaId}/participant?participantId=${participantId}`,
-      heroButtonText: "Lihat E-Ticket & Detail Acara",
-      contentTitle1: "Halo,",
-      contentParagraph1: `Terima kasih telah mendaftar di acara **${agendaTitle}**. Kami sangat antusias menyambut kehadiran Anda! Silakan klik tombol di bawah ini untuk melihat detail pendaftaran, kode QR, serta panduan acara Anda.`,
-      contentParagraph2: `Jika acara ini memerlukan biaya pendaftaran, mohon selesaikan pembayaran Anda melalui tautan portal untuk mengamankan kursi Anda.`,
-      contentTitle2: "Informasi Penting",
+      heroButtonText: "Akses Portal Peserta",
+      contentTitle1: "Yth. Bapak/Ibu/Saudara/i,",
+      contentParagraph1: `Kami mengucapkan terima kasih atas partisipasi Anda dalam **${agendaTitle}**. Pendaftaran Anda telah kami verifikasi dengan sukses. Silakan gunakan tautan portal peserta di bawah ini untuk mengakses informasi lebih lanjut mengenai agenda ini.`,
+      contentParagraph2: `Apabila agenda ini mensyaratkan biaya registrasi, kami mengimbau agar Anda segera menyelesaikan proses pembayaran melalui portal untuk mengamankan keikutsertaan Anda.`,
+      contentTitle2: "Informasi Registrasi",
       contentListItems: [
-        `ID Pendaftaran: ${participantId}`,
-        `Cek jadwal acara melalui halaman resmi agenda.`,
-        `Siapkan kode QR Anda dari portal saat melakukan check-in.`
+        `Nomor Registrasi: ${participantId}`,
+        `Jadwal dan lokasi acara dapat diakses secara berkala melalui portal.`,
+        `Mohon persiapkan QR Code E-Ticket Anda saat melakukan registrasi ulang di lokasi.`
       ],
-      ctaTitle: "Ada Pertanyaan?",
-      ctaSubtitle: "Tim kami siap membantu Anda.",
+      ctaTitle: "Layanan Dukungan Terpadu",
+      ctaSubtitle: "Jika Anda membutuhkan bantuan atau informasi tambahan, tim layanan kami siap membantu.",
       ctaButtonLink: `${config.public.public_uri}/#contacts`,
-      ctaButtonText: "Hubungi Kami",
+      ctaButtonText: "Hubungi Layanan Dukungan",
     });
 
-    await sendEmail(
-      sender,
-      email,
-      `Pendaftaran Berhasil: ${agendaTitle}`,
-      newMail.render(),
-      "agenda-registration"
-    );
+    await sendEmail(sender, email, `Konfirmasi Pendaftaran: ${agendaTitle}`, newMail.render(), "agenda-registration");
     return { success: true, type: payload.type };
-  } else if (payload.type === "committee-registration") {
+  } 
+  else if (payload.type === "committee-registration") {
     const { agendaTitle, agendaId, committeeId, name, email } = payload;
-    const config = useRuntimeConfig();
-    let sender = {
-      email: config.resend_from,
-      name: "Himatika Event Organizer",
-    };
     const newMail = new Email({
       recipientName: name,
-      emailTitle: `Pendaftaran Panitia: ${agendaTitle}`,
-      heroTitle: `Selamat Bergabung di Tim! 🤝`,
-      heroSubtitle: `Pendaftaran kepanitiaan Anda untuk acara "${agendaTitle}" telah kami terima.`,
+      emailTitle: `Pendaftaran Kepanitiaan: ${agendaTitle}`,
+      heroTitle: `Pendaftaran Kepanitiaan Diterima`,
+      heroSubtitle: `Berkas pendaftaran Anda untuk kepanitiaan "${agendaTitle}" telah masuk ke dalam sistem kami.`,
       heroButtonLink: `${config.public.public_uri}/agendas/${agendaId}/committee?committeeId=${committeeId}`,
-      heroButtonText: "Lihat Portal Panitia",
-      contentTitle1: "Halo Rekan Panitia,",
-      contentParagraph1: `Terima kasih atas kesediaan Anda untuk berkontribusi sebagai panitia di **${agendaTitle}**. Dedikasi Anda sangat berarti untuk kesuksesan acara ini!`,
-      contentParagraph2: `Silakan klik tombol di bawah ini untuk mengakses portal panitia Anda. Di sana, Anda dapat mengecek status persetujuan (approval) dan deskripsi tugas yang diberikan. Tim inti kami akan segera menghubungi Anda untuk instruksi lebih lanjut.`,
-      contentTitle2: "Langkah Selanjutnya",
+      heroButtonText: "Akses Portal Panitia",
+      contentTitle1: "Yth. Calon Panitia,",
+      contentParagraph1: `Kami mengapresiasi minat dan kesediaan Anda untuk berkontribusi dalam penyelenggaraan **${agendaTitle}**. Formulir pendaftaran kepanitiaan Anda saat ini sedang dalam peninjauan oleh koordinator pelaksana.`,
+      contentParagraph2: `Anda dapat memantau status persetujuan serta rincian penugasan melalui portal panitia. Mohon pastikan seluruh data yang Anda unggah telah valid.`,
+      contentTitle2: "Tahapan Selanjutnya",
       contentListItems: [
         `ID Kepanitiaan: ${committeeId}`,
-        `Mohon tunggu persetujuan dari koordinator pelaksana jika status Anda masih pending.`,
-        `Pelajari detail acara dan tugas yang akan Anda jalankan.`
+        `Menunggu persetujuan (approval) dari pengurus inti acara.`,
+        `Pelajari dengan saksama uraian tugas (job description) yang akan diberikan.`
       ],
-      ctaTitle: "Butuh Bantuan?",
-      ctaSubtitle: "Jangan ragu menghubungi tim penyelenggara inti.",
+      ctaTitle: "Pusat Bantuan",
+      ctaSubtitle: "Untuk pertanyaan lebih lanjut terkait proses rekrutmen, silakan hubungi narahubung kami.",
       ctaButtonLink: `${config.public.public_uri}/#contacts`,
-      ctaButtonText: "Hubungi Kami",
+      ctaButtonText: "Hubungi Koordinator",
     });
 
-    await sendEmail(
-      sender,
-      email,
-      `Pendaftaran Panitia: ${agendaTitle}`,
-      newMail.render(),
-      "committee-registration"
-    );
+    await sendEmail(sender, email, `Pendaftaran Kepanitiaan: ${agendaTitle}`, newMail.render(), "committee-registration");
     return { success: true, type: payload.type };
-  } else if (payload.type === "payment-success") {
+  } 
+  else if (payload.type === "payment-pending") {
+    const { agendaTitle, agendaId, participantId, name, email, amount, method, bank, va_number, qris_png, expiry, isCommittee } = payload;
+    const formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount || 0);
+    const formattedExpiry = new Date(expiry).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    let paymentInstruction = `Silakan selesaikan pembayaran menggunakan metode ${method?.toUpperCase()} melalui tautan pembayaran pada portal Anda.`;
+    if (["bank_transfer", "echannel", "permata"].includes(method)) {
+      paymentInstruction = `Mohon lakukan transfer melalui Virtual Account ${bank?.toUpperCase()} ke nomor **${va_number}**.`;
+    } else if (method === "qris") {
+      paymentInstruction = `Silakan pindai (scan) kode QRIS di bawah ini atau melalui portal Anda menggunakan aplikasi pembayaran elektronik pilihan Anda.`;
+    }
+
+    const newMail = new Email({
+      recipientName: name,
+      emailTitle: `Menunggu Pembayaran: ${agendaTitle}`,
+      heroTitle: `Instruksi Pembayaran Tagihan`,
+      heroSubtitle: `Terdapat tagihan sebesar ${formattedAmount} yang menunggu penyelesaian untuk agenda "${agendaTitle}".`,
+      heroButtonLink: `${config.public.public_uri}/agendas/${agendaId}/${isCommittee ? 'committee' : 'participant'}?${isCommittee ? 'committeeId' : 'participantId'}=${participantId}`,
+      heroButtonText: "Tinjau Detail Tagihan",
+      contentTitle1: "Rincian Instruksi Pembayaran",
+      contentParagraph1: `Yth. Bapak/Ibu/Saudara/i, pendaftaran Anda untuk **${agendaTitle}** hampir selesai. ${paymentInstruction}`,
+      contentParagraph2: `Untuk menghindari pembatalan otomatis oleh sistem, kami mohon agar Anda segera menyelesaikan pembayaran ini sebelum batas tenggat waktu pada **${formattedExpiry}**. Tiket elektronik (E-Ticket) akan diterbitkan segera setelah pembayaran terverifikasi secara otomatis.`,
+      contentTitle2: "Informasi Tagihan",
+      contentListItems: [
+        `Nomor Referensi: ${participantId}`,
+        `Total Tagihan: ${formattedAmount}`,
+        `Batas Kedaluwarsa: ${formattedExpiry}`
+      ],
+      qrCodeDataUrl: method === "qris" ? qris_png : undefined,
+      ctaTitle: "Kendala Transaksi?",
+      ctaSubtitle: "Jika Anda mengalami kesulitan saat melakukan transaksi, layanan dukungan kami selalu siap mendampingi Anda.",
+      ctaButtonLink: `${config.public.public_uri}/#contacts`,
+      ctaButtonText: "Hubungi Layanan Finansial",
+    });
+
+    await sendEmail(sender, email, `[Menunggu Pembayaran] Tagihan Registrasi: ${agendaTitle}`, newMail.render(), "payment-pending");
+    return { success: true, type: payload.type };
+  }
+  else if (payload.type === "payment-success") {
     const { agendaTitle, agendaId, participantId, name, email, amount } = payload;
-    const config = useRuntimeConfig();
-    let sender = {
-      email: config.resend_from,
-      name: "Himatika Finance",
-    };
-    
-    // Format mata uang rupiah
     const formattedAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount || 0);
 
     const newMail = new Email({
       recipientName: name,
-      emailTitle: `Pembayaran Lunas: ${agendaTitle}`,
-      heroTitle: `Pembayaran Berhasil! 💳`,
-      heroSubtitle: `Pembayaran Anda sebesar ${formattedAmount} untuk acara "${agendaTitle}" telah kami terima.`,
+      emailTitle: `Kuitansi & E-Ticket: ${agendaTitle}`,
+      heroTitle: `Pembayaran Terverifikasi`,
+      heroSubtitle: `Pembayaran sebesar ${formattedAmount} untuk agenda "${agendaTitle}" telah tervalidasi.`,
       heroButtonLink: `${config.public.public_uri}/agendas/${agendaId}/participant?participantId=${participantId}`,
-      heroButtonText: "Lihat E-Ticket Anda",
-      contentTitle1: "E-Ticket Anda Sudah Aktif",
-      contentParagraph1: `Terima kasih! Transaksi Anda telah berhasil diverifikasi oleh sistem. E-Ticket Anda kini sudah berstatus aktif dan siap digunakan.`,
-      contentParagraph2: `Silakan klik tombol di bawah ini untuk melihat detail E-Ticket Anda. Tunjukkan QR Code pada tiket tersebut kepada panitia saat registrasi ulang di lokasi acara.`,
-      contentTitle2: "Detail Transaksi",
+      heroButtonText: "Unduh / Akses E-Ticket",
+      contentTitle1: "Penerbitan Tiket Elektronik",
+      contentParagraph1: `Yth. Bapak/Ibu/Saudara/i, kami dengan senang hati menginformasikan bahwa transaksi Anda telah berhasil kami terima dan verifikasi. Sebagai konfirmasi resmi, E-Ticket Anda kini telah aktif.`,
+      contentParagraph2: `E-Ticket beserta barcode dapat diakses kapan saja melalui portal peserta. Mohon tunjukkan E-Ticket tersebut kepada petugas kami saat melakukan proses kedatangan (check-in) di lokasi penyelenggaraan acara.`,
+      contentTitle2: "Bukti Transaksi (Kuitansi Digital)",
       contentListItems: [
-        `ID Peserta: ${participantId}`,
-        `Total Pembayaran: ${formattedAmount}`,
-        `Status: LUNAS`
+        `Nomor Referensi Peserta: ${participantId}`,
+        `Jumlah Terbayar: ${formattedAmount}`,
+        `Status Pembayaran: LUNAS`
       ],
-      ctaTitle: "Kendala Teknis?",
-      ctaSubtitle: "Jika Anda mengalami masalah dalam mengakses tiket, silakan hubungi kami.",
+      ctaTitle: "Dukungan Teknis",
+      ctaSubtitle: "Apabila E-Ticket Anda tidak dapat diakses, mohon hubungi kami dengan melampirkan email ini.",
       ctaButtonLink: `${config.public.public_uri}/#contacts`,
-      ctaButtonText: "Hubungi Kami",
+      ctaButtonText: "Pusat Resolusi Masalah",
     });
 
-    await sendEmail(
-      sender,
-      email,
-      `[LUNAS] E-Ticket & Bukti Pembayaran: ${agendaTitle}`,
-      newMail.render(),
-      "payment-receipt"
-    );
+    await sendEmail(sender, email, `[LUNAS] E-Ticket Aktif: ${agendaTitle}`, newMail.render(), "payment-receipt");
     return { success: true, type: payload.type };
-  } else if (payload.type === "check-in-success") {
+  } 
+  else if (payload.type === "check-in-success") {
     const { agendaTitle, name, email, visitTime } = payload;
-    const config = useRuntimeConfig();
-    let sender = {
-      email: config.resend_from,
-      name: "Himatika Event Organizer",
-    };
-
-    const formattedTime = new Date(visitTime).toLocaleString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const formattedTime = new Date(visitTime).toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const newMail = new Email({
       recipientName: name,
-      emailTitle: `Terima Kasih Atas Partisipasi Anda: ${agendaTitle}`,
-      heroTitle: `Terima Kasih Telah Hadir! ✨`,
-      heroSubtitle: `Kehadiran Anda di acara "${agendaTitle}" sangat berkesan bagi kami.`,
+      emailTitle: `Apresiasi Kehadiran: ${agendaTitle}`,
+      heroTitle: `Apresiasi Partisipasi Anda`,
+      heroSubtitle: `Terima kasih atas dedikasi dan kehadiran Anda pada agenda "${agendaTitle}".`,
       heroButtonLink: `${config.public.public_uri}`,
-      heroButtonText: "Kunjungi Website Himatika",
-      contentTitle1: "Halo,",
-      contentParagraph1: `Terima kasih telah meluangkan waktu Anda untuk berpartisipasi dalam agenda **${agendaTitle}**. Kami mencatat bahwa Anda telah melakukan check-in pada **${formattedTime}**.`,
-      contentParagraph2: `Kami berharap Anda mendapatkan pengalaman yang bermanfaat dan berharga dari acara ini. Dukungan Anda sangat memotivasi kami untuk terus menghadirkan kegiatan-kegiatan berkualitas di masa depan.`,
-      contentTitle2: "Berikan Masukan Anda",
+      heroButtonText: "Kunjungi Situs Resmi",
+      contentTitle1: "Yth. Bapak/Ibu/Saudara/i,",
+      contentParagraph1: `Atas nama komite penyelenggara, kami mengucapkan terima kasih yang sebesar-besarnya atas kehadiran Anda pada agenda **${agendaTitle}**. Sistem kami telah mencatat kehadiran resmi Anda pada **${formattedTime}**.`,
+      contentParagraph2: `Kami berharap acara ini memberikan wawasan, nilai, serta pengalaman profesional yang berharga bagi Anda. Dukungan serta partisipasi aktif Anda sangat bermakna bagi peningkatan kualitas program kerja kami selanjutnya.`,
+      contentTitle2: "Evaluasi & Tindak Lanjut",
       contentListItems: [
-        `Pendapat Anda sangat berharga untuk peningkatan kualitas acara kami.`,
-        `Nantikan informasi mengenai sertifikat (jika ada) melalui portal acara.`
+        `Masukan Anda sangat krusial bagi evaluasi mutu layanan penyelenggaraan acara kami.`,
+        `Informasi pendistribusian sertifikat (apabila tersedia) akan diumumkan melalui portal peserta.`
       ],
-      ctaTitle: "Tetap Terhubung",
-      ctaSubtitle: "Ikuti perkembangan event dan informasi terbaru dari kami.",
+      ctaTitle: "Jalin Relasi Terbuka",
+      ctaSubtitle: "Mari terus terhubung untuk menjajaki berbagai peluang kolaborasi di masa mendatang.",
       ctaButtonLink: `${config.public.public_uri}/#contacts`,
-      ctaButtonText: "Hubungi Kami",
+      ctaButtonText: "Hubungi Layanan Kemitraan",
     });
 
-    await sendEmail(
-      sender,
-      email,
-      `Terima Kasih Telah Hadir di ${agendaTitle}`,
-      newMail.render(),
-      "event-attendance"
-    );
+    await sendEmail(sender, email, `Apresiasi Kehadiran - ${agendaTitle}`, newMail.render(), "event-attendance");
     return { success: true, type: payload.type };
   }
 

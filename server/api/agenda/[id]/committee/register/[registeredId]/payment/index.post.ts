@@ -124,6 +124,39 @@ export default defineEventHandler(
 
       await committee.save();
 
+      // Publish payment-pending to QStash
+      const { Client } = await import("@upstash/qstash");
+      const qstashClient = new Client({
+        token: process.env.QSTASH_TOKEN || "",
+      });
+
+      const config = useRuntimeConfig();
+      const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
+
+      const customerName = committee.member ? (committee.member as IMember).fullName : "";
+      const customerEmail = committee.member ? (committee.member as IMember).email : "";
+
+      qstashClient
+        .publishJSON({
+          url: webhookUrl,
+          body: {
+            type: "payment-pending",
+            agendaTitle: agenda.title,
+            agendaId: agenda._id,
+            participantId: registeredId,
+            name: customerName,
+            email: customerEmail,
+            amount: totalAmount,
+            method: body.payment_method,
+            bank: payment.va_numbers?.[0]?.bank || body.bank_transfer || "midtrans",
+            va_number: payment.va_numbers?.[0]?.va_number || "",
+            qris_png: payment.actions?.[1]?.url || "",
+            expiry: new Date(payment.expiry_time).toISOString(),
+            isCommittee: true
+          },
+        })
+        .catch((e) => console.error("Failed to publish payment-pending to QStash", e));
+
       return {
         statusCode: 200,
         statusMessage: "Payment created",
