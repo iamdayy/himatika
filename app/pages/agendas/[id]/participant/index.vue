@@ -11,14 +11,14 @@ const participantIdQuery = route.query.participantId as string || participantIdF
 const { makeTicket } = useMakeDocs();
 
 // 1. Fetch Agenda Data & Registration Status
-const { data: agenda, pending, error } = useLazyAsyncData('agenda', () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
+const { data: agenda, pending, error } = useLazyAsyncData(`agenda-${agendaId}`, () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
     transform: (data) => {
         if (!data.data) return null;
         return data.data.agenda;
     },
     default: () => null,
 });
-const { data: me, pending: mePending } = useLazyAsyncData('registration', () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
+const { data: me, pending: mePending, error: meError } = useLazyAsyncData(`registration-${agendaId}`, () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
     query: { participantId: participantIdQuery }
 }), {
     transform: (data) => {
@@ -54,11 +54,20 @@ const isQuestionsAnswered = computed(() => {
 });
 
 // Validasi jika belum terdaftar
-watch([me, mePending], ([newMe, isPending]) => {
-    if (!newMe && !isPending) {
-        // Hapus cookie jika pendaftaran tidak valid/ditemukan
-        participantIdFromCookie.value = null;
-        navigateTo(`/agendas/${agendaId}/participant/register?participantId=${route.query.participantId || ''}`);
+watch([me, mePending, agenda, pending, meError, error], ([newMe, isMePending, newAgenda, isAgendaPending, newMeError, newAgendaError]) => {
+    // Jangan redirect jika ada error dari sistem/jaringan
+    if (newAgendaError) return;
+
+    // Pastikan agenda selesai dimuat dan ada datanya
+    if (!isAgendaPending && newAgenda) {
+        // Asumsi data tidak valid/tidak ditemukan jika null dan (tidak ada error HTTP/jaringan atau errornya 404)
+        const isParticipantNotFound = !newMe && (!newMeError || (newMeError as any).statusCode === 404 || (newMeError as any).response?.status === 404);
+
+        if (!isMePending && isParticipantNotFound) {
+            // Hapus cookie jika pendaftaran tidak valid/ditemukan
+            participantIdFromCookie.value = null;
+            navigateTo(`/agendas/${agendaId}/participant/register?participantId=${route.query.participantId || ''}`);
+        }
     }
 }, { immediate: true });
 
