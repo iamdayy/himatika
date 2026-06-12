@@ -63,8 +63,20 @@ export function decrypt(
   ivData: string,
   tagHex: string,
 ): string {
+  if (!ivData || typeof ivData !== "string") {
+    throw new Error("Invalid ivData provided to decrypt");
+  }
+  if (!tagHex || typeof tagHex !== "string") {
+    throw new Error(`Invalid tagHex provided to decrypt: ${tagHex}`);
+  }
+
   const iv = Buffer.from(ivData, "hex");
   const tag = Buffer.from(tagHex, "hex");
+
+  if (tag.length !== 16) {
+    throw new Error(`Invalid authentication tag length: ${tag.length} bytes (from hex string '${tagHex}'). AES-256-GCM requires a 16-byte tag.`);
+  }
+
   const decipher = crypto.createDecipheriv(algorithm, cachedKey, iv);
   decipher.setAuthTag(tag);
   const decryptedBuf = Buffer.concat([
