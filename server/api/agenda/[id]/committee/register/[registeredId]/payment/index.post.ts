@@ -92,6 +92,31 @@ export default defineEventHandler(
           statusMessage: "Total tagihan pembayaran tidak valid (Rp 0). Harap periksa kembali detail tagihan Anda atau hubungi panitia.",
         });
       }
+      if (body.payment_method === "manual_transfer") {
+        committee.payment = {
+          ...committee.payment,
+          status: "pending",
+          method: "manual_transfer",
+          order_id: registeredId,
+          transaction_id: `MANUAL-${Date.now()}`,
+          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+          time: new Date(),
+          bank: "manual",
+          va_number: "",
+          qris_png: "",
+          manual_target: body.manual_target || "",
+        } as any;
+        await committee.save();
+
+        return {
+          statusCode: 200,
+          statusMessage: "Manual payment created",
+          data: {
+            payment: committee.payment,
+          },
+        };
+      }
+
       const payment = await createCharge({
         payment_type: body.payment_method,
         bank_transfer: {

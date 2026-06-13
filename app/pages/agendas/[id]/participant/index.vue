@@ -46,6 +46,40 @@ const isPaid = computed(() => {
     return status === 'success';
 });
 
+const manualPaymentTarget = computed(() => {
+    if (me.value?.payment?.method !== 'manual_transfer') return null;
+    return agenda.value?.configuration?.manualPayments?.find(p => p.name === me.value?.payment?.manual_target);
+});
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const isUploadingProof = ref(false);
+const handleProofUpload = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    
+    isUploadingProof.value = true;
+    try {
+        const formData = new FormData();
+        formData.append('proof', file);
+        
+        const res = await $api<any>(`/api/agenda/${agendaId}/payment/${me.value?._id}/proof`, {
+            method: 'POST',
+            body: formData,
+        });
+        
+        if (res.statusCode === 200) {
+            toast.add({ title: 'Sukses', description: 'Bukti pembayaran berhasil diunggah', color: 'success' });
+            refresh();
+        }
+    } catch (err: any) {
+        toast.add({ title: 'Gagal', description: err.response?.data?.statusMessage || 'Gagal mengunggah bukti pembayaran', color: 'error' });
+    } finally {
+        isUploadingProof.value = false;
+        input.value = '';
+    }
+};
+
 // Cek Status Jawaban
 const isQuestionsAnswered = computed(() => {
     const questions = agenda.value?.configuration?.participant.questions || [];
@@ -239,7 +273,43 @@ definePageMeta({
 
                 <!-- Warning Alerts -->
                 <div v-if="!isPaid" class="mb-6 relative z-10">
-                    <div class="bg-red-500 rounded-xl p-4 text-white space-y-2">
+                    <div v-if="me?.payment?.method === 'manual_transfer'" class="bg-primary-500 rounded-xl p-4 md:p-6 text-white shadow-lg space-y-4">
+                        <div v-if="me?.payment?.status === 'verifying'" class="flex items-center gap-3">
+                            <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                <Icon name="i-heroicons-clock" class="w-6 h-6 animate-pulse" />
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-bold">Sedang Diverifikasi</h3>
+                                <p class="text-sm opacity-90 mt-1">Panitia sedang mengecek bukti pembayaran Anda. Harap tunggu beberapa saat.</p>
+                            </div>
+                        </div>
+                        <div v-else class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                    <Icon name="i-heroicons-banknotes" class="w-6 h-6" />
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-lg mb-1">Transfer Manual</h3>
+                                    <p class="text-sm opacity-90">Selesaikan pembayaran sebesar <span class="font-bold text-lg">Rp {{ agenda?.configuration?.participant?.amount?.toLocaleString() }}</span></p>
+                                    
+                                    <div v-if="manualPaymentTarget" class="mt-4 bg-black/10 p-4 rounded-xl backdrop-blur-sm border border-white/20">
+                                        <p class="text-xs opacity-75 mb-1 uppercase tracking-wider">Tujuan Transfer:</p>
+                                        <p class="font-bold text-lg">{{ manualPaymentTarget.name }} - {{ manualPaymentTarget.account }}</p>
+                                        <p class="text-sm">A.N. {{ manualPaymentTarget.owner }}</p>
+                                        <p v-if="manualPaymentTarget.instructions" class="text-xs mt-2 italic flex items-center gap-1"><Icon name="i-heroicons-information-circle" class="w-4 h-4" /> {{ manualPaymentTarget.instructions }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pt-2 flex flex-col sm:flex-row gap-3">
+                                <input type="file" ref="fileInputRef" class="hidden" accept="image/*" @change="handleProofUpload" />
+                                <UButton color="white" variant="solid" block :loading="isUploadingProof" @click="() => fileInputRef?.click()">
+                                    <template #leading><Icon name="i-heroicons-arrow-up-tray" class="w-4 h-4" /></template>
+                                    Upload Bukti Transfer
+                                </UButton>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="bg-red-500 rounded-xl p-4 text-white space-y-2">
                         <div class="flex items-start gap-3">
                             <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
                                 <Icon name="i-heroicons-credit-card" class="w-6 h-6" />
@@ -248,7 +318,7 @@ definePageMeta({
                                 <h3 class="font-bold text-sm">Menunggu Pembayaran</h3>
                                 <p class="text-xs opacity-90 mt-1 leading-relaxed">
                                     Tiket belum aktif. Selesaikan pembayaran sebesar <span class="font-bold">Rp {{
-                                        agenda.configuration?.participant?.amount?.toLocaleString() }}</span>
+                                        agenda?.configuration?.participant?.amount?.toLocaleString() }}</span>
                                 </p>
                             </div>
                         </div>

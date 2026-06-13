@@ -233,9 +233,10 @@ export interface IContributor {
   member: IMember | Types.ObjectId | number | string;
   job: string;
 }
-export type IPaymentMethod = "cash" | "bank_transfer" | "e_wallet" | "qris";
+export type IPaymentMethod = "cash" | "bank_transfer" | "e_wallet" | "qris" | "manual_transfer";
 export type TPaymentStatus =
   | "pending"
+  | "verifying"
   | "success"
   | "failed"
   | "canceled"
@@ -250,6 +251,15 @@ export interface IPayment {
   qris_png?: string;
   time?: Date;
   expiry?: Date;
+  manual_target?: string;
+  proof_url?: string;
+}
+
+export interface IManualPaymentTarget {
+  name: string;
+  account: string;
+  owner: string;
+  instructions?: string;
 }
 
 /**
@@ -367,6 +377,7 @@ export interface IAgendaConfiguration {
   participant: IAgendaParticipantConfiguration;
   certificate?: ICertificateConfiguration;
   sponsors?: ISponsor[];
+  manualPayments?: IManualPaymentTarget[];
 }
 
 /**

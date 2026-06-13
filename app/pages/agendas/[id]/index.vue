@@ -601,6 +601,14 @@ function formatCurrency(amount: number): string {
                                         variant="soft" icon="i-heroicons-star" size="sm">
                                         Sponsorship
                                     </UButton>
+                                    <UButton :to="`/administrator/agendas/${id}/payment-settings`" color="primary"
+                                        variant="soft" icon="i-heroicons-credit-card" size="sm">
+                                        Pengaturan Pembayaran
+                                    </UButton>
+                                    <UButton :to="`/administrator/agendas/${id}/payments-verification`" color="primary"
+                                        variant="soft" icon="i-heroicons-check-badge" size="sm">
+                                        Verifikasi Pembayaran
+                                    </UButton>
                                 </div>
                                 <div v-else class="flex items-center gap-3">
                                     <div

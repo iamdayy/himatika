@@ -201,6 +201,7 @@ const formSelectPayment = reactiveComputed(() => ({
     time: participant.value?.payment?.time || new Date(),
     expiry: participant.value?.payment?.expiry || new Date(),
     qris_png: participant.value?.payment?.qris_png || '',
+    manual_target: participant.value?.payment?.manual_target || '',
 }));
 const formPayment = reactiveComputed(() => ({
     status: formSelectPayment.status || 'pending',
@@ -219,11 +220,17 @@ const registerAsOptions = computed(() => {
     }
     return options;
 });
-const paymentMethods = ref<{ label: string; value: IPaymentMethod; icon: string; }[]>([
-    { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
-    { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
-    { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
-]);
+const paymentMethods = computed<{ label: string; value: IPaymentMethod; icon: string; }[]>(() => {
+    const methods = [
+        { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
+        { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
+        { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
+    ] as { label: string; value: IPaymentMethod; icon: string; }[];
+    if (agenda.value?.configuration?.manualPayments && agenda.value.configuration.manualPayments.length > 0) {
+        methods.push({ label: 'Transfer Manual', value: 'manual_transfer', icon: 'i-heroicons-document-text' });
+    }
+    return methods;
+});
 const vaBanks = ref([
     { label: 'BCA', value: 'bca' },
     { label: 'BNI', value: 'bni' },
@@ -336,6 +343,7 @@ const payment = async (): Promise<boolean | FormError> => {
             body: {
                 payment_method: formSelectPayment.method,
                 bank_transfer: formSelectPayment.bank,
+                manual_target: formSelectPayment.manual_target,
             } as IPaymentBody
         });
         if (statusCode === 200 && data) {
@@ -431,6 +439,10 @@ const validationRuleSelectPayment: FieldValidationRules = reactiveComputed(() =>
     bank: (value: string) => {
         if (formSelectPayment.method !== 'bank_transfer') return null;
         return value ? null : { message: $ts('bank_required'), path: 'bank' };
+    },
+    manual_target: (value: string) => {
+        if (formSelectPayment.method !== 'manual_transfer') return null;
+        return value ? null : { message: 'Pilih rekening tujuan', path: 'manual_target' };
     },
 }));
 const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => ({
@@ -661,6 +673,17 @@ watch(participant, (newValue) => {
                                 <UFormField label="Select Bank" help="Choose your preferred bank for Virtual Account">
                                     <URadioGroup v-model="formSelectPayment.bank" :items="vaBanks"
                                         class="grid grid-cols-2 gap-2" :ui="{ fieldset: 'w-full' }" />
+                                </UFormField>
+                            </div>
+
+                            <div v-if="formSelectPayment.method === 'manual_transfer'" class="animate-fade-in">
+                                <UFormField label="Pilih Rekening Tujuan" help="Pilih rekening bank atau e-wallet yang dituju">
+                                    <URadioGroup v-model="formSelectPayment.manual_target" :items="(agenda?.configuration?.manualPayments || []).map(p => ({ label: `${p.name} - ${p.account} a.n ${p.owner}`, value: p.name }))"
+                                        class="grid grid-cols-1 md:grid-cols-2 gap-3" :ui="{ fieldset: 'w-full' }">
+                                        <template #label="{ item }">
+                                            <span class="font-medium">{{ item.label }}</span>
+                                        </template>
+                                    </URadioGroup>
                                 </UFormField>
                             </div>
 
