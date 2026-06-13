@@ -79,8 +79,8 @@ async function onSubmit() {
 
 const links = computed(() => [
     { label: $ts('dashboard'), to: '/dashboard', icon: 'i-heroicons-home' },
-    { label: $ts('agenda'), to: '/dashboard/agendas', icon: 'i-heroicons-clipboard-document-list' },
-    { label: agenda.value?.title || '', to: `/agendas/${id}`, icon: 'i-heroicons-document' },
+    { label: $ts('agenda'), to: '/administrator/agendas', icon: 'i-heroicons-clipboard-document-list' },
+    { label: agenda.value?.title || '', to: `/administrator/agendas/${id}`, icon: 'i-heroicons-document' },
     { label: 'Metode Pembayaran Manual', icon: 'i-heroicons-credit-card' },
 ]);
 </script>
@@ -109,13 +109,16 @@ const links = computed(() => [
                                 <UIcon name="i-heroicons-credit-card" class="text-primary" />
                                 Metode Transfer Manual
                             </h2>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tambahkan rekening Bank atau E-Wallet yang bisa digunakan peserta untuk mentransfer uang pendaftaran. Jika dikosongkan, opsi transfer manual tidak akan muncul.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tambahkan rekening Bank atau
+                                E-Wallet yang bisa digunakan peserta untuk mentransfer uang pendaftaran. Jika
+                                dikosongkan, opsi transfer manual tidak akan muncul.</p>
                         </div>
                     </div>
                 </template>
 
                 <div class="space-y-6">
-                    <div v-for="(payment, index) in configurationState.manualPayments" :key="index" class="flex flex-col gap-4 bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 relative transition-all duration-300 hover:shadow-md">
+                    <div v-for="(payment, index) in configurationState.manualPayments" :key="index"
+                        class="flex flex-col gap-4 bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 relative transition-all duration-300 hover:shadow-md">
                         <div class="flex flex-col sm:flex-row gap-4">
                             <div class="flex-1 space-y-2">
                                 <UFormField label="Nama Bank / E-Wallet" required>
@@ -136,16 +139,20 @@ const links = computed(() => [
                         <div class="flex flex-col sm:flex-row gap-4 items-end">
                             <div class="flex-1 space-y-2">
                                 <UFormField label="Instruksi Tambahan (Opsional)">
-                                    <UInput v-model="payment.instructions" placeholder="Misal: Sertakan 3 digit terakhir NIM pada nominal transfer" />
+                                    <UInput v-model="payment.instructions"
+                                        placeholder="Misal: Sertakan 3 digit terakhir NIM pada nominal transfer" />
                                 </UFormField>
                             </div>
                             <div class="pb-1">
-                                <UButton color="error" icon="i-heroicons-trash" variant="soft" @click="removePayment(index)">Hapus</UButton>
+                                <UButton color="error" icon="i-heroicons-trash" variant="soft"
+                                    @click="removePayment(index)">Hapus
+                                </UButton>
                             </div>
                         </div>
                     </div>
 
-                    <UButton color="neutral" icon="i-heroicons-plus" variant="outline" block size="lg" class="border-dashed" @click="addPayment">
+                    <UButton color="neutral" icon="i-heroicons-plus" variant="outline" block size="lg"
+                        class="border-dashed" @click="addPayment">
                         Tambah Rekening Baru
                     </UButton>
                 </div>
