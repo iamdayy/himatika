@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { IResponse } from '~~/types/IResponse';
+import { ModalsImageOpen, UBadge, UButton, UCheckbox } from '#components';
+import type { TableColumn } from '@nuxt/ui';
+import type { Column } from '@tanstack/vue-table';
+import type { IPaymentVerification } from '~~/types';
+import type { IAgendaResponse, IPaymentVerificationResponse, IResponse } from '~~/types/IResponse';
 
 definePageMeta({
     middleware: ["sidebase-auth", 'organizer', 'committee'],
@@ -10,13 +14,20 @@ const route = useRoute();
 const { id } = route.params as { id: string };
 const toast = useToast();
 const { $api, $ts } = useNuxtApp();
+const overlay = useOverlay();
+const ImageModal = overlay.create(ModalsImageOpen);
 
-const { data: agenda } = useLazyAsyncData(`agenda-${id}`, () => $api<any>(`/api/agenda/${id}`), {
+const sort = ref({
+    column: 'name',
+    direction: 'asc'
+});
+
+const { data: agenda } = useLazyAsyncData(`agenda-${id}`, () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (res) => res.data?.agenda,
 });
 
-const { data: verifyingList, pending, refresh } = useLazyAsyncData(`verifying-${id}`, () => $api<any>(`/api/agenda/${id}/payment/verifying`), {
-    transform: (res) => res.data?.verifying || [],
+const { data: verifyingList, pending, refresh } = useLazyAsyncData(`verifying-${id}`, () => $api<IPaymentVerificationResponse>(`/api/agenda/${id}/payment/verifying`), {
+    transform: (res) => res.data?.verifyingList || [],
     default: () => [],
 });
 
@@ -29,7 +40,7 @@ const handleVerify = async (registeredId: string, status: 'success' | 'failed') 
             method: 'POST',
             body: { registeredId, status }
         });
-        
+
         if (res.statusCode === 200) {
             toast.add({ title: 'Berhasil', description: `Pembayaran berhasil di${status === 'success' ? 'terima' : 'tolak'}`, color: 'success' });
             refresh();
@@ -41,21 +52,122 @@ const handleVerify = async (registeredId: string, status: 'success' | 'failed') 
     }
 };
 
-const columns = [
-    { key: 'name', label: 'Nama Lengkap' },
-    { key: 'type', label: 'Tipe' },
-    { key: 'manual_target', label: 'Tujuan Transfer' },
-    { key: 'proof_url', label: 'Bukti Pembayaran' },
-    { key: 'time', label: 'Waktu' },
-    { key: 'actions', label: 'Aksi' }
+function addSortButton(column: Column<IPaymentVerification>, label: string) {
+    const isSorted = column.getIsSorted();
+
+    return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: label,
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => {
+            sort.value.column = column.id;
+            sort.value.direction = column.getIsSorted() === 'asc' ? 'desc' : 'asc';
+            column.toggleSorting(column.getIsSorted() === 'asc');
+        }
+    })
+}
+
+const columns: TableColumn<IPaymentVerification>[] = [
+    {
+        id: 'select',
+        header: ({ table }) => h(UCheckbox, {
+            modelValue: table.getIsSomePageRowsSelected()
+                ? 'indeterminate'
+                : table.getIsAllPageRowsSelected(),
+            'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                table.toggleAllPageRowsSelected(!!value),
+            'aria-label': 'Select all'
+        }),
+        cell: ({ row }) => h(UCheckbox, {
+            modelValue: row.getIsSelected(),
+            'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+            'aria-label': 'Select row'
+        })
+    },
+    {
+        id: 'id',
+        accessorKey: 'id',
+        header: '#',
+        size: 50,
+        enableSorting: false,
+        enableResizing: false,
+        cell: ({ row }) => row.index + 1,
+    },
+    {
+        id: 'name',
+        accessorKey: 'name',
+        header: ({ column }) => addSortButton(column, $ts('name')),
+        size: 100,
+    },
+    {
+        id: 'email',
+        accessorKey: 'email',
+        header: ({ column }) => addSortButton(column, $ts('email')),
+        size: 100,
+    },
+    {
+        id: 'type',
+        accessorKey: 'type',
+        header: ({ column }) => addSortButton(column, $ts('type')),
+        size: 100,
+        cell: ({ row }) => {
+            return h(UBadge, { color: row.original.type === 'committee' ? 'neutral' : 'info', variant: 'subtle' }, row.original.type === 'committee' ? 'Kepanitiaan' : 'Peserta');
+        }
+    },
+    {
+        id: 'manual_target',
+        header: ({ column }) => addSortButton(column, $ts('manual_target')),
+        cell: ({ row }) => {
+            const payment = row.original.payment;
+            return payment?.manual_target;
+        },
+        size: 100,
+    },
+    {
+        id: 'proof_url',
+        header: ({ column }) => addSortButton(column, $ts('proof_url')),
+        size: 100,
+        cell: ({ row }) => {
+            return h(UButton, { icon: 'i-heroicons-eye', color: 'info', size: 'xs', onClick: () => openProof(row.original.payment?.proof_url) }, $ts('view'));
+        }
+    },
+    {
+        id: 'time',
+        accessorKey: 'time',
+        header: ({ column }) => addSortButton(column, $ts('time')),
+        size: 100,
+        cell: ({ row }) => {
+            return h('span', { class: 'text-xs text-gray-500' }, new Date(row.original.payment?.time || '').toLocaleString());
+        }
+    },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        cell: ({ row }) => {
+            return h('div', { class: 'flex items-center gap-2' }, [
+                h(UButton, { icon: 'i-heroicons-check', color: 'success', size: 'xs', loading: isSubmitting.value, onClick: () => handleVerify(row.original._id, 'success') }, 'Sah'),
+                h(UButton, { icon: 'i-heroicons-x-mark', color: 'error', size: 'xs', loading: isSubmitting.value, onClick: () => handleVerify(row.original._id, 'failed') }, 'Tolak')
+            ]);
+        }
+    }
 ];
 
-const selectedProof = ref('');
-const isProofModalOpen = ref(false);
-
-const openProof = (url: string) => {
-    selectedProof.value = url;
-    isProofModalOpen.value = true;
+const openProof = (url: string | undefined | null) => {
+    if (url) {
+        ImageModal.open({
+            photo: {
+                image: url,
+                tags: ['Bukti Transfer'],
+                archived: false,
+            }
+        });
+    }
 };
 
 const links = computed(() => [
@@ -69,7 +181,6 @@ const links = computed(() => [
 <template>
     <div class="mb-24">
         <UBreadcrumb :items="links" />
-
         <div class="mt-6">
             <UCard>
                 <template #header>
@@ -80,36 +191,14 @@ const links = computed(() => [
                                 Verifikasi Transfer Manual
                             </h2>
                             <p class="text-sm text-gray-500 mt-1">
-                                Daftar peserta/panitia yang sudah mengunggah bukti transfer manual dan menunggu persetujuan Anda.
+                                Daftar peserta/panitia yang sudah mengunggah bukti transfer manual dan menunggu
+                                persetujuan Anda.
                             </p>
                         </div>
                     </div>
                 </template>
 
-                <UTable :columns="columns" :rows="verifyingList" :loading="pending">
-                    <template #type-data="{ row }">
-                        <UBadge :color="row.type === 'committee' ? 'purple' : 'blue'" variant="subtle">
-                            {{ row.type === 'committee' ? 'Kepanitiaan' : 'Peserta' }}
-                        </UBadge>
-                    </template>
-                    <template #manual_target-data="{ row }">
-                        <span class="font-medium">{{ row.payment?.manual_target }}</span>
-                    </template>
-                    <template #proof_url-data="{ row }">
-                        <UButton size="xs" color="gray" variant="soft" icon="i-heroicons-photo" @click="openProof(row.payment?.proof_url)">
-                            Lihat Gambar
-                        </UButton>
-                    </template>
-                    <template #time-data="{ row }">
-                        <span class="text-xs text-gray-500">{{ new Date(row.payment?.time).toLocaleString() }}</span>
-                    </template>
-                    <template #actions-data="{ row }">
-                        <div class="flex items-center gap-2">
-                            <UButton size="xs" color="success" icon="i-heroicons-check" :loading="isSubmitting" @click="handleVerify(row._id, 'success')">Sah</UButton>
-                            <UButton size="xs" color="error" icon="i-heroicons-x-mark" :loading="isSubmitting" @click="handleVerify(row._id, 'failed')">Tolak</UButton>
-                        </div>
-                    </template>
-                    
+                <UTable :columns="columns" :data="verifyingList" :loading="pending">
                     <template #empty-state>
                         <div class="flex flex-col items-center justify-center py-12">
                             <UIcon name="i-heroicons-inbox" class="w-12 h-12 text-gray-300 mb-4" />
@@ -119,21 +208,5 @@ const links = computed(() => [
                 </UTable>
             </UCard>
         </div>
-
-        <UModal v-model="isProofModalOpen">
-            <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
-                <template #header>
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
-                            Bukti Transfer
-                        </h3>
-                        <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isProofModalOpen = false" />
-                    </div>
-                </template>
-                <div class="flex justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <img :src="selectedProof" alt="Bukti Transfer" class="max-w-full max-h-[70vh] object-contain rounded-md" />
-                </div>
-            </UCard>
-        </UModal>
     </div>
 </template>

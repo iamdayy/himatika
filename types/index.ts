@@ -233,7 +233,7 @@ export interface IContributor {
   member: IMember | Types.ObjectId | number | string;
   job: string;
 }
-export type IPaymentMethod = "cash" | "bank_transfer" | "e_wallet" | "qris" | "manual_transfer";
+export type IPaymentMethod = "cash" | "bank_transfer" | "qris" | "manual_transfer";
 export type TPaymentStatus =
   | "pending"
   | "verifying"
@@ -253,6 +253,18 @@ export interface IPayment {
   expiry?: Date;
   manual_target?: string;
   proof_url?: string;
+  amount?: number;
+}
+
+export interface IPaymentVerification {
+  _id: string;
+  type: 'participant' | 'committee';
+  name: string;
+  email: string;
+  payment: IPayment;
+  manual_target?: string;
+  proof_url?: string;
+  time?: string;
 }
 
 export interface IManualPaymentTarget {

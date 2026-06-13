@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import type { IMember } from '~~/types';
 
-// Props: Menerima data member dan status modal
+// Props: Menerima data member
 const props = defineProps<{
-    modelValue: boolean; // Untuk v-model (buka/tutup modal)
     member?: IMember | null; // Data member yang akan ditampilkan
 }>();
 
-// Emits: Untuk update v-model
-const emit = defineEmits(['update:modelValue']);
-
-// Computed untuk v-model
-const isOpen = computed({
-    get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value),
-});
+// Emits: Untuk menutup modal
+const emit = defineEmits(['close']);
 
 // Helper untuk format tanggal
 const formatDate = (date?: string | Date) => {
@@ -43,7 +36,7 @@ const items = [{
 </script>
 
 <template>
-    <UModal v-model="isOpen">
+    <UModal @close="$emit('close')">
         <template #body>
 
             <div class="flex items-center justify-between">
@@ -64,7 +57,7 @@ const items = [{
                     </div>
                 </div>
 
-                <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" @click="isOpen = false" />
+                <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" @click="$emit('close')" />
             </div>
 
             <div v-if="member">

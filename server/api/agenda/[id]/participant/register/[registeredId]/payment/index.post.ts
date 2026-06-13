@@ -107,9 +107,37 @@ export default defineEventHandler(
           bank: "manual",
           va_number: "",
           qris_png: "",
+          amount: totalAmount,
           manual_target: body.manual_target || "",
         } as any;
         await participant.save();
+
+        // Publish manual payment-pending to QStash
+        const { Client } = await import("@upstash/qstash");
+        const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+        const config = useRuntimeConfig();
+        
+        const customerName = participant.member ? (participant.member as any).fullName : (participant.guest as any)?.fullName || "";
+        const customerEmail = participant.member ? (participant.member as any).email : (participant.guest as any)?.email || "";
+
+        qstashClient.publishJSON({
+          url: `${config.public.public_uri}/api/webhooks/qstash/email`,
+          body: {
+            type: "payment-pending",
+            agendaTitle: agenda.title,
+            agendaId: agenda._id,
+            participantId: registeredId,
+            name: customerName,
+            email: customerEmail,
+            amount: totalAmount,
+            method: "manual_transfer",
+            bank: "manual",
+            va_number: body.manual_target || "",
+            qris_png: "",
+            expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            isCommittee: false
+          },
+        }).catch((e) => console.error("Failed to publish manual payment-pending", e));
 
         return {
           statusCode: 200,
@@ -155,6 +183,7 @@ export default defineEventHandler(
         expiry: new Date(payment.expiry_time),
         time: new Date(payment.transaction_time),
         bank: payment.va_numbers?.[0]?.bank || body.bank_transfer || "midtrans",
+        amount: totalAmount,
         va_number: payment.va_numbers?.[0]?.va_number || "",
         qris_png: payment.actions?.[1]?.url,
       };

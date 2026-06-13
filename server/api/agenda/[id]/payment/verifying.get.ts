@@ -1,8 +1,9 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
-import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
+import { IPaymentVerificationResponse } from "~~/types/IResponse";
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<IPaymentVerificationResponse> => {
   try {
     const { id } = event.context.params as { id: string };
 
@@ -50,12 +51,12 @@ export default defineEventHandler(async (event) => {
       statusCode: 200,
       statusMessage: "Verifying payments retrieved",
       data: {
-        verifying: results,
+        verifyingList: results,
+        length: results.length,
       },
     };
   } catch (error: any) {
-    console.error(error);
-    return createError({
+    throw createError({
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || "Internal Server Error",
     });

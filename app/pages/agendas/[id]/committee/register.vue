@@ -395,7 +395,7 @@ onMounted(() => {
                                 <div v-for="option in paymentMethods" :key="option.value"
                                     class="relative rounded-2xl p-4 md:p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group"
                                     :class="formPayment.method === option.value ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-md' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-400'"
-                                    @click="formPayment.method = option.value; formPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
+                                    @click="formPayment.method = option.value; formPayment.bank = 'bca'">
                                     <div class="flex flex-col items-center gap-3 text-center">
                                         <div :class="formPayment.method === option.value ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 group-hover:text-primary-500'"
                                             class="p-3 rounded-full transition-colors">

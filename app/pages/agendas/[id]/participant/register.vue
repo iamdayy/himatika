@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { ModalsAuthLoginRequired } from '#components';
 import type { IGuest, IMember, IParticipant, IPaymentMethod } from '~~/types';
 import type { FieldValidationRules, FormError, Step } from '~~/types/component/stepper';
 import type { IPaymentBody } from '~~/types/IRequestPost';
@@ -16,6 +17,8 @@ const tab = computed(() => route.query.tab as string | undefined);
 const participantId = computed(() => route.query.participantId as string | undefined);
 
 const { $api } = useNuxtApp()
+const overlay = useOverlay();
+const LoginRequiredModal = overlay.create(ModalsAuthLoginRequired);
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
@@ -102,7 +105,6 @@ const steps = computed<Step[]>(() => {
     });
 });
 const activeStep = ref(0);
-const showLoginModal = ref(false);
 
 const registerAs = ref((participant.value?.guest as IGuest | undefined) ? ((participant.value?.guest as IGuest | undefined)?.instance ? 'non-student' : 'student-guest') : (user.value ? 'student' : 'non-student'));
 const draftRegistration = useLocalStorage(`draft_registration_${id}`, {
@@ -128,7 +130,7 @@ const initialFormData = computed(() => {
             NIM: user.value.member.NIM || 0,
             class: user.value.member.class || '',
             semester: user.value.member.semester || 0,
-            prodi: '',
+            prodi: (user.value.member as any).prodi || '',
             instance: '',
             confirmEmail: user.value.member.email || ''
         };
@@ -148,6 +150,13 @@ const initialFormData = computed(() => {
     }
     return draftRegistration.value;
 });
+
+const isFieldDisabled = (field: string) => {
+    if (!user.value) return false;
+    if (user.value.member) return !!(user.value.member as any)[field];
+    if (user.value.guest) return !!(user.value.guest as any)[field];
+    return false;
+};
 
 const formRegistration = reactive({
     registerAs: initialFormData.value.registerAs || registerAs.value,
@@ -283,6 +292,8 @@ const register = async (): Promise<boolean | FormError> => {
         // Logic is simplified: if no user is logged in, it's a guest registration.
         if (!user.value) {
             body.guest = formRegistration;
+        } else {
+            body.memberUpdate = formRegistration;
         }
 
         const { data, statusCode, statusMessage } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register`, {
@@ -315,7 +326,10 @@ const register = async (): Promise<boolean | FormError> => {
 
         // Intercept specific error when a guest uses a Member's email
         if (error?.data?.statusCode === 403 && errorMsg.includes('Mahasiswa (Member)')) {
-            showLoginModal.value = true;
+            LoginRequiredModal.open({
+                email: formRegistration.email,
+                callbackUrl: `/agendas/${id}/participant/register`
+            });
             return false;
         }
 
@@ -567,17 +581,19 @@ watch(participant, (newValue) => {
                             <div :class="['grid gap-4 px-2 md:px-4', responsiveClasses.gridCols]">
                                 <UFormField :label="$ts('NIM')" v-if="registerAs !== 'non-student'"
                                     :error="errors.NIM?.message" help="Nomor Induk Mahasiswa Anda">
-                                    <UInput v-model="formRegistration.NIM" size="lg" :disabled="user ? true : false"
+                                    <UInput v-model="formRegistration.NIM" size="lg" :disabled="isFieldDisabled('NIM')"
                                         class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <UFormField :label="$ts('name')" :error="errors.fullName?.message"
                                     help="Nama lengkap sesuai identitas">
                                     <UInput v-model="formRegistration.fullName" size="lg"
-                                        :disabled="user ? true : false" class="focus:ring-2 focus:ring-primary-500" />
+                                        :disabled="isFieldDisabled('fullName')"
+                                        class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <UFormField :label="$ts('email')" :error="errors.email?.message"
                                     help="Email aktif untuk pengiriman E-Ticket">
-                                    <UInput v-model="formRegistration.email" size="lg" :disabled="user ? true : false"
+                                    <UInput v-model="formRegistration.email" size="lg"
+                                        :disabled="isFieldDisabled('email')"
                                         class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <UFormField v-if="!user" label="Konfirmasi Email" :error="errors.confirmEmail?.message"
@@ -587,29 +603,34 @@ watch(participant, (newValue) => {
                                 </UFormField>
                                 <UFormField :label="$ts('phone')" :error="errors.phone?.message"
                                     help="Nomor WhatsApp yang bisa dihubungi">
-                                    <UInput v-model="formRegistration.phone" size="lg" :disabled="user ? true : false"
+                                    <UInput v-model="formRegistration.phone" size="lg"
+                                        :disabled="isFieldDisabled('phone')"
                                         class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <UFormField :label="$ts('class')" v-if="registerAs !== 'non-student'"
                                     :error="errors.class?.message" help="Contoh: A, B, atau Reguler">
-                                    <UInput v-model="formRegistration.class" size="lg" :disabled="user ? true : false"
+                                    <UInput v-model="formRegistration.class" size="lg"
+                                        :disabled="isFieldDisabled('class')"
                                         class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <UFormField :label="$ts('semester')" v-if="registerAs !== 'non-student'"
                                     :error="errors.semester?.message" help="Semester saat ini">
                                     <UInput v-model="formRegistration.semester" size="lg"
-                                        :disabled="user ? true : false" class="focus:ring-2 focus:ring-primary-500" />
+                                        :disabled="isFieldDisabled('semester')"
+                                        class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
-                                <UFormField :label="$ts('prodi')" v-if="registerAs !== 'non-student' && !user"
+                                <UFormField :label="$ts('prodi')" v-if="registerAs !== 'non-student'"
                                     :error="errors.prodi?.message" help="Program Studi Anda">
-                                    <UInput v-model="formRegistration.prodi" size="lg" :disabled="user ? true : false"
+                                    <UInput v-model="formRegistration.prodi" size="lg"
+                                        :disabled="isFieldDisabled('prodi')"
                                         class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <UFormField :label="$ts('instance')"
                                     v-if="registerAs === 'non-student' || registerAs === 'student-guest'"
                                     :error="errors.instance?.message" help="Asal Universitas / Instansi / Perusahaan">
                                     <UInput v-model="formRegistration.instance" size="lg"
-                                        :disabled="user ? true : false" class="focus:ring-2 focus:ring-primary-500" />
+                                        :disabled="isFieldDisabled('instance')"
+                                        class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <p v-if="checkIfProdiIsInformatics"
                                     class="md:col-span-2 text-red-500 dark:text-red-400">**
@@ -652,7 +673,7 @@ watch(participant, (newValue) => {
                                 <div v-for="option in paymentMethods" :key="option.value"
                                     class="relative rounded-2xl p-4 md:p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group"
                                     :class="formSelectPayment.method === option.value ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-md' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-400'"
-                                    @click="formSelectPayment.method = option.value; formSelectPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
+                                    @click="formSelectPayment.method = option.value; formSelectPayment.bank = 'bca'">
                                     <div class="flex flex-col items-center gap-3 text-center">
                                         <div :class="formSelectPayment.method === option.value ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 group-hover:text-primary-500'"
                                             class="p-3 rounded-full transition-colors">
@@ -677,8 +698,10 @@ watch(participant, (newValue) => {
                             </div>
 
                             <div v-if="formSelectPayment.method === 'manual_transfer'" class="animate-fade-in">
-                                <UFormField label="Pilih Rekening Tujuan" help="Pilih rekening bank atau e-wallet yang dituju">
-                                    <URadioGroup v-model="formSelectPayment.manual_target" :items="(agenda?.configuration?.manualPayments || []).map(p => ({ label: `${p.name} - ${p.account} a.n ${p.owner}`, value: p.name }))"
+                                <UFormField label="Pilih Rekening Tujuan"
+                                    help="Pilih rekening bank atau e-wallet yang dituju">
+                                    <URadioGroup v-model="formSelectPayment.manual_target"
+                                        :items="(agenda?.configuration?.manualPayments || []).map(p => ({ label: `${p.name} - ${p.account} a.n ${p.owner}`, value: p.name }))"
                                         class="grid grid-cols-1 md:grid-cols-2 gap-3" :ui="{ fieldset: 'w-full' }">
                                         <template #label="{ item }">
                                             <span class="font-medium">{{ item.label }}</span>
@@ -769,39 +792,6 @@ watch(participant, (newValue) => {
                 </div>
             </template>
         </CoreStepper>
-
-        <!-- Login Required Modal -->
-        <UModal v-model="showLoginModal">
-            <template #body>
-                <div
-                    class="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center">
-                    <UIcon name="i-heroicons-user-circle" class="w-10 h-10" />
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Email Terdaftar Sebagai Mahasiswa
-                    </h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-center">
-                        Sistem mendeteksi bahwa email <span class="font-semibold text-gray-700 dark:text-gray-300">{{
-                            formRegistration.email }}</span> sudah terdaftar sebagai akun Mahasiswa (Member). Silakan
-                        login
-                        terlebih dahulu untuk melanjutkan pendaftaran acara ini menggunakan akun Anda.
-                    </p>
-                </div>
-            </template>
-            <template #footer>
-                <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <UButton color="neutral" variant="soft" @click="showLoginModal = false"
-                        class="justify-center flex-1">
-                        Kembali
-                    </UButton>
-                    <UButton color="primary" :to="`/login?callbackUrl=/agendas/${id}/participant/register`"
-                        class="justify-center flex-1">
-                        Login Sekarang
-                    </UButton>
-                </div>
-
-            </template>
-        </UModal>
     </div>
 </template>
 <style scoped></style>

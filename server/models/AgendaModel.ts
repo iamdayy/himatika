@@ -61,7 +61,7 @@ const IGuestSchema = new Schema<IGuestSchema>({
 export const paymentSchema = new Schema<IPaymentSchema>({
   method: {
     type: String,
-    enum: ["cash", "bank_transfer", "qris", "e_wallet", "manual_transfer"],
+    enum: ["cash", "bank_transfer", "qris", "manual_transfer"],
     required: true,
     default: "cash",
   },

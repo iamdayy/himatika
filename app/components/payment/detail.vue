@@ -278,17 +278,6 @@ const paymentInstructions = computed(() => {
         ];
     }
 
-    if (payment.value.method === 'e_wallet') {
-        return [
-            {
-                label: `Pay with ${payment.value.bank || 'E-Wallet'}`,
-                icon: "i-lucide-wallet",
-                defaultOpen: true,
-                content: `Please follow the instructions in your ${payment.value.bank} application.`
-            }
-        ]
-    }
-
     return [];
 });
 

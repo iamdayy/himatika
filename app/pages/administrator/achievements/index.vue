@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ModalsAchievementAdd } from '#components';
+import { ModalsAchievementAdd, ModalsAchievementApprove } from '#components';
 import type { SelectItem } from '@nuxt/ui';
 
 
@@ -9,6 +9,7 @@ const toast = useToast();
 const overlay = useOverlay();
 
 const addAchievementModal = overlay.create(ModalsAchievementAdd);
+const ApproveModal = overlay.create(ModalsAchievementApprove);
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
@@ -36,32 +37,14 @@ const { data: requests, refresh, pending } = useLazyAsyncData('pending-achieveme
     }
 );
 
-// State Form Approval
-const approvalForm = reactive({
-    id: '',
-    amount: 10,
-    isOpen: false,
-
-    // Opsi Berita
-    createNews: true, // Default ON
-    newsTitle: '',
-    newsBody: ''
-});
-
-// Helper untuk membuka modal dan PRE-FILL data berita
+// Helper untuk membuka modal
 const openApprove = (req: any) => {
-    approvalForm.id = req._id;
-    approvalForm.amount = 10;
-    approvalForm.isOpen = true;
-    approvalForm.createNews = true;
-
-    // Auto-generate Draft (Bisa diedit admin)
-    const memberName = req.member?.fullName || 'Anggota';
-    approvalForm.newsTitle = `Membanggakan! ${memberName} Meraih ${req.reason}`;
-    approvalForm.newsBody = `<p>Kabar gembira datang dari salah satu anggota kita, <strong>${memberName}</strong>.</p>
-<p>Berdasarkan laporan prestasi yang masuk, beliau berhasil meraih pencapaian sebagai <strong>${req.reason}</strong>.</p>
-<p><em>"${req.description || ''}"</em></p>
-<p>Semoga prestasi ini dapat memotivasi anggota lain!</p>`;
+    ApproveModal.open({
+        req: req,
+        onSuccess: () => {
+            refresh();
+        }
+    });
 };
 
 const openAddAchievementModal = () => {
@@ -74,23 +57,18 @@ const openAddAchievementModal = () => {
 };
 
 
-const decide = async (action: 'approve' | 'reject') => {
+const rejectAchievement = async (id: string) => {
     try {
         await $api('/api/admin/achievement/decide', {
             method: 'POST',
             body: {
-                id: approvalForm.id,
-                action,
-                amount: action === 'approve' ? approvalForm.amount : 0,
-
-                // Kirim data berita kustom jika diapprove
-                createNews: action === 'approve' ? approvalForm.createNews : false,
-                newsTitle: approvalForm.newsTitle,
-                newsBody: approvalForm.newsBody
+                id: id,
+                action: 'reject',
+                amount: 0,
+                createNews: false,
             }
         });
         toast.add({ title: 'Status berhasil diperbarui', color: 'success' });
-        approvalForm.isOpen = false;
         refresh();
     } catch (e: any) {
         toast.add({ title: 'Gagal', description: e.message, color: 'error' });
@@ -172,58 +150,10 @@ const links = computed(() => [{
                             <UButton color="success" icon="i-heroicons-check" block @click="openApprove(req)">Proses
                             </UButton>
                             <UButton color="error" variant="soft" icon="i-heroicons-x-mark" block
-                                @click="approvalForm.id = req._id; decide('reject')">Tolak</UButton>
+                                @click="rejectAchievement(req._id)">Tolak</UButton>
                         </div>
                     </div>
                 </UCard>
-
-                <UModal v-model:open="approvalForm.isOpen">
-                    <template #header>
-                        <h3 class="font-bold text-lg">Persetujuan Prestasi</h3>
-                    </template>
-                    <template #body>
-                        <div class="space-y-5 max-h-[70vh] overflow-y-auto px-1">
-                            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                                <UFormField label="Berikan Poin Reward"
-                                    help="Nilai poin yang akan masuk ke akumulasi member">
-                                    <UInput type="number" v-model="approvalForm.amount" size="lg">
-                                        <template #leading><span
-                                                class="text-xs font-bold text-gray-500">PTS</span></template>
-                                    </UInput>
-                                </UFormField>
-                            </div>
-
-                            <USeparator />
-
-                            <div class="flex items-center justify-between">
-                                <div class="text-sm">
-                                    <p class="font-semibold">Terbitkan Berita Otomatis?</p>
-                                    <p class="text-gray-500 text-xs">Jadikan ini konten di halaman Berita</p>
-                                </div>
-                                <USwitch v-model="approvalForm.createNews" />
-                            </div>
-
-                            <div v-if="approvalForm.createNews" class="space-y-4 border-l-2 border-primary pl-4 ml-1">
-                                <UFormField label="Judul Berita">
-                                    <UInput v-model="approvalForm.newsTitle" />
-                                </UFormField>
-
-                                <UFormField label="Isi Berita (HTML)">
-                                    <CoreTiptap v-model="approvalForm.newsBody" />
-                                </UFormField>
-                            </div>
-                        </div>
-                    </template>
-
-                    <template #footer>
-                        <div class="flex justify-between gap-2 w-full items-center">
-                            <UButton variant="ghost" @click="approvalForm.isOpen = false">Batal</UButton>
-                            <UButton @click="decide('approve')" :loading="pending">
-                                {{ approvalForm.createNews ? 'Simpan Poin & Terbitkan Berita' : 'Simpan Poin Saja' }}
-                            </UButton>
-                        </div>
-                    </template>
-                </UModal>
             </div>
             <template #footer>
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">

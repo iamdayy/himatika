@@ -14,6 +14,7 @@ import type {
   IOrganizer,
   IParticipant,
   IPayment,
+  IPaymentVerification,
   IPhoto,
   IPhotoGrouped,
   IProject,
@@ -95,6 +96,14 @@ export interface IPaymentResponse extends IResponse {
     payment: IPayment;
   };
 }
+
+export interface IPaymentVerificationResponse extends IResponse {
+  data?: {
+    verifyingList: IPaymentVerification[];
+    length: number;
+  }
+}
+
 export interface IAgendaMeResponse extends IResponse {
   /** An array of agendas matching the query. */
   data?: {

@@ -98,6 +98,8 @@ export default defineEventHandler(async (event) => {
       paymentInstruction = `Mohon lakukan transfer melalui Virtual Account ${bank?.toUpperCase()} ke nomor **${va_number}**.`;
     } else if (method === "qris") {
       paymentInstruction = `Silakan pindai (scan) kode QRIS di bawah ini atau melalui portal Anda menggunakan aplikasi pembayaran elektronik pilihan Anda.`;
+    } else if (method === "manual_transfer") {
+      paymentInstruction = `Mohon lakukan transfer secara manual ke rekening tujuan panitia berikut: **${va_number}**. Setelah melakukan transfer, harap **unggah bukti pembayaran** melalui portal untuk dapat kami verifikasi.`;
     }
 
     const newMail = new Email({

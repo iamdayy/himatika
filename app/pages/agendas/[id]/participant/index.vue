@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ModalsParticipantUpdateEmail } from '#components';
 import { useQRCode } from '@vueuse/integrations/useQRCode';
 import type { ICategory, IGuest, IMember } from '~~/types';
 import { type IAgendaResponse, type IParticipantResponse } from '~~/types/IResponse';
@@ -10,6 +11,8 @@ const agendaId = route.params.id as string;
 const participantIdFromCookie = useCookie(`agenda-participant-${agendaId}`, { maxAge: 60 * 60 * 24 * 30 });
 const participantIdQuery = route.query.participantId as string || participantIdFromCookie.value;
 const { makeTicket } = useMakeDocs();
+const overlay = useOverlay();
+const UpdateEmailModal = overlay.create(ModalsParticipantUpdateEmail);
 
 // 1. Fetch Agenda Data & Registration Status
 const { data: agenda, pending, error } = useLazyAsyncData(`agenda-${agendaId}`, () => $api<IAgendaResponse>(`/api/agenda/${agendaId}`), {
@@ -19,7 +22,7 @@ const { data: agenda, pending, error } = useLazyAsyncData(`agenda-${agendaId}`, 
     },
     default: () => null,
 });
-const { data: me, pending: mePending, error: meError } = useLazyAsyncData(`registration-${agendaId}`, () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
+const { data: me, pending: mePending, error: meError, refresh } = useLazyAsyncData(`registration-${agendaId}`, () => $api<IParticipantResponse>(`/api/agenda/${agendaId}/participant/me`, {
     query: { participantId: participantIdQuery }
 }), {
     transform: (data) => {
@@ -57,17 +60,30 @@ const handleProofUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    
+
     isUploadingProof.value = true;
+
+    if (!file) {
+        toast.add({ title: 'Gagal', description: 'File tidak ditemukan', color: 'error' });
+        isUploadingProof.value = false;
+        return;
+    }
+
+    if (file.size > 1024 * 1024 * 5) {
+        toast.add({ title: 'Gagal', description: 'File terlalu besar', color: 'error' });
+        isUploadingProof.value = false;
+        return;
+    }
+
     try {
         const formData = new FormData();
         formData.append('proof', file);
-        
+
         const res = await $api<any>(`/api/agenda/${agendaId}/payment/${me.value?._id}/proof`, {
             method: 'POST',
             body: formData,
         });
-        
+
         if (res.statusCode === 200) {
             toast.add({ title: 'Sukses', description: 'Bukti pembayaran berhasil diunggah', color: 'success' });
             refresh();
@@ -177,37 +193,18 @@ const downloadTicket = async () => {
     }
 };
 
-const showEmailModal = ref(false);
-const newEmail = ref('');
-const isUpdatingEmail = ref(false);
-
-const updateEmail = async () => {
-    if (!newEmail.value) {
-        toast.add({ title: 'Gagal', description: 'Email tidak boleh kosong', color: 'error' });
-        return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newEmail.value)) {
-        toast.add({ title: 'Gagal', description: 'Format email tidak valid', color: 'error' });
-        return;
-    }
-    
-    isUpdatingEmail.value = true;
-    try {
-        const res = await $api(`/api/agenda/${agendaId}/participant/register/${me.value?._id}/email`, {
-            method: 'PUT',
-            body: { email: newEmail.value }
-        });
-        toast.add({ title: 'Berhasil', description: 'Email berhasil diperbarui', color: 'success' });
-        showEmailModal.value = false;
-        if (me.value && me.value.guest) {
-            (me.value.guest as IGuest).email = newEmail.value;
+const openUpdateEmailModal = () => {
+    if (!me.value) return;
+    UpdateEmailModal.open({
+        initialEmail: (me.value.guest as IGuest)?.email || '',
+        agendaId: agendaId,
+        participantId: me.value._id as string,
+        onSuccess: (newEmail: string) => {
+            if (me.value && me.value.guest) {
+                (me.value.guest as IGuest).email = newEmail;
+            }
         }
-    } catch (e: any) {
-        toast.add({ title: 'Gagal', description: e.data?.statusMessage || e.message || 'Gagal mengubah email', color: 'error' });
-    } finally {
-        isUpdatingEmail.value = false;
-    }
+    });
 };
 
 const links = computed(() => [{
@@ -273,14 +270,16 @@ definePageMeta({
 
                 <!-- Warning Alerts -->
                 <div v-if="!isPaid" class="mb-6 relative z-10">
-                    <div v-if="me?.payment?.method === 'manual_transfer'" class="bg-primary-500 rounded-xl p-4 md:p-6 text-white shadow-lg space-y-4">
+                    <div v-if="me?.payment?.method === 'manual_transfer'"
+                        class="bg-primary-500 rounded-xl p-4 md:p-6 text-white shadow-lg space-y-4">
                         <div v-if="me?.payment?.status === 'verifying'" class="flex items-center gap-3">
                             <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
                                 <Icon name="i-heroicons-clock" class="w-6 h-6 animate-pulse" />
                             </div>
                             <div class="flex-1">
                                 <h3 class="font-bold">Sedang Diverifikasi</h3>
-                                <p class="text-sm opacity-90 mt-1">Panitia sedang mengecek bukti pembayaran Anda. Harap tunggu beberapa saat.</p>
+                                <p class="text-sm opacity-90 mt-1">Panitia sedang mengecek bukti pembayaran Anda. Harap
+                                    tunggu beberapa saat.</p>
                             </div>
                         </div>
                         <div v-else class="space-y-4">
@@ -290,20 +289,32 @@ definePageMeta({
                                 </div>
                                 <div class="flex-1">
                                     <h3 class="font-bold text-lg mb-1">Transfer Manual</h3>
-                                    <p class="text-sm opacity-90">Selesaikan pembayaran sebesar <span class="font-bold text-lg">Rp {{ agenda?.configuration?.participant?.amount?.toLocaleString() }}</span></p>
-                                    
-                                    <div v-if="manualPaymentTarget" class="mt-4 bg-black/10 p-4 rounded-xl backdrop-blur-sm border border-white/20">
+                                    <p class="text-sm opacity-90">Selesaikan pembayaran sebesar <span
+                                            class="font-bold text-lg">Rp {{
+                                                agenda?.configuration?.participant?.amount?.toLocaleString() }}</span></p>
+
+                                    <div v-if="manualPaymentTarget"
+                                        class="mt-4 bg-black/10 p-4 rounded-xl backdrop-blur-sm border border-white/20">
                                         <p class="text-xs opacity-75 mb-1 uppercase tracking-wider">Tujuan Transfer:</p>
-                                        <p class="font-bold text-lg">{{ manualPaymentTarget.name }} - {{ manualPaymentTarget.account }}</p>
+                                        <p class="font-bold text-lg">{{ manualPaymentTarget.name }} - {{
+                                            manualPaymentTarget.account }}</p>
                                         <p class="text-sm">A.N. {{ manualPaymentTarget.owner }}</p>
-                                        <p v-if="manualPaymentTarget.instructions" class="text-xs mt-2 italic flex items-center gap-1"><Icon name="i-heroicons-information-circle" class="w-4 h-4" /> {{ manualPaymentTarget.instructions }}</p>
+                                        <p v-if="manualPaymentTarget.instructions"
+                                            class="text-xs mt-2 italic flex items-center gap-1">
+                                            <Icon name="i-heroicons-information-circle" class="w-4 h-4" /> {{
+                                                manualPaymentTarget.instructions }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                             <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                                <input type="file" ref="fileInputRef" class="hidden" accept="image/*" @change="handleProofUpload" />
-                                <UButton color="white" variant="solid" block :loading="isUploadingProof" @click="() => fileInputRef?.click()">
-                                    <template #leading><Icon name="i-heroicons-arrow-up-tray" class="w-4 h-4" /></template>
+                                <input type="file" ref="fileInputRef" class="hidden" accept="image/*"
+                                    @change="handleProofUpload" />
+                                <UButton color="neutral" variant="solid" block :loading="isUploadingProof"
+                                    @click="() => fileInputRef?.click()">
+                                    <template #leading>
+                                        <Icon name="i-heroicons-arrow-up-tray" class="w-4 h-4" />
+                                    </template>
                                     Upload Bukti Transfer
                                 </UButton>
                             </div>
@@ -352,7 +363,8 @@ definePageMeta({
                 <!-- Ticket Card -->
                 <div v-else class="relative group perspective-1000">
                     <!-- Clean design with glassmorphism and subtle glow -->
-                    <div class="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-2xl rounded-4xl shadow-2xl overflow-hidden ring-1 ring-gray-200/50 dark:ring-gray-700/50 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,141,211,0.3)] transition-all duration-700 ease-out">
+                    <div
+                        class="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-2xl rounded-4xl shadow-2xl overflow-hidden ring-1 ring-gray-200/50 dark:ring-gray-700/50 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,141,211,0.3)] transition-all duration-700 ease-out">
 
                         <!-- Top Section: Visual & Header -->
                         <div class="h-64 relative bg-gray-900">
@@ -365,11 +377,15 @@ definePageMeta({
 
                             <!-- Logos Overlay (Top Right) -->
                             <div class="absolute top-4 right-4 flex gap-2 z-10">
-                                <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full ring-1 ring-white/30 shadow-lg shadow-black/20">
-                                    <NuxtImg provider="localProvider" src="/img/itsnu-logo.png" alt="ITSNU Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-md" />
+                                <div
+                                    class="bg-white/20 backdrop-blur-md p-1.5 rounded-full ring-1 ring-white/30 shadow-lg shadow-black/20">
+                                    <NuxtImg provider="localProvider" src="/img/itsnu-logo.png" alt="ITSNU Logo"
+                                        class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-md" />
                                 </div>
-                                <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full ring-1 ring-white/30 shadow-lg shadow-black/20">
-                                    <NuxtImg provider="localProvider" src="/img/logo.png" alt="HIMATIKA Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-md" />
+                                <div
+                                    class="bg-white/20 backdrop-blur-md p-1.5 rounded-full ring-1 ring-white/30 shadow-lg shadow-black/20">
+                                    <NuxtImg provider="localProvider" src="/img/logo.png" alt="HIMATIKA Logo"
+                                        class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-md" />
                                 </div>
                             </div>
 
@@ -398,7 +414,8 @@ definePageMeta({
                         </div>
 
                         <!-- Middle Section: Ticket Details (Rip Effect) -->
-                        <div class="relative bg-white/60 dark:bg-gray-900/40 border-t border-gray-100/50 dark:border-gray-800/50 backdrop-blur-xl">
+                        <div
+                            class="relative bg-white/60 dark:bg-gray-900/40 border-t border-gray-100/50 dark:border-gray-800/50 backdrop-blur-xl">
                             <!-- Rip Circles -->
                             <div
                                 class="absolute -top-4 -left-4 w-8 h-8 bg-gray-50 dark:bg-gray-900 rounded-full z-20 shadow-[inset_-3px_-3px_5px_rgba(0,0,0,0.1)] dark:shadow-[inset_-3px_-3px_5px_rgba(255,255,255,0.05)]">
@@ -453,8 +470,10 @@ definePageMeta({
                                 <!-- QR Code Section -->
                                 <div
                                     class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/80 dark:to-gray-900/80 rounded-3xl p-6 ring-1 ring-gray-200/50 dark:ring-gray-700/50 shadow-inner flex flex-col items-center justify-center relative group-hover:ring-primary-500/50 group-hover:shadow-[0_0_30px_rgba(0,141,211,0.15)] transition-all duration-500">
-                                    <div class="bg-white p-3 rounded-2xl shadow-[0_8px_24px_-8px_rgba(0,0,0,0.15)] mb-4 transition-transform duration-500 group-hover:scale-105">
-                                        <img :src="qrCode" class="w-40 h-40 object-contain mix-blend-multiply" alt="QR Code" />
+                                    <div
+                                        class="bg-white p-3 rounded-2xl shadow-[0_8px_24px_-8px_rgba(0,0,0,0.15)] mb-4 transition-transform duration-500 group-hover:scale-105">
+                                        <img :src="qrCode" class="w-40 h-40 object-contain mix-blend-multiply"
+                                            alt="QR Code" />
                                     </div>
                                     <div class="text-center">
                                         <p class="text-[10px] uppercase tracking-[0.2em] text-gray-400 mb-1">Scan saat
@@ -477,10 +496,15 @@ definePageMeta({
                         </div>
 
                         <!-- Sponsor Section Web Ticket -->
-                        <div v-if="agenda.configuration?.sponsors?.length" class="bg-gray-50/50 dark:bg-gray-800/30 border-t border-gray-100/50 dark:border-gray-800/50 px-6 py-4 flex items-center gap-4 justify-center flex-wrap">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Supported By:</span>
+                        <div v-if="agenda.configuration?.sponsors?.length"
+                            class="bg-gray-50/50 dark:bg-gray-800/30 border-t border-gray-100/50 dark:border-gray-800/50 px-6 py-4 flex items-center gap-4 justify-center flex-wrap">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Supported
+                                By:</span>
                             <div class="flex items-center gap-4">
-                                <NuxtImg provider="localProvider" v-for="(sponsor, idx) in agenda.configuration.sponsors" :key="idx" :src="(sponsor.logo as string)" :alt="sponsor.name" class="h-6 w-auto object-contain grayscale opacity-60" />
+                                <NuxtImg provider="localProvider"
+                                    v-for="(sponsor, idx) in agenda.configuration.sponsors" :key="idx"
+                                    :src="(sponsor.logo as string)" :alt="sponsor.name"
+                                    class="h-6 w-auto object-contain grayscale opacity-60" />
                             </div>
                         </div>
 
@@ -488,8 +512,9 @@ definePageMeta({
                         <div
                             class="bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-4 flex flex-col gap-3 border-t border-gray-100/50 dark:border-gray-800/50">
                             <div class="flex gap-3">
-                                <UButton @click="downloadTicket" :loading="isGeneratingPdf" color="neutral" variant="solid"
-                                    class="flex-1 justify-center font-bold" icon="i-heroicons-arrow-down-tray">
+                                <UButton @click="downloadTicket" :loading="isGeneratingPdf" color="neutral"
+                                    variant="solid" class="flex-1 justify-center font-bold"
+                                    icon="i-heroicons-arrow-down-tray">
                                     Unduh Tiket (PDF)
                                 </UButton>
                                 <UButton to="/agendas" color="neutral" variant="solid" class="justify-center"
@@ -499,7 +524,8 @@ definePageMeta({
                             </div>
                             <div v-if="me?.guest" class="text-center mt-2">
                                 <p class="text-xs text-gray-500">
-                                    Tidak menerima email tiket? <button @click="newEmail = (me?.guest as IGuest)?.email || ''; showEmailModal = true" class="text-primary-500 hover:underline">Ubah Email Anda</button>
+                                    Tidak menerima email tiket? <button @click="openUpdateEmailModal"
+                                        class="text-primary-500 hover:underline">Ubah Email Anda</button>
                                 </p>
                             </div>
                         </div>
@@ -511,34 +537,5 @@ definePageMeta({
                 </div>
             </div>
         </UCard>
-        
-        <!-- Ubah Email Modal -->
-        <UModal v-model="showEmailModal">
-            <template #body>
-                <div
-                    class="mx-auto w-16 h-16 bg-primary-100 dark:bg-primary-900/30 text-primary-500 rounded-full flex items-center justify-center mb-4">
-                    <UIcon name="i-heroicons-envelope" class="w-10 h-10" />
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">Ubah Email</h3>
-                    <p class="text-gray-500 dark:text-gray-400 text-center mb-4 text-sm">
-                        Masukkan email baru yang aktif untuk menerima e-ticket.
-                    </p>
-                    <UInput v-model="newEmail" type="email" placeholder="Email Baru" size="lg" icon="i-heroicons-envelope" />
-                </div>
-            </template>
-            <template #footer>
-                <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <UButton color="neutral" variant="soft" @click="showEmailModal = false"
-                        class="justify-center flex-1">
-                        Batal
-                    </UButton>
-                    <UButton color="primary" @click="updateEmail" :loading="isUpdatingEmail"
-                        class="justify-center flex-1">
-                        Simpan Email
-                    </UButton>
-                </div>
-            </template>
-        </UModal>
     </div>
 </template>

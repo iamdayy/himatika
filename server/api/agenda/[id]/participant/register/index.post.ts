@@ -127,6 +127,24 @@ export default defineEventHandler(
           });
         }
         newParticipantData.member = user.member._id;
+
+        // Auto update empty member fields
+        const { memberUpdate } = await readBody(ev);
+        if (memberUpdate) {
+            const { MemberModel } = await import("~~/server/models/MemberModel");
+            const memberToUpdate = await MemberModel.findById(user.member._id);
+            if (memberToUpdate) {
+                let updated = false;
+                const updatableFields = ['phone', 'class', 'semester', 'prodi', 'instance'];
+                for (const field of updatableFields) {
+                    if (!memberToUpdate[field as keyof typeof memberToUpdate] && memberUpdate[field]) {
+                        (memberToUpdate as any)[field] = memberUpdate[field];
+                        updated = true;
+                    }
+                }
+                if (updated) await memberToUpdate.save();
+            }
+        }
       } else if (user && user.guest) {
         const g = user.guest;
         name = g.fullName;
