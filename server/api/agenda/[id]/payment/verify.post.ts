@@ -1,6 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
-import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
           participantId: body.registeredId,
           name: customerName,
           email: customerEmail,
-          amount: registration.payment.amount,
+          amount: registration.payment?.amount,
         },
       }).catch((e) => console.error("Failed to publish manual payment-success", e));
     }

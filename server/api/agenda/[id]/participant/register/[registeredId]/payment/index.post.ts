@@ -1,6 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { createCharge } from "~~/server/utils/midtrans";
-import { IMember } from "~~/types";
 import { IPaymentBody } from "~~/types/IRequestPost";
 import { IError, IPaymentResponse } from "~~/types/IResponse";
 // --- KONFIGURASI BIAYA ADMIN (Sesuaikan dengan Dashboard Midtrans) ---

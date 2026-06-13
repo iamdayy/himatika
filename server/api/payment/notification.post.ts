@@ -123,7 +123,7 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
                     const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
                     if (otherParticipationsCount === 0) {
                         const { GuestModel } = await import("~~/server/models/GuestModel");
-                        await GuestModel.deleteOne({ _id: participant.guest });
+                        await GuestModel.deleteOne({ _id: participant.guest as any });
                     }
                 } else {
                     // Atomic Update for Registered User
