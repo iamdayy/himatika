@@ -1,7 +1,8 @@
 import { ConfigModel } from "~~/server/models/ConfigModel";
 import { DocModel } from "~~/server/models/DocModel";
+import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
-import { IDoc, IPoint } from "~~/types";
+import { IAgenda, IDoc, IPoint } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   const { user } = event.context;
@@ -104,7 +105,103 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // 4. Call Worker
+  // 4. Fetch detailed activities for the lampiran (page 2)
+  const fullMember = await MemberModel.findById(user.member._id)
+    .populate({
+      path: "committeesData",
+      match: { approved: true },
+      populate: {
+        path: "agendaId",
+        select: "title date at configuration",
+      },
+    })
+    .populate({
+      path: "participantsData",
+      populate: {
+        path: "agendaId",
+        select: "title date at configuration",
+      },
+    })
+    .populate({
+      path: "projects",
+      match: { published: true },
+      select: "title date description",
+    })
+    .populate({
+      path: "aspirations",
+      match: { deleted: { $ne: true }, archived: { $ne: true } },
+      select: "subject createdAt",
+    });
+
+  // Filter activities by point date range
+  const committees = (fullMember?.committeesData || [])
+    .filter((c: any) => {
+      const agenda = c.agendaId as IAgenda | null;
+      if (!agenda?.date) return false;
+      const start = new Date(agenda.date.start);
+      const end = new Date(agenda.date.end);
+      return start >= pointStartDate && end <= pointEndDate;
+    })
+    .map((c: any) => ({
+      title: (c.agendaId as any)?.title || "-",
+      date: (c.agendaId as any)?.date?.start || null,
+      role: "Panitia",
+      job: c.job || "-",
+      point: (c.agendaId as any)?.configuration?.committee?.point || 0,
+    }));
+
+  const participants = (fullMember?.participantsData || [])
+    .filter((p: any) => {
+      const agenda = p.agendaId as IAgenda | null;
+      if (!agenda?.date) return false;
+      const start = new Date(agenda.date.start);
+      const end = new Date(agenda.date.end);
+      return start >= pointStartDate && end <= pointEndDate;
+    })
+    .map((p: any) => ({
+      title: (p.agendaId as any)?.title || "-",
+      date: (p.agendaId as any)?.date?.start || null,
+      role: "Peserta",
+      job: "-",
+      point: (p.agendaId as any)?.configuration?.participant?.point || 0,
+    }));
+
+  const projects = (fullMember?.projects || [])
+    .filter((project: any) => {
+      if (!project.date) return false;
+      const projectDate = new Date(project.date);
+      return projectDate >= pointStartDate && projectDate <= pointEndDate;
+    })
+    .map((project: any) => ({
+      title: project.title || "-",
+      date: project.date || null,
+      role: "Kontributor",
+      job: "-",
+      point: 75,
+    }));
+
+  const aspirations = (fullMember?.aspirations || [])
+    .filter((asp: any) => {
+      if (!asp.createdAt) return false;
+      const aspDate = new Date(asp.createdAt);
+      return aspDate >= pointStartDate && aspDate <= pointEndDate;
+    })
+    .map((asp: any) => ({
+      title: asp.subject || "-",
+      date: asp.createdAt || null,
+      role: "Aspirasi",
+      job: "-",
+      point: 50,
+    }));
+
+  const activitiesDetails = {
+    committees,
+    participants,
+    projects,
+    aspirations,
+  };
+
+  // 5. Call Worker
   try {
     const result = await himatikaPdfWorker.generateActivinessLetter({
       member: user.member,
@@ -119,6 +216,7 @@ export default defineEventHandler(async (event) => {
         phone: configData.contact?.phone || "-",
         email: configData.contact?.email || "-",
       },
+      activitiesDetails,
     });
 
     // 5. Construct IDoc object

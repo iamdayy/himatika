@@ -32,7 +32,13 @@ export const himatikaPdfWorker = {
       address: string;
       phone: string;
       email: string;
-    }
+    };
+    activitiesDetails?: {
+      committees: { title: string; date: string | null; role: string; job: string; point: number }[];
+      participants: { title: string; date: string | null; role: string; job: string; point: number }[];
+      projects: { title: string; date: string | null; role: string; job: string; point: number }[];
+      aspirations: { title: string; date: string | null; role: string; job: string; point: number }[];
+    };
   }) {
     const config = useRuntimeConfig();
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
