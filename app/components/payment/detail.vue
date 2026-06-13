@@ -2,7 +2,7 @@
     <UCard v-if="payment.status === 'pending'"
         :ui="{ root: 'ring-1 ring-gray-200 dark:ring-gray-800 shadow-xl rounded-3xl', body: 'p-0 sm:p-0', header: 'p-0 sm:p-0' }">
         <template #header>
-            <div class="bg-gradient-to-br from-primary-600 to-indigo-700 p-6 text-white relative overflow-hidden">
+            <div class="bg-gradient-to-br from-primary-600 to-indigo-700 p-5 md:p-6 text-white relative overflow-hidden">
                 <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                 <h1 class="text-2xl font-black tracking-tight mb-1">Payment Details</h1>
                 <p class="text-primary-100 text-sm">
@@ -31,7 +31,7 @@
             </div>
         </template>
         <div class="w-full mx-auto">
-            <div class="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+            <div class="p-5 md:p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
                 <div class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-1">Total
                     Payment
                 </div>
@@ -53,7 +53,7 @@
                     <div class="relative group">
                         <div class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 group-hover:border-primary-400 transition-colors cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
                             @click="copyVaNumber">
-                            <div class="font-mono text-2xl font-black tracking-widest text-gray-900 dark:text-white">{{
+                            <div class="font-mono text-xl sm:text-2xl font-black tracking-widest text-gray-900 dark:text-white break-all pr-2">{{
                                 payment.va_number }}</div>
                             <UButton color="primary" variant="ghost" icon="i-heroicons-clipboard-document" size="md"
                                 class="group-hover:scale-110 transition-transform" />
@@ -73,7 +73,7 @@
                         class="relative p-1 rounded-3xl bg-gradient-to-br from-primary-400 via-indigo-500 to-purple-500 shadow-xl shadow-primary-500/20 group">
                         <div class="bg-white p-4 rounded-[22px]">
                             <img :src="payment.qris_png"
-                                class="w-64 h-64 object-contain group-hover:scale-105 transition-transform duration-500"
+                                class="w-48 h-48 sm:w-64 sm:h-64 object-contain group-hover:scale-105 transition-transform duration-500"
                                 alt="QRIS" />
                         </div>
                     </div>
@@ -108,7 +108,7 @@
                 </div>
             </div>
 
-            <div class="p-6" v-if="payment.method !== 'cash'">
+            <div class="p-5 md:p-6" v-if="payment.method !== 'cash'">
                 <h3 class="mb-4 font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <UIcon name="i-heroicons-book-open" class="w-5 h-5 text-primary-500" />
                     Cara Pembayaran
@@ -139,7 +139,7 @@
     <UCard v-else-if="payment.status === 'success'"
         :ui="{ root: 'ring-1 ring-green-200 dark:ring-green-900 shadow-2xl shadow-green-500/10 rounded-3xl', body: 'p-0 sm:p-0', header: 'p-0 sm:p-0' }">
         <template #header>
-            <div class="p-6 text-white bg-gradient-to-r from-green-500 to-emerald-600 relative overflow-hidden">
+            <div class="p-5 md:p-6 text-white bg-gradient-to-r from-green-500 to-emerald-600 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-3xl"></div>
                 <h1 class="text-2xl font-black tracking-tight mb-1 relative z-10">Payment Success</h1>
                 <p class="text-green-100 text-sm relative z-10">
@@ -148,7 +148,7 @@
             </div>
         </template>
         <div class="w-full mx-auto bg-white dark:bg-gray-900">
-            <div class="p-8 text-center border-b border-gray-100 dark:border-gray-800 relative">
+            <div class="p-6 md:p-8 text-center border-b border-gray-100 dark:border-gray-800 relative">
                 <!-- Watermark -->
                 <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
                     <UIcon name="i-heroicons-check-badge-solid" class="w-64 h-64" />
@@ -163,7 +163,7 @@
                     Transaction Successful</div>
             </div>
 
-            <div class="p-8 bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-800">
+            <div class="p-6 md:p-8 bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-800">
                 <div
                     class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-2 text-center">
                     Total Paid</div>
@@ -172,7 +172,7 @@
                     }}</div>
             </div>
 
-            <div class="p-8 space-y-4 relative">
+            <div class="p-6 md:p-8 space-y-4 relative">
                 <!-- Receipt Cutout Top -->
                 <div
                     class="absolute -top-3 left-8 right-8 h-px border-t border-dashed border-gray-300 dark:border-gray-700">
@@ -200,7 +200,7 @@
     </UCard>
 
     <UCard v-else>
-        <div class="p-8 text-center">
+        <div class="p-6 md:p-8 text-center">
             <UIcon name="i-lucide-x-circle" class="w-16 h-16 mx-auto text-red-500 mb-4" />
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Payment {{ payment.status }}</h2>
             <p class="text-gray-500 mt-2">This transaction has been {{ payment.status }}.</p>
@@ -364,7 +364,13 @@ async function cancel() {
 }
 
 function downloadQRCode() {
-
+    if (!payment.value.qris_png) return;
+    const link = document.createElement('a');
+    link.href = payment.value.qris_png;
+    link.download = `QRIS-${payment.value.transaction_id || 'payment'}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Lifecycle

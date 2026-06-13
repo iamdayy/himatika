@@ -283,6 +283,11 @@ const register = async (): Promise<boolean | FormError> => {
                 pCookie.value = (data as any).participantId;
                 router.replace({ query: { ...route.query, participantId: (data as any).participantId, tab: agenda.value?.configuration?.participant?.questions && agenda.value?.configuration?.participant?.questions.length > 0 ? 'answer_question' : 'select_payment' } });
             }
+            toast.add({
+                title: $ts('success'),
+                description: 'Tautan akses tiket dan status pembayaran telah dikirim ke email Anda.',
+                color: 'success',
+            });
             refreshParticipant();
             return true;
         } else {
@@ -534,9 +539,9 @@ watch(participant, (newValue) => {
                     </UAlert>
                     <USeparator class="my-6" />
                     <div class="text-start">
-                        <div class="space-y-6 bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800"
+                        <div class="space-y-6 bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800"
                             v-if="registerAs">
-                            <div :class="['grid gap-4 px-4', responsiveClasses.gridCols]">
+                            <div :class="['grid gap-4 px-2 md:px-4', responsiveClasses.gridCols]">
                                 <UFormField :label="$ts('NIM')" v-if="registerAs !== 'non-student'"
                                     :error="errors.NIM?.message" help="Nomor Induk Mahasiswa Anda">
                                     <UInput v-model="formRegistration.NIM" size="lg" :disabled="user ? true : false"
@@ -599,7 +604,7 @@ watch(participant, (newValue) => {
                             kepesertaan Anda.</p>
                     </div>
                     <div
-                        class="bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800">
+                        class="bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800">
                         <div v-if="pendingQuestions" class="space-y-6">
                             <USkeleton class="h-20 w-full rounded-2xl" v-for="i in 3" :key="i" />
                         </div>
@@ -615,9 +620,9 @@ watch(participant, (newValue) => {
                         <h3 class="text-lg font-semibold mb-4">{{ $ts('select_payment_method') }}</h3>
 
                         <div class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                                 <div v-for="option in paymentMethods" :key="option.value"
-                                    class="relative rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group"
+                                    class="relative rounded-2xl p-4 md:p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group"
                                     :class="formSelectPayment.method === option.value ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-md' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-400'"
                                     @click="formSelectPayment.method = option.value; formSelectPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
                                     <div class="flex flex-col items-center gap-3 text-center">
@@ -644,7 +649,7 @@ watch(participant, (newValue) => {
                             </div>
 
                             <div v-if="formSelectPayment.method !== 'cash'"
-                                class="relative bg-white dark:bg-gray-900 rounded-2xl p-6 mt-8 border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden group hover:border-primary-200 dark:hover:border-primary-900/50 transition-colors">
+                                class="relative bg-white dark:bg-gray-900 rounded-2xl p-4 md:p-6 mt-8 border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden group hover:border-primary-200 dark:hover:border-primary-900/50 transition-colors">
                                 <!-- Receipt Header Accent -->
                                 <div
                                     class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 to-indigo-500">
@@ -700,11 +705,21 @@ watch(participant, (newValue) => {
                     </div>
                     <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">{{ $ts('registration_success') }}
                     </h2>
-                    <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-8 text-sm">{{
+                    <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6 text-sm">{{
                         $ts('registration_success_desc') }}</p>
 
+                    <UAlert color="info" variant="soft" icon="i-heroicons-envelope"
+                        class="max-w-md mx-auto mb-8 text-left ring-1 ring-blue-200 dark:ring-blue-800"
+                        title="Cek Kotak Masuk Email Anda">
+                        <template #description>
+                            Kami telah mengirimkan instruksi dan tautan akses ke email Anda. Gunakan tautan tersebut
+                            untuk melihat e-ticket, mengubah metode pembayaran, dan mendapatkan pemberitahuan lainnya di
+                            kemudian hari.
+                        </template>
+                    </UAlert>
+
                     <div v-if="agenda?.configuration.messageAfterRegister"
-                        class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50 rounded-3xl p-6 ring-1 ring-gray-100 dark:ring-gray-800 shadow-sm text-left max-w-2xl mx-auto backdrop-blur-xl">
+                        class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50 rounded-3xl p-4 md:p-6 ring-1 ring-gray-100 dark:ring-gray-800 shadow-sm text-left max-w-2xl mx-auto backdrop-blur-xl">
                         <div class="flex items-center gap-2 mb-4 text-primary-500">
                             <UIcon name="i-heroicons-information-circle-solid" class="w-5 h-5" />
                             <span class="font-bold text-sm uppercase tracking-wider">Informasi Tambahan</span>
