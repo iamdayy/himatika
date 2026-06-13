@@ -114,7 +114,8 @@ const draftRegistration = useLocalStorage(`draft_registration_${id}`, {
     class: '',
     semester: 0,
     prodi: '',
-    instance: ''
+    instance: '',
+    confirmEmail: ''
 });
 
 const initialFormData = computed(() => {
@@ -128,7 +129,8 @@ const initialFormData = computed(() => {
             class: user.value.member.class || '',
             semester: user.value.member.semester || 0,
             prodi: '',
-            instance: ''
+            instance: '',
+            confirmEmail: user.value.member.email || ''
         };
     } else if (user.value?.guest) {
         return {
@@ -140,7 +142,8 @@ const initialFormData = computed(() => {
             class: user.value.guest.class || '',
             semester: user.value.guest.semester || 0,
             prodi: user.value.guest.prodi || '',
-            instance: user.value.guest.instance || ''
+            instance: user.value.guest.instance || '',
+            confirmEmail: user.value.guest.email || ''
         };
     }
     return draftRegistration.value;
@@ -156,6 +159,7 @@ const formRegistration = reactive({
     semester: initialFormData.value.semester || 0,
     prodi: initialFormData.value.prodi || '',
     instance: initialFormData.value.instance || '',
+    confirmEmail: initialFormData.value.confirmEmail || '',
 });
 
 watch(formRegistration, (newVal) => {
@@ -180,6 +184,7 @@ watch(participantData, (p) => {
         formRegistration.semester = (p.member as IMember)?.semester || (p.guest as IGuest | undefined)?.semester || 0;
         formRegistration.prodi = (p.guest as IGuest | undefined)?.prodi || '';
         formRegistration.instance = (p.guest as IGuest | undefined)?.instance || '';
+        formRegistration.confirmEmail = (p.member as IMember)?.email || (p.guest as IGuest | undefined)?.email || '';
     }
 }, { immediate: true });
 
@@ -383,6 +388,12 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return value && emailRegex.test(value) ? null : { message: $ts('valid_email'), path: 'email' };
         },
+        confirmEmail: (value: string) => {
+            if (user.value) return null;
+            if (!value) return { message: 'Konfirmasi email wajib diisi', path: 'confirmEmail' };
+            if (value !== formRegistration.email) return { message: 'Email tidak cocok', path: 'confirmEmail' };
+            return null;
+        },
         phone: (value: string) => {
             const phoneRegex = /^\d{10,15}$/;
             return value && phoneRegex.test(value.replace(/\D/g, '')) ? null : { message: $ts('valid_phone'), path: 'phone' };
@@ -427,7 +438,7 @@ const validationRuleConfirmation: FieldValidationRules = reactiveComputed(() => 
 }));
 const onCompleted = async () => {
     draftRegistration.value = {
-        registerAs: '', fullName: '', email: '', phone: '', NIM: 0, class: '', semester: 0, prodi: '', instance: ''
+        registerAs: '', fullName: '', email: '', confirmEmail: '', phone: '', NIM: 0, class: '', semester: 0, prodi: '', instance: ''
     }; // clear draft
     router.push(`/agendas/${id}/participant?participantId=${registrationId.value}`);
 }
@@ -555,6 +566,11 @@ watch(participant, (newValue) => {
                                 <UFormField :label="$ts('email')" :error="errors.email?.message"
                                     help="Email aktif untuk pengiriman E-Ticket">
                                     <UInput v-model="formRegistration.email" size="lg" :disabled="user ? true : false"
+                                        class="focus:ring-2 focus:ring-primary-500" />
+                                </UFormField>
+                                <UFormField v-if="!user" label="Konfirmasi Email" :error="errors.confirmEmail?.message"
+                                    help="Ulangi pengetikan email Anda">
+                                    <UInput v-model="formRegistration.confirmEmail" size="lg"
                                         class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
                                 <UFormField :label="$ts('phone')" :error="errors.phone?.message"

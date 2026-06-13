@@ -4,6 +4,7 @@ import type { ICategory, IGuest, IMember } from '~~/types';
 import { type IAgendaResponse, type IParticipantResponse } from '~~/types/IResponse';
 
 const route = useRoute();
+const toast = useToast();
 const { $api, $ts } = useNuxtApp();
 const agendaId = route.params.id as string;
 const participantIdFromCookie = useCookie(`agenda-participant-${agendaId}`, { maxAge: 60 * 60 * 24 * 30 });
@@ -141,6 +142,40 @@ const downloadTicket = async () => {
         isGeneratingPdf.value = false;
     }
 };
+
+const showEmailModal = ref(false);
+const newEmail = ref('');
+const isUpdatingEmail = ref(false);
+
+const updateEmail = async () => {
+    if (!newEmail.value) {
+        toast.add({ title: 'Gagal', description: 'Email tidak boleh kosong', color: 'error' });
+        return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail.value)) {
+        toast.add({ title: 'Gagal', description: 'Format email tidak valid', color: 'error' });
+        return;
+    }
+    
+    isUpdatingEmail.value = true;
+    try {
+        const res = await $api(`/api/agenda/${agendaId}/participant/register/${me.value?._id}/email`, {
+            method: 'PUT',
+            body: { email: newEmail.value }
+        });
+        toast.add({ title: 'Berhasil', description: 'Email berhasil diperbarui', color: 'success' });
+        showEmailModal.value = false;
+        if (me.value && me.value.guest) {
+            (me.value.guest as IGuest).email = newEmail.value;
+        }
+    } catch (e: any) {
+        toast.add({ title: 'Gagal', description: e.data?.statusMessage || e.message || 'Gagal mengubah email', color: 'error' });
+    } finally {
+        isUpdatingEmail.value = false;
+    }
+};
+
 const links = computed(() => [{
     label: $ts('home'),
     icon: 'i-heroicons-home',
@@ -363,15 +398,22 @@ definePageMeta({
 
                         <!-- Footer Actions -->
                         <div
-                            class="bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-4 flex gap-3 border-t border-gray-100/50 dark:border-gray-800/50">
-                            <UButton @click="downloadTicket" :loading="isGeneratingPdf" color="neutral" variant="solid"
-                                class="flex-1 justify-center font-bold" icon="i-heroicons-arrow-down-tray">
-                                Unduh Tiket (PDF)
-                            </UButton>
-                            <UButton to="/agendas" color="neutral" variant="solid" class="justify-center"
-                                icon="i-heroicons-home">
-                                Kembali
-                            </UButton>
+                            class="bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-4 flex flex-col gap-3 border-t border-gray-100/50 dark:border-gray-800/50">
+                            <div class="flex gap-3">
+                                <UButton @click="downloadTicket" :loading="isGeneratingPdf" color="neutral" variant="solid"
+                                    class="flex-1 justify-center font-bold" icon="i-heroicons-arrow-down-tray">
+                                    Unduh Tiket (PDF)
+                                </UButton>
+                                <UButton to="/agendas" color="neutral" variant="solid" class="justify-center"
+                                    icon="i-heroicons-home">
+                                    Kembali
+                                </UButton>
+                            </div>
+                            <div v-if="me?.guest" class="text-center mt-2">
+                                <p class="text-xs text-gray-500">
+                                    Tidak menerima email tiket? <button @click="newEmail = (me?.guest as IGuest)?.email || ''; showEmailModal = true" class="text-primary-500 hover:underline">Ubah Email Anda</button>
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -381,5 +423,34 @@ definePageMeta({
                 </div>
             </div>
         </UCard>
+        
+        <!-- Ubah Email Modal -->
+        <UModal v-model="showEmailModal">
+            <template #body>
+                <div
+                    class="mx-auto w-16 h-16 bg-primary-100 dark:bg-primary-900/30 text-primary-500 rounded-full flex items-center justify-center mb-4">
+                    <UIcon name="i-heroicons-envelope" class="w-10 h-10" />
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">Ubah Email</h3>
+                    <p class="text-gray-500 dark:text-gray-400 text-center mb-4 text-sm">
+                        Masukkan email baru yang aktif untuk menerima e-ticket.
+                    </p>
+                    <UInput v-model="newEmail" type="email" placeholder="Email Baru" size="lg" icon="i-heroicons-envelope" />
+                </div>
+            </template>
+            <template #footer>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <UButton color="neutral" variant="soft" @click="showEmailModal = false"
+                        class="justify-center flex-1">
+                        Batal
+                    </UButton>
+                    <UButton color="primary" @click="updateEmail" :loading="isUpdatingEmail"
+                        class="justify-center flex-1">
+                        Simpan Email
+                    </UButton>
+                </div>
+            </template>
+        </UModal>
     </div>
 </template>
