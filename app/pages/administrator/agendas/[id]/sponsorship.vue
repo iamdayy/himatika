@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IAgenda, IAgendaConfiguration, ICategory } from '~~/types';
+import type { IAgendaConfiguration } from '~~/types';
 import type { IAgendaResponse, IResponse } from '~~/types/IResponse';
 
 definePageMeta({
@@ -36,6 +36,37 @@ watch(agenda, (newAgenda) => {
 }, { immediate: true });
 
 const loading = ref(false);
+
+const moveUp = (index: number) => {
+    if (index > 0 && configurationState.sponsors) {
+        const temp = configurationState.sponsors[index - 1];
+        if (temp) {
+            configurationState.sponsors[index - 1] = configurationState.sponsors[index] as any;
+            configurationState.sponsors[index] = temp as any;
+        }
+    }
+}
+
+const moveDown = (index: number) => {
+    if (configurationState.sponsors && index < configurationState.sponsors.length - 1) {
+        const temp = configurationState.sponsors[index + 1];
+        if (temp) {
+             configurationState.sponsors[index + 1] = configurationState.sponsors[index] as any;
+             configurationState.sponsors[index] = temp as any;
+        }
+    }
+}
+
+const removeSponsor = (index: number) => {
+    if (configurationState.sponsors) {
+        configurationState.sponsors.splice(index, 1);
+    }
+}
+
+const addSponsor = () => {
+    if (!configurationState.sponsors) configurationState.sponsors = [];
+    configurationState.sponsors.push({ name: '', logo: '', showOnPdf: false, url: '', priority: 0 } as any);
+}
 
 async function onSubmit() {
     loading.value = true;
@@ -98,20 +129,23 @@ const links = computed(() => [
                                 <UIcon name="i-heroicons-star" class="text-yellow-500" />
                                 Kelola Sponsorship
                             </h2>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Atur urutan dan visibilitas sponsor di sini. Posisi paling atas akan mendapat prioritas terbesar.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Atur urutan dan visibilitas sponsor
+                                di sini. Posisi paling atas akan mendapat prioritas terbesar.</p>
                         </div>
-                        <UButton color="primary" variant="solid" icon="i-heroicons-device-arrow-mobile" :to="`/agendas/${id}`" target="_blank">
+                        <UButton color="primary" variant="solid" icon="i-heroicons-device-arrow-mobile"
+                            :to="`/agendas/${id}`" target="_blank">
                             Lihat Halaman
                         </UButton>
                     </div>
                 </template>
 
                 <div class="space-y-6">
-                    <div v-for="(sponsor, index) in configurationState.sponsors" :key="index" class="flex flex-col sm:flex-row gap-4 items-end bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 relative group transition-all duration-300 hover:shadow-md">
+                    <div v-for="(sponsor, index) in configurationState.sponsors" :key="index"
+                        class="flex flex-col sm:flex-row gap-4 items-end bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 relative group transition-all duration-300 hover:shadow-md">
                         <!-- Up/Down arrows for implicit ordering -->
                         <div class="absolute -left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <UButton v-if="index > 0" icon="i-heroicons-chevron-up" size="xs" color="gray" variant="solid" class="rounded-full shadow-sm" @click="() => { const temp = configurationState.sponsors![index-1]; configurationState.sponsors![index-1] = sponsor; configurationState.sponsors![index] = temp; }" />
-                            <UButton v-if="index < (configurationState.sponsors?.length || 0) - 1" icon="i-heroicons-chevron-down" size="xs" color="gray" variant="solid" class="rounded-full shadow-sm" @click="() => { const temp = configurationState.sponsors![index+1]; configurationState.sponsors![index+1] = sponsor; configurationState.sponsors![index] = temp; }" />
+                            <UButton v-if="index > 0" icon="i-heroicons-chevron-up" size="xs" color="neutral" variant="solid" class="rounded-full shadow-sm" @click="moveUp(index)" />
+                            <UButton v-if="index < (configurationState.sponsors?.length || 0) - 1" icon="i-heroicons-chevron-down" size="xs" color="neutral" variant="solid" class="rounded-full shadow-sm" @click="moveDown(index)" />
                         </div>
 
                         <div class="flex-1 w-full space-y-2">
@@ -130,11 +164,11 @@ const links = computed(() => [
                             </UFormField>
                         </div>
                         <div class="pb-1">
-                            <UButton color="error" icon="i-heroicons-trash" variant="soft" @click="configurationState.sponsors!.splice(index, 1)" />
+                            <UButton color="error" icon="i-heroicons-trash" variant="soft" @click="removeSponsor(index)" />
                         </div>
                     </div>
 
-                    <UButton color="neutral" icon="i-heroicons-plus" variant="outline" block size="lg" class="border-dashed" @click="configurationState.sponsors!.push({ name: '', logo: '', showOnPdf: false })">
+                    <UButton color="neutral" icon="i-heroicons-plus" variant="outline" block size="lg" class="border-dashed" @click="addSponsor">
                         Tambah Sponsor Baru
                     </UButton>
                 </div>
