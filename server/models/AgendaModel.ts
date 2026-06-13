@@ -254,6 +254,13 @@ const certificateConfigurationSchema =
     ],
   });
 
+const sponsorSchema = new Schema({
+  name: { type: String, required: true },
+  logo: { type: String, required: true },
+  url: { type: String },
+  showOnPdf: { type: Boolean, default: false }
+});
+
 /**
  * Schema for representing an agenda configuration.
  */
@@ -287,6 +294,10 @@ const configurationSchema = new Schema<IAgendaConfigurationSchema>({
     type: String,
     enum: ["Public", "Organizer", "Member"],
     default: "Public",
+  },
+  sponsors: {
+    type: [sponsorSchema],
+    default: [],
   },
 });
 /**

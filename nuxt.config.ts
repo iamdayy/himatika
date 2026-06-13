@@ -187,7 +187,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "nuxt-security",
     "@vite-pwa/nuxt",
-    "@vercel/speed-insights",
+    // "@vercel/speed-insights",
   ],
   pwa: {
     manifest: {

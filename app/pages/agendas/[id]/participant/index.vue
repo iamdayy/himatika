@@ -293,6 +293,16 @@ definePageMeta({
                             <div class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/40 to-transparent">
                             </div>
 
+                            <!-- Logos Overlay (Top Right) -->
+                            <div class="absolute top-4 right-4 flex gap-2 z-10">
+                                <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full ring-1 ring-white/30 shadow-lg shadow-black/20">
+                                    <NuxtImg provider="localProvider" src="/img/itsnu-logo.png" alt="ITSNU Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-md" />
+                                </div>
+                                <div class="bg-white/20 backdrop-blur-md p-1.5 rounded-full ring-1 ring-white/30 shadow-lg shadow-black/20">
+                                    <NuxtImg provider="localProvider" src="/img/logo.png" alt="HIMATIKA Logo" class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-md" />
+                                </div>
+                            </div>
+
                             <!-- Event Info Overlay -->
                             <div class="absolute bottom-0 left-0 right-0 p-6">
                                 <div class="flex items-center gap-2 mb-3">
@@ -393,6 +403,14 @@ definePageMeta({
                                     </div>
                                 </div>
 
+                            </div>
+                        </div>
+
+                        <!-- Sponsor Section Web Ticket -->
+                        <div v-if="agenda.configuration?.sponsors?.length" class="bg-gray-50/50 dark:bg-gray-800/30 border-t border-gray-100/50 dark:border-gray-800/50 px-6 py-4 flex items-center gap-4 justify-center flex-wrap">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Supported By:</span>
+                            <div class="flex items-center gap-4">
+                                <NuxtImg provider="localProvider" v-for="(sponsor, idx) in agenda.configuration.sponsors" :key="idx" :src="(sponsor.logo as string)" :alt="sponsor.name" class="h-6 w-auto object-contain grayscale opacity-60" />
                             </div>
                         </div>
 

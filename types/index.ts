@@ -350,6 +350,14 @@ export interface ICertificateConfiguration {
   signers?: { memberId: string; as: string; signatureItemId?: string }[];
 }
 
+export interface ISponsor {
+  _id?: string | Types.ObjectId;
+  name: string;
+  logo: string | IFile; // URL string when populated
+  url?: string;
+  showOnPdf?: boolean;
+}
+
 export interface IAgendaConfiguration {
   canSee?: TRole;
   canSeeRegistered?: TRole;
@@ -358,6 +366,7 @@ export interface IAgendaConfiguration {
   committee: IAgendaCommitteeConfiguration;
   participant: IAgendaParticipantConfiguration;
   certificate?: ICertificateConfiguration;
+  sponsors?: ISponsor[];
 }
 
 /**

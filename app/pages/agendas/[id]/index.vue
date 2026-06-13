@@ -411,6 +411,25 @@ function formatCurrency(amount: number): string {
                             </div>
                         </div>
 
+                        <!-- Sponsorship Section -->
+                        <div v-if="agenda.configuration?.sponsors?.length" class="space-y-4 pt-4">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <UIcon name="i-heroicons-star" class="text-yellow-500" />
+                                Supported By
+                            </h3>
+                            <div class="flex flex-wrap gap-8 items-center justify-start bg-white/40 dark:bg-gray-800/40 p-6 rounded-3xl border border-gray-100 dark:border-gray-700/50 backdrop-blur-md">
+                                <div v-for="(sponsor, index) in agenda.configuration.sponsors" :key="index" 
+                                    class="relative group cursor-pointer flex items-center justify-center transition-all duration-500"
+                                    :class="index < 2 ? 'h-16 md:h-20 w-auto' : 'h-10 md:h-12 w-auto'">
+                                    <NuxtImg provider="localProvider" :src="(sponsor.logo as string)" :alt="sponsor.name" 
+                                        class="h-full w-auto object-contain drop-shadow-sm group-hover:scale-110 group-hover:drop-shadow-lg transition-all duration-500 opacity-80 hover:opacity-100 filter grayscale hover:grayscale-0" />
+                                    <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900/90 backdrop-blur-sm text-white text-[10px] font-medium px-2.5 py-1 rounded-md whitespace-nowrap z-10 pointer-events-none shadow-lg">
+                                        {{ sponsor.name }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="lg:col-span-1">
@@ -577,6 +596,10 @@ function formatCurrency(amount: number): string {
                                     <UButton :to="`/administrator/agendas/${id}/participant`" color="primary"
                                         variant="soft" icon="i-heroicons-users" size="sm">
                                         Data Peserta
+                                    </UButton>
+                                    <UButton :to="`/administrator/agendas/${id}/sponsorship`" color="primary"
+                                        variant="soft" icon="i-heroicons-star" size="sm">
+                                        Sponsorship
                                     </UButton>
                                 </div>
                                 <div v-else class="flex items-center gap-3">
