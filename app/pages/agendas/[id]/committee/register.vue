@@ -228,12 +228,26 @@ const register = async (): Promise<boolean | FormError> => {
             body: { job: formRegistration.job }
         });
         if (statusCode === 200 && data) {
+            toast.add({
+                title: $ts('success'),
+                description: 'Tautan akses kepanitiaan dan status pembayaran telah dikirim ke email Anda.',
+                color: 'success',
+            });
             refreshCommittee();
             return true;
         }
+        toast.add({
+            title: $ts('failed'),
+            description: $ts('failed_to_register'),
+            color: 'error',
+        });
         return false;
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        toast.add({
+            title: $ts('failed'),
+            description: error?.data?.statusMessage || error?.data?.message || error?.statusMessage || error?.message || $ts('failed_to_register'),
+            color: 'error',
+        });
         return false;
     }
 }
@@ -252,17 +266,30 @@ const payment = async (): Promise<boolean | FormError> => {
             refreshCommittee();
             return true;
         }
+        toast.add({
+            title: $ts('failed'),
+            description: $ts('failed_to_register_payment'),
+            color: 'error',
+        });
         return false;
-    } catch (error) {
-        console.error(error);
-        toast.add({ title: $ts('error'), description: 'Failed to create payment', color: 'error' });
+    } catch (error: any) {
+        toast.add({
+            title: $ts('failed'),
+            description: error?.data?.statusMessage || error?.data?.message || error?.statusMessage || error?.message || $ts('failed_to_register_payment'),
+            color: 'error',
+        });
         return false;
     }
 }
 
 const onCancelPayment = async () => {
     refreshCommittee();
-    activeStep.value = steps.value.findIndex(s => s.id === 'select_payment');
+    const stepIndex = steps.value.findIndex(s => s.id === 'select_payment');
+    if (stepIndex !== -1) {
+        activeStep.value = stepIndex;
+    } else {
+        activeStep.value = 1;
+    }
 }
 
 // --- VALIDATION RULES ---
@@ -327,8 +354,9 @@ onMounted(() => {
                         :description="$ts('already_committee_desc')" class="mb-4"></UAlert>
                     <Useparator class="my-4" />
                     <div class="text-start">
-                        <div class="space-y-4">
-                            <div :class="['grid gap-2 px-4', isMobile ? 'grid-cols-1' : 'grid-cols-6']">
+                        <div
+                            class="space-y-6 bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800">
+                            <div class="grid grid-cols-1 gap-4 px-2 md:px-4">
                                 <UFormField class="col-span-full" :label="$ts('job')" :error="errors.job?.message">
                                     <URadioGroup v-model="formRegistration.job" :items="jobAvailablesItems" />
                                 </UFormField>
@@ -337,13 +365,24 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div v-else-if="step?.id === 'answer_question'">
-                    <div v-if="pendingQuestions" class="space-y-4">
-                        <USkeleton class="h-16 w-full" v-for="i in 3" :key="i" />
+                <div v-else-if="step?.id === 'answer_question'"
+                    class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div class="mb-6 px-2">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Informasi Tambahan</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Lengkapi form berikut untuk mempermudah
+                            pendataan
+                            kepesertaan Anda.</p>
                     </div>
-                    <div v-else class="space-y-4">
-                        <CoreQuestion v-for="(question, index) in questions" :key="index" :question="question.question"
-                            v-model="question.answer" />
+                    <div
+                        class="bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800">
+                        <div v-if="pendingQuestions" class="space-y-6">
+                            <USkeleton class="h-20 w-full rounded-2xl" v-for="i in 3" :key="i" />
+                        </div>
+                        <div v-else class="space-y-8 divide-y divide-gray-100/50 dark:divide-gray-800/50">
+                            <div v-for="(question, index) in questions" :key="index" class="pt-6 first:pt-0">
+                                <CoreQuestion :question="question.question" v-model="question.answer" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -352,14 +391,23 @@ onMounted(() => {
                         <h3 class="text-lg font-semibold mb-4">{{ $ts('select_payment_method') }}</h3>
 
                         <div class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                                 <div v-for="option in paymentMethods" :key="option.value"
-                                    class="border rounded-lg p-4 cursor-pointer transition-all hover:border-primary-500"
-                                    :class="formPayment.method === option.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-2 ring-primary-500' : 'border-gray-200 dark:border-gray-700'"
-                                    @click="formPayment.method = option.value; formPayment.bank = option.value === 'e_wallet' ? 'gopay' : 'bca'">
-                                    <div class="flex items-center gap-3">
-                                        <UIcon :name="option.icon" class="w-6 h-6 text-primary-500" />
-                                        <span class="font-medium">{{ option.label }}</span>
+                                    class="relative rounded-2xl p-4 md:p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group"
+                                    :class="formPayment.method === option.value ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-md' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-400'"
+                                    @click="formPayment.method = option.value; formPayment.bank = 'bca'">
+                                    <div class="flex flex-col items-center gap-3 text-center">
+                                        <div :class="formPayment.method === option.value ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 group-hover:text-primary-500'"
+                                            class="p-3 rounded-full transition-colors">
+                                            <UIcon :name="option.icon" class="w-7 h-7" />
+                                        </div>
+                                        <span class="font-bold text-sm transition-colors"
+                                            :class="formPayment.method === option.value ? 'text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'">{{
+                                                option.label }}</span>
+                                    </div>
+                                    <div v-if="formPayment.method === option.value"
+                                        class="absolute top-3 right-3 text-primary-500 animate-in zoom-in duration-300">
+                                        <UIcon name="i-heroicons-check-circle-solid" class="w-5 h-5" />
                                     </div>
                                 </div>
                             </div>
@@ -372,21 +420,33 @@ onMounted(() => {
                             </div>
 
                             <div v-if="formPayment.method !== 'cash'"
-                                class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-6">
-                                <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-3">Payment Summary</h4>
-                                <div class="space-y-2 text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Ticket Price</span>
-                                        <span>Rp {{ formatCurrency(priceSummary.base) }}</span>
+                                class="relative bg-white dark:bg-gray-900 rounded-2xl p-4 md:p-6 mt-8 border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden group hover:border-primary-200 dark:hover:border-primary-900/50 transition-colors">
+                                <!-- Receipt Header Accent -->
+                                <div
+                                    class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 to-indigo-500">
+                                </div>
+                                <h4
+                                    class="font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2 uppercase tracking-widest text-xs">
+                                    <UIcon name="i-heroicons-receipt-percent" class="w-5 h-5 text-primary-500" />
+                                    Payment Summary
+                                </h4>
+                                <div class="space-y-4 font-mono text-sm">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500 dark:text-gray-400">Ticket Price</span>
+                                        <span class="font-medium text-gray-900 dark:text-gray-100">Rp {{
+                                            formatCurrency(priceSummary.base) }}</span>
                                     </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Admin Fee</span>
-                                        <span>Rp {{ formatCurrency(priceSummary.admin) }}</span>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500 dark:text-gray-400">Admin Fee</span>
+                                        <span class="font-medium text-gray-900 dark:text-gray-100">Rp {{
+                                            formatCurrency(priceSummary.admin) }}</span>
                                     </div>
-                                    <Useparator class="my-2" />
-                                    <div class="flex justify-between font-bold text-lg text-primary-600">
-                                        <span>Total</span>
-                                        <span>Rp {{ formatCurrency(priceSummary.total) }}</span>
+                                    <div
+                                        class="pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                                        <span
+                                            class="font-bold text-gray-900 dark:text-white text-base font-sans">Total</span>
+                                        <span class="font-black text-2xl text-primary-600 dark:text-primary-400">Rp {{
+                                            formatCurrency(priceSummary.total) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -409,6 +469,7 @@ onMounted(() => {
                     <div v-if="formPayment">
                         <PaymentDetail v-if="formPayment.method !== 'cash'"
                             :amount="agenda?.configuration.committee.amount" :payment="formPayment"
+                            :agenda-id="id as string" :registered-id="registrationId?.toString()"
                             @cancel="onCancelPayment" @success="refreshCommittee" />
                         <div v-else>
                             <UAlert color="success" :title="$ts('cash_payment')"
@@ -421,10 +482,36 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div v-else-if="step?.id === 'success'">
-                    <UAlert color="success" :title="$ts('registration_success')"
-                        :description="$ts('registration_success_desc')" />
-                    <CoreContent class="my-4" :content="agenda?.configuration.messageAfterRegister || ''" />
+                <div v-else-if="step?.id === 'success'"
+                    class="text-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div
+                        class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500 dark:text-green-400 mb-6 shadow-[0_0_40px_rgba(34,197,94,0.3)] animate-pulse">
+                        <UIcon name="i-heroicons-check-circle-solid" class="w-16 h-16" />
+                    </div>
+                    <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">{{ $ts('registration_success') }}
+                    </h2>
+                    <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6 text-sm">{{
+                        $ts('registration_success_desc') }}</p>
+
+                    <UAlert color="info" variant="soft" icon="i-heroicons-envelope"
+                        class="max-w-md mx-auto mb-8 text-left ring-1 ring-blue-200 dark:ring-blue-800"
+                        title="Cek Kotak Masuk Email Anda">
+                        <template #description>
+                            Kami telah mengirimkan instruksi dan tautan akses ke email Anda. Gunakan tautan tersebut
+                            untuk melihat e-ticket, mengubah metode pembayaran, dan mendapatkan pemberitahuan lainnya di
+                            kemudian hari.
+                        </template>
+                    </UAlert>
+
+                    <div v-if="agenda?.configuration.messageAfterRegister"
+                        class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-900/50 rounded-3xl p-4 md:p-6 ring-1 ring-gray-100 dark:ring-gray-800 shadow-sm text-left max-w-2xl mx-auto backdrop-blur-xl">
+                        <div class="flex items-center gap-2 mb-4 text-primary-500">
+                            <UIcon name="i-heroicons-information-circle-solid" class="w-5 h-5" />
+                            <span class="font-bold text-sm uppercase tracking-wider">Informasi Tambahan</span>
+                        </div>
+                        <CoreContent class="prose dark:prose-invert text-sm"
+                            :content="agenda.configuration.messageAfterRegister" />
+                    </div>
                 </div>
 
             </template>

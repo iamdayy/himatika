@@ -32,7 +32,7 @@ async function sendConfirmationEmail(
     emailTitle: `Pendaftaran Agenda ${agenda.title} Berhasil!`,
     heroTitle: `Selamat, Anda Terdaftar!`,
     heroSubtitle: `Anda telah berhasil terdaftar dalam agenda "${agenda.title}". Kami sangat senang Anda bergabung!`,
-    heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}/participant/register/?participantId=${participantId}`,
+    heroButtonLink: `${config.public.public_uri}/agendas/${agenda._id}/participant/?participantId=${participantId}`,
     heroButtonText: "Lihat Detail Pendaftaran",
     contentTitle1: "Detail Pendaftaran Anda",
     contentParagraph1: `Berikut adalah QR Code unik Anda untuk agenda "${agenda.title}". Mohon simpan dan tunjukkan QR Code ini saat registrasi ulang di lokasi acara.`,
@@ -68,7 +68,7 @@ export default defineEventHandler(
       if (!user && !guest) {
         throw createError({
           statusCode: 401, // Changed from 400 to 401 for clarity
-          statusMessage: "Authentication or guest data is required.",
+          statusMessage: "Data sesi tidak valid. Silakan login atau lengkapi data formulir pendaftaran Guest untuk melanjutkan.",
         });
       }
 
@@ -76,7 +76,7 @@ export default defineEventHandler(
       if (!agenda) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Agenda not found.",
+          statusMessage: "Acara atau agenda yang Anda tuju tidak ditemukan atau mungkin sudah dihapus.",
         });
       }
 
@@ -87,7 +87,7 @@ export default defineEventHandler(
           throw createError({
             statusCode: 403,
             statusMessage:
-              "You do not have permission to register for this agenda.",
+              "Anda tidak memenuhi syarat pendaftaran untuk agenda ini berdasarkan aturan yang ditetapkan oleh panitia.",
           });
         }
       }
@@ -123,10 +123,28 @@ export default defineEventHandler(
         if (isRegisteredCommittee || isRegisteredParticipant) {
           throw createError({
             statusCode: 409,
-            statusMessage: "You are already registered.",
+            statusMessage: "Anda sudah terdaftar sebagai panitia atau peserta pada agenda ini.",
           });
         }
         newParticipantData.member = user.member._id;
+
+        // Auto update empty member fields
+        const { memberUpdate } = await readBody(ev);
+        if (memberUpdate) {
+            const { MemberModel } = await import("~~/server/models/MemberModel");
+            const memberToUpdate = await MemberModel.findById(user.member._id);
+            if (memberToUpdate) {
+                let updated = false;
+                const updatableFields = ['phone', 'class', 'semester', 'prodi', 'instance'];
+                for (const field of updatableFields) {
+                    if (!memberToUpdate[field as keyof typeof memberToUpdate] && memberUpdate[field]) {
+                        (memberToUpdate as any)[field] = memberUpdate[field];
+                        updated = true;
+                    }
+                }
+                if (updated) await memberToUpdate.save();
+            }
+        }
       } else if (user && user.guest) {
         const g = user.guest;
         name = g.fullName;
@@ -139,7 +157,7 @@ export default defineEventHandler(
         if (isRegisteredParticipant) {
           throw createError({
             statusCode: 409,
-            statusMessage: "You are already registered.",
+            statusMessage: "Email atau data akun Anda sudah pernah digunakan untuk mendaftar pada agenda ini.",
           });
         }
         newParticipantData.guest = g._id;
@@ -188,7 +206,7 @@ export default defineEventHandler(
         if (isRegisteredParticipant) {
           throw createError({
             statusCode: 409,
-            statusMessage: "You are already registered.",
+            statusMessage: "Email ini sudah terdaftar sebagai peserta dalam agenda ini.",
           });
         }
         newParticipantData.guest = existingGuest._id;
@@ -196,7 +214,7 @@ export default defineEventHandler(
         throw createError({
           statusCode: 400,
           statusMessage:
-            "Invalid registration data. Please login or provide guest details.",
+            "Data pendaftaran tidak valid atau tidak lengkap. Pastikan Anda sudah mengisi seluruh form yang diperlukan.",
         });
       }
 
@@ -239,7 +257,7 @@ export default defineEventHandler(
         statusCode: error.statusCode || 500,
         statusMessage:
           error.statusMessage ||
-          "An unexpected error occurred during agenda registration.",
+          "Terjadi kendala pada sistem saat memproses pendaftaran Anda. Silakan muat ulang halaman dan coba lagi.",
       });
     }
   },

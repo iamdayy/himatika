@@ -27,7 +27,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     await ensureCommitteeOrOrganizer(agenda._id.toString(), user);
 
     // Find the registered user by ID
-    const participant = await ParticipantModel.findById(registeredId);
+    const participant = await ParticipantModel.findById(registeredId).populate("member").populate("guest");
     if (!participant || participant.agendaId.toString() !== id) {
       throw createError({
         statusCode: 404,
@@ -58,6 +58,28 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     participant.payment.time = new Date();
 
     await participant.save();
+
+    // Trigger payment-success email
+    const { Client } = await import("@upstash/qstash");
+    const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+    const config = useRuntimeConfig();
+
+    const customerName = participant.member ? (participant.member as any).fullName : (participant.guest as any)?.fullName || "";
+    const customerEmail = participant.member ? (participant.member as any).email : (participant.guest as any)?.email || "";
+
+    qstashClient.publishJSON({
+      url: `${config.public.public_uri}/api/webhooks/qstash/email`,
+      body: {
+        type: "payment-success",
+        agendaTitle: agenda.title,
+        agendaId: agenda._id,
+        participantId: registeredId,
+        name: customerName,
+        email: customerEmail,
+        amount: participant.payment.amount || 0,
+      },
+    }).catch((e) => console.error("Failed to publish manual pay-success", e));
+
     return {
       statusCode: 200,
       statusMessage: "Payment marked as success",

@@ -163,6 +163,7 @@ export interface IReqCommitteeBatch {
 export interface IPaymentBody {
   payment_method: IPaymentMethod;
   bank_transfer?: string;
+  manual_target?: string;
   credit_card?: {
     token_id: string;
   };

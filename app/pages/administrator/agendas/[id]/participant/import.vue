@@ -28,7 +28,7 @@ const selectedRows = ref<{
 const paymentStatus = ref(true); // true = success, false = pending
 const paymentStatusOptions = ['pending', 'success', 'failed'];
 const paymentMethod = ref('cash');
-const paymentMethodOptions = ['cash', 'bank_transfer', 'qris'];
+const paymentMethodOptions = ['cash', 'bank_transfer', 'qris', 'manual_transfer'];
 const isVisiting = ref(false);
 
 const selectedMembers = computed<{ NIM: number; name: string; payment: boolean; visiting: boolean; }[]>(() => {

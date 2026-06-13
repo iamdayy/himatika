@@ -233,9 +233,10 @@ export interface IContributor {
   member: IMember | Types.ObjectId | number | string;
   job: string;
 }
-export type IPaymentMethod = "cash" | "bank_transfer" | "e_wallet" | "qris";
+export type IPaymentMethod = "cash" | "bank_transfer" | "qris" | "manual_transfer";
 export type TPaymentStatus =
   | "pending"
+  | "verifying"
   | "success"
   | "failed"
   | "canceled"
@@ -250,6 +251,28 @@ export interface IPayment {
   qris_png?: string;
   time?: Date;
   expiry?: Date;
+  manual_target?: string;
+  proof_url?: string;
+  amount?: number;
+  biller_code?: string;
+}
+
+export interface IPaymentVerification {
+  _id: string;
+  type: 'participant' | 'committee';
+  name: string;
+  email: string;
+  payment: IPayment;
+  manual_target?: string;
+  proof_url?: string;
+  time?: string;
+}
+
+export interface IManualPaymentTarget {
+  name: string;
+  account: string;
+  owner: string;
+  instructions?: string;
 }
 
 /**
@@ -350,6 +373,14 @@ export interface ICertificateConfiguration {
   signers?: { memberId: string; as: string; signatureItemId?: string }[];
 }
 
+export interface ISponsor {
+  _id?: string | Types.ObjectId;
+  name: string;
+  logo: string | IFile; // URL string when populated
+  url?: string;
+  showOnPdf?: boolean;
+}
+
 export interface IAgendaConfiguration {
   canSee?: TRole;
   canSeeRegistered?: TRole;
@@ -358,6 +389,8 @@ export interface IAgendaConfiguration {
   committee: IAgendaCommitteeConfiguration;
   participant: IAgendaParticipantConfiguration;
   certificate?: ICertificateConfiguration;
+  sponsors?: ISponsor[];
+  manualPayments?: IManualPaymentTarget[];
 }
 
 /**

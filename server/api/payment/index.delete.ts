@@ -1,6 +1,4 @@
-import { AgendaModel } from "~~/server/models/AgendaModel";
 import { cancelPayment } from "~~/server/utils/midtrans";
-import { ICommittee, IParticipant } from "~~/types";
 import { IReqPaymentQuery } from "~~/types/IRequestPost";
 import { IError, IResponse } from "~~/types/IResponse";
 
@@ -12,65 +10,58 @@ export default defineEventHandler(
       if (!user) {
         throw createError({
           statusCode: 403,
-          statusMessage: "Anda harus login untuk membatalkan transaksi",
+          statusMessage: "Sesi Anda telah berakhir atau tidak valid. Silakan login atau akses kembali melalui Magic Link.",
         });
       }
 
-      // Find agenda where this transaction exists AND belongs to the current user
-      const agenda = await AgendaModel.findOne({
-        $or: [
-          {
-            "committees.payment.transaction_id": transaction_id,
-            "committees.member": user.member._id,
-          },
-          {
-            "participants.payment.transaction_id": transaction_id,
-            "participants.member": user.member._id,
-          },
-        ],
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
+      let registered: any = await ParticipantModel.findOne({
+        "payment.transaction_id": transaction_id,
       });
 
-      if (!agenda) {
-        throw createError({
-          statusCode: 404,
-            statusMessage:
-            "Transaksi tidak ditemukan atau anda tidak memiliki izin untuk membatalkannya",
+      if (!registered) {
+        registered = await CommitteeModel.findOne({
+          "payment.transaction_id": transaction_id,
         });
       }
-      let registered: IParticipant | ICommittee | undefined;
-      
-      registered = agenda.committees?.find(
-        (r) => r.payment?.transaction_id === transaction_id
-      );
 
-      if (!registered) {
-        registered = agenda.participants?.find(
-          (r) => r.payment?.transaction_id === transaction_id
-        );
-      }
-
-      // Double check (redundant but safe)
       if (!registered || !registered.payment) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Transaksi tidak ditemukan",
+          statusMessage: "Transaksi pembayaran yang ingin Anda batalkan tidak dapat ditemukan. Pembayaran mungkin sudah dibatalkan sebelumnya.",
         });
       }
 
-      // Ensure the registered user matches the authenticated user (extra safety)
-      if (registered.member?.toString() !== user.member._id.toString()) {
+      if (registered.member) {
+        if (!user.member || registered.member.toString() !== user.member._id.toString()) {
+          throw createError({
+            statusCode: 403,
+            statusMessage: "Anda tidak memiliki izin membatalkan transaksi ini karena terdaftar pada akun member lain.",
+          });
+        }
+      } else if (registered.guest) {
+        if (!user.guest || registered.guest.toString() !== user.guest._id.toString()) {
+           throw createError({
+            statusCode: 403,
+            statusMessage: "Anda tidak memiliki izin membatalkan transaksi ini karena terdaftar pada akun guest lain.",
+          });
+        }
+      } else {
         throw createError({
           statusCode: 403,
-          statusMessage: "Aksi tidak diizinkan",
+          statusMessage: "Anda tidak memiliki akses untuk membatalkan transaksi ini.",
         });
       }
 
       const cancel = await cancelPayment(transaction_id);
-      if (cancel.status_code !== "200" && cancel.status_code !== "412") {
+      if (cancel.status_code !== "200" && cancel.status_code !== "412" && cancel.status_code !== "404") {
         // 412 is "Merchant cannot modify status of the transaction" (already cancelled/settled)
+        // 404 is transaction not found (might happen in sandbox or if already removed)
         throw createError({
           statusCode: 500,
-          statusMessage: "Gagal membatalkan transaksi dari Payment Gateway",
+          statusMessage: "Sistem gagal membatalkan transaksi pada sistem Midtrans. Kemungkinan transaksi ini sudah kedaluwarsa atau telah dibayar. Hubungi panitia jika masalah berlanjut.",
           data: { message: cancel.status_message },
         });
       }
@@ -82,7 +73,7 @@ export default defineEventHandler(
         bank: "",
         expiry: undefined,
       };
-      await agenda.save();
+      await registered.save();
       return {
         statusCode: 200,
         statusMessage: "Transaksi dibatalkan",
@@ -90,7 +81,7 @@ export default defineEventHandler(
     } catch (error: any) {
       throw createError({
         statusCode: error.statusCode || 500,
-        statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
+        statusMessage: error.statusMessage || "Terjadi kesalahan sistem saat mencoba membatalkan pembayaran Anda. Silakan coba beberapa saat lagi.",
         data: error.data,
       });
     }

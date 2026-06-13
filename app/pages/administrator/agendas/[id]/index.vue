@@ -86,6 +86,13 @@ const shortcuts = [
         color: 'primary'
     },
     {
+        label: 'Sponsorship & Logo',
+        desc: 'Atur logo sponsor dan tiket acara',
+        icon: 'i-heroicons-star',
+        to: `/administrator/agendas/${id}/sponsorship`,
+        color: 'yellow'
+    },
+    {
         label: 'Data Peserta',
         desc: 'Kelola pendaftaran & presensi peserta',
         icon: 'i-heroicons-users',
@@ -100,10 +107,24 @@ const shortcuts = [
         color: 'secondary'
     },
     {
+        label: 'Verifikasi Pembayaran',
+        desc: 'Cek bukti transfer manual peserta',
+        icon: 'i-heroicons-check-badge',
+        to: `/administrator/agendas/${id}/payments-verification`,
+        color: 'green'
+    },
+    {
+        label: 'Pengaturan Pembayaran',
+        desc: 'Kelola daftar rekening bank himpunan',
+        icon: 'i-heroicons-credit-card',
+        to: `/administrator/agendas/${id}/payment-settings`,
+        color: 'orange'
+    },
+    {
         label: 'Scanner Presensi',
         desc: 'Buka kamera untuk scan tiket',
         icon: 'i-heroicons-qr-code',
-        to: `/administrator/agendas/${id}/scan`, // Asumsi route
+        to: `/administrator/agendas/${id}/scan`,
         color: 'neutral'
     }
 ];

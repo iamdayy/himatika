@@ -333,7 +333,7 @@ function formatCurrency(amount: number): string {
                 <NuxtImg :src="bannerImage" provider="localProvider"
                     class="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm scale-105 transition-transform duration-700 group-hover:scale-110"
                     alt="Banner" />
-                <div class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
 
                 <div
                     class="absolute inset-0 container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-12 z-10">
@@ -350,23 +350,23 @@ function formatCurrency(amount: number): string {
 
                     <div class="flex flex-wrap gap-3 text-sm font-medium text-gray-100">
                         <div
-                            class="flex items-center gap-2 bg-white/30/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                            class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm">
                             <UIcon name="i-heroicons-calendar-days" class="text-primary-400 w-5 h-5" />
                             <span>{{ formattedDate }}</span>
                         </div>
                         <div
-                            class="flex items-center gap-2 bg-white/30/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                            class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm">
                             <UIcon name="i-heroicons-map-pin" class="text-red-400 w-5 h-5" />
                             <span>{{ agenda.at }}</span>
                         </div>
                         <div v-if="agenda.category"
-                            class="flex items-center gap-2 bg-white/30/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                            class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm">
                             <UIcon name="i-heroicons-tag" class="text-yellow-400 w-5 h-5" />
                             <span>{{ (agenda.category as ICategory)?.title }}</span>
                         </div>
                         <!-- New: Tags -->
                         <div v-if="agenda.tags && agenda.tags.length > 0"
-                            class="flex items-center gap-2 bg-white/30/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                            class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm">
                             <UIcon name="i-heroicons-hashtag" class="text-blue-400 w-5 h-5" />
                             <span class="flex gap-1">
                                 <span v-for="(tag, i) in agenda.tags" :key="i">
@@ -382,7 +382,7 @@ function formatCurrency(amount: number): string {
 
                     <div class="lg:col-span-2 space-y-8">
 
-                        <div class="bg-white/30 dark:bg-gray-800/40 rounded-2xl shadow-sm p-6 md:p-8">
+                        <div class="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-3xl shadow-sm ring-1 ring-white/50 dark:ring-gray-700/50 p-6 md:p-8">
                             <h2 class="text-2xl font-bold mb-6 flex items-center gap-2 text-gray-900 dark:text-white">
                                 <UIcon name="i-heroicons-information-circle" class="text-primary" />
                                 Tentang Agenda
@@ -397,11 +397,11 @@ function formatCurrency(amount: number): string {
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Galeri Kegiatan</h3>
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 <div v-for="(photo, index) in agenda.photos.slice(0, 6)" :key="index"
-                                    class="relative aspect-square rounded-xl overflow-hidden group cursor-pointer shadow-sm">
+                                    class="relative aspect-square rounded-2xl overflow-hidden group cursor-pointer shadow-md ring-1 ring-white/20">
                                     <NuxtImg :src="typeof photo.image === 'string' ? photo.image : ''"
-                                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                         loading="lazy" />
-                                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                     </div>
                                 </div>
                             </div>
@@ -411,16 +411,35 @@ function formatCurrency(amount: number): string {
                             </div>
                         </div>
 
+                        <!-- Sponsorship Section -->
+                        <div v-if="agenda.configuration?.sponsors?.length" class="space-y-4 pt-4">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <UIcon name="i-heroicons-star" class="text-yellow-500" />
+                                Supported By
+                            </h3>
+                            <div class="flex flex-wrap gap-8 items-center justify-start bg-white/40 dark:bg-gray-800/40 p-6 rounded-3xl border border-gray-100 dark:border-gray-700/50 backdrop-blur-md">
+                                <div v-for="(sponsor, index) in agenda.configuration.sponsors" :key="index" 
+                                    class="relative group cursor-pointer flex items-center justify-center transition-all duration-500"
+                                    :class="index < 2 ? 'h-16 md:h-20 w-auto' : 'h-10 md:h-12 w-auto'">
+                                    <NuxtImg provider="localProvider" :src="(sponsor.logo as string)" :alt="sponsor.name" 
+                                        class="h-full w-auto object-contain drop-shadow-sm group-hover:scale-110 group-hover:drop-shadow-lg transition-all duration-500 opacity-80 hover:opacity-100 filter grayscale hover:grayscale-0" />
+                                    <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900/90 backdrop-blur-sm text-white text-[10px] font-medium px-2.5 py-1 rounded-md whitespace-nowrap z-10 pointer-events-none shadow-lg">
+                                        {{ sponsor.name }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="lg:col-span-1">
                         <div class="sticky top-24 space-y-6">
 
                             <div
-                                class="bg-white/30 dark:bg-gray-800/40 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 hidden lg:block">
+                                class="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-3xl shadow-xl ring-1 ring-white/50 dark:ring-gray-700/50 p-6 hidden lg:block border-none">
                                 <div class="text-center mb-6">
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Harga Tiket</p>
-                                    <div class="text-4xl font-extrabold text-primary">{{ priceLabel }}</div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest font-bold">Harga Tiket</p>
+                                    <div class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">{{ priceLabel }}</div>
                                 </div>
 
                                 <div v-if="isRegistered"
@@ -497,7 +516,7 @@ function formatCurrency(amount: number): string {
                                         </div>
 
                                         <UButton v-if="eventStatus?.label !== 'Selesai'" block size="lg" color="primary"
-                                            class="font-bold rounded-xl" :disabled="!canMeRegisterAsParticipant"
+                                            class="font-bold rounded-xl shadow-[0_0_20px_rgba(var(--color-primary-500),0.3)] hover:shadow-[0_0_25px_rgba(var(--color-primary-500),0.5)] transition-shadow duration-300" :disabled="!canMeRegisterAsParticipant"
                                             @click="navigateToRegisterParticipant">
                                             {{ canMeRegisterAsParticipant ? 'Daftar Sekarang' : 'Pendaftaran Tutup' }}
                                         </UButton>
@@ -565,7 +584,7 @@ function formatCurrency(amount: number): string {
                                 </div>
                             </div>
 
-                            <div class="bg-white/30 dark:bg-gray-800/40 rounded-2xl shadow-sm p-4">
+                            <div class="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-3xl shadow-sm ring-1 ring-white/50 dark:ring-gray-700/50 p-5 mt-6">
                                 <div v-if="isOrganizer || isCommittee" class="flex flex-col gap-2">
                                     <h4 class="text-xs font-bold uppercase text-gray-400 mb-1 tracking-wider">Admin
                                         Tools
@@ -577,6 +596,18 @@ function formatCurrency(amount: number): string {
                                     <UButton :to="`/administrator/agendas/${id}/participant`" color="primary"
                                         variant="soft" icon="i-heroicons-users" size="sm">
                                         Data Peserta
+                                    </UButton>
+                                    <UButton :to="`/administrator/agendas/${id}/sponsorship`" color="primary"
+                                        variant="soft" icon="i-heroicons-star" size="sm">
+                                        Sponsorship
+                                    </UButton>
+                                    <UButton :to="`/administrator/agendas/${id}/payment-settings`" color="primary"
+                                        variant="soft" icon="i-heroicons-credit-card" size="sm">
+                                        Pengaturan Pembayaran
+                                    </UButton>
+                                    <UButton :to="`/administrator/agendas/${id}/payments-verification`" color="primary"
+                                        variant="soft" icon="i-heroicons-check-badge" size="sm">
+                                        Verifikasi Pembayaran
                                     </UButton>
                                 </div>
                                 <div v-else class="flex items-center gap-3">
@@ -668,8 +699,8 @@ function formatCurrency(amount: number): string {
             </div>
 
             <div
-                class="fixed bottom-0 left-0 right-0 p-4 bg-white/30 dark:bg-gray-900 border-t dark:border-gray-800 z-50 lg:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-                <div class="flex items-center gap-4">
+                class="fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-800/50 z-50 lg:hidden shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+                <div class="flex items-center gap-4 max-w-lg mx-auto">
                     <div class="flex-1">
                         <p class="text-xs text-gray-500">Total Biaya</p>
                         <p class="text-xl font-bold text-primary">{{ priceLabel }}</p>
@@ -683,8 +714,8 @@ function formatCurrency(amount: number): string {
                     </div>
                     <template v-else>
                         <div class="flex-1" v-if="!canMeRegisterAsCommittee">
-                            <p class="text-xs text-gray-500">Biaya</p>
-                            <p class="text-lg font-bold text-primary">{{ priceLabel }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-1">Biaya</p>
+                            <p class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600 dark:from-primary-400 dark:to-indigo-400">{{ priceLabel }}</p>
                         </div>
 
                         <div v-if="canMeRegisterAsCommittee" class="flex gap-2 w-full">
@@ -698,7 +729,7 @@ function formatCurrency(amount: number): string {
                         </div>
 
                         <div v-else class="flex-1 text-right">
-                            <UButton block size="lg" :disabled="!canMeRegisterAsParticipant"
+                            <UButton block size="lg" :disabled="!canMeRegisterAsParticipant" color="primary" class="font-bold shadow-[0_0_15px_rgba(var(--color-primary-500),0.3)] rounded-xl"
                                 @click="navigateToRegisterParticipant">
                                 {{ canMeRegisterAsParticipant ? 'Daftar' : 'Tutup' }}
                             </UButton>

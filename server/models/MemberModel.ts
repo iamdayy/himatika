@@ -4,7 +4,8 @@ import { IAddressSchema, IMemberSchema } from "~~/types/ISchemas";
 import { AgendaModel } from "./AgendaModel";
 import { ProjectModel } from "./ProjectModel";
 import { UserModel } from "./UserModel";
-
+import "./ParticipantModel";
+import "./CommitteeModel";
 interface MemberMethods {
   calculatePoints: (
     rangeDate: { start: Date; end: Date },

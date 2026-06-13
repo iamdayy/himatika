@@ -61,14 +61,20 @@ const IGuestSchema = new Schema<IGuestSchema>({
 export const paymentSchema = new Schema<IPaymentSchema>({
   method: {
     type: String,
-    enum: ["cash", "bank_transfer", "qris"],
+    enum: ["cash", "bank_transfer", "qris", "manual_transfer"],
     required: true,
     default: "cash",
   },
   status: {
     type: String,
     default: "pending",
-    enum: ["pending", "canceled", "success", "expired", "failed"],
+    enum: ["pending", "verifying", "canceled", "success", "expired", "failed"],
+  },
+  manual_target: {
+    type: String,
+  },
+  proof_url: {
+    type: String,
   },
   order_id: {
     type: String,
@@ -254,6 +260,20 @@ const certificateConfigurationSchema =
     ],
   });
 
+const sponsorSchema = new Schema({
+  name: { type: String, required: true },
+  logo: { type: String, required: true },
+  url: { type: String },
+  showOnPdf: { type: Boolean, default: false }
+});
+
+const manualPaymentTargetSchema = new Schema({
+  name: { type: String, required: true },
+  account: { type: String, required: true },
+  owner: { type: String, required: true },
+  instructions: { type: String },
+});
+
 /**
  * Schema for representing an agenda configuration.
  */
@@ -287,6 +307,14 @@ const configurationSchema = new Schema<IAgendaConfigurationSchema>({
     type: String,
     enum: ["Public", "Organizer", "Member"],
     default: "Public",
+  },
+  sponsors: {
+    type: [sponsorSchema],
+    default: [],
+  },
+  manualPayments: {
+    type: [manualPaymentTargetSchema],
+    default: [],
   },
 });
 /**

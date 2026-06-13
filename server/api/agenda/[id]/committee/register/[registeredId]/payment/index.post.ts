@@ -43,7 +43,7 @@ export default defineEventHandler(
       if (!agenda) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Agenda not found",
+          statusMessage: "Acara atau agenda yang Anda tuju tidak ditemukan.",
         });
       }
 
@@ -53,13 +53,13 @@ export default defineEventHandler(
       if (!committee || committee.agendaId.toString() !== id) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Committee not found",
+          statusMessage: "Data kepanitiaan Anda tidak ditemukan. Silakan ulangi proses pendaftaran.",
         });
       }
       if (committee.payment?.status === "success") {
         throw createError({
           statusCode: 400,
-          statusMessage: "Payment already completed",
+          statusMessage: "Pembayaran untuk kepanitiaan ini sudah berhasil diselesaikan. Anda tidak dapat membuat tagihan baru.",
         });
       }
       if (
@@ -89,9 +89,65 @@ export default defineEventHandler(
         // Tapi disini kita throw error dulu
         throw createError({
           statusCode: 400,
-          statusMessage: "Invalid payment amount",
+          statusMessage: "Total tagihan pembayaran tidak valid (Rp 0). Harap periksa kembali detail tagihan Anda atau hubungi panitia.",
         });
       }
+      if (body.payment_method === "manual_transfer") {
+        const manualTarget = agenda.configuration?.manualPayments?.find((m: any) => m._id?.toString() === body.manual_target);
+
+        committee.payment = {
+          ...committee.payment,
+          status: "pending",
+          method: "manual_transfer",
+          order_id: registeredId,
+          transaction_id: `MANUAL-${Date.now()}`,
+          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+          time: new Date(),
+          bank: manualTarget?.name || "manual",
+          va_number: manualTarget?.account || "",
+          qris_png: "",
+          amount: totalAmount,
+          manual_target: body.manual_target || "",
+          biller_code: manualTarget?.owner || "",
+        } as any;
+        await committee.save();
+
+        // Publish manual payment-pending to QStash
+        const { Client } = await import("@upstash/qstash");
+        const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
+        const config = useRuntimeConfig();
+
+        const customerName = committee.member ? (committee.member as IMember).fullName : "";
+        const customerEmail = committee.member ? (committee.member as IMember).email : "";
+
+        qstashClient.publishJSON({
+          url: `${config.public.public_uri}/api/webhooks/qstash/email`,
+          body: {
+            type: "payment-pending",
+            agendaTitle: agenda.title,
+            agendaId: agenda._id,
+            participantId: registeredId,
+            name: customerName,
+            email: customerEmail,
+            amount: totalAmount,
+            method: "manual_transfer",
+            bank: "manual",
+            va_number: body.manual_target || "",
+            qris_png: "",
+            expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            isCommittee: true
+          },
+        }).catch((e) => console.error("Failed to publish manual payment-pending", e));
+
+        return {
+          statusCode: 200,
+          statusMessage: "Manual payment created",
+          data: {
+            payment: committee.payment,
+          },
+        };
+      }
+
       const payment = await createCharge({
         payment_type: body.payment_method,
         bank_transfer: {
@@ -118,11 +174,45 @@ export default defineEventHandler(
         expiry: new Date(payment.expiry_time),
         time: new Date(payment.transaction_time),
         bank: payment.va_numbers?.[0]?.bank || body.bank_transfer || "midtrans",
+        amount: totalAmount,
         va_number: payment.va_numbers?.[0]?.va_number || "",
         qris_png: payment.actions?.[1]?.url,
       };
 
       await committee.save();
+
+      // Publish payment-pending to QStash
+      const { Client } = await import("@upstash/qstash");
+      const qstashClient = new Client({
+        token: process.env.QSTASH_TOKEN || "",
+      });
+
+      const config = useRuntimeConfig();
+      const webhookUrl = `${config.public.public_uri}/api/webhooks/qstash/email`;
+
+      const customerName = committee.member ? (committee.member as IMember).fullName : "";
+      const customerEmail = committee.member ? (committee.member as IMember).email : "";
+
+      qstashClient
+        .publishJSON({
+          url: webhookUrl,
+          body: {
+            type: "payment-pending",
+            agendaTitle: agenda.title,
+            agendaId: agenda._id,
+            participantId: registeredId,
+            name: customerName,
+            email: customerEmail,
+            amount: totalAmount,
+            method: body.payment_method,
+            bank: payment.va_numbers?.[0]?.bank || body.bank_transfer || "midtrans",
+            va_number: payment.va_numbers?.[0]?.va_number || "",
+            qris_png: payment.actions?.[1]?.url || "",
+            expiry: new Date(payment.expiry_time).toISOString(),
+            isCommittee: true
+          },
+        })
+        .catch((e) => console.error("Failed to publish payment-pending to QStash", e));
 
       return {
         statusCode: 200,
@@ -135,7 +225,7 @@ export default defineEventHandler(
       console.error("Error creating committee payment:", error);
       throw createError({
         statusCode: error.statusCode || 500,
-        statusMessage: error.statusMessage || "Internal server error",
+        statusMessage: error.statusMessage || "Terjadi kesalahan pada server saat mencoba membuat tagihan pembayaran. Silakan coba beberapa saat lagi.",
       });
     }
   }

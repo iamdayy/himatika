@@ -54,7 +54,7 @@ const paymentMethod = ref('cash');
 const isVisiting = ref(false);
 
 const paymentStatusOptions = ['pending', 'success', 'failed'];
-const paymentMethodOptions = ['cash', 'bank_transfer', 'qris'];
+const paymentMethodOptions = ['cash', 'bank_transfer', 'qris', 'manual_transfer'];
 
 const selectedMembers = computed<{ nim: number; job: string; name: string; payment: boolean; visiting: boolean; }[]>(() => {
     return parsedData.value.filter((row: IMember, index) => {

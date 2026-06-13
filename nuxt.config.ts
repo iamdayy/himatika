@@ -95,22 +95,22 @@ export default defineNuxtConfig({
       },
     },
     "/api/otp/generate": {
-        security: {
-            rateLimiter: {
-                tokensPerInterval: 5,
-                interval: 60000,
-                headers: false,
-            }
-        }
+      security: {
+        rateLimiter: {
+          tokensPerInterval: 5,
+          interval: 60000,
+          headers: false,
+        },
+      },
     },
     "/api/otp/verify": {
-        security: {
-            rateLimiter: {
-                tokensPerInterval: 10,
-                interval: 60000,
-                headers: false,
-            }
-        }
+      security: {
+        rateLimiter: {
+          tokensPerInterval: 10,
+          interval: 60000,
+          headers: false,
+        },
+      },
     },
     "/api/agenda/**/participant/register": {
       security: {
@@ -187,7 +187,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "nuxt-security",
     "@vite-pwa/nuxt",
-    "@vercel/speed-insights",
+    // "@vercel/speed-insights",
   ],
   pwa: {
     manifest: {
@@ -392,8 +392,15 @@ export default defineNuxtConfig({
             sex: "'female' | 'male'",
           },
           guest: {
+            fullName: "string",
             email: "string",
+            phone: "string",
             instance: "string",
+            avatar: "string",
+            NIM: "number",
+            class: "string",
+            semester: "number",
+            prodi: "string",
           },
         },
       },
