@@ -231,9 +231,18 @@ const register = async (): Promise<boolean | FormError> => {
             refreshCommittee();
             return true;
         }
+        toast.add({
+            title: $ts('failed'),
+            description: $ts('failed_to_register'),
+            color: 'error',
+        });
         return false;
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        toast.add({
+            title: $ts('failed'),
+            description: error?.data?.statusMessage || error?.data?.message || error?.statusMessage || error?.message || $ts('failed_to_register'),
+            color: 'error',
+        });
         return false;
     }
 }
@@ -252,17 +261,30 @@ const payment = async (): Promise<boolean | FormError> => {
             refreshCommittee();
             return true;
         }
+        toast.add({
+            title: $ts('failed'),
+            description: $ts('failed_to_register_payment'),
+            color: 'error',
+        });
         return false;
-    } catch (error) {
-        console.error(error);
-        toast.add({ title: $ts('error'), description: 'Failed to create payment', color: 'error' });
+    } catch (error: any) {
+        toast.add({
+            title: $ts('failed'),
+            description: error?.data?.statusMessage || error?.data?.message || error?.statusMessage || error?.message || $ts('failed_to_register_payment'),
+            color: 'error',
+        });
         return false;
     }
 }
 
 const onCancelPayment = async () => {
     refreshCommittee();
-    activeStep.value = steps.value.findIndex(s => s.id === 'select_payment');
+    const stepIndex = steps.value.findIndex(s => s.id === 'select_payment');
+    if (stepIndex !== -1) {
+        activeStep.value = stepIndex;
+    } else {
+        activeStep.value = 1;
+    }
 }
 
 // --- VALIDATION RULES ---

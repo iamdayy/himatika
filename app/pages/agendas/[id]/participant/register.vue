@@ -102,6 +102,7 @@ const steps = computed<Step[]>(() => {
     });
 });
 const activeStep = ref(0);
+const showLoginModal = ref(false);
 
 const registerAs = ref((participant.value?.guest as IGuest | undefined) ? ((participant.value?.guest as IGuest | undefined)?.instance ? 'non-student' : 'student-guest') : (user.value ? 'student' : 'non-student'));
 const draftRegistration = useLocalStorage(`draft_registration_${id}`, {
@@ -292,10 +293,18 @@ const register = async (): Promise<boolean | FormError> => {
             })
             return false;
         }
-    } catch (error) {
+    } catch (error: any) {
+        const errorMsg = error?.data?.statusMessage || error?.data?.message || error?.statusMessage || error?.message || $ts('failed_to_register');
+
+        // Intercept specific error when a guest uses a Member's email
+        if (error?.data?.statusCode === 403 && errorMsg.includes('Mahasiswa (Member)')) {
+            showLoginModal.value = true;
+            return false;
+        }
+
         toast.add({
             title: $ts('failed'),
-            description: $ts('failed_to_register'),
+            description: errorMsg,
             color: 'error',
         })
         return false;
@@ -312,7 +321,7 @@ const payment = async (): Promise<boolean | FormError> => {
         return false;
     }
     try {
-        const { data, statusCode } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${RegistrationId}/payment`, {
+        const { data, statusCode, statusMessage } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register/${RegistrationId}/payment`, {
             method: 'POST',
             body: {
                 payment_method: formSelectPayment.method,
@@ -326,15 +335,15 @@ const payment = async (): Promise<boolean | FormError> => {
         } else {
             toast.add({
                 title: $ts('failed'),
-                description: $ts('failed_to_register_payment'),
+                description: statusMessage || $ts('failed_to_register_payment'),
                 color: 'error',
             })
             return false;
         }
-    } catch (error) {
+    } catch (error: any) {
         toast.add({
             title: $ts('failed'),
-            description: $ts('failed_to_register_payment'),
+            description: error?.data?.statusMessage || error?.data?.message || error?.statusMessage || error?.message || $ts('failed_to_register_payment'),
             color: 'error',
         })
         return false;
@@ -342,7 +351,12 @@ const payment = async (): Promise<boolean | FormError> => {
 }
 const onCancelPayment = async () => {
     refreshParticipant();
-    activeStep.value = 1;
+    const stepIndex = steps.value.findIndex(s => s.id === 'select_payment');
+    if (stepIndex !== -1) {
+        activeStep.value = stepIndex;
+    } else {
+        activeStep.value = 1;
+    }
 }
 
 
@@ -429,13 +443,13 @@ async function handleAnswer() {
             body: formData,
         });
         if (response.statusCode !== 200) {
-            toast.add({ title: $ts('failed'), description: $ts('failed_to_answer_question'), color: 'error' });
+            toast.add({ title: $ts('failed'), description: response.statusMessage || $ts('failed_to_answer_question'), color: 'error' });
             return false;
         }
-        toast.add({ title: $ts('success'), description: $ts('success_to_answer_question'), color: 'success' });
+        toast.add({ title: $ts('success'), description: response.statusMessage || $ts('success_to_answer_question'), color: 'success' });
         return true;
-    } catch (error) {
-        toast.add({ title: $ts('success'), description: $ts('failed_to_answer_question'), color: 'error' });
+    } catch (error: any) {
+        toast.add({ title: $ts('failed'), description: error?.data?.statusMessage || error?.data?.message || error?.statusMessage || error?.message || $ts('failed_to_answer_question'), color: 'error' });
         return false;
     }
 }
@@ -701,6 +715,36 @@ watch(participant, (newValue) => {
                 </div>
             </template>
         </CoreStepper>
+
+        <!-- Login Required Modal -->
+        <UModal v-model="showLoginModal">
+            <div class="p-6 text-center space-y-6">
+                <div
+                    class="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center">
+                    <UIcon name="i-heroicons-user-circle" class="w-10 h-10" />
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Email Terdaftar Sebagai Mahasiswa
+                    </h3>
+                    <p class="text-gray-500 dark:text-gray-400">
+                        Sistem mendeteksi bahwa email <span class="font-semibold text-gray-700 dark:text-gray-300">{{
+                            formRegistration.email }}</span> sudah terdaftar sebagai akun Mahasiswa (Member). Silakan
+                        login
+                        terlebih dahulu untuk melanjutkan pendaftaran acara ini menggunakan akun Anda.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <UButton color="neutral" variant="soft" @click="showLoginModal = false"
+                        class="justify-center flex-1">
+                        Kembali
+                    </UButton>
+                    <UButton color="primary" :to="`/login?callbackUrl=/agendas/${id}/participant/register`"
+                        class="justify-center flex-1">
+                        Login Sekarang
+                    </UButton>
+                </div>
+            </div>
+        </UModal>
     </div>
 </template>
 <style scoped></style>

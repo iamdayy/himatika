@@ -48,7 +48,7 @@ export default defineEventHandler(
       if (!agenda) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Agenda not found",
+          statusMessage: "Acara atau agenda yang Anda tuju tidak ditemukan.",
         });
       }
       const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
@@ -56,13 +56,13 @@ export default defineEventHandler(
       if (!participant || participant.agendaId.toString() !== id) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Participant not found",
+          statusMessage: "Data pendaftaran peserta Anda tidak ditemukan. Silakan ulangi proses pendaftaran.",
         });
       }
       if (participant.payment?.status === "success") {
         throw createError({
           statusCode: 400,
-          statusMessage: "Payment already completed",
+          statusMessage: "Pembayaran untuk pendaftaran ini sudah berhasil diselesaikan. Anda tidak dapat membuat tagihan baru.",
         });
       }
       if (
@@ -92,7 +92,7 @@ export default defineEventHandler(
         // Tapi disini kita throw error dulu
         throw createError({
           statusCode: 400,
-          statusMessage: "Invalid payment amount",
+          statusMessage: "Total tagihan pembayaran tidak valid (Rp 0). Harap periksa kembali detail tagihan Anda atau hubungi panitia.",
         });
       }
       const payment = await createCharge({
@@ -185,7 +185,7 @@ export default defineEventHandler(
       console.error("Error creating payment:", error);
       throw createError({
         statusCode: error.statusCode || 500,
-        statusMessage: error.statusMessage || "Internal server error",
+        statusMessage: error.statusMessage || "Terjadi kesalahan pada server saat mencoba membuat tagihan pembayaran. Silakan coba beberapa saat lagi.",
       });
     }
   }
