@@ -757,6 +757,8 @@ watch(participant, (newValue) => {
                 </div>
                 <div v-else-if="step?.id === 'payment'">
                     <PaymentDetail :amount="agenda?.configuration.participant.amount" :payment="formSelectPayment"
+                        :agenda-id="id"
+                        :registered-id="participant?._id as string || registrationId as string || undefined"
                         @cancel="onCancelPayment" />
                 </div>
                 <div v-else-if="step?.id === 'success'"

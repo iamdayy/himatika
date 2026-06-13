@@ -96,6 +96,8 @@ export default defineEventHandler(
         });
       }
       if (body.payment_method === "manual_transfer") {
+        const manualTarget = agenda.configuration?.manualPayments?.find((m: any) => m._id?.toString() === body.manual_target);
+
         participant.payment = {
           ...participant.payment,
           status: "pending",
@@ -104,11 +106,12 @@ export default defineEventHandler(
           transaction_id: `MANUAL-${Date.now()}`,
           expiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
           time: new Date(),
-          bank: "manual",
-          va_number: "",
+          bank: manualTarget?.name || "manual",
+          va_number: manualTarget?.account || "",
           qris_png: "",
           amount: totalAmount,
           manual_target: body.manual_target || "",
+          biller_code: manualTarget?.owner || "",
         } as any;
         await participant.save();
 

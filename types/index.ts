@@ -254,6 +254,7 @@ export interface IPayment {
   manual_target?: string;
   proof_url?: string;
   amount?: number;
+  biller_code?: string;
 }
 
 export interface IPaymentVerification {

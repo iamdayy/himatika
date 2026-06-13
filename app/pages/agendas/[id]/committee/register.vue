@@ -469,6 +469,7 @@ onMounted(() => {
                     <div v-if="formPayment">
                         <PaymentDetail v-if="formPayment.method !== 'cash'"
                             :amount="agenda?.configuration.committee.amount" :payment="formPayment"
+                            :agenda-id="id as string" :registered-id="registrationId?.toString()"
                             @cancel="onCancelPayment" @success="refreshCommittee" />
                         <div v-else>
                             <UAlert color="success" :title="$ts('cash_payment')"

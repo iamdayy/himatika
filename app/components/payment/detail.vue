@@ -1,8 +1,9 @@
 <template>
-    <UCard v-if="payment.status === 'pending'"
+    <UCard v-if="payment.status === 'pending' || payment.status === 'verifying'"
         :ui="{ root: 'ring-1 ring-gray-200 dark:ring-gray-800 shadow-xl rounded-3xl', body: 'p-0 sm:p-0', header: 'p-0 sm:p-0' }">
         <template #header>
-            <div class="bg-gradient-to-br from-primary-600 to-indigo-700 p-5 md:p-6 text-white relative overflow-hidden">
+            <div
+                class="bg-gradient-to-br from-primary-600 to-indigo-700 p-5 md:p-6 text-white relative overflow-hidden">
                 <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                 <h1 class="text-2xl font-black tracking-tight mb-1">Payment Details</h1>
                 <p class="text-primary-100 text-sm">
@@ -53,8 +54,10 @@
                     <div class="relative group">
                         <div class="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 group-hover:border-primary-400 transition-colors cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]"
                             @click="copyVaNumber">
-                            <div class="font-mono text-xl sm:text-2xl font-black tracking-widest text-gray-900 dark:text-white break-all pr-2">{{
-                                payment.va_number }}</div>
+                            <div
+                                class="font-mono text-xl sm:text-2xl font-black tracking-widest text-gray-900 dark:text-white break-all pr-2">
+                                {{
+                                    payment.va_number }}</div>
                             <UButton color="primary" variant="ghost" icon="i-heroicons-clipboard-document" size="md"
                                 class="group-hover:scale-110 transition-transform" />
                         </div>
@@ -64,6 +67,53 @@
                         variant="soft" icon="i-heroicons-check-circle-solid" title="Disalin!">
                         Nomor VA berhasil disalin ke clipboard.
                     </UAlert>
+                </div>
+
+                <div v-else-if="payment.method === 'manual_transfer'">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Transfer Manual ke Rekening/E-Wallet</div>
+                        <UBadge color="primary" variant="soft" size="md" class="uppercase font-bold tracking-wider">
+                            {{ payment.bank || 'BANK' }}
+                        </UBadge>
+                    </div>
+
+                    <div class="relative group">
+                        <div class="flex flex-col p-4 rounded-2xl bg-white dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 group-hover:border-primary-400 transition-colors shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
+                            <div class="text-sm text-gray-500 mb-1">Atas Nama: <span class="font-bold text-gray-900 dark:text-white">{{ payment.biller_code }}</span></div>
+                            <div class="flex items-center justify-between cursor-pointer" @click="copyVaNumber">
+                                <div class="font-mono text-xl sm:text-2xl font-black tracking-widest text-gray-900 dark:text-white break-all pr-2">
+                                    {{ payment.va_number }}
+                                </div>
+                                <UButton color="primary" variant="ghost" icon="i-heroicons-clipboard-document" size="md"
+                                    class="group-hover:scale-110 transition-transform" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <UAlert v-if="copied" class="mt-3 animate-in fade-in slide-in-from-top-2" color="success"
+                        variant="soft" icon="i-heroicons-check-circle-solid" title="Disalin!">
+                        Nomor rekening/e-wallet berhasil disalin ke clipboard.
+                    </UAlert>
+
+                    <UAlert color="warning" variant="subtle" icon="i-heroicons-information-circle" class="mt-3" title="Perhatian">
+                        Lakukan transfer tepat sesuai nominal dan simpan bukti transfer untuk dikonfirmasi ke panitia jika diperlukan.
+                    </UAlert>
+
+                    <div v-if="registeredId && agendaId" class="mt-6 p-4 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800">
+                        <div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                            <UIcon name="i-heroicons-arrow-up-tray" class="w-5 h-5 text-primary-500" />
+                            Upload Bukti Transfer
+                        </div>
+                        
+                        <!-- Show uploaded proof if it exists -->
+                        <div v-if="payment.proof_url" class="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 mb-3 group">
+                            <img :src="payment.proof_url" class="w-full h-auto max-h-48 object-contain bg-white dark:bg-gray-900" alt="Bukti Transfer" />
+                        </div>
+                        
+                        <div v-if="payment.status === 'pending'" class="flex flex-col gap-2">
+                            <UInput type="file" accept="image/*" @change="handleProofUpload" :loading="uploading" :disabled="uploading" />
+                        </div>
+                    </div>
                 </div>
 
                 <div v-else-if="payment.method === 'qris'" class="flex flex-col items-center text-center">
@@ -85,13 +135,6 @@
                         </UButton>
                     </div>
                 </div>
-
-                <!-- <div v-else-if="payment.method === 'e_wallet'" class="flex flex-col items-center text-center">
-                    <div class="mb-2 text-sm text-gray-500">Payment via {{ payment.bank || 'E-Wallet' }}</div>
-                    <div v-if="payment.va_number" class="p-2 bg-white rounded-lg shadow-sm qr-code">
-                        <NuxtImg :src="payment.qris_png" />
-                    </div>
-                </div> -->
 
                 <div v-else-if="payment.method === 'cash'" class="flex flex-col items-center py-4 text-center">
                     <div class="p-3 mb-3 rounded-full bg-green-50">
@@ -124,13 +167,17 @@
             </div>
         </div>
         <template #footer>
-            <div class="flex justify-between gap-3 p-4">
+            <div class="flex flex-col sm:flex-row justify-between gap-3 p-4">
                 <UButton block class="flex-1" @click="cancel" color="error" variant="soft">
-                    Cancel
+                    Batal
                 </UButton>
-                <UButton block color="primary" class="flex-1" @click="checkStatus" :loading="checking">
-                    Check Status
+                <UButton v-if="payment.method !== 'manual_transfer'" block color="primary" class="flex-1" @click="checkStatus" :loading="checking">
+                    Cek Status
                     <UIcon name="i-lucide-refresh-cw" class="ml-1" />
+                </UButton>
+                <UButton v-else block color="warning" class="flex-1 flex gap-2" variant="soft" disabled>
+                    <UIcon name="i-heroicons-clock" class="w-5 h-5" />
+                    Menunggu Verifikasi Admin
                 </UButton>
             </div>
         </template>
@@ -169,7 +216,7 @@
                     Total Paid</div>
                 <div class="text-4xl font-black text-center text-gray-900 dark:text-white">Rp {{ formatCurrency(amount
                     || 0)
-                    }}</div>
+                }}</div>
             </div>
 
             <div class="p-6 md:p-8 space-y-4 relative">
@@ -209,6 +256,7 @@
 </template>
 
 <script setup lang="ts">
+import imageCompression from 'browser-image-compression';
 import type { IPayment } from '~~/types';
 import type { IPaymentResponse } from '~~/types/IResponse';
 
@@ -220,16 +268,70 @@ const props = defineProps({
     amount: {
         type: Number,
     },
+    registeredId: {
+        type: String,
+        required: false,
+    },
+    agendaId: {
+        type: String,
+        required: false,
+    }
 });
 
 const emits = defineEmits(['cancel', 'success']);
+const toast = useToast();
 
 // Reactive state
 const payment = ref(props.payment);
+const uploading = ref(false);
 const remainingTime = ref(calculateRemainingTime());
 const copied = ref(false);
 const checking = ref(false);
 let timer: string | number | NodeJS.Timeout | undefined = undefined;
+
+const handleProofUpload = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (target && target.files && target.files.length > 0) {
+        const file = target.files[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            toast.add({ title: 'Gagal', description: 'File harus berupa gambar', color: 'error' });
+            return;
+        }
+
+        const options = {
+            maxSizeMB: 1, 
+            maxWidthOrHeight: 1200,
+            useWebWorker: true,
+        };
+        
+        try {
+            uploading.value = true;
+            const compressedFile = await imageCompression(file, options);
+            
+            const formData = new FormData();
+            formData.append('proof', compressedFile, compressedFile.name || 'proof.png');
+            
+            const response = await $fetch<any>(`/api/agenda/${props.agendaId}/payment/${props.registeredId}/proof`, {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (response.statusCode === 200) {
+                payment.value.proof_url = response.data?.payment?.proof_url;
+                payment.value.status = 'verifying';
+                toast.add({ title: 'Berhasil', description: 'Bukti transfer berhasil diunggah.', color: 'success' });
+            } else {
+                throw new Error(response.statusMessage || 'Gagal mengunggah bukti');
+            }
+        } catch (error: any) {
+            toast.add({ title: 'Gagal', description: error.message || 'Terjadi kesalahan saat mengunggah bukti transfer', color: 'error' });
+        } finally {
+            uploading.value = false;
+        }
+    }
+}
 
 
 // Dynamic Instructions based on Payment Method
@@ -256,6 +358,25 @@ const paymentInstructions = computed(() => {
                     <li>Select <b>Other Trans</b> > <b>Transfer</b> > <b>Virtual Account</b></li>
                     <li>Enter VA Number: <b>${payment.value.va_number}</b></li>
                     <li>Confirm payment</li>
+                </ol>`,
+            }
+        ];
+    }
+
+    if (payment.value.method === 'manual_transfer') {
+        const bankName = payment.value.bank?.toUpperCase() || 'Bank / E-Wallet';
+        return [
+            {
+                label: `Transfer ke ${bankName}`,
+                icon: "i-lucide-smartphone",
+                defaultOpen: true,
+                content: `<ol class="pl-5 space-y-1 list-decimal">
+                    <li>Buka aplikasi Mobile Banking atau E-Wallet Anda</li>
+                    <li>Pilih menu Transfer ke Rekening / E-Wallet</li>
+                    <li>Masukkan Nomor Tujuan: <b>${payment.value.va_number}</b></li>
+                    <li>Pastikan nama penerima adalah: <b>${payment.value.biller_code}</b></li>
+                    <li>Masukkan nominal transfer: <b>Rp ${formatCurrency(props.amount || 0)}</b></li>
+                    <li>Selesaikan pembayaran dan <b>simpan tangkapan layar (screenshot) bukti transfer</b></li>
                 </ol>`,
             }
         ];
