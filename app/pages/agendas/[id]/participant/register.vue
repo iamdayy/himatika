@@ -107,6 +107,13 @@ const steps = computed<Step[]>(() => {
 const activeStep = ref(0);
 
 const registerAs = ref((participant.value?.guest as IGuest | undefined) ? ((participant.value?.guest as IGuest | undefined)?.instance ? 'non-student' : 'student-guest') : (user.value ? 'student' : 'non-student'));
+const selectedTicketModelId = ref<string | undefined>(undefined);
+const ticketModels = computed(() => agenda.value?.configuration?.participant?.ticketModels || []);
+const hasTicketModels = computed(() => ticketModels.value.length > 0);
+const selectedTicketModel = computed(() => {
+    if (!selectedTicketModelId.value) return null;
+    return ticketModels.value.find((m: any) => (m._id || m.name) === selectedTicketModelId.value) || null;
+});
 const draftRegistration = useLocalStorage(`draft_registration_${id}`, {
     registerAs: registerAs.value,
     fullName: '',
@@ -171,11 +178,11 @@ const formRegistration = reactive({
     confirmEmail: initialFormData.value.confirmEmail || '',
 });
 
-watch(formRegistration, (newVal) => {
+watchDebounced(formRegistration, (newVal) => {
     if (!user.value) {
         draftRegistration.value = { ...newVal };
     }
-}, { deep: true });
+}, { deep: true, debounce: 500, maxWait: 2000 });
 
 watch(initialFormData, (newVal) => {
     if (user.value) {
@@ -197,9 +204,7 @@ watch(participantData, (p) => {
     }
 }, { immediate: true });
 
-watch(formRegistration, (val) => {
-    draftRegistration.value = { ...val };
-}, { deep: true });
+// Duplicate watcher for draftRegistration removed
 const formSelectPayment = reactiveComputed(() => ({
     method: participant.value?.payment?.method || 'bank_transfer',
     status: participant.value?.payment?.status || 'pending',
@@ -254,7 +259,8 @@ const FEES = {
 };
 
 const priceSummary = computed(() => {
-    const basePrice = agenda.value?.configuration?.participant?.amount || 0;
+    // Gunakan harga dari ticketModel jika ada, fallback ke harga default
+    const basePrice = selectedTicketModel.value?.price ?? agenda.value?.configuration?.participant?.amount ?? 0;
     let adminFee = 0;
 
     if (formSelectPayment.method === 'bank_transfer') {
@@ -295,6 +301,10 @@ const register = async (): Promise<boolean | FormError> => {
         } else {
             body.memberUpdate = formRegistration;
         }
+        // Attach selected ticket model
+        if (selectedTicketModelId.value) {
+            body.ticketModelId = selectedTicketModelId.value;
+        }
 
         const { data, statusCode, statusMessage } = await $api<IAgendaRegisterResponse>(`/api/agenda/${id}/participant/register`, {
             method: 'POST',
@@ -312,6 +322,20 @@ const register = async (): Promise<boolean | FormError> => {
                 color: 'success',
             });
             refreshParticipant();
+            return true;
+        } else if (statusCode === 409) {
+            toast.add({
+                title: $ts('failed'),
+                description: statusMessage || $ts('failed_to_register'),
+                color: 'error',
+            });
+            router.replace({
+                query: {
+                    ...route.query,
+                    participantId: (data as any).participantId,
+                    tab: steps.value?.[1]?.id
+                }
+            });
             return true;
         } else {
             toast.add({
@@ -331,6 +355,17 @@ const register = async (): Promise<boolean | FormError> => {
                 callbackUrl: `/agendas/${id}/participant/register`
             });
             return false;
+        }
+
+        if (error?.data?.statusCode === 409) {
+            router.replace({
+                query: {
+                    ...route.query,
+                    participantId: (error?.data as any).participantId,
+                    tab: steps.value?.[1]?.id
+                }
+            });
+            return true;
         }
 
         toast.add({
@@ -574,6 +609,43 @@ watch(participant, (newValue) => {
                             Anda gunakan aktif untuk menerima tautan tiket acara Anda secara langsung.
                         </template>
                     </UAlert>
+                    <!-- Pilih Model Tiket -->
+                    <div v-if="hasTicketModels" class="mt-6 mx-4">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Pilih Jenis Tiket</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div v-for="model in ticketModels" :key="(model as any)._id || model.name"
+                                class="relative rounded-2xl p-5 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] group"
+                                :class="selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-lg shadow-primary-500/10' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-300 hover:shadow-md'"
+                                @click="selectedTicketModelId = (model as any)._id || model.name">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div :class="selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 group-hover:text-primary-500'"
+                                            class="p-3 rounded-full transition-colors">
+                                            <UIcon
+                                                :name="model.meetLink ? 'i-heroicons-video-camera' : 'i-heroicons-map-pin'"
+                                                class="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-gray-900 dark:text-white">{{ model.name }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                {{ model.meetLink ? 'Online (Zoom/Meet)' : 'Hadir di Lokasi' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-black text-primary-600 dark:text-primary-400">Rp {{
+                                            formatCurrency(model.price) }}</p>
+                                        <p v-if="model.quota" class="text-[10px] text-gray-400">Kuota: {{ model.quota }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div v-if="selectedTicketModelId === ((model as any)._id || model.name)"
+                                    class="absolute top-3 right-3 text-primary-500 animate-in zoom-in duration-300">
+                                    <UIcon name="i-heroicons-check-circle-solid" class="w-5 h-5" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <USeparator class="my-6" />
                     <div class="text-start">
                         <div class="space-y-6 bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800"
@@ -666,7 +738,7 @@ watch(participant, (newValue) => {
                 </div>
                 <div v-else-if="step?.id === 'select_payment'">
                     <div class="p-3 md:p-4">
-                        <h3 class="text-lg font-semibold mb-4">{{ $ts('select_payment_method') }}</h3>
+                        <h3 class="text-lg font-semibold mb-4">Pilih Metode Pembayaran</h3>
 
                         <div class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
@@ -690,21 +762,31 @@ watch(participant, (newValue) => {
                                 </div>
                             </div>
 
-                            <div v-if="formSelectPayment.method === 'bank_transfer'" class="animate-fade-in">
-                                <UFormField label="Select Bank" help="Choose your preferred bank for Virtual Account">
+                            <div v-if="formSelectPayment.method === 'bank_transfer'" class="animate-fade-in mt-6">
+                                <UFormField label="Pilih Bank" help="Pilih bank untuk pembayaran Virtual Account">
                                     <URadioGroup v-model="formSelectPayment.bank" :items="vaBanks"
-                                        class="grid grid-cols-2 gap-2" :ui="{ fieldset: 'w-full' }" />
+                                        class="grid grid-cols-2 sm:grid-cols-4 gap-3" :ui="{ fieldset: 'w-full' }">
+                                        <template #label="{ item }">
+                                            <div class="flex flex-col items-center justify-center p-2">
+                                                <span class="font-bold text-gray-700 dark:text-gray-200">{{ item.label }}</span>
+                                            </div>
+                                        </template>
+                                    </URadioGroup>
                                 </UFormField>
                             </div>
 
-                            <div v-if="formSelectPayment.method === 'manual_transfer'" class="animate-fade-in">
+                            <div v-if="formSelectPayment.method === 'manual_transfer'" class="animate-fade-in mt-6">
                                 <UFormField label="Pilih Rekening Tujuan"
                                     help="Pilih rekening bank atau e-wallet yang dituju">
                                     <URadioGroup v-model="formSelectPayment.manual_target"
-                                        :items="(agenda?.configuration?.manualPayments || []).map(p => ({ label: `${p.name} - ${p.account} a.n ${p.owner}`, value: p.name }))"
+                                        :items="(agenda?.configuration?.manualPayments || []).map(p => ({ label: p.name, account: p.account, owner: p.owner, value: p.name }))"
                                         class="grid grid-cols-1 md:grid-cols-2 gap-3" :ui="{ fieldset: 'w-full' }">
                                         <template #label="{ item }">
-                                            <span class="font-medium">{{ item.label }}</span>
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-gray-900 dark:text-white">{{ item.label }}</span>
+                                                <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ item.account }}</span>
+                                                <span class="text-xs text-gray-500">a.n {{ item.owner }}</span>
+                                            </div>
                                         </template>
                                     </URadioGroup>
                                 </UFormField>
@@ -719,36 +801,44 @@ watch(participant, (newValue) => {
                                 <h4
                                     class="font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2 uppercase tracking-widest text-xs">
                                     <UIcon name="i-heroicons-receipt-percent" class="w-5 h-5 text-primary-500" />
-                                    Payment Summary
+                                    Ringkasan Pembayaran
                                 </h4>
                                 <div class="space-y-4 font-mono text-sm">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-500 dark:text-gray-400">Ticket Price</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Harga Tiket</span>
                                         <span class="font-medium text-gray-900 dark:text-gray-100">Rp {{
                                             formatCurrency(priceSummary.base) }}</span>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="text-gray-500 dark:text-gray-400">Admin Fee</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Biaya Layanan</span>
                                         <span class="font-medium text-gray-900 dark:text-gray-100">Rp {{
                                             formatCurrency(priceSummary.admin) }}</span>
                                     </div>
                                     <div
                                         class="pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-800 flex justify-between items-center">
                                         <span
-                                            class="font-bold text-gray-900 dark:text-white text-base font-sans">Total</span>
-                                        <span class="font-black text-2xl text-primary-600 dark:text-primary-400">Rp {{
+                                            class="font-bold text-gray-900 dark:text-white text-base font-sans">Total Pembayaran</span>
+                                        <span class="font-black text-2xl text-primary-600 dark:text-primary-400 drop-shadow-sm">Rp {{
                                             formatCurrency(priceSummary.total) }}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div v-else class="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-lg">
-                                <div class="flex gap-3">
-                                    <UIcon name="i-heroicons-information-circle" class="w-6 h-6 text-yellow-500" />
-                                    <div class="text-sm text-yellow-700 dark:text-yellow-200">
-                                        Please come to the committee secretariat to make a cash payment.
-                                        Amount: <strong>Rp {{ formatCurrency(agenda?.configuration.participant.amount ||
-                                            0) }}</strong>
+                            <div v-else class="relative overflow-hidden bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10 p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm mt-8">
+                                <div class="flex gap-4 relative z-10">
+                                    <div class="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-xl h-fit hidden sm:block">
+                                        <UIcon name="i-heroicons-wallet" class="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div class="space-y-1 text-sm text-amber-900 dark:text-amber-100 w-full">
+                                        <p class="font-bold text-base flex items-center gap-2">
+                                            <UIcon name="i-heroicons-wallet" class="w-5 h-5 sm:hidden" />
+                                            Pembayaran Tunai (Cash)
+                                        </p>
+                                        <p>Silakan datang ke sekretariat panitia untuk melakukan pembayaran secara tunai.</p>
+                                        <div class="mt-4 pt-3 border-t border-amber-200/50 dark:border-amber-800/50 flex items-center justify-between">
+                                            <span class="font-medium">Total Tagihan:</span>
+                                            <strong class="text-xl text-amber-700 dark:text-amber-300 font-mono">Rp {{ formatCurrency(priceSummary.total) }}</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

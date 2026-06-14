@@ -107,6 +107,17 @@ export default defineEventHandler(async (event) => {
       myParticipant = await ParticipantModel.findOne({ agendaId: id, guest: user.guest._id }).lean();
     }
 
+    // Hapus meetLink untuk non-organizer agar link zoom tidak bocor di frontend
+    if (!event.context.organizer && eventDataDoc.configuration?.participant?.ticketModels) {
+      eventDataDoc.configuration.participant.ticketModels = eventDataDoc.configuration.participant.ticketModels.map(m => {
+        if (m.meetLink) {
+          // Ganti string meetLink menjadi nilai dummy sekadar untuk indikator boolean di frontend
+          return { ...m, meetLink: "true" };
+        }
+        return m;
+      });
+    }
+
     const agenda = {
       ...eventDataDoc,
       participants,

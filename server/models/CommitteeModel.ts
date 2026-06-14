@@ -56,6 +56,9 @@ const committeeSchema = new Schema<ICommitteeSchema>(
       type: Types.ObjectId,
       ref: "Doc",
     },
+    ticketModelId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

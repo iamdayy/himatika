@@ -136,7 +136,9 @@ const configurationState = reactiveComputed<IAgendaConfiguration>(() => {
                 start: new Date(),
                 end: new Date(),
             },
-        }
+            ticketModels: [],
+        },
+        manualPayments: [],
     };
 });
 type ICommitteeState = {
@@ -1020,6 +1022,46 @@ const links = [
                                             </div>
                                         </template>
                                     </UCollapsible>
+                                </UFormField>
+                                <UFormField label="Model Tiket (Luring/Daring)" v-if="configurationState.participant.pay">
+                                    <div class="space-y-3">
+                                        <UButton icon="i-heroicons-plus" color="neutral" variant="subtle"
+                                            @click="() => {
+                                                if (!configurationState.participant.ticketModels) {
+                                                    configurationState.participant.ticketModels = [];
+                                                }
+                                                configurationState.participant.ticketModels.push({ name: '', price: 0 });
+                                            }" block class="mb-2" :size="responsiveUISizes.button">
+                                            Tambah Model Tiket
+                                        </UButton>
+                                        <div v-for="(model, index) in configurationState.participant.ticketModels" :key="index"
+                                            class="p-4 rounded-xl ring-1 ring-gray-200 dark:ring-gray-700 space-y-3 bg-white/50 dark:bg-gray-800/30">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Tiket #{{ index + 1 }}</span>
+                                                <UButton icon="i-heroicons-trash" color="error" variant="ghost" size="xs"
+                                                    @click="configurationState.participant.ticketModels?.splice(index, 1)" />
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <UFormField label="Nama Tiket">
+                                                    <UInput v-model="model.name" placeholder="contoh: Luring / Daring" :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                                <UFormField label="Harga">
+                                                    <UInputNumber v-model="model.price" :format-options="{
+                                                        style: 'currency',
+                                                        currency: 'IDR',
+                                                        currencyDisplay: 'code',
+                                                        currencySign: 'accounting'
+                                                    }" orientation="vertical" :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                                <UFormField label="Kuota (opsional)">
+                                                    <UInputNumber v-model="model.quota" placeholder="Kosongkan jika unlimited" orientation="vertical" :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                                <UFormField label="Link Zoom/Meet (opsional)" help="Untuk tiket daring">
+                                                    <UInput v-model="model.meetLink" placeholder="https://zoom.us/j/..." :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </UFormField>
                             </div>
                         </div>

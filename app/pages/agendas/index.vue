@@ -27,6 +27,7 @@ const sort = ref('date');
 const order = ref('desc');
 const upcomingOnly = ref(false);
 const search = ref('');
+const debouncedSearch = refDebounced(search, 500);
 const selectedCategory = ref<string>(categories.value);
 const selectedTags = ref<string[]>([]);
 
@@ -40,7 +41,7 @@ const { data: agendas, refresh: refreshAgendas, pending } = useLazyAsyncData("ag
         sort: sort.value,
         order: order.value,
         showMissed: !upcomingOnly.value,
-        search: search.value,
+        search: debouncedSearch.value,
         category: selectedCategory.value,
         tags: selectedTags.value
     }
@@ -57,7 +58,7 @@ const { data: agendas, refresh: refreshAgendas, pending } = useLazyAsyncData("ag
         data: [],
         count: 0
     }),
-    watch: [page, perPage, sort, order, upcomingOnly, search, selectedCategory, selectedTags]
+    watch: [page, perPage, sort, order, upcomingOnly, debouncedSearch, selectedCategory, selectedTags]
 });
 
 const showPaidOnly = ref(false);

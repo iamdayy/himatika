@@ -50,6 +50,9 @@ const participantSchema = new Schema<IParticipantSchema>(
       type: Types.ObjectId,
       ref: "Doc",
     },
+    ticketModelId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

@@ -122,6 +122,24 @@ const jobSchema = new Schema<IJobSchema>({
   },
 });
 
+const ticketModelSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  quota: {
+    type: Number,
+  },
+  meetLink: {
+    type: String,
+  },
+});
+
 /**
  * Schema for representing a committee configuration.
  */
@@ -168,6 +186,10 @@ const committeeConfigurationSchema = new Schema<ICommitteeConfigurationSchema>({
         "question type options required max min acceptedFileTypes maxFileSize",
     },
   },
+  ticketModels: {
+    type: [ticketModelSchema],
+    default: [],
+  },
 });
 /**
  * Schema for representing a participant configuration.
@@ -212,6 +234,10 @@ const participantConfigurationSchema =
         select:
           "question type options required max min acceptedFileTypes maxFileSize",
       },
+    },
+    ticketModels: {
+      type: [ticketModelSchema],
+      default: [],
     },
   });
 
