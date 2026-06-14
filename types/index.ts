@@ -224,6 +224,7 @@ export interface ICommittee {
     | (IReqruitment & { approved: boolean }[]);
   answers?: IAnswer[];
   certificateDoc?: string | Types.ObjectId | IDoc;
+  ticketModelId?: string;
 }
 
 /**
@@ -292,6 +293,7 @@ export interface IParticipant {
     | (IReqruitment & { approved: boolean }[]);
   answers?: IAnswer[];
   certificateDoc?: string | Types.ObjectId | IDoc;
+  ticketModelId?: string;
 }
 
 /**
@@ -307,6 +309,14 @@ export interface ICategory {
 export interface IJob {
   label: string;
   count: number;
+}
+
+export interface ITicketModel {
+  _id?: string | Types.ObjectId;
+  name: string;
+  price: number;
+  quota?: number;
+  meetLink?: string;
 }
 
 export interface IReqruitment {
@@ -326,6 +336,7 @@ export interface IAgendaCommitteeConfiguration {
   reqruitments?: IReqruitment[];
   jobAvailables?: IJob[];
   questions?: IQuestion[] | Types.ObjectId[];
+  ticketModels?: ITicketModel[];
 }
 
 export interface IAgendaParticipantConfiguration {
@@ -339,6 +350,7 @@ export interface IAgendaParticipantConfiguration {
     end: Date;
   };
   questions?: IQuestion[] | Types.ObjectId[];
+  ticketModels?: ITicketModel[];
 }
 
 

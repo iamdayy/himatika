@@ -88,6 +88,17 @@ const eventStatus = computed<EventStatus | null>(() => {
 const priceLabel = computed(() => {
     const participantConfig = agenda.value?.configuration?.participant;
     if (!participantConfig?.pay) return 'GRATIS';
+    const ticketModels = participantConfig.ticketModels || [];
+    if (ticketModels.length > 0) {
+        const prices = ticketModels.map(m => m.price).sort((a, b) => a - b);
+        const fmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' });
+        const minPrice = prices[0] ?? 0;
+        const maxPrice = prices[prices.length - 1] ?? 0;
+        if (minPrice === maxPrice) {
+            return fmt.format(minPrice);
+        }
+        return `${fmt.format(minPrice)} - ${fmt.format(maxPrice)}`;
+    }
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(participantConfig.amount);
 });
 
@@ -206,8 +217,7 @@ const generateCertificate = async () => {
             }
         });
         if (res.success) {
-            // Refresh the agenda data to get updated certificateDoc reference
-            await refresh();
+            // Update local certificate status so UI reflects the new state immediately
             // Update local certificate status so UI reflects the new state immediately
             await fetchCertificateStatus(myParticipant.value);
             if (res.signsTotal > 0 && res.signedCount < res.signsTotal) {

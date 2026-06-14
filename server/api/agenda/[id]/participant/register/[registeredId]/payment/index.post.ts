@@ -77,7 +77,15 @@ export default defineEventHandler(
         };
       }
       // --- LOGIC HARGA BARU ---
-      const ticketPrice = agenda.configuration?.participant?.amount || 0;
+      // Resolve harga tiket: jika peserta memilih ticketModel, gunakan harga dari model tersebut
+      let ticketPrice = agenda.configuration?.participant?.amount || 0;
+      if (participant.ticketModelId) {
+        const ticketModels = agenda.configuration?.participant?.ticketModels || [];
+        const selectedModel = ticketModels.find((m: any) => m._id?.toString() === participant.ticketModelId);
+        if (selectedModel) {
+          ticketPrice = selectedModel.price;
+        }
+      }
 
       // Hitung Admin Fee berdasarkan tipe pembayaran yang dipilih user
       const adminFee = calculateAdminFee(ticketPrice, body.payment_method);
