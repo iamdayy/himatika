@@ -3,7 +3,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { IResponse } from "~~/types/IResponse";
 
-export default defineEventHandler(async (event): Promise<IResponse> => {
+export default defineEventHandler(async (event): Promise<any> => {
   try {
     // 1. Auth Check
     const user = event.context.user;

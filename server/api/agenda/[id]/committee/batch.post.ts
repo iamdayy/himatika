@@ -1,8 +1,8 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IResponse } from "~~/types/IResponse";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
 
-export default defineEventHandler(async (event): Promise<IResponse> => {
+export default defineEventHandler(async (event): Promise<any> => {
   try {
     const user = event.context.user;
     if (!user || !user.member.organizer) throw createError({ statusCode: 403 });
@@ -23,16 +23,19 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const nims = body.data.map((d) => d.nim);
     const members = await MemberModel.find({ NIM: { $in: nims } });
 
-    const existingCommitteeIds =
-      agenda.committees?.map((c) => c.member?.toString()) || [];
+    const existingCommittees = await CommitteeModel.find({ agendaId: id });
+    const existingCommitteeIds = existingCommittees.map((c) => c.member?.toString());
+
     let addedCount = 0;
     const failedMembers: any[] = [];
+    const newCommittees: any[] = [];
 
     // Loop data request untuk mencocokkan jabatan
     body.data.forEach((reqItem) => {
       const member = members.find((m) => m.NIM === reqItem.nim);
       if (member && !existingCommitteeIds.includes(member.id.toString())) {
-        agenda.committees?.push({
+        newCommittees.push({
+          agendaId: id,
           member: member.id,
           job: reqItem.job || "Anggota", // Default job
           approved: true, // Auto approve karena import admin
@@ -46,7 +49,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       }
     });
 
-    await agenda.save();
+    if (newCommittees.length > 0) {
+      await CommitteeModel.insertMany(newCommittees);
+    }
 
     return {
       statusCode: 200,
