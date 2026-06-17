@@ -22,6 +22,7 @@ export default defineNitroPlugin(async () => {
       // Opsi tambahan untuk kestabilan serverless
       // bufferCommands: false,
       maxPoolSize: 10, // Batasi jumlah koneksi per instance
+      retryWrites: false, // Wajib false untuk standalone MongoDB (tanpa replica set)
     });
     // cachedConnection = conn;
     console.log("DB connection established (New).");
