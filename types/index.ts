@@ -410,6 +410,8 @@ export interface IAgenda {
     committees?: ICommittee[];
     participants?: IParticipant[];
   };
+  participants?: IParticipant[];
+  committees?: ICommittee[];
   gallery?: {
     photos?: IPhoto[];
     videos?: IVideo[];

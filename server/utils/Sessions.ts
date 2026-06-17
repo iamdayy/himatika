@@ -153,6 +153,13 @@ export const refreshSession = async (payload: string) => {
 
     // Kita hanya update JIKA refreshToken di DB masih sama dengan payload (belum diubah orang lain)
     if (session.refreshToken === payload) {
+      // 1. Debouncing: Cegah concurrent refresh dalam waktu sangat berdekatan
+      const timeSinceLastUpdate = new Date().getTime() - new Date(session.updatedAt || 0).getTime();
+      if (timeSinceLastUpdate < 10000) {
+        // Jika baru di-update kurang dari 10 detik lalu oleh request concurrent, kembalikan token yang baru jadi
+        return { token: session.token };
+      }
+
       // Determine if it's a user or guest session for the new token payload
       const tokenPayload = session.user ? { user: session.user } : { guest: session.guest };
       
@@ -160,10 +167,12 @@ export const refreshSession = async (payload: string) => {
         expiresIn: "1d",
       });
 
+      // 2. Atomic Update: Gunakan session.token lama sebagai kondisi untuk mencegat race condition
       const updatedSession = await SessionModel.findOneAndUpdate(
         {
           _id: session._id,
           refreshToken: payload,
+          token: session.token, // Pastikan token belum ditimpa request lain
         },
         {
           $set: {
@@ -180,7 +189,17 @@ export const refreshSession = async (payload: string) => {
         return {
           token: newToken,
         };
+      } else {
+        // Jika gagal menimpa (atomic update fail), artinya request lain sudah mendahului!
+        // Ambil token hasil update dari request lain tersebut
+        const concurrentSession = await SessionModel.findById(session._id);
+        if (concurrentSession) {
+          return {
+            token: concurrentSession.token,
+          };
+        }
       }
+
       throw createError({
          statusMessage: "Concurrent Refresh Failed",
          statusCode: 401,

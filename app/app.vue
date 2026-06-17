@@ -11,7 +11,7 @@ const
       return {
         left: `${x.value}px`,
         top: `${y.value}px`,
-        opacity: 0.7,
+        opacity: 0.4,
       };
     }
     return {
@@ -42,7 +42,7 @@ setTimeout(() => {
         <!-- Maintenance Mode Screen -->
         <!-- <div class="min-h-[100dvh] flex flex-col items-center justify-center p-4 text-center z-50 relative">
           <div
-            class="max-w-md w-full bg-red-50 dark:bg-red-950/40 p-8 rounded-3xl shadow-2xl border border-red-200 dark:border-red-900/50 backdrop-blur-xl">
+            class="max-w-md w-full bg-red-50 dark:bg-red-950/40 p-8 rounded-3xl shadow-lg border border-red-200 dark:border-red-900/50 backdrop-blur-xl">
             <div
               class="w-20 h-20 mx-auto bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mb-6 shadow-inner">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"

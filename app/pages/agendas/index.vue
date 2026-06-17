@@ -425,7 +425,7 @@ const links = computed(() => [{
                                     :to="`/agendas/${agenda._id}`" class="group h-full">
                                     <UCard
                                         :ui="{ body: 'p-0 sm:p-0 px-0 md:px-0', header: 'p-0 sm:p-0', footer: 'p-4 sm:p-4' }"
-                                        class="h-full overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ring-1 ring-gray-200 dark:ring-gray-800 border-none group-hover:ring-primary-500/50">
+                                        class="h-full overflow-hidden transition-all duration-500 hover:shadow-lg hover:-translate-y-2 ring-1 ring-gray-200 dark:ring-gray-800 border-none group-hover:ring-primary-500/50">
 
                                         <!-- Card Image -->
                                         <div class="relative aspect-video overflow-hidden">
@@ -521,7 +521,7 @@ const links = computed(() => [{
                                 <NuxtLink v-for="agenda in groupedAgendas[year]![month]" :key="(agenda._id as string)"
                                     :to="`/agendas/${agenda._id}`" class="block group">
                                     <UCard :ui="{ body: 'p-0 sm:p-0 px-0 md:px-0' }"
-                                        class="overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:border-primary-500/50 border border-transparent ring-1 ring-gray-200 dark:ring-gray-800 group-hover:ring-primary-500/50">
+                                        class="overflow-hidden transition-all duration-500 hover:shadow-lg hover:-translate-y-1 hover:border-primary-500/50 border border-transparent ring-1 ring-gray-200 dark:ring-gray-800 group-hover:ring-primary-500/50">
                                         <div class="flex flex-col sm:flex-row h-full sm:h-48">
                                             <!-- Image -->
                                             <div

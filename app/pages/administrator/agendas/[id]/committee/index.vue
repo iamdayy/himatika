@@ -30,15 +30,16 @@ const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 const id = route.params.id;
 const search = ref('');
+const debouncedSearch = refDebounced(search, 500);
 const { data, refresh, pending } = useLazyAsyncData(() => $api<IAgendaCommitteeResponse>(`/api/agenda/${id}/committee`, {
     method: 'GET',
     query: {
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,
-        search: search.value,
+        search: debouncedSearch.value,
     }
 }), {
-    watch: [() => pagination.value.pageIndex, () => pagination.value.pageSize, search],
+    watch: [() => pagination.value.pageIndex, () => pagination.value.pageSize, debouncedSearch],
 });
 
 const toast = useToast();
@@ -171,33 +172,7 @@ const printIdCards = () => {
     }, 500);
 };
 
-// --- BULK ACTIONS ---
-const bulkActions = computed<DropdownMenuItem[][]>(() => [
-    [{
-        label: `Terpilih (${selectedCommittee.value.length})`,
-        disabled: true
-    }],
-    [{
-        label: $ts('export_data'),
-        icon: 'i-heroicons-document-arrow-down',
-        onSelect: generateXlsx
-    }, {
-        label: 'Cetak ID Card',
-        icon: 'i-heroicons-identification',
-        onSelect: printIdCards
-    }],
-    [{
-        label: $ts('set_visit_status'),
-        icon: 'i-heroicons-check-circle',
-        disabled: selectedCommittee.value.length === 0,
-        onSelect: () => setBatch('visiting')
-    }, {
-        label: $ts('set_payment_status'),
-        icon: 'i-heroicons-banknotes',
-        disabled: selectedCommittee.value.length === 0,
-        onSelect: () => setBatch('payment')
-    }]
-]);
+
 
 // --- TABLE COLUMNS ---
 const columns = computed<TableColumn<ICommittee>[]>(() => {
@@ -518,11 +493,19 @@ useHead({
                 </UInput>
 
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <UDropdownMenu v-if="isCommittee" :items="bulkActions" :popper="{ placement: 'bottom-end' }">
-                        <UButton color="white" icon="i-heroicons-cog-6-tooth" trailing-icon="i-heroicons-chevron-down">
-                            {{ selectedCommittee.length > 0 ? `${selectedCommittee.length} Terpilih` : 'Kelola Data' }}
-                        </UButton>
-                    </UDropdownMenu>
+                    <div class="flex items-center gap-2" v-if="isCommittee">
+                        <template v-if="selectedCommittee.length > 0">
+                            <span class="text-sm text-gray-500 mr-1">{{ selectedCommittee.length }} Terpilih:</span>
+                            <UButton @click="setBatch('visiting')" icon="i-heroicons-check-circle" size="sm" color="gray" variant="solid" tooltip="Tandai Hadir">Hadir</UButton>
+                            <UButton @click="setBatch('payment')" icon="i-heroicons-banknotes" size="sm" color="gray" variant="solid" tooltip="Tandai Lunas">Lunas</UButton>
+                            <UButton @click="printIdCards" icon="i-heroicons-identification" size="sm" color="gray" variant="solid" tooltip="Cetak ID Card">Cetak</UButton>
+                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm" color="gray" variant="solid" tooltip="Export Excel">Export</UButton>
+                        </template>
+                        <template v-else>
+                            <UButton @click="printIdCards" icon="i-heroicons-identification" size="sm" color="white" variant="solid">Cetak Semua</UButton>
+                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm" color="white" variant="solid">Export Semua</UButton>
+                        </template>
+                    </div>
 
                     <UButton icon="i-heroicons-arrow-path" variant="ghost" color="gray" @click="refresh()"
                         :loading="pending" tooltip="Refresh Data" />

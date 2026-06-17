@@ -123,7 +123,7 @@ const links = computed(() => [{
             <div v-else-if="nearestAgenda"
                 class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-500 to-primary-700 dark:from-primary-600 dark:to-primary-900 shadow-xl text-white">
                 <div
-                    class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-accent-4 opacity-30 rounded-full blur-3xl">
+                    class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-accent-4 opacity-10 rounded-full blur-2xl">
                 </div>
                 <div
                     class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-accent-3 opacity-30 rounded-full blur-2xl">

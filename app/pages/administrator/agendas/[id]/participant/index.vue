@@ -38,15 +38,16 @@ const ConfirmationModal = overlay.create(ModalsConfirmation);
 
 const id = route.params.id;
 const search = ref('');
+const debouncedSearch = refDebounced(search, 500);
 const { data, refresh, pending } = useLazyAsyncData<IAgendaParticipantResponse>('agenda-participant', () => $fetch(`/api/agenda/${id}/participant`, {
     method: 'GET',
     query: {
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,
-        search: search.value,
+        search: debouncedSearch.value,
     }
 }), {
-    watch: [() => pagination.value.pageIndex, () => pagination.value.pageSize, search],
+    watch: [() => pagination.value.pageIndex, () => pagination.value.pageSize, debouncedSearch],
 });
 const toast = useToast();
 const agenda = computed<IAgenda | undefined>(() => data.value?.data?.agenda);
@@ -400,33 +401,7 @@ const printNametags = () => {
     }, 500);
 };
 
-// --- REFACTOR BULK ACTIONS ---
-const bulkActions = computed<DropdownMenuItem[][]>(() => [
-    [{
-        label: `Terpilih (${selectedParticipant.value.length})`,
-        disabled: true
-    }],
-    [{
-        label: $ts('export_data'),
-        icon: 'i-heroicons-document-arrow-down',
-        onSelect: generateXlsx
-    }, {
-        label: 'Cetak Nametag',
-        icon: 'i-heroicons-identification',
-        onSelect: printNametags
-    }],
-    [{
-        label: $ts('set_visit_status'),
-        icon: 'i-heroicons-check-circle',
-        disabled: selectedParticipant.value.length === 0,
-        onSelect: () => setBatch('visiting')
-    }, {
-        label: $ts('set_payment_status'),
-        icon: 'i-heroicons-banknotes',
-        disabled: selectedParticipant.value.length === 0,
-        onSelect: () => setBatch('payment')
-    }]
-]);
+
 
 /**
  * Generates and downloads an XLSX file of participant users
@@ -702,12 +677,19 @@ useHead({
                     :size="responsiveUISizes.input" class="w-full md:w-64" />
 
                 <div class="flex items-center gap-2 self-end">
-                    <UDropdownMenu v-if="isCommittee" :items="bulkActions" :popper="{ placement: 'bottom-end' }">
-                        <UButton color="white" icon="i-heroicons-cog-6-tooth" trailing-icon="i-heroicons-chevron-down">
-                            {{ selectedParticipant.length > 0 ? `${selectedParticipant.length} Selected` : 'Aksi Massal'
-                            }}
-                        </UButton>
-                    </UDropdownMenu>
+                    <div class="flex items-center gap-2" v-if="isCommittee">
+                        <template v-if="selectedParticipant.length > 0">
+                            <span class="text-sm text-gray-500 mr-1">{{ selectedParticipant.length }} Terpilih:</span>
+                            <UButton @click="setBatch('visiting')" icon="i-heroicons-check-circle" size="sm" color="gray" variant="solid" tooltip="Tandai Hadir">Hadir</UButton>
+                            <UButton @click="setBatch('payment')" icon="i-heroicons-banknotes" size="sm" color="gray" variant="solid" tooltip="Tandai Lunas">Lunas</UButton>
+                            <UButton @click="printNametags" icon="i-heroicons-identification" size="sm" color="gray" variant="solid" tooltip="Cetak Nametag">Cetak</UButton>
+                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm" color="gray" variant="solid" tooltip="Export Excel">Export</UButton>
+                        </template>
+                        <template v-else>
+                            <UButton @click="printNametags" icon="i-heroicons-identification" size="sm" color="white" variant="solid">Cetak Semua</UButton>
+                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm" color="white" variant="solid">Export Semua</UButton>
+                        </template>
+                    </div>
 
                     <UButton icon="i-heroicons-arrow-path" variant="ghost" color="gray" @click="refresh()"
                         :loading="pending" tooltip="Refresh Data" />

@@ -1,10 +1,13 @@
 {
-    "success_to_add_carrousel": "Berhasil menambahkan carousel",
-    "failed_to_add_carrousel": "Gagal menambahkan carousel",
-    "success_to_delete_carrousel": "Berhasil menghapus carousel",
-    "failed_to_delete_carrousel": "Gagal menghapus carousel",
-    "success_to_update_config": "Berhasil memperbarui konfigurasi",
-    "failed_to_update_config": "Gagal memperbarui konfigurasi",
-    "auto_save_enabled": "Simpan otomatis diaktifkan",
-    "auto_save_disabled": "Simpan otomatis dinonaktifkan"
+  "success_to_add_carrousel": "Berhasil menambahkan carousel",
+  "failed_to_add_carrousel": "Gagal menambahkan carousel",
+  "success_to_delete_carrousel": "Berhasil menghapus carousel",
+  "failed_to_delete_carrousel": "Gagal menghapus carousel",
+  "success_to_update_config": "Berhasil memperbarui konfigurasi",
+  "failed_to_update_config": "Gagal memperbarui konfigurasi",
+  "auto_save_enabled": "Simpan otomatis diaktifkan",
+  "auto_save_disabled": "Simpan otomatis dinonaktifkan",
+  "success_to_create_new_encription": "Success to create new encription",
+  "failed_to_create_new_encription": "Failed to create new encription",
+  "config": "Konfigurasi"
 }

@@ -54,7 +54,7 @@ export default defineEventHandler(
             statusMessage: "Aspiration not found",
           };
         }
-        aspiration.votes?.forEach((vote) => {
+        aspiration.votes?.forEach((vote: any) => {
           const exists = (vote.user as IMember).NIM === user.member.NIM;
           if (exists) {
             voteType = vote.voteType;
@@ -110,7 +110,8 @@ export default defineEventHandler(
         })
         .skip((Number(page) - 1) * Number(perPage))
         .limit(Number(perPage))
-        .sort(sortOpt);
+        .sort(sortOpt)
+        .lean();
       const length = await AspirationModel.countDocuments(query);
       if (!aspiration) {
         return {
@@ -122,8 +123,8 @@ export default defineEventHandler(
         statusCode: 200,
         statusMessage: "Aspiration found",
         data: {
-          aspirations: aspiration.map((aspiration) => ({
-            ...aspiration.toObject(),
+          aspirations: aspiration.map((aspiration: any) => ({
+            ...aspiration,
             from: aspiration.anonymous ? undefined : aspiration.from,
           })),
           length,

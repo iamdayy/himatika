@@ -27,8 +27,8 @@ const { data: agenda, pending, refresh } = useLazyAsyncData('admin-agenda-detail
 // --- STATISTIK COMPUTED ---
 const stats = computed(() => {
     if (!agenda.value) return [];
-    const participants = agenda.value.presences?.participants || [];
-    const committees = agenda.value.presences?.committees || [];
+    const participants = agenda.value.participants || [];
+    const committees = agenda.value.committees || [];
 
     const totalParticipants = participants.length;
     const paidParticipants = participants.filter((p: IParticipant) => p.payment?.status === 'success').length;

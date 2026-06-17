@@ -61,8 +61,8 @@ useSeoMeta({
         <!-- Hero Section -->
         <section class="relative w-full mx-auto min-h-[70vh] flex flex-col justify-center overflow-hidden bg-gradient-to-br from-primary-500/5 via-transparent to-accent-4/5 dark:from-primary-500/10 dark:via-transparent dark:to-accent-4/10">
             <!-- Glow background effect -->
-            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/20 dark:bg-primary-500/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
-            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-4/20 dark:bg-accent-4/10 rounded-full blur-3xl -z-10 animate-pulse delay-1000"></div>
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 dark:bg-primary-500/5 rounded-full blur-2xl -z-10 animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-4/10 dark:bg-accent-4/5 rounded-full blur-2xl -z-10 animate-pulse delay-1000"></div>
             
             <div class="text-center px-4 z-10">
                 <NuxtImg provider="localProvider" src="/img/logo.png" alt="Logo"
@@ -152,7 +152,7 @@ useSeoMeta({
             <Contacts />
         </section>
         <UButton
-            class="fixed flex items-center justify-center text-4xl text-white duration-300 bg-blue-600 rounded-full w-14 h-14 z-90 bottom-10 right-8 drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-2xl hover:animate-bounce"
+            class="fixed flex items-center justify-center text-4xl text-white duration-300 bg-blue-600 rounded-full w-14 h-14 z-90 bottom-10 right-8 drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-lg hover:animate-bounce"
             to="#contacts" aria-label="Go to contacts section">
             <UIcon name="i-heroicons-envelope" class="w-8 h-8 text-white" />
         </UButton>

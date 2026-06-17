@@ -19,7 +19,7 @@ export default defineEventHandler(
       if (!user) {
         showNotApproved = false;
       }
-      const agenda = await AgendaModel.findById(id).select("-configuration.participant -description").exec();
+      const agenda = await AgendaModel.findById(id).select("-configuration.participant -description").lean().exec();
       if (!agenda) {
         return {
           statusCode: 404,
@@ -34,6 +34,7 @@ export default defineEventHandler(
           model: AnswerModel,
           select: "question value",
         })
+        .lean()
         .exec();
 
       // Check if the user is an approved committee member
@@ -68,15 +69,13 @@ export default defineEventHandler(
           filteredCommittees = filteredCommittees.filter(c => c.approved === true);
       }
 
-      const paginatedCommittees = filteredCommittees
-        .slice((Number(page) - 1) * Number(perPage), Number(page) * Number(perPage))
-        .map(c => c.toObject());
+      const paginatedCommittees = filteredCommittees.slice((Number(page) - 1) * Number(perPage), Number(page) * Number(perPage));
 
       return {
         statusCode: 200,
         statusMessage: "Success",
         data: {
-          agenda: agenda.toObject(),
+          agenda: agenda,
           committees: paginatedCommittees as any,
           length: filteredCommittees.length,
         },

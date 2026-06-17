@@ -133,7 +133,7 @@ export default defineAppConfig({
     },
     modal: {
       slots: {
-        content: "rounded-3xl shadow-2xl",
+        content: "rounded-3xl shadow-lg",
       },
       variants: {
         fullscreen: {

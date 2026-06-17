@@ -1,1 +1,9 @@
-{}
+{
+  "sign_document": "Sign document",
+  "sign_document_confirmation": "Sign document confirmation",
+  "pdf_not_loaded": "Pdf not loaded",
+  "success_to_sign_document": "Success to sign document",
+  "failed_to_sign_document": "Failed to sign document",
+  "data": "Data",
+  "signed_at": "Signed at"
+}

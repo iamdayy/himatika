@@ -15,7 +15,7 @@ export default defineEventHandler(
         id: string;
       };
       
-      const agenda = await AgendaModel.findById(id).select("-configuration.committee -description").exec();
+      const agenda = await AgendaModel.findById(id).select("-configuration.committee -description").lean().exec();
       if (!agenda) {
         return {
           statusCode: 404,
@@ -31,6 +31,7 @@ export default defineEventHandler(
           model: AnswerModel,
           select: "question value",
         })
+        .lean()
         .exec();
 
       let filteredParticipants = allParticipants;
@@ -57,15 +58,13 @@ export default defineEventHandler(
         });
       }
 
-      const paginatedParticipants = filteredParticipants
-        .slice((Number(page) - 1) * Number(perPage), Number(page) * Number(perPage))
-        .map(p => p.toObject());
+      const paginatedParticipants = filteredParticipants.slice((Number(page) - 1) * Number(perPage), Number(page) * Number(perPage));
 
       return {
         statusCode: 200,
         statusMessage: "Success",
         data: {
-          agenda: agenda.toObject(),
+          agenda: agenda,
           participants: paginatedParticipants as any,
           length: filteredParticipants.length,
         },

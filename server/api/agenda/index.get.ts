@@ -86,7 +86,8 @@ export default defineCachedEventHandler(
         })
         .skip(skip || 0)
         .limit(limit || 0)
-        .sort(sortOpt);
+        .sort(sortOpt)
+        .lean();
       const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
       const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
       
@@ -125,7 +126,7 @@ export default defineCachedEventHandler(
       const agendasWithCounts = agendas.map((agenda) => {
         const agendaIdStr = agenda._id.toString();
         return {
-          ...agenda.toObject(),
+          ...agenda,
           participantsCount: pCountMap.get(agendaIdStr) || 0,
           committeesCount: cCountMap.get(agendaIdStr) || 0,
           myParticipant: myParticipantsMap.get(agendaIdStr) || undefined,

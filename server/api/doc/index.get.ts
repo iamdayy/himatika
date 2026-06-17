@@ -22,8 +22,8 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
         path: "on",
         select: "_id slug title description",
         options: { autopopulate: false },
-      });
-      const groupped = groupByOn(docs.map((doc) => doc.toObject()) as IDoc[]);
+      }).lean();
+      const groupped = groupByOn(docs as IDoc[]);
       return {
         statusCode: 200,
         statusMessage: "Docs fetched",
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
           statusMessage: "Unauthorized",
         };
       }
-      const doc = await DocModel.findById(id);
+      const doc = await DocModel.findById(id).lean();
       if (!doc) {
         return {
           statusCode: 404,
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
         statusCode: 200,
         statusMessage: "Doc fetched",
         data: {
-          doc: doc.toObject() as IDoc,
+          doc: doc as IDoc,
           length: 1,
           signedByMe,
         },
@@ -91,8 +91,9 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
         select: "_id category title description tags",
         options: { autopopulate: false },
       })
-      .sort(sortQuery);
-    const groupped = groupByOn(docs.map((doc) => doc.toObject()) as IDoc[]);
+      .sort(sortQuery)
+      .lean();
+    const groupped = groupByOn(docs as IDoc[]);
 
     const paginated = groupped.slice(
       (page - 1) * perPage,
@@ -147,7 +148,7 @@ function groupByOn(arr: IDoc[]): IDocGrouped[] {
         type: item.onModel?.toLowerCase() as "agenda" | "project",
       });
     } else {
-      result[resultIndex].docs.push({
+      result[resultIndex]!.docs.push({
         doc: item.doc,
         no: item.no,
         uploader: item.uploader,

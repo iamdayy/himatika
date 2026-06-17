@@ -120,7 +120,8 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
           path: "manualPoints",
           model: PointModel,
           select: "amount reason type date status -_id",
-        });
+        })
+        .lean();
 
       if (!member) {
         throw createError({
@@ -133,9 +134,9 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
         statusMessage: "Member fetched",
         data: {
           member: {
-            ...member.toObject(),
+            ...member,
             aspirations: member.aspirations?.filter(
-              (aspiration) => aspiration.anonymous === false
+              (aspiration: any) => aspiration.anonymous === false
             ),
           },
         },
@@ -281,7 +282,8 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       )
       .sort(sortOpt)
       .skip(Number(page) * Number(perPage))
-      .limit(Number(perPage));
+      .limit(Number(perPage))
+      .lean();
 
     return {
       statusCode: 200,

@@ -1,1 +1,15 @@
-{}
+{
+  "file_not_found": "File not found",
+  "success_to_update_member": "Success to update member",
+  "failed_to_update_member": "Failed to update member",
+  "download_template": "Download template",
+  "preview_data": "Preview data",
+  "preview_data_hint": "Preview data hint",
+  "selected": "Selected",
+  "update_selected": "Update selected",
+  "download_failed_member": "Download failed member",
+  "import_warning_hint": "Import warning hint",
+  "no_data_hint": "No data hint",
+  "warning": "Warning",
+  "info": "Info"
+}

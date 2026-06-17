@@ -70,7 +70,7 @@ const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
         accessorKey: 'fullName',
         header: $ts('fullName'),
         cell: ({ row }) => {
-            return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.nim}` }, [
+            return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.nim}` }, () => [
                 h(NuxtImg, { src: row.original.avatar || '/img/profile-blank.png', size: 'sm', provider: 'localProvider', class: "object-cover rounded-full max-w-8 aspect-square", loading: 'lazy', alt: row.original.fullName }),
                 h('div', undefined, [
                     h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.fullName),
@@ -117,7 +117,7 @@ const { pending: pendingStats } = useLazyAsyncData('dashboard-stats', async () =
     return true; // Return sesuatu agar useAsyncData tahu proses selesai
 });
 const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations, memberProfile } = storeToRefs(statsStore);
-const { data: projectsData, pending: pendingProjects } = useLazyAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
+const { data: projectsData, pending: pendingProjects } = useLazyAsyncData('dashboard-projects-list', () => $api<IProjectsResponse>('/api/project'), {
     transform: (data) => ({
         data: data.data?.projects || [],
         count: data.data?.length || 0
@@ -177,15 +177,7 @@ const carouselRef = ref()
  * Set up carousel auto-rotation
  */
 onMounted(() => {
-    setInterval(() => {
-        if (!carouselRef.value) return;
-
-        if (carouselRef.value.page === carouselRef.value.pages) {
-            return carouselRef.value.select(0)
-        }
-
-        carouselRef.value.next()
-    }, 30000);
+    // Autoplay is already handled by UCarousel prop :autoplay="{ delay: 30000 }"
 });
 
 /**
@@ -506,7 +498,7 @@ const color = computed(() => {
             <UTooltip text="Scan to Presence!" placement="left"
                 :popper="{ strategy: 'absolute', scroll: true, arrow: true }">
                 <UButton
-                    class="flex items-center justify-center w-20 h-20 text-4xl text-white duration-300 bg-blue-600 rounded-full drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-2xl hover:animate-bounce"
+                    class="flex items-center justify-center w-20 h-20 text-4xl text-white duration-300 bg-blue-600 rounded-full drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-lg hover:animate-bounce"
                     to="/agendas/scan" id="maido">
                     <UIcon name="i-heroicons-qr-code" class="w-16 h-16 text-white" />
                 </UButton>

@@ -154,7 +154,7 @@ definePageMeta({
         <UCard class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center font-sans">
 
             <div v-if="pending || mePending" class="w-full max-w-md mx-auto space-y-4">
-                <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-lg overflow-hidden">
                     <USkeleton class="h-64 w-full rounded-none" />
                     <div class="p-6 space-y-6">
                         <div class="grid grid-cols-2 gap-6">
@@ -227,7 +227,7 @@ definePageMeta({
                 <!-- Ticket Card -->
                 <div v-else class="relative group">
                     <!-- Clean design without glow effects -->
-                    <div class="relative bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
+                    <div class="relative bg-white dark:bg-gray-800 rounded-4xl shadow-lg overflow-hidden">
 
                         <!-- Top Section: Visual & Header -->
                         <div class="h-64 relative bg-gray-900">

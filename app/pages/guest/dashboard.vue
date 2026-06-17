@@ -104,7 +104,7 @@
             <UTooltip text="Scan to Presence!" placement="left"
                 :popper="{ strategy: 'absolute', scroll: true, arrow: true }">
                 <UButton
-                    class="flex items-center justify-center w-20 h-20 text-4xl text-white duration-300 bg-blue-600 rounded-full drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-2xl hover:animate-bounce"
+                    class="flex items-center justify-center w-20 h-20 text-4xl text-white duration-300 bg-blue-600 rounded-full drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-lg hover:animate-bounce"
                     to="/agendas/scan" id="maido">
                     <UIcon name="i-heroicons-qr-code" class="w-16 h-16 text-white" />
                 </UButton>

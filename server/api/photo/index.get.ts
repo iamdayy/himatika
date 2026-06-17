@@ -22,9 +22,9 @@ export default defineCachedEventHandler(
           path: "on",
           select: "_id slug title description",
           options: { autopopulate: false },
-        });
+        }).lean();
         const groupped = groupByOn(
-          photos.map((photo) => photo.toObject()) as IPhoto[]
+          photos as IPhoto[]
         );
         return {
           statusCode: 200,
@@ -61,9 +61,10 @@ export default defineCachedEventHandler(
           select: "_id category title description tags",
           options: { autopopulate: false },
         })
-        .sort(sortQuery);
+        .sort(sortQuery)
+        .lean();
       const groupped = groupByOn(
-        photos.map((photo) => photo.toObject()) as IPhoto[]
+        photos as IPhoto[]
       );
 
       const paginated = groupped.slice(
@@ -122,9 +123,9 @@ function groupByOn(arr: IPhoto[]): IPhotoGrouped[] {
           },
         ],
         type: item.onModel?.toLowerCase() as "agenda" | "project",
-      });
+      } as IPhotoGrouped);
     } else {
-      result[resultIndex].photos.push({
+      result[resultIndex]!.photos.push({
         image: item.image,
         uploader: item.uploader,
         tags: item.tags,

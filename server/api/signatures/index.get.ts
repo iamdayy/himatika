@@ -27,7 +27,8 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
     })
       .sort(sortOpt)
       .skip((page - 1) * perPage)
-      .limit(perPage);
+      .limit(perPage)
+      .lean();
     const totalDocs = await DocModel.countDocuments({
       signs: { $elemMatch: { user: userId, signed } },
     });
@@ -35,7 +36,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
       statusCode: 200,
       statusMessage: "Dokumen ditemukan",
       data: {
-        doc: docs.map((doc) => ({ ...doc.toObject(), _id: String(doc._id) })),
+        doc: docs.map((doc) => ({ ...doc, _id: String(doc._id) })),
         length: totalDocs,
       },
     };
