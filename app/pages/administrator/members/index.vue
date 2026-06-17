@@ -557,6 +557,8 @@ const links = computed(() => [{
                             class="mx-auto my-3" @click="addModal" />
                         <UButton :label="$ts('import')" :size="responsiveUISizes.button" class="mx-auto my-3"
                             v-if="isOrganizer" to="/administrator/members/import" />
+                        <UButton label="Batch Edit (Excel)" :size="responsiveUISizes.button" class="mx-auto my-3"
+                            v-if="isOrganizer" to="/administrator/members/batch-edit" color="neutral" variant="outline" />
                     </div>
                 </div>
                 <!-- Filters -->
