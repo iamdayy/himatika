@@ -19,9 +19,6 @@ export default defineNitroPlugin(async () => {
   try {
     const conn = await mongoose.connect(config.mongodb_uri, {
       dbName: config.dbName,
-      // Opsi tambahan untuk kestabilan serverless
-      // bufferCommands: false,
-      maxPoolSize: 10, // Batasi jumlah koneksi per instance
       retryWrites: false, // Wajib false untuk standalone MongoDB (tanpa replica set)
     });
     // cachedConnection = conn;
