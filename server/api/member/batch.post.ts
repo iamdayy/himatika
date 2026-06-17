@@ -39,13 +39,44 @@ export default defineEventHandler(
     // Read the request body containing an array of member data
     const body = await readBody<IMember[]>(event);
 
+    // Clean up body to remove null or empty emails to prevent E11000 duplicate key error
+    // Also calculate the correct semester automatically based on enteredYear
+    const cleanedBody = body.map(member => {
+      let currentMember = member;
+
+      // Clean email
+      if (!currentMember.email || currentMember.email.trim() === '') {
+        const { email, ...rest } = currentMember;
+        currentMember = rest as IMember;
+      }
+
+      // Calculate semester
+      if (currentMember.enteredYear) {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth(); // 0-11
+
+        let sem = (currentYear - currentMember.enteredYear) * 2;
+        if (currentMonth >= 8) { // Sept - Dec
+          sem += 1;
+        } else if (currentMonth >= 2) { // Mar - Aug
+          sem += 0;
+        } else { // Jan - Feb
+          sem -= 1;
+        }
+        currentMember.semester = sem > 0 ? sem : 1;
+      }
+
+      return currentMember;
+    });
+
     // Attempt to insert multiple members into the database
     let savedCount = 0;
     let failedCount = 0;
     let failedMembers: IMember[] = []; // Array untuk menyimpan anggota yang gagal disimpan
 
     try {
-      const result = await MemberModel.insertMany(body, {
+      const result = await MemberModel.insertMany(cleanedBody, {
         ordered: false,
         throwOnValidationError: false,
       });
