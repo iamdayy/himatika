@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { AnswerModel } from "~~/server/models/AnswerModel";
 import { IMember } from "~~/types";
 import { IReqAgendaCommitteeQuery } from "~~/types/IRequestPost";
@@ -18,28 +19,25 @@ export default defineEventHandler(
       if (!user) {
         showNotApproved = false;
       }
-      const agenda = await AgendaModel.findById(id).populate({
-        path: "committees",
-        populate: {
-          path: "answers",
-          model: AnswerModel,
-          select: "question value",
-        },
-      });
+      const agenda = await AgendaModel.findById(id).select("-configuration.participant -description").exec();
       if (!agenda) {
         return {
           statusCode: 404,
           statusMessage: "Agenda not found",
         };
       }
-      if (!agenda.committees) {
-        return {
-          statusCode: 404,
-          statusMessage: "Committees not found",
-        };
-      }
-      // Check if the user is a committee member
-      const isCommittee = agenda.committees?.some(
+
+      const allCommittees = await CommitteeModel.find({ agendaId: id })
+        .populate("member", "fullName NIM email")
+        .populate({
+          path: "answers",
+          model: AnswerModel,
+          select: "question value",
+        })
+        .exec();
+
+      // Check if the user is an approved committee member
+      const isCommittee = allCommittees.some(
         (item) =>
           (item.member as IMember | undefined)?.NIM == user?.member.NIM &&
           item.approved === true
@@ -47,53 +45,40 @@ export default defineEventHandler(
       if (isCommittee) {
         showNotApproved = true;
       }
-      const committees =
-        (agenda.committees as ICommitteeSchema[])
-          ?.map((committee) => {
-            return {
-              ...committee.toObject(),
-              answers: committee.answers,
-            };
-          })
-          ?.slice(
-            (Number(page) - 1) * Number(perPage),
-            Number(perPage) * Number(page)
-          )
-          .filter((committee) => {
-            if (search) {
-              const searchString = search.toLowerCase();
-              const nameMember =
-                (
-                  committee.member as IMember | undefined
-                )?.fullName.toLowerCase() || "";
-              const nimMember =
-                (committee.member as IMember | undefined)?.NIM || 0;
-              const emailMember =
-                (
-                  committee.member as IMember | undefined
-                )?.email?.toLowerCase() || "";
-              return (
-                nameMember.includes(searchString) ||
-                nimMember.toString().includes(searchString) ||
-                emailMember.includes(searchString)
-              );
-            }
-            return true;
-          })
-          .filter((Committee) => {
-            if (showNotApproved) {
-              return true;
-            } else {
-              return Committee.approved == true;
-            }
-          }) || [];
+
+      let filteredCommittees = allCommittees;
+
+      if (search) {
+        const searchString = search.toLowerCase();
+        filteredCommittees = allCommittees.filter((committee) => {
+          const nameMember =
+            (committee.member as IMember | undefined)?.fullName.toLowerCase() || "";
+          const nimMember = (committee.member as IMember | undefined)?.NIM || 0;
+          const emailMember =
+            (committee.member as IMember | undefined)?.email?.toLowerCase() || "";
+          return (
+            nameMember.includes(searchString) ||
+            nimMember.toString().includes(searchString) ||
+            emailMember.includes(searchString)
+          );
+        });
+      }
+
+      if (!showNotApproved) {
+          filteredCommittees = filteredCommittees.filter(c => c.approved === true);
+      }
+
+      const paginatedCommittees = filteredCommittees
+        .slice((Number(page) - 1) * Number(perPage), Number(page) * Number(perPage))
+        .map(c => c.toObject());
+
       return {
         statusCode: 200,
         statusMessage: "Success",
         data: {
           agenda: agenda.toObject(),
-          committees: committees,
-          length: committees?.length || 0,
+          committees: paginatedCommittees as any,
+          length: filteredCommittees.length,
         },
       };
     } catch (error: any) {
