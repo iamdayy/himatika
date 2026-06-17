@@ -50,8 +50,7 @@ export default defineEventHandler(
     try {
       const result = await MemberModel.updateMany(
         { NIM: { $in: body.members } }, // Filter by member IDs
-        { [body.field]: body.value }, // Update the specified field with the new value
-        { ordered: false, throwOnValidationError: false }
+        { [body.field]: body.value } // Update the specified field with the new value
       );
 
       savedCount = result.modifiedCount; // Count the number of successfully updated members
