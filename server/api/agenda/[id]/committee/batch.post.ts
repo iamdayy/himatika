@@ -26,6 +26,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const existingCommitteeIds =
       agenda.committees?.map((c) => c.member?.toString()) || [];
     let addedCount = 0;
+    const failedMembers: any[] = [];
 
     // Loop data request untuk mencocokkan jabatan
     body.data.forEach((reqItem) => {
@@ -40,6 +41,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
           visitTime: reqItem.visiting ? new Date() : undefined
         });
         addedCount++;
+      } else {
+        failedMembers.push(reqItem);
       }
     });
 
@@ -47,7 +50,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     return {
       statusCode: 200,
-      statusMessage: `Berhasil menambahkan ${addedCount} panitia.`,
+      statusMessage: `Berhasil menambahkan ${addedCount} panitia. ${failedMembers.length} gagal.`,
+      data: {
+        savedCount: addedCount,
+        failedCount: failedMembers.length,
+        failedMembers
+      }
     };
   } catch (error: any) {
     throw createError({

@@ -345,8 +345,11 @@ const links = computed(() => [{
                 :description="$ts('some_members_failed_to_upload')" />
             <USeparator class="my-2 md:my-4" />
             <!-- Table -->
-            <UTable v-model:row-selection="selectedRows" :data="DataFromCSV" :columns="columns" :loading="loading">
+            <UTable v-model:row-selection="selectedRows" :data="DataFromCSV.slice(0, 50)" :columns="columns" :loading="loading">
             </UTable>
+            <div v-if="DataFromCSV.length > 50" class="text-center p-4 text-sm text-gray-500 dark:text-gray-400">
+                Menampilkan 50 data pertama sebagai preview. (Total {{ DataFromCSV.length }} data siap diimpor)
+            </div>
             <template #footer>
                 <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
                     :disabled="DataFromCSV.length <= 0" :label="$ts('add_member', { count: selectedCollegers.length })"
