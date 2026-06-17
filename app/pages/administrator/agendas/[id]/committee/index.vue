@@ -500,7 +500,7 @@ useHead({
                         </p>
                     </div>
 
-                    <div class="flex gap-2" v-if="isCommittee">
+                    <div class="flex gap-2" v-if="isCommittee || isOrganizer">
                         <UButton :to="`/administrator/agendas/${id}/committee/add`" label="Tambah Manual"
                             icon="i-heroicons-plus" size="sm" color="white" />
                     </div>
