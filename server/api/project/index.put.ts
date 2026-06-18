@@ -1,8 +1,9 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { MemberModel } from "~~/server/models/MemberModel";
 import { ProjectModel } from "~~/server/models/ProjectModel";
+import { MemberModel } from "~~/server/models/MemberModel";
 import { IMember, IProject } from "~~/types";
 import type { IResponse } from "~~/types/IResponse";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
+
 const config = useRuntimeConfig();
 /**
  * Handles PUT requests for updating an existing project.
@@ -51,22 +52,9 @@ export default defineEventHandler(async (ev): Promise<IResponse> => {
     const file = body.image;
     let imageUrl = "";
     if (file && typeof file !== "string") {
-      const BASE_PHOTO_FOLDER = "/uploads/img/projects/";
-      const fileName = `${BASE_PHOTO_FOLDER}/${file.name}.${
-        file.type?.split("/")[1]
-      }`;
-
       // Handle main image upload
       if (file.type?.startsWith("image/")) {
-        await r2Client.send(
-          new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: fileName,
-            Body: file.data,
-            ContentType: file.type,
-          })
-        );
-        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+        imageUrl = await uploadToR2(file, StoragePaths.PROJECTS(project._id.toString()));
       } else {
         throw createError({
           statusMessage: "Please upload nothing but images.",

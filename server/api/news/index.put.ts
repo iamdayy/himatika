@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, deleteFromR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
@@ -15,7 +15,6 @@ const config = useRuntimeConfig();
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const { slug } = getQuery(event);
-    const BASE_MAINIMAGE_FOLDER = "/uploads/img/newss";
     let imageUrl = "";
 
     // Check user authorization
@@ -55,19 +54,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (file && typeof file !== "string") {
       if (file.type?.startsWith("image/")) {
         // Remove old image if it exists
-        const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(file.name!)}.${
-          file.type.split("/")[1] || "png"
-        }`;
+        if (news.mainImage) {
+            await deleteFromR2(news.mainImage as string);
+        }
+        
         // Save new
-        await r2Client.send(
-          new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: fileName,
-            Body: file.data,
-            ContentType: file.type,
-          })
-        );
-        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+        imageUrl = await uploadToR2(file, StoragePaths.NEWS);
       } else {
         imageUrl = news.mainImage as string;
       }

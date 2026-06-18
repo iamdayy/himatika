@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
@@ -56,20 +56,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const fileName = `${BASE_PHOTO_FOLDER}/${file.name}.${
-      file.type?.split("/")[1]
-    }`;
     // Handle main image upload
     if (file.type?.startsWith("image/")) {
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: file.data,
-          ContentType: file.type,
-        })
-      );
-      imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      imageUrl = await uploadToR2(file, StoragePaths.PROJECTS(project._id.toString()));
     } else {
       throw createError({
         statusMessage: "Please upload nothing but images.",

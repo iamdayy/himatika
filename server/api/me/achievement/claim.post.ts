@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { PointModel } from "~~/server/models/PointModel";
 import { IPointLog } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
@@ -20,7 +20,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       }
     );
 
-    const BASE_PROOFS_FOLDER = `uploads/achievements/${user.member._id}/proofs`;
     let proofUrl = "";
 
     const file = body.file;
@@ -36,27 +35,16 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Invalid file data",
       });
     }
+    
     if (file) {
-      const fileName = `${BASE_PROOFS_FOLDER}/${file.name}.${
-        file.type?.split("/")[1] || "png"
-      }`;
-
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: file.data,
-          ContentType: file.type,
-        })
-      );
-      proofUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      proofUrl = await uploadToR2(file, StoragePaths.ACHIEVEMENTS(user.member._id.toString()));
     }
 
     await PointModel.create({
       member: user.member._id,
       reason: body.reason as string, // Contoh: Juara 2 Fotografi
       description: body.description as string,
-      type: body.type as string, // achievement / activity
+      type: body.type as "achievement" | "activity", // achievement / activity
       proof: proofUrl, // Link gambar/PDF yang sudah diupload
       amount: 0, // Poin 0 dulu, nanti Admin yang tentukan bobotnya
       status: "pending", // Default pending

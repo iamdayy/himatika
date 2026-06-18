@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3"; // Ganti import Vercel
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { IResponse } from "~~/types/IResponse";
 
@@ -51,29 +51,21 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     // Process and save the new avatar
-    // Generate nama file (Key)
-    const fileName = `${BASE_AVATAR_FOLDER}/${member.NIM}.${
-      avatarFile?.type?.split("/")[1] || "png"
-    }`;
-
     if (!avatarFile?.type || !ALLOWED_IMAGE_TYPES.includes(avatarFile.type as any)) {
       throw createError({
         statusCode: 400,
         statusMessage: "Invalid file type: Please upload a JPEG, PNG, or WebP image",
       });
     }
-    // --- UPLOAD KE R2 ---
-    await r2Client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: fileName,
-        Body: avatarFile.data,
-        ContentType: avatarFile.type,
-      })
-    );
 
-    // Susun URL Publik R2
-    const imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+    const fileObj = {
+      name: avatarFile.filename || `${member.NIM}.${avatarFile.type.split("/")[1] || "png"}`,
+      data: avatarFile.data,
+      type: avatarFile.type
+    };
+
+    // --- UPLOAD KE R2 ---
+    const imageUrl = await uploadToR2(fileObj, StoragePaths.AVATARS);
 
     // Update member dengan URL baru
     member.avatar = imageUrl;

@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
@@ -57,9 +57,6 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const BASE_FILE_FOLDER = `uploads/img/agenda/${agenda._id}/payments/${registeredId}`;
-    const fileName = `${BASE_FILE_FOLDER}/proof-${Date.now()}-${filePart.filename?.replace(/[^a-zA-Z0-9.]/g, '') || 'upload.png'}`;
-
     if (!filePart.type?.startsWith("image/")) {
       throw createError({
         statusCode: 400,
@@ -67,16 +64,13 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    await r2Client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: fileName,
-        Body: filePart.data,
-        ContentType: filePart.type,
-      })
-    );
+    const fileObj = {
+      name: filePart.filename || 'upload.png',
+      data: filePart.data,
+      type: filePart.type
+    };
 
-    const fileUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+    const fileUrl = await uploadToR2(fileObj, StoragePaths.AGENDAS(agenda._id.toString(), 'payments', registeredId));
 
     registration.payment = {
       ...registration.payment,

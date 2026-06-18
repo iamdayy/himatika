@@ -11,6 +11,7 @@ export type TRole =
   | "Committee"
   | "Participant";
 export interface ICarousel {
+  _id?: string | Types.ObjectId;
   title: string;
   description: string;
   image?: IPhoto;
@@ -29,7 +30,6 @@ export type IConfig = {
   };
   dailyManagements: string[];
   departments: string[];
-  carousels?: ICarousel[];
   enscriptActivinessLetter?: string | IEncryption | Types.ObjectId;
   minPoint?: number;
 };

@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, deleteFromR2, StoragePaths } from "~~/server/utils/storage";
 import { PointModel } from "~~/server/models/PointModel";
 import { IPointLog } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
@@ -43,39 +43,18 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     // Jika ada file baru yang diupload
     if (body.file && typeof body.file !== "string") {
       const file = body.file;
-      const BASE_PROOFS_FOLDER = `uploads/achievements/${user.member._id}/proofs`;
-      const fileName = `${BASE_PROOFS_FOLDER}/${file.name}.${
-        file.type?.split("/")[1] || "png"
-      }`;
 
       // 1. Hapus file lama jika ada
       if (existingAchievement.proof) {
-        const oldKey = existingAchievement.proof.replace(
-          `${R2_PUBLIC_DOMAIN}/`,
-          ""
-        );
         try {
-          await r2Client.send(
-            new DeleteObjectCommand({
-              Bucket: R2_BUCKET_NAME,
-              Key: oldKey,
-            })
-          );
+          await deleteFromR2(existingAchievement.proof);
         } catch (err) {
           console.warn("Failed to delete old file:", err);
         }
       }
 
       // 2. Upload file baru
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: file.data,
-          ContentType: file.type,
-        })
-      );
-      proofUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      proofUrl = await uploadToR2(file, StoragePaths.ACHIEVEMENTS(user.member._id.toString()));
     }
 
     // Update data di DB

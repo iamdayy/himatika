@@ -20,6 +20,7 @@ const { data: dataConfig, pending: pendingConfig } = useFetch<IConfigResponse>('
     lazy: false,
     server: true,
 });
+const { data: carouselData, pending: pendingCarousel } = useFetch<IResponse & {data: ICarousel[]}>('/api/carousel');
 const config = computed(() => dataConfig.value?.data);
 
 /**
@@ -35,9 +36,8 @@ const responsiveUISizes = useResponsiveUiSizes();
  * 
  */
 const randomPhotos = computed<ICarousel[]>(() => {
-
-    if (dataConfig.value) {
-        const shuffled = [...(config.value?.carousels || [])].sort(() => 0.5 - Math.random());
+    if (carouselData.value?.data) {
+        const shuffled = [...carouselData.value.data].sort(() => 0.5 - Math.random());
         return shuffled.slice(0, 12) as ICarousel[];
     }
     return [];
@@ -104,7 +104,7 @@ useSeoMeta({
         </section>
         <!-- carousel Section -->
         <section class="py-8 md:py-12 carousel mx-12 md:mx-28" id="carousel">
-            <div v-if="pendingConfig" class="px-4 md:px-12 lg:px-24">
+            <div v-if="pendingCarousel" class="px-4 md:px-12 lg:px-24">
                 <USkeleton class="w-full h-[400px] rounded-xl" />
             </div>
             <UCarousel v-else ref="carouselRef" v-slot="{ item, index }" :items="randomPhotos"

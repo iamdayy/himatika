@@ -4,18 +4,17 @@ import type { IConfigResponse } from "~~/types/IResponse";
 export default defineCachedEventHandler(
   async (event): Promise<IConfigResponse> => {
     try {
-      const config = await ConfigModel.find().select("-_id");
-      if (config.length === 0) {
+      const config = await ConfigModel.findOne().sort({ _id: -1 }).select("-_id");
+      if (!config) {
         throw createError({
           statusCode: 404,
           statusMessage: "No config found",
         });
       }
-      const lastConfigItem = config[config.length - 1];
       return {
         statusCode: 200,
         statusMessage: "Success",
-        data: lastConfigItem as IConfig,
+        data: config as unknown as IConfig,
       };
     } catch (error: any) {
       throw createError({

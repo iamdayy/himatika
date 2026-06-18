@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
 import { IMember, IOrganizer } from "~~/types";
@@ -6,7 +6,6 @@ import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const BASE_AVATAR_FOLDER = "/uploads/img/avatar";
     const user = event.context.user;
     if (!user) {
       throw createError({
@@ -86,20 +85,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       let imageUrl = council.image; // Default to existing image path or null
 
       if (filePart && typeof filePart !== "string") {
-        const fileExtension = filePart.type?.split("/")[1] || "jpg";
-        const fileName = `${BASE_AVATAR_FOLDER}/${
-          filePart.name || `council-${index}`
-        }.${fileExtension}`;
-
-        await r2Client.send(
-          new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: fileName,
-            Body: filePart.data,
-            ContentType: filePart.type,
-          })
-        );
-        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+        imageUrl = await uploadToR2(filePart, StoragePaths.ORGANIZERS);
       }
       return {
         position: council.position,
@@ -111,19 +97,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const advisorFilePart = uploadedData["advisor-image"];
     let imageUrlAdvisor = body.advisor.image;
     if (advisorFilePart && typeof advisorFilePart !== "string") {
-      const fileExtension = advisorFilePart.type?.split("/")[1] || "jpg";
-      const fileName = `${BASE_AVATAR_FOLDER}/${
-        advisorFilePart.name || "advisor"
-      }.${fileExtension}`;
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: advisorFilePart.data,
-          ContentType: advisorFilePart.type,
-        })
-      );
-      imageUrlAdvisor = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      imageUrlAdvisor = await uploadToR2(advisorFilePart, StoragePaths.ORGANIZERS);
     }
     const advisor = {
       position: body.advisor.position,

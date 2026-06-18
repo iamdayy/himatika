@@ -1,18 +1,6 @@
 import mongoose, { Types } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
-import { ICarousel } from "~~/types";
 import type { IConfigSchema } from "~~/types/ISchemas";
-import { PhotoModel } from "./PhotoModel";
-const carouselSchema = new mongoose.Schema<ICarousel>({
-  title: { type: String },
-  description: { type: String },
-  date: { type: Date },
-  image: {
-    type: Types.ObjectId,
-    ref: PhotoModel,
-    autopopulate: true,
-  },
-});
 
 const configSchema = new mongoose.Schema<IConfigSchema>({
   name: { type: String, required: true },
@@ -38,7 +26,6 @@ const configSchema = new mongoose.Schema<IConfigSchema>({
   },
   dailyManagements: { type: [String], required: true },
   departments: { type: [String], required: true },
-  carousels: [carouselSchema],
   enscriptActivinessLetter: {
     type: Types.ObjectId,
     default: null,

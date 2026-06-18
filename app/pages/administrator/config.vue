@@ -55,8 +55,15 @@ const Config = ref<IConfig>({
     socialMedia: data.value?.data?.socialMedia || [{ name: '', url: '' }],
     vision: data.value?.data?.vision || '',
     mission: data.value?.data?.mission || [],
-    carousels: data.value?.data?.carousels || [],
 });
+
+const carousels = ref<ICarousel[]>([]);
+const { data: carouselData } = useLazyAsyncData(() => $fetch<IResponse & {data: ICarousel[]}>("/api/carousel"));
+watch(carouselData, (newData) => {
+    if (newData?.data) {
+        carousels.value = newData.data;
+    }
+}, { immediate: true });
 
 watch(data, (newData) => {
     if (newData?.data) {
@@ -72,7 +79,6 @@ watch(data, (newData) => {
             socialMedia: newData.data.socialMedia || [{ name: '', url: '' }],
             vision: newData.data.vision || '',
             mission: newData.data.mission || [],
-            carousels: newData.data.carousels || [],
         };
     }
 }, { immediate: true });
@@ -175,12 +181,15 @@ const addPhoto = async () => {
                     body: body.getFormData()
                 });
                 if (response.statusCode == 200 && response.data) {
-                    toast.add({ title: $ts('success'), description: $ts('success_to_add_carrousel') });
-                    const newCarousel: ICarousel = {
-                        ...carousel,
-                        image: response.data
-                    };
-                    Config.value.carousels?.push(newCarousel);
+                    const carouselResponse = await $api<IResponse & { data?: ICarousel }>('/api/carousel', {
+                        method: "POST",
+                        body: { ...carousel, image: response.data._id }
+                    });
+                    if (carouselResponse.statusCode == 200 && carouselResponse.data) {
+                        toast.add({ title: $ts('success'), description: $ts('success_to_add_carrousel') });
+                        carousels.value.unshift(carouselResponse.data);
+                        file.value = undefined;
+                    }
                 }
             } catch (error: any) {
                 toast.add({ title: $ts('failed'), description: $ts('failed_to_add_carrousel'), color: "error" })
@@ -190,23 +199,18 @@ const addPhoto = async () => {
 }
 
 const deletePhoto = async (index: number, id: string) => {
-    console.log('delete photo');
     if (notEditMode.value && !isSaving.value) return;
     try {
-        const response = await $api<IResponse>("/api/photo", {
-            method: "delete",
-            query: {
-                id
-            }
+        const response = await $api<IResponse>(`/api/carousel/${id}`, {
+            method: "delete"
         });
         if (response.statusCode == 200) {
             toast.add({ title: $ts('success'), description: $ts('success_to_delete_carrousel') });
-            Config.value.carousels?.splice(index, 1);
+            carousels.value.splice(index, 1);
         }
     } catch (error: any) {
         toast.add({ title: $ts('failed'), description: $ts('failed_to_delete_carrousel'), color: "error" });
     }
-
 }
 
 const createNewEncription = async (title: string) => {
@@ -246,10 +250,8 @@ const onSubmit = async () => {
     try {
         await $api<IResponse>('/api/config', {
             method: 'POST',
-            body: {
-                ...Config.value,
-                carousels: Config.value.carousels?.map(carousel => ({ ...carousel, image: carousel.image?._id }))
-            }
+            body: Config.value
+
         });
         toast.add({
             title: $ts('success'),
@@ -332,9 +334,12 @@ const links = computed(() => [{
                     <UButton icon="i-heroicons-pencil" @click="notEditMode = !notEditMode"
                         :size="responsiveUISizes.button" />
                 </div>
-                <div v-if="!notEditMode" class="flex flex-row items-center gap-2 text-gray-500">
-                    <UIcon name="i-heroicons-inbox-arrow-down" />
-                    {{ $ts('auto_save_enabled') }}
+                </div>
+                <div v-if="!notEditMode" class="flex flex-row items-center gap-2">
+                    <UButton icon="i-heroicons-x-mark" variant="ghost" color="gray" @click="notEditMode = true"
+                        :size="responsiveUISizes.button">
+                        {{ $ts('cancel') || 'Cancel' }}
+                    </UButton>
                 </div>
             </template>
             <div v-if="pending" class="px-2 py-6 space-y-6 md:py-12 md:px-8">
@@ -343,7 +348,7 @@ const links = computed(() => [{
                     <USkeleton class="h-10 w-full" />
                 </div>
             </div>
-            <div v-else class="px-2 py-6 space-y-2 md:py-12 md:px-8">
+            <div v-else class="px-2 py-6 space-y-6 md:py-12 md:px-8">
                 <UFormField :label="$ts('name')">
                     <UInput name="name" v-model="Config.name" :size="responsiveUISizes.input"
                         :disabled="notEditMode && !isSaving" class="px-2 md:px-4" />
@@ -490,17 +495,17 @@ const links = computed(() => [{
                         <UFileUpload v-model="file" accept="image/*" :disabled="notEditMode && !isSaving"
                             @update:model-value="onChangeImage">
                         </UFileUpload>
-                        <UButton block @click="addPhoto" :disabled="notEditMode && !isSaving"
+                        <UButton block @click="addPhoto" :disabled="(notEditMode && !isSaving) || !file"
                             :size="responsiveUISizes.button">
                             {{ $ts('upload') }}</UButton>
                     </div>
                     <div class="flex flex-wrap gap-2 my-2 md:my-4">
-                        <div class="relative inline-block max-w-[240px]" v-for="img, i in Config.carousels" :key="i">
-                            <NuxtImg provider="localProvider" :src="((img as ICarousel).image?.image as string)"
+                        <div class="relative inline-block max-w-[240px]" v-for="img, i in carousels" :key="i">
+                            <NuxtImg v-if="(img as ICarousel).image?.image" provider="localProvider" :src="((img as ICarousel).image?.image as string)"
                                 class="object-cover rounded-lg shadow-md" alt="Carousel Image" loading="lazy" />
                             <UButton icon="i-heroicons-x-mark" color="error" variant="soft" size="xs"
                                 class="absolute top-2 right-2 !bg-white/80 hover:!bg-white/100"
-                                @click="deletePhoto(i, img.image?._id as string)"
+                                @click="deletePhoto(i, img._id as string)"
                                 :disabled="notEditMode && !isSaving" />
                         </div>
                     </div>
@@ -510,8 +515,7 @@ const links = computed(() => [{
 
             <template #footer>
                 <UButton @click="onSubmit" :label="$ts('save')" :loading="loading" variant="solid" block
-                    :size="responsiveUISizes.button"
-                    :v-if="organizer?.role.includes('Ketua') || organizer?.role.includes('Chairman')" />
+                    :size="responsiveUISizes.button" />
             </template>
         </UCard>
     </div>

@@ -1,8 +1,7 @@
 import { MultiPartData } from "h3";
 import { DocModel } from "~~/server/models/DocModel";
 import { IDoc, ISign } from "~~/types";
-// Import S3 Command dan Utility yang baru kita buat
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -10,9 +9,6 @@ export default defineEventHandler(async (event) => {
       allowedTypes: ["application/pdf"],
       maxFileSize: 3 * 1024 * 1024, // 3MB
     });
-
-    // Ubah base folder (S3/R2 biasanya tidak menyarankan diawali garis miring '/')
-    const BASE_DOC_FOLDER = `uploads/doc`;
 
     const user = event.context.user;
     if (!user) {
@@ -23,23 +19,8 @@ export default defineEventHandler(async (event) => {
 
     const d = data.doc as MultiPartData;
 
-    // Buat nama file (Key) untuk R2
-    const fileKey = `${BASE_DOC_FOLDER}/${user.member.NIM}/${d.name!}`;
-
     // Upload ke R2
-    await r2Client.send(
-      new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME,
-        Key: fileKey,
-        Body: d.data, // Buffer data dari file
-        ContentType: d.type, // Penting agar browser tahu ini gambar/pdf
-        // ACL: "public-read" // R2 biasanya mengatur akses via pengaturan bucket/domain, bukan di sini, tapi bisa dibiarkan default.
-      })
-    );
-
-    // Buat URL Publik Manual
-    // URL Vercel Blob otomatis digenerate, tapi di R2 kita gabungkan domain + fileKey
-    const url = `${process.env.R2_PUBLIC_DOMAIN}/${fileKey}`;
+    const url = await uploadToR2(d, StoragePaths.DOCS);
 
     data.doc = url;
     // ----------------------------------------------

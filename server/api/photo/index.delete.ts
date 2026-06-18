@@ -1,4 +1,4 @@
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { deleteFromR2 } from "~~/server/utils/storage";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -33,13 +33,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     // Delete the associated main image file if it exists
     if (photo.image) {
-      const mainImageKey = (photo.image as string).split("/").pop();
-      await r2Client.send(
-        new DeleteObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: mainImageKey,
-        })
-      );
+      await deleteFromR2(photo.image as string);
     }
     return { statusCode: 200, statusMessage: "Foto berhasil dihapus" };
   } catch (error: any) {

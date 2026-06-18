@@ -1,3 +1,4 @@
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { DocModel } from "~~/server/models/DocModel";
 import SignModel from "~~/server/models/SignModel";
@@ -22,12 +23,11 @@ export default defineEventHandler(async (event) => {
     }
     if (typeof body.doc === "string") {
       doc.doc = body.doc;
-    } else {
-      const BASE_DOC_FOLDER = `/uploads/docs/${doc.label.replace(/\s+/g, "_")}`;
+    } else if (body.doc) {
       if (doc.doc) {
         let oldDocUrl = undefined;
         oldDocUrl = doc.doc as string;
-        if (doc.trails) {
+        if (doc.trails && doc.trails.length > 0) {
           doc.trails[doc.trails.length - 1].doc = oldDocUrl;
         }
       }
@@ -35,8 +35,7 @@ export default defineEventHandler(async (event) => {
       const docBody = body.doc as IFile;
       // Handle main doc upload
       if (docBody.type?.startsWith("application/")) {
-        const hashedName = await storeFileLocally(docBody, 12, BASE_DOC_FOLDER);
-        docUrl = `${BASE_DOC_FOLDER}/${hashedName}`;
+        docUrl = await uploadToR2(docBody, StoragePaths.DOCS);
         doc.doc = docUrl;
       } else {
         throw createError({
