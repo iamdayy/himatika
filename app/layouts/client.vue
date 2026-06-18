@@ -202,14 +202,15 @@ useHead({
                 </div>
             </div>
         </nav>
-        <main>
-            <div class="px-2 py-6 pt-24 mx-auto md:px-8">
-                <UContainer class="py-16">
-                    <slot />
-                </UContainer>
-                <Footer />
+        <div class="pt-16 min-h-screen">
+            <UContainer v-if="!$route.meta.fluid" class="py-8">
+                <slot />
+            </UContainer>
+            <div v-else>
+                <slot />
             </div>
-        </main>
+        </div>
+        <Footer />
     </div>
 </template>
 <style scoped>
