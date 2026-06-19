@@ -99,7 +99,7 @@ const perPageOptions = computed(() => {
     return baseOptions;
 });
 const pageTotal = computed(() => agendas.value.count || 0) // This value should be dynamic coming from the API
-const pageFrom = computed(() => (page.value! - 1) * perPage.value! + 1)
+const pageFrom = computed(() => page.value === 0 ? 0 : (page.value! - 1) * perPage.value! + 1)
 const pageTo = computed(() => Math.min(page.value! * perPage.value!, pageTotal.value || 0))
 
 const sortOptions = [

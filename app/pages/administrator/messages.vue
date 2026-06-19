@@ -124,7 +124,7 @@ const { data, pending, refresh } = useLazyAsyncData('users', () => $api<IMessage
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0);
-const pageFrom = computed(() => (page.value - 1) * perPage.value + 1);
+const pageFrom = computed(() => page.value === 0 ? 0 : (page.value - 1) * perPage.value + 1);
 const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];

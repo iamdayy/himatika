@@ -106,7 +106,7 @@ const sortOptions = ['Date', 'Published', 'Title', 'Progress'];
  * Computed properties for pagination
  */
 const pageTotal = computed(() => projects.value.count || 0)
-const pageFrom = computed(() => (page.value - 1) * perPage.value + 1)
+const pageFrom = computed(() => page.value === 0 ? 0 : (page.value - 1) * perPage.value + 1)
 const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.value || 0))
 const perPageOptions = computed(() => [10, 20, 50, 100, 200, pageTotal.value || 0]);
 

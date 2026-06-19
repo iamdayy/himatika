@@ -390,7 +390,8 @@
     "email_not_verified": "Email Anda belum diverifikasi",
     "verify_email": "Silakan verifikasi email Anda untuk melanjutkan",
     "wrong_password": "Kata sandi salah",
-    "check_password": "Silakan periksa kembali kata sandi Anda"
+    "check_password": "Silakan periksa kembali kata sandi Anda",
+    "invalid_credentials": "Email atau Kata Sandi salah"
   },
   "register_page": {
     "member_free": "Keanggotaan ditemukan dan bisa didaftarkan",

@@ -81,55 +81,56 @@ async function onSubmit() {
             method: 'POST',
             body: state,
         });
-        if (response.statusCode === 200) {
-            loading.value = false;
-            const id = response.data?.id;
-            newPhotos.value.forEach(async (photo) => {
+        if (response.statusCode === 200 && response.data?.id) {
+            const id = response.data.id;
+            const uploadTasks: Promise<any>[] = [];
+
+            newPhotos.value.forEach((photo) => {
                 const body = new CustomFormData<IPhoto>();
                 body.append('image', photo.image);
                 body.append('tags', photo.tags ? JSON.stringify(photo.tags) : '');
-                const response = await $api<IResponse>(`/api/aspiration/${id}/photo`, {
+                uploadTasks.push($api<IResponse>(`/api/aspiration/${id}/photo`, {
                     method: "POST",
                     body: body.getFormData()
-                });
-                toast.add({ title: response.statusMessage });
+                }));
             });
-            newVideos.value.forEach(async (video) => {
+            newVideos.value.forEach((video) => {
                 const body = new CustomFormData<IVideo>();
                 body.append('video', video.video);
                 body.append('tags', video.tags ? JSON.stringify(video.tags) : '');
-                const response = await $api<IResponse>(`/api/aspiration/${id}/video`, {
+                uploadTasks.push($api<IResponse>(`/api/aspiration/${id}/video`, {
                     method: "POST",
                     body: body.getFormData()
-                });
-                toast.add({ title: response.statusMessage });
+                }));
             });
-            newDocs.value.forEach(async (doc) => {
+            newDocs.value.forEach((doc) => {
                 const body = new CustomFormData<IDoc>();
                 body.append('doc', doc.doc);
                 body.append('label', doc.label);
                 body.append('tags', doc.tags ? JSON.stringify(doc.tags) : '');
                 body.append('no', doc.no.toString());
-                const response = await $api<IResponse>(`/api/aspiration/${id}/doc`, {
+                uploadTasks.push($api<IResponse>(`/api/aspiration/${id}/doc`, {
                     method: "POST",
                     body: body.getFormData()
-                });
-                toast.add({ title: response.statusMessage });
+                }));
             });
+
+            await Promise.all(uploadTasks);
+
             toast.add({ title: $ts('success'), description: $ts('aspiration_success_description'), color: 'success' });
+            
+            setTimeout(() => {
+                router.push('/dashboard/aspirations');
+            }, 1000);
         }
     } catch (err: any) {
-        loading.value = false;
         if (err.response) {
-            toast.add({ title: err.response.data.message, color: 'error' });
+            toast.add({ title: err.response.data?.message || err.response.data?.statusMessage, color: 'error' });
         } else {
             toast.add({ title: $ts('something_went_wrong'), color: 'error' });
         }
     } finally {
         loading.value = false;
-        setTimeout(() => {
-            router.push('/dashboard/aspirations');
-        }, 3000);
     }
 };
 const links = [

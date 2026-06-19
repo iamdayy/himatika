@@ -157,10 +157,7 @@ export interface IUser {
  * Represents a user session with authentication tokens.
  */
 export interface ISession {
-  token: string;
   refreshToken: string;
-  previousRefreshToken?: string;
-  previousToken?: string;
   user?: Types.ObjectId | IUser;
   guest?: Types.ObjectId | IGuest;
 }

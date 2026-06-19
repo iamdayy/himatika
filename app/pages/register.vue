@@ -4,6 +4,7 @@ import type { FieldValidationRules, FormError, Step } from "~~/types/component/s
 import type { IReqGenerateOTP } from "~~/types/IRequestPost";
 import type { IGenerateOTPResponse, IResponse, IVerifyOTPResponse } from "~~/types/IResponse";
 import type { RegisterSchema, VerifyNIMSchema } from "~~/types/schemas/auth";
+import { useIntervalFn } from "@vueuse/core";
 
 const { $pageGuide } = useNuxtApp();
 const { $ts } = useI18n();
@@ -17,7 +18,6 @@ const activeTab = ref(0);
 const fullName = ref("");
 
 const remainingTime = ref(0);
-let timer: string | number | NodeJS.Timeout | undefined = undefined;
 
 const toast = useToast();
 const showPasswordReType = ref(false);
@@ -320,6 +320,10 @@ const calculateRemainingTime = () => {
     return Math.max(0, new Date(OTPForm.expiresAt).getTime() - now);
 };
 
+const { pause, resume } = useIntervalFn(() => {
+    remainingTime.value = calculateRemainingTime();
+}, 1000);
+
 function formatTime(ms: number) {
     if (ms <= 0) return "00:00:00";
 
@@ -362,21 +366,10 @@ onMounted(() => {
         showButtons: ["next", "previous"],
     });
 
-    // Update the countdown every second
-    timer = setInterval(() => {
-        remainingTime.value = calculateRemainingTime();
-    }, 1000);
-
     // If verification parameters are present, clean up the URL
     if (hasVerificationParams.value) {
         // We'll keep the parameters in the state but remove them from the URL for security
         router.replace({ path: route.path });
-    }
-});
-
-onBeforeUnmount(() => {
-    if (timer) {
-        clearInterval(timer);
     }
 });
 </script>

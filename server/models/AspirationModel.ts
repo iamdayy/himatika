@@ -40,9 +40,6 @@ const AspirationSchema = new Schema<IAspirationSchema>(
         user: {
           type: Schema.Types.ObjectId,
           ref: "Member",
-          autopopulate: {
-            select: "fullName email class semester avatar NIM",
-          },
         },
         voteType: {
           type: String,

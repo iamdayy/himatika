@@ -341,7 +341,7 @@ const filters = computed(() => {
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0);
-const pageFrom = computed(() => (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
+const pageFrom = computed(() => pagination.value.pageIndex === 0 ? 0 : (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
 const pageTo = computed(() => Math.min(pagination.value.pageIndex * pagination.value.pageSize, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];

@@ -55,7 +55,7 @@ export default defineEventHandler(
           };
         }
         aspiration.votes?.forEach((vote: any) => {
-          const exists = (vote.user as IMember).NIM === user.member.NIM;
+          const exists = vote.user?.toString() === user.member._id.toString();
           if (exists) {
             voteType = vote.voteType;
           }
@@ -96,18 +96,6 @@ export default defineEventHandler(
         query.deleted = { $in: [true, false] };
       }
       const aspiration = await AspirationModel.find(query)
-        .populate({
-          path: "photos",
-          model: PhotoModel,
-        })
-        .populate({
-          path: "videos",
-          model: VideoModel,
-        })
-        .populate({
-          path: "docs",
-          model: DocModel,
-        })
         .skip((Number(page) - 1) * Number(perPage))
         .limit(Number(perPage))
         .sort(sortOpt)
@@ -125,6 +113,9 @@ export default defineEventHandler(
         data: {
           aspirations: aspiration.map((aspiration: any) => ({
             ...aspiration,
+            upVotesCount: aspiration.votes?.filter((v: any) => v.voteType === "upvote").length || 0,
+            downVotesCount: aspiration.votes?.filter((v: any) => v.voteType === "downvote").length || 0,
+            votes: undefined, // remove to reduce payload
             from: aspiration.anonymous ? undefined : aspiration.from,
           })),
           length,

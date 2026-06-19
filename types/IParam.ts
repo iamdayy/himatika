@@ -5,11 +5,6 @@ import { Types } from "mongoose";
  */
 export interface ISetSessionParams {
   /**
-   * The authentication token for the session.
-   */
-  token: string;
-
-  /**
    * The refresh token used to obtain a new authentication token when the current one expires.
    */
   refreshToken: string;
