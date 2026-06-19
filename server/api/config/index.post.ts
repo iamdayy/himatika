@@ -16,14 +16,12 @@ export default defineEventHandler(async (event) => {
       });
     }
     const body = await readBody<IConfig>(event);
-    
-    // Upsert logic: Update the first config document if exists, else create new
-    const config = await ConfigModel.findOneAndUpdate({}, { $set: body }, { 
-        new: true, 
-        upsert: true, 
-        sort: { _id: -1 },
-        runValidators: true
-    });
+    const config = await ConfigModel.findOne();
+    if(config) {
+        await ConfigModel.updateOne({ _id: config._id }, { $set: body });
+    }else {
+        await ConfigModel.create(body);
+    }
     
     const fs = require('fs');
     fs.writeFileSync('debug.log', JSON.stringify({ body, config }));
