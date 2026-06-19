@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
-import { UserModel } from "~~/server/models/UserModel";
+import { UserModel, UserPopulateOptions } from "~~/server/models/UserModel";
 import { MemberModel } from "../models/MemberModel";
 import { setSession } from "../utils/Sessions";
 
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
     let queryFilter: any = [];
     
     // The frontend sends everything (Username, NIM, Email) in the `username` field
-    const inputStr = body.username || "";
+    const inputStr = body.username || body.email || "";
     
     // 1. Always check UserModel.username
     queryFilter.push({ username: inputStr });
@@ -77,20 +77,7 @@ export default defineEventHandler(async (event) => {
 
     // Find user and do heavy populate ONCE here
     const user = await UserModel.findOne({ $or: queryFilter })
-      .populate({
-        path: "member",
-        populate: [
-          { path: 'organizersConsiderationBoard' },
-          { path: 'organizersDailyManagement' },
-          { path: 'organizersDepartmentCoordinator' },
-          { path: 'organizersDepartmentMembers' },
-        ],
-        select: "NIM fullName avatar email organizer status semester class sex phone",
-        options: { autopopulate: false }, 
-      })
-      .populate({
-        path: "guest",
-      });
+      .populate(UserPopulateOptions);
 
     if (!user) {
       throw invalidCredentialsError;

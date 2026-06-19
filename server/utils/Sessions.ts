@@ -2,7 +2,7 @@ import { H3Error } from "h3";
 import jwt from "jsonwebtoken";
 import { ISetSessionParams } from "~~/types/IParam";
 import { SessionModel } from "../models/SessionModel";
-import { UserModel } from "../models/UserModel";
+import { UserModel, UserPopulateOptions } from "../models/UserModel";
 
 const getSecretKey = () => {
   const secretKey = useRuntimeConfig().jwtSecret;
@@ -22,6 +22,16 @@ export const checkSession = async (payload: string) => {
     if (!decoded || (!decoded.user && !decoded.guest)) {
       throw createError({
         statusMessage: "Invalid Session Data",
+        statusCode: 401,
+      });
+    }
+
+    // Stateful check to ensure the session hasn't been revoked
+    const query = decoded.user ? { user: decoded.user } : { guest: decoded.guest };
+    const sessionExists = await SessionModel.exists(query);
+    if (!sessionExists) {
+      throw createError({
+        statusMessage: "Session revoked",
         statusCode: 401,
       });
     }
@@ -73,20 +83,7 @@ export const refreshSession = async (payload: string) => {
     if (session.user) {
       // Do the heavy populate once per refresh
       const user = await UserModel.findById(session.user)
-        .populate({
-          path: "member",
-          populate: [
-            { path: 'organizersConsiderationBoard' },
-            { path: 'organizersDailyManagement' },
-            { path: 'organizersDepartmentCoordinator' },
-            { path: 'organizersDepartmentMembers' },
-          ],
-          select: "NIM fullName avatar email organizer status semester class sex phone",
-          options: { autopopulate: false }, 
-        })
-        .populate({
-          path: "guest",
-        });
+        .populate(UserPopulateOptions);
 
       if (!user) throw createError({ statusCode: 401 });
       

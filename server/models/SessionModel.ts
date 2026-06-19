@@ -15,11 +15,13 @@ const sessionSchema = new Schema<ISessionSchema>(
       type: Types.ObjectId,
       ref: "User",
       sparse: true,
+      index: true,
     },
     guest: {
         type: Types.ObjectId,
         ref: "Guest",
         sparse: true,
+        index: true,
     },
     createdAt: Date,
     updatedAt: Date,

@@ -40,12 +40,17 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
     const memberFound = await MemberModel.findOne({ NIM: body.NIM });
     const emailExists = await MemberModel.exists({ email: body.email });
     
-    // Gunakan $or dengan nilai yang valid, bukan array mentah yg bisa error kalau undefined
+    const usernameTaken = await UserModel.findOne({ username: body.username });
+    if (usernameTaken && usernameTaken.member?.toString() !== memberFound?._id?.toString()) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: "Username sudah digunakan",
+        data: { message: "Username sudah digunakan", path: "username" },
+      });
+    }
+
     const userFound = await UserModel.findOne({
-      $or: [
-        { username: body.username },
-        ...(memberFound ? [{ member: memberFound._id as any }] : [])
-      ]
+      member: memberFound?._id as any
     });
 
     if (!memberFound) {
