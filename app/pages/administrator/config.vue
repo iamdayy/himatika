@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CoreTiptap, ModalsCarouselAdd, ModalsImageCrop, UInput } from '#components';
+import { ModalsCarouselAdd, ModalsImageCrop } from '#components';
 import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICarousel, IConfig, IPhoto } from "~~/types";
@@ -58,7 +58,7 @@ const Config = ref<IConfig>({
 });
 
 const carousels = ref<ICarousel[]>([]);
-const { data: carouselData } = useLazyAsyncData(() => $fetch<IResponse & {data: ICarousel[]}>("/api/carousel"));
+const { data: carouselData } = useLazyAsyncData(() => $fetch<IResponse & { data: ICarousel[] }>("/api/carousel"));
 watch(carouselData, (newData) => {
     if (newData?.data) {
         carousels.value = newData.data;
@@ -334,9 +334,8 @@ const links = computed(() => [{
                     <UButton icon="i-heroicons-pencil" @click="notEditMode = !notEditMode"
                         :size="responsiveUISizes.button" />
                 </div>
-                </div>
                 <div v-if="!notEditMode" class="flex flex-row items-center gap-2">
-                    <UButton icon="i-heroicons-x-mark" variant="ghost" color="gray" @click="notEditMode = true"
+                    <UButton icon="i-heroicons-x-mark" variant="ghost" color="neutral" @click="notEditMode = true"
                         :size="responsiveUISizes.button">
                         {{ $ts('cancel') || 'Cancel' }}
                     </UButton>
