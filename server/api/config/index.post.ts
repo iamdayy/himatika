@@ -18,16 +18,26 @@ export default defineEventHandler(async (event) => {
     const body = await readBody<IConfig>(event);
     
     // Upsert logic: Update the first config document if exists, else create new
-    const config = await ConfigModel.findOneAndUpdate({}, body, { 
+    const config = await ConfigModel.findOneAndUpdate({}, { $set: body }, { 
         new: true, 
         upsert: true, 
-        sort: { _id: 1 } 
+        sort: { _id: -1 },
+        runValidators: true
     });
+    
+    const fs = require('fs');
+    fs.writeFileSync('debug.log', JSON.stringify({ body, config }));
 
     try {
-        await useStorage('cache').removeItem('nitro:handlers:config-cache:/api/config.json');
+        const storage = useStorage();
+        const keys = await storage.getKeys();
+        for (const key of keys) {
+            if (key.includes('config-cache') || key.includes('api/config')) {
+                await storage.removeItem(key);
+            }
+        }
     } catch (e) {
-        // Ignore cache clear error
+        console.error("Cache clear error:", e);
     }
 
     return {

@@ -259,6 +259,8 @@ const onSubmit = async () => {
             icon: 'i-heroicons-check-circle',
             color: 'success'
         });
+        notEditMode.value = true;
+        refresh();
     } catch (error) {
         toast.add({
             title: $ts('failed'),
