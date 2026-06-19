@@ -16,11 +16,11 @@ export default defineEventHandler(async (event) => {
       });
     }
     const body = await readBody<IConfig>(event);
-    const config = await ConfigModel.findOne();
+    let config = await ConfigModel.findOne();
     if(config) {
-        await ConfigModel.updateOne({ _id: config._id }, { $set: body });
+        config = await ConfigModel.findOneAndUpdate({ _id: config._id }, { $set: body }, { new: true });
     }else {
-        await ConfigModel.create(body);
+        config = await ConfigModel.create(body);
     }
     
     const fs = require('fs');
