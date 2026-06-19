@@ -16,15 +16,14 @@ export default defineEventHandler(async (event) => {
       });
     }
     const body = await readBody<IConfig>(event);
-    let config = await ConfigModel.findOne();
-    if(config) {
-        config = await ConfigModel.findOneAndUpdate({ _id: config._id }, { $set: body }, { new: true });
+    console.log("body", body);
+    const config = await ConfigModel.find();
+    console.log("config", config);
+    if(!config || config.length === 0) {
+        await ConfigModel.create(body);
     }else {
-        config = await ConfigModel.create(body);
+        await ConfigModel.updateOne({ _id: config[0]?._id }, body);
     }
-    
-    const fs = require('fs');
-    fs.writeFileSync('debug.log', JSON.stringify({ body, config }));
 
     try {
         const storage = useStorage();
@@ -41,7 +40,7 @@ export default defineEventHandler(async (event) => {
     return {
       statusCode: 200,
       statusMessage: "Config berhasil diperbarui",
-      data: config as unknown as IConfig,
+      data: body as unknown as IConfig,
     };
   } catch (error: any) {
     console.error(error);

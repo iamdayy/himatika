@@ -60,7 +60,6 @@ export default defineNuxtConfig({
       },
     },
     "/api/config": {
-      swr: 60 * 60, // Cache selama 1 jam
       security: {
         xssValidator: false,
         csrf: false,
