@@ -16,9 +16,7 @@ export default defineEventHandler(async (event) => {
       });
     }
     const body = await readBody<IConfig>(event);
-    console.log("body", body);
     const config = await ConfigModel.find();
-    console.log("config", config);
     if(!config || config.length === 0) {
         await ConfigModel.create(body);
     }else {
