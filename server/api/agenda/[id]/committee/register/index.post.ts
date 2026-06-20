@@ -15,7 +15,7 @@ const config = useRuntimeConfig();
  */
 export default defineEventHandler(
   async (ev): Promise<IAgendaRegisterResponse | IError> => {
-    const { job } = await readBody<IReqAgendaRegister>(ev);
+    const { job, ticketModelId } = await readBody<IReqAgendaRegister & { ticketModelId?: string }>(ev);
     // Get the agenda ID from the query parameters
     const { id } = ev.context.params as { id: string };
     try {
@@ -96,6 +96,7 @@ export default defineEventHandler(
           job: job,
           member: me._id,
           approved: false,
+          ticketModelId: ticketModelId || undefined,
         });
       } else {
         throw createError({

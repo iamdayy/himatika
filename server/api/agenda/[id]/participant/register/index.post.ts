@@ -60,7 +60,7 @@ async function sendConfirmationEmail(
 export default defineEventHandler(
   async (ev): Promise<IAgendaRegisterResponse | IError> => {
     try {
-      const { guest } = await readBody(ev);
+      const { guest, ticketModelId } = await readBody(ev);
       const { id } = ev.context.params as { id: string };
       const user = ev.context.user;
 
@@ -105,6 +105,7 @@ export default defineEventHandler(
       let newParticipantData: any = {
         _id: participantId,
         agendaId: id,
+        ticketModelId: ticketModelId || undefined,
       };
 
       if (user && user.member) {

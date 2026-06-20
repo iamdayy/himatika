@@ -130,7 +130,9 @@ const configurationState = reactive<IAgendaConfiguration>({
             start: new Date(),
             end: new Date(),
         },
-    }
+        ticketModels: [],
+    },
+    manualPayments: [],
 });
 
 const enableFormCommittee = ref<boolean>(false);
@@ -204,38 +206,19 @@ watch(agenda, (newAgenda) => {
 
         // Update Configuration
         if (newAgenda.configuration) {
-            Object.assign(configurationState, {
-                canSee: newAgenda.configuration.canSee || 'Public',
-                canSeeRegistered: newAgenda.configuration.canSeeRegistered || 'Public',
-                onlyParticipantCanVisit: newAgenda.configuration.onlyParticipantCanVisit || false,
-                messageAfterRegister: newAgenda.configuration.messageAfterRegister || '',
-                committee: {
-                    pay: newAgenda.configuration.committee?.pay || false,
-                    amount: newAgenda.configuration.committee?.amount || 0,
-                    point: newAgenda.configuration.committee?.point || 0,
-                    reqruitments: newAgenda.configuration.committee?.reqruitments || [],
-                    jobAvailables: newAgenda.configuration.committee?.jobAvailables || [],
-                    canRegister: newAgenda.configuration.committee?.canRegister || 'Public',
-                    canRegisterUntil: {
-                        start: newAgenda.configuration.committee?.canRegisterUntil?.start ? new Date(newAgenda.configuration.committee.canRegisterUntil.start) : new Date(),
-                        end: newAgenda.configuration.committee?.canRegisterUntil?.end ? new Date(newAgenda.configuration.committee.canRegisterUntil.end) : new Date(),
-                    },
-                },
-                participant: {
-                    pay: newAgenda.configuration.participant?.pay || false,
-                    amount: newAgenda.configuration.participant?.amount || 0,
-                    point: newAgenda.configuration.participant?.point || 0,
-                    reqruitments: newAgenda.configuration.participant?.reqruitments || [],
-                    canRegister: newAgenda.configuration.participant?.canRegister || 'Public',
-                    canRegisterUntil: {
-                        start: newAgenda.configuration.participant?.canRegisterUntil?.start ? new Date(newAgenda.configuration.participant.canRegisterUntil.start) : new Date(),
-                        end: newAgenda.configuration.participant?.canRegisterUntil?.end ? new Date(newAgenda.configuration.participant.canRegisterUntil.end) : new Date(),
-                    },
-                }
-            });
+            Object.assign(configurationState, newAgenda.configuration);
+            
+            if (configurationState.committee?.canRegisterUntil) {
+                configurationState.committee.canRegisterUntil.start = configurationState.committee.canRegisterUntil.start ? new Date(configurationState.committee.canRegisterUntil.start) : new Date();
+                configurationState.committee.canRegisterUntil.end = configurationState.committee.canRegisterUntil.end ? new Date(configurationState.committee.canRegisterUntil.end) : new Date();
+            }
+            if (configurationState.participant?.canRegisterUntil) {
+                configurationState.participant.canRegisterUntil.start = configurationState.participant.canRegisterUntil.start ? new Date(configurationState.participant.canRegisterUntil.start) : new Date();
+                configurationState.participant.canRegisterUntil.end = configurationState.participant.canRegisterUntil.end ? new Date(configurationState.participant.canRegisterUntil.end) : new Date();
+            }
 
-            enableFormCommittee.value = (configurationState.committee.questions ?? []).length > 0;
-            enableFormParticipant.value = (configurationState.participant.questions?.length ?? 0) > 0;
+            enableFormCommittee.value = (configurationState.committee?.questions ?? []).length > 0;
+            enableFormParticipant.value = (configurationState.participant?.questions?.length ?? 0) > 0;
         }
 
         // Update Committees
@@ -903,6 +886,46 @@ const links = computed(() => [
                                             </div>
                                         </template>
                                     </UCollapsible>
+                                </UFormField>
+                                <UFormField label="Model Tiket (Luring/Daring)" v-if="configurationState.participant.pay">
+                                    <div class="space-y-3">
+                                        <UButton icon="i-heroicons-plus" color="neutral" variant="subtle"
+                                            @click="() => {
+                                                if (!configurationState.participant.ticketModels) {
+                                                    configurationState.participant.ticketModels = [];
+                                                }
+                                                configurationState.participant.ticketModels.push({ name: '', price: 0 });
+                                            }" block class="mb-2" :size="responsiveUISizes.button">
+                                            Tambah Model Tiket
+                                        </UButton>
+                                        <div v-for="(model, index) in configurationState.participant.ticketModels" :key="index"
+                                            class="p-4 rounded-xl ring-1 ring-gray-200 dark:ring-gray-700 space-y-3 bg-white/50 dark:bg-gray-800/30">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Tiket #{{ index + 1 }}</span>
+                                                <UButton icon="i-heroicons-trash" color="error" variant="ghost" size="xs"
+                                                    @click="configurationState.participant.ticketModels?.splice(index, 1)" />
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <UFormField label="Nama Tiket">
+                                                    <UInput v-model="model.name" placeholder="contoh: Luring / Daring" :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                                <UFormField label="Harga">
+                                                    <UInputNumber v-model="model.price" :format-options="{
+                                                        style: 'currency',
+                                                        currency: 'IDR',
+                                                        currencyDisplay: 'code',
+                                                        currencySign: 'accounting'
+                                                    }" orientation="vertical" :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                                <UFormField label="Kuota (opsional)">
+                                                    <UInputNumber v-model="model.quota" placeholder="Kosongkan jika unlimited" orientation="vertical" :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                                <UFormField label="Link Zoom/Meet (opsional)" help="Untuk tiket daring">
+                                                    <UInput v-model="model.meetLink" placeholder="https://zoom.us/j/..." :size="responsiveUISizes.input" />
+                                                </UFormField>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </UFormField>
                             </div>
                         </div>

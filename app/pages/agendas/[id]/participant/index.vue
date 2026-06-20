@@ -104,6 +104,13 @@ const isQuestionsAnswered = computed(() => {
     return userAnswers.length >= questions.length;
 });
 
+// Resolve ticket model
+const myTicketModel = computed(() => {
+    if (!me.value?.ticketModelId || !agenda.value) return null;
+    const models = agenda.value.configuration?.participant?.ticketModels || [];
+    return models.find((m: any) => (m._id?.toString() || m.name) === me.value?.ticketModelId) || null;
+});
+
 // Validasi jika belum terdaftar
 watch([me, mePending, agenda, pending, meError, error], ([newMe, isMePending, newAgenda, isAgendaPending, newMeError, newAgendaError]) => {
     // Jangan redirect jika ada error dari sistem/jaringan
@@ -114,13 +121,38 @@ watch([me, mePending, agenda, pending, meError, error], ([newMe, isMePending, ne
         // Asumsi data tidak valid/tidak ditemukan jika null dan (tidak ada error HTTP/jaringan atau errornya 404)
         const isParticipantNotFound = !newMe && (!newMeError || (newMeError as any).statusCode === 404 || (newMeError as any).response?.status === 404);
 
-        if (!isMePending && isParticipantNotFound) {
+        if (!isMePending && isParticipantNotFound && isVerified.value) {
             // Hapus cookie jika pendaftaran tidak valid/ditemukan
             participantIdFromCookie.value = null;
             navigateTo(`/agendas/${agendaId}/participant/register?tab=register&participantId=${route.query.participantId || ''}`);
         }
     }
 });
+
+const isVerified = ref(!!participantIdFromCookie.value || !route.query.participantId);
+const verificationEmail = ref('');
+const isVerifying = ref(false);
+
+const verifyEmail = async () => {
+    if (!verificationEmail.value) return;
+    isVerifying.value = true;
+    try {
+        const res = await $api<any>(`/api/agenda/${agendaId}/participant/${participantIdQuery}/verify`, {
+            method: 'POST',
+            body: { email: verificationEmail.value }
+        });
+        if (res.statusCode === 200) {
+            isVerified.value = true;
+            participantIdFromCookie.value = participantIdQuery;
+            refresh();
+            toast.add({ title: 'Sukses', description: 'Email berhasil diverifikasi', color: 'success' });
+        }
+    } catch (e: any) {
+        toast.add({ title: 'Gagal', description: e.response?.data?.statusMessage || 'Email tidak cocok dengan data pendaftaran', color: 'error' });
+    } finally {
+        isVerifying.value = false;
+    }
+};
 
 const bannerImage = computed(() => {
     if (agenda.value?.photos && agenda.value.photos.length > 0) {
@@ -239,8 +271,36 @@ definePageMeta({
         <UBreadcrumb :items="links" />
         <UCard class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex justify-center items-center font-sans">
 
-            <div v-if="pending || mePending" class="w-full max-w-md mx-auto space-y-4">
-                <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-lg overflow-hidden">
+            <!-- Verifikasi Email Form -->
+            <div v-if="!isVerified" class="w-full max-w-md mx-auto">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 ring-1 ring-gray-200 dark:ring-gray-700">
+                    <div class="flex flex-col items-center text-center mb-8">
+                        <div class="bg-primary-50 dark:bg-primary-900/30 p-4 rounded-full mb-4">
+                            <UIcon name="i-heroicons-lock-closed" class="w-8 h-8 text-primary-500" />
+                        </div>
+                        <h2 class="text-2xl font-black text-gray-900 dark:text-white">Verifikasi Keamanan</h2>
+                        <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">
+                            Masukkan email yang Anda gunakan saat mendaftar untuk mengakses tiket ini.
+                        </p>
+                    </div>
+
+                    <form @submit.prevent="verifyEmail" class="space-y-6">
+                        <UFormField label="Alamat Email" required>
+                            <UInput v-model="verificationEmail" type="email" placeholder="email@contoh.com"
+                                icon="i-heroicons-envelope" size="lg" />
+                        </UFormField>
+                        <UButton type="submit" :loading="isVerifying" color="primary" block size="lg"
+                            icon="i-heroicons-shield-check">
+                            Verifikasi Tiket
+                        </UButton>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Ticket View -->
+            <div v-else-if="pending || mePending" class="w-full max-w-md mx-auto space-y-4">
+                <div class="bg-white dark:bg-gray-800 rounded-4xl shadow-2xl overflow-hidden">
                     <USkeleton class="h-64 w-full rounded-none" />
                     <div class="p-6 space-y-6">
                         <div class="grid grid-cols-2 gap-6">
@@ -401,6 +461,14 @@ definePageMeta({
                                         <div class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
                                         Confirmed
                                     </div>
+                                    <div v-if="myTicketModel"
+                                        class="px-3 py-1 text-[10px] font-bold backdrop-blur-md border rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1"
+                                        :class="myTicketModel.meetLink ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'">
+                                        <UIcon
+                                            :name="myTicketModel.meetLink ? 'i-heroicons-video-camera' : 'i-heroicons-map-pin'"
+                                            class="w-3 h-3" />
+                                        {{ myTicketModel.name }}
+                                    </div>
                                 </div>
                                 <h1
                                     class="text-2xl sm:text-3xl font-black text-white leading-tight drop-shadow-lg font-display mb-1">
@@ -511,6 +579,13 @@ definePageMeta({
                         <!-- Footer Actions -->
                         <div
                             class="bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-4 flex flex-col gap-3 border-t border-gray-100/50 dark:border-gray-800/50">
+                            <!-- Meet Link Button (Daring ticket) -->
+                            <UButton v-if="myTicketModel?.meetLink && isPaid"
+                                :to="`/api/agenda/${agendaId}/participant/${me?._id}/meet`" target="_blank"
+                                color="primary" variant="solid" class="justify-center font-bold"
+                                icon="i-heroicons-video-camera" block>
+                                Gabung Pertemuan (Zoom/Meet)
+                            </UButton>
                             <div class="flex gap-3">
                                 <UButton @click="downloadTicket" :loading="isGeneratingPdf" color="neutral"
                                     variant="solid" class="flex-1 justify-center font-bold"
