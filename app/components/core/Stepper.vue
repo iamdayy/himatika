@@ -44,20 +44,29 @@
                 </p>
 
                 <!-- Validation warning message -->
-                <UAlert v-if="showValidationAlert" color="error" class="mb-4">
+                <UAlert v-if="showValidationAlert" color="error" variant="soft" class="mb-4">
                     <template #title>
-                        {{ $ts('failed') }}
+                        Ada data yang belum lengkap atau tidak valid
                     </template>
                     <template #description>
-                        <div class="flex items-center">
-                            <span class="mr-2">⚠️</span>
-                            <span v-if="invalidStepIndex !== null">
-                                Please complete Step {{ invalidStepIndex + 1 }}: {{ steps[invalidStepIndex]!.title }}
-                                before proceeding.
-                            </span>
-                            <span v-else>
-                                Please fix the validation errors before proceeding.
-                            </span>
+                        <div class="flex flex-col gap-2 mt-1">
+                            <div class="flex items-center">
+                                <span class="mr-2">⚠️</span>
+                                <span v-if="invalidStepIndex !== null">
+                                    Mohon lengkapi <b>Langkah {{ invalidStepIndex + 1 }}: {{
+                                        steps[invalidStepIndex]!.title }}</b> sebelum melanjutkan:
+                                </span>
+                                <span v-else>
+                                    Mohon perbaiki kesalahan pengisian form sebelum melanjutkan.
+                                </span>
+                            </div>
+                            <ul v-if="invalidStepIndex !== null && stepValidationErrors[steps[invalidStepIndex]!.id]"
+                                class="list-disc pl-8 text-sm">
+                                <li v-for="(error, field) in stepValidationErrors[steps[invalidStepIndex]!.id]"
+                                    :key="field">
+                                    {{ error.message }}
+                                </li>
+                            </ul>
                         </div>
                     </template>
                 </UAlert>

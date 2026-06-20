@@ -86,13 +86,19 @@ const links = computed(() => [
 ]);
 const steps = computed<Step[]>(() => {
     const steps: Step[] = [
-        { id: 'registration', label: $ts('register'), title: $ts('register'), formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value._id ? nextToAnswerQuestion : register },
-        { id: 'answer_question', label: $ts('answer_question'), title: $ts('answer_question'), formData: {}, validationRules: {}, onNext: handleAnswer },
-        { id: 'select_payment', label: $ts('select_payment'), title: $ts('select_payment'), formData: formSelectPayment, validationRules: validationRuleSelectPayment, onNext: formSelectPayment.method !== 'cash' ? payment : undefined },
-        { id: 'payment', label: $ts('payment'), title: $ts('payment'), formData: formPayment, validationRules: validationRuleConfirmation },
-        { id: 'success', label: $ts('success'), title: $ts('success'), formData: {} }
+        { id: 'cover', label: 'Panduan', title: 'Panduan Pendaftaran', formData: formCover, validationRules: validationRuleCover },
+        { id: 'select_ticket', label: 'Tiket', title: 'Pilih Tiket', formData: formSelectTicket, validationRules: validationRuleSelectTicket },
+        { id: 'register_as', label: 'Peran', title: 'Daftar Sebagai', formData: formRegisterAs, validationRules: validationRuleRegisterAs },
+        { id: 'data_diri', label: 'Data Diri', title: 'Data Diri', formData: formRegistration, validationRules: validationRuleRegistration, onNext: participant.value._id ? nextToAnswerQuestion : register },
+        { id: 'answer_question', label: 'Tambahan', title: 'Pertanyaan', formData: {}, validationRules: {}, onNext: handleAnswer },
+        { id: 'select_payment', label: 'Pembayaran', title: 'Metode Pembayaran', formData: formSelectPayment, validationRules: validationRuleSelectPayment, onNext: formSelectPayment.method !== 'cash' ? payment : undefined },
+        { id: 'payment', label: 'Instruksi', title: 'Instruksi Pembayaran', formData: formPayment, validationRules: validationRuleConfirmation },
+        { id: 'success', label: 'Selesai', title: 'Pendaftaran Selesai', formData: {} }
     ];
     return steps.filter(step => {
+        if (step.id === 'select_ticket') {
+            return hasTicketModels.value;
+        }
         if (step.id === 'answer_question') {
             return agenda.value?.configuration?.participant?.questions && agenda.value?.configuration?.participant?.questions.length > 0;
         }
@@ -107,8 +113,11 @@ const steps = computed<Step[]>(() => {
 });
 const activeStep = ref(0);
 
-const registerAs = ref((participant.value?.guest as IGuest | undefined) ? ((participant.value?.guest as IGuest | undefined)?.instance ? 'non-student' : 'student-guest') : (user.value ? 'student' : 'non-student'));
+const registerAs = ref((participant.value?.guest as IGuest | undefined) ? ((participant.value?.guest as IGuest | undefined)?.instance === 'ITSNU Pekalongan' ? 'internal-student' : 'external-student') : (user.value ? 'himatika-member' : 'public'));
+const formCover = reactive({ agreed: false });
 const selectedTicketModelId = ref<string | undefined>(undefined);
+const formSelectTicket = reactiveComputed(() => ({ ticketModelId: selectedTicketModelId.value }));
+const formRegisterAs = reactiveComputed(() => ({ role: registerAs.value }));
 const ticketModels = computed(() => agenda.value?.configuration?.participant?.ticketModels || []);
 const hasTicketModels = computed(() => ticketModels.value.length > 0);
 const selectedTicketModel = computed(() => {
@@ -131,7 +140,7 @@ const draftRegistration = useLocalStorage(`draft_registration_${id}`, {
 const initialFormData = computed(() => {
     if (user.value?.member) {
         return {
-            registerAs: 'student',
+            registerAs: 'himatika-member',
             fullName: user.value.member.fullName || '',
             email: user.value.member.email || '',
             phone: user.value.member.phone || '',
@@ -144,7 +153,7 @@ const initialFormData = computed(() => {
         };
     } else if (user.value?.guest) {
         return {
-            registerAs: user.value.guest.instance ? 'non-student' : 'student-guest',
+            registerAs: user.value.guest.instance === 'ITSNU Pekalongan' ? 'internal-student' : 'external-student',
             fullName: user.value.guest.fullName || '',
             email: user.value.guest.email || '',
             phone: user.value.guest.phone || '',
@@ -160,6 +169,7 @@ const initialFormData = computed(() => {
 });
 
 const isFieldDisabled = (field: string) => {
+    if (field === 'instance' && registerAs.value === 'internal-student') return true;
     if (!user.value) return false;
     if (user.value.member) return !!(user.value.member as any)[field];
     if (user.value.guest) return !!(user.value.guest as any)[field];
@@ -227,18 +237,30 @@ const checkIfProdiIsInformatics = computed(() => {
 });
 const registerAsOptions = computed(() => {
     let options = [
-        { label: $ts('non_student'), value: 'non-student' },
-        { label: $ts('student_guest'), value: 'student-guest' },
+        { label: 'Mahasiswa Internal', description: 'Mahasiswa ITSNU Pekalongan', value: 'internal-student', icon: 'i-heroicons-academic-cap' },
+        { label: 'Mahasiswa Eksternal', description: 'Mahasiswa dari institusi lain', value: 'external-student', icon: 'i-heroicons-building-library' },
+        { label: 'Umum', description: 'Masyarakat umum / Non-Mahasiswa', value: 'public', icon: 'i-heroicons-user-group' },
     ];
     if (user.value) {
-        options.unshift({ label: $ts('student'), value: 'student' });
+        options.unshift({ label: 'Anggota Himatika', description: 'Anggota Himatika ITSNU Pekalongan', value: 'himatika-member', icon: 'i-heroicons-identification' });
     }
     const canReg = agenda.value?.configuration?.participant?.canRegister;
     if (canReg === 'Member' || canReg === 'Organizer') {
-        options = options.filter(o => o.value === 'student');
+        options = options.filter(o => o.value === 'himatika-member');
     }
     return options;
 });
+
+watch(registerAs, (newVal) => {
+    if (newVal === 'internal-student') {
+        formRegistration.instance = 'ITSNU Pekalongan';
+    } else if (newVal === 'himatika-member' && user.value?.member) {
+        formRegistration.instance = 'ITSNU Pekalongan';
+        formRegistration.prodi = 'Teknik Informatika';
+    } else if (!user.value) {
+        formRegistration.instance = draftRegistration.value.instance || '';
+    }
+}, { immediate: true });
 const paymentMethods = computed<{ label: string; value: IPaymentMethod; icon: string; }[]>(() => {
     const methods = [
         { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
@@ -442,9 +464,12 @@ const responsiveClasses = computed(() => ({
     container: isMobile.value ? 'p-2' : 'p-3',
 }));
 
+const validationRuleCover = { agreed: (val: boolean) => val ? null : { message: 'Anda harus menyetujui Syarat & Ketentuan', path: 'agreed' } };
+const validationRuleSelectTicket = { ticketModelId: (val: string) => val ? null : { message: 'Silakan pilih tiket yang tersedia', path: 'ticketModelId' } };
+const validationRuleRegisterAs = { role: (val: string) => val ? null : { message: 'Silakan pilih peran pendaftaran Anda', path: 'role' } };
+
 const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => {
     const rules: FieldValidationRules = {
-        registerAs: (value: string) => value ? null : { message: $ts('register_as_required'), path: 'registerAs' },
         fullName: (value: string) => value ? null : { message: $ts('name_required'), path: 'fullName' },
         email: (value: string) => {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -462,15 +487,16 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         },
     };
 
-    // No longer check for user.value here, rely on registerAs
-    if (formRegistration.registerAs === 'student' || formRegistration.registerAs === 'student-guest') {
+    if (formRegistration.registerAs === 'himatika-member' || formRegistration.registerAs === 'internal-student' || formRegistration.registerAs === 'external-student') {
         rules.NIM = (value: number) => value > 0 ? null : { message: $ts('NIM_required'), path: 'NIM' };
-        rules.class = (value: string) => value ? null : { message: $ts('class_required'), path: 'class' };
         rules.semester = (value: number) => value > 0 ? null : { message: $ts('semester_required'), path: 'semester' };
         rules.prodi = (value: string) => value ? null : { message: $ts('prodi_required'), path: 'prodi' };
+        if (formRegistration.registerAs === 'himatika-member') {
+            rules.class = (value: string) => value ? null : { message: $ts('class_required'), path: 'class' };
+        }
     }
 
-    if (formRegistration.registerAs === 'student-guest' || formRegistration.registerAs === 'non-student') {
+    if (formRegistration.registerAs !== 'himatika-member') {
         rules.instance = (value: string) => value ? null : { message: $ts('instance_required'), path: 'instance' };
     }
 
@@ -479,7 +505,7 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         delete rules.fullName;
         delete rules.email;
         delete rules.phone;
-        if (formRegistration.registerAs === 'student') {
+        if (formRegistration.registerAs === 'himatika-member') {
             delete rules.NIM;
             delete rules.class;
             delete rules.semester;
@@ -598,130 +624,228 @@ watch(participant, (newValue) => {
         <CoreStepper v-else :steps="steps" v-model="activeStep" validate-on-change @complete="onCompleted"
             :prev-button-text="$ts('previous')" :next-button-text="$ts('next')" :complete-button-text="$ts('complete')">
             <template #default="{ step, errors }">
-                <div v-if="step?.id === 'registration'">
-                    <UAlert v-if="participant._id" color="success" :title="$ts('already_participant')"
-                        :description="$ts('already_participant_desc')" class="mb-4"></UAlert>
-                    <div class="flex space-x-4">
-                        <UFormField :label="$ts('register_as')" class="px-4" :error="errors.registerAs?.message">
-                            <URadioGroup v-model="registerAs" :items="registerAsOptions"
-                                :disabled="user ? true : false" />
+                <div v-if="step?.id === 'cover'" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div class="mb-8 text-center max-w-2xl mx-auto">
+                        <UIcon name="i-heroicons-document-text" class="w-16 h-16 text-primary-500 mb-4 opacity-80" />
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Selamat Datang!</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Silakan ikuti proses pendaftaran ini langkah demi
+                            langkah. Pastikan data yang Anda isi valid dan benar.</p>
+                    </div>
+
+                    <div
+                        class="bg-primary-50/50 dark:bg-primary-900/10 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto ring-1 ring-primary-100 dark:ring-primary-900/50">
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <UIcon name="i-heroicons-shield-check" class="w-5 h-5 text-primary-500" />
+                            Syarat dan Ketentuan
+                        </h4>
+                        <div
+                            class="prose dark:prose-invert text-sm text-gray-600 dark:text-gray-300 max-w-none space-y-4">
+                            <p>Dengan mendaftar pada acara ini, Anda menyetujui bahwa:</p>
+                            <ul class="list-disc pl-5 space-y-2">
+                                <li>Data yang diberikan adalah benar dan dapat dipertanggungjawabkan.</li>
+                                <li>Panitia berhak membatalkan keikutsertaan jika ditemukan pelanggaran data.</li>
+                                <li>Akses E-Ticket bersifat rahasia dan tidak untuk disebarluaskan.</li>
+                            </ul>
+                        </div>
+                        <UFormField :error="errors.agreed?.message"
+                            class="mt-8 pt-6 border-t border-primary-200/50 dark:border-primary-800/50">
+                            <UCheckbox v-model="formCover.agreed" class="font-medium">
+                                <template #label>
+                                    Saya telah membaca dan menyetujui <a
+                                        href="https://docs.himatika-itsnupekalongan.com/terms-and-conditions"
+                                        target="_blank"
+                                        class="text-primary-600 dark:text-primary-400 hover:underline">Syarat &
+                                        Ketentuan (T&C)</a> acara ini.
+                                </template>
+                            </UCheckbox>
                         </UFormField>
                     </div>
-                    <UAlert v-if="!user" color="info" variant="soft" class="mt-4 mx-4 shadow-sm"
-                        icon="i-heroicons-information-circle" title="Pendaftaran Mudah Tanpa Password">
-                        <template #description>
-                            Akses E-Ticket Anda dijamin aman melalui <b>Sistem Magic Link</b>. Mohon pastikan email yang
-                            Anda gunakan aktif untuk menerima tautan tiket acara Anda secara langsung.
-                        </template>
-                    </UAlert>
-                    <!-- Pilih Model Tiket -->
-                    <div v-if="hasTicketModels" class="mt-6 mx-4">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Pilih Jenis Tiket</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+
+                <div v-else-if="step?.id === 'select_ticket'"
+                    class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div class="mb-6 text-center">
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Pilih Tiket</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Pilih jenis tiket yang tersedia untuk agenda ini.
+                        </p>
+                    </div>
+                    <UFormField :error="errors.ticketModelId?.message">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
                             <div v-for="model in ticketModels" :key="(model as any)._id || model.name"
-                                class="relative rounded-2xl p-5 transition-all duration-300 transform group"
-                                :class="[
+                                class="relative rounded-2xl p-6 transition-all duration-300 transform group" :class="[
                                     (model.quota && (model.sold || 0) >= model.quota) ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]',
                                     selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-lg shadow-primary-500/10' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-300 hover:shadow-md'
                                 ]"
                                 @click="(model.quota && (model.sold || 0) >= model.quota) ? null : selectedTicketModelId = (model as any)._id || model.name">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-start gap-4">
                                         <div :class="selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 group-hover:text-primary-500'"
-                                            class="p-3 rounded-full transition-colors">
+                                            class="p-4 rounded-full transition-colors mt-1">
                                             <UIcon
                                                 :name="model.meetLink ? 'i-heroicons-video-camera' : 'i-heroicons-map-pin'"
-                                                class="w-6 h-6" />
+                                                class="w-8 h-8" />
                                         </div>
                                         <div>
-                                            <p class="font-bold text-gray-900 dark:text-white">{{ model.name }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ model.meetLink ? 'Online (Zoom/Meet)' : 'Hadir di Lokasi' }}
+                                            <p class="font-bold text-xl text-gray-900 dark:text-white">{{ model.name }}
+                                            </p>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                {{ model.meetLink ? 'Akses Online (Zoom/Meet)' : 'Hadir di Lokasi Acara'
+                                                }}
                                             </p>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-lg font-black text-primary-600 dark:text-primary-400">Rp {{
+                                        <p class="text-2xl font-black text-primary-600 dark:text-primary-400">Rp {{
                                             formatCurrency(model.price) }}</p>
-                                        <p v-if="model.quota" class="text-[10px]" :class="((model.sold || 0) >= model.quota) ? 'text-red-500 font-bold' : 'text-gray-400'">
-                                            {{ ((model.sold || 0) >= model.quota) ? 'Habis (Sold Out)' : `Sisa Kuota: ${model.quota - (model.sold || 0)}` }}
+                                        <p v-if="model.quota"
+                                            class="mt-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full"
+                                            :class="((model.sold || 0) >= model.quota) ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'">
+                                            {{ ((model.sold || 0) >= model.quota) ? 'Habis (Sold Out)' : `Sisa Kuota:
+                                            ${model.quota -
+                                                (model.sold || 0)}` }}
                                         </p>
                                     </div>
                                 </div>
                                 <div v-if="selectedTicketModelId === ((model as any)._id || model.name)"
-                                    class="absolute top-3 right-3 text-primary-500 animate-in zoom-in duration-300">
-                                    <UIcon name="i-heroicons-check-circle-solid" class="w-5 h-5" />
+                                    class="absolute top-4 right-4 text-primary-500 animate-in zoom-in duration-300">
+                                    <UIcon name="i-heroicons-check-circle-solid" class="w-6 h-6" />
                                 </div>
                             </div>
                         </div>
+                    </UFormField>
+                </div>
+
+                <div v-else-if="step?.id === 'register_as'"
+                    class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div class="mb-8 text-center">
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Daftar Sebagai</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Pilih peran pendaftaran yang sesuai dengan status
+                            Anda saat ini.</p>
                     </div>
-                    <USeparator class="my-6" />
-                    <div class="text-start">
-                        <div class="space-y-6 bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800"
-                            v-if="registerAs">
-                            <div :class="['grid gap-4 px-2 md:px-4', responsiveClasses.gridCols]">
-                                <UFormField :label="$ts('NIM')" v-if="registerAs !== 'non-student'"
-                                    :error="errors.NIM?.message" help="Nomor Induk Mahasiswa Anda">
-                                    <UInput v-model="formRegistration.NIM" size="lg" :disabled="isFieldDisabled('NIM')"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField :label="$ts('name')" :error="errors.fullName?.message"
-                                    help="Nama lengkap sesuai identitas">
-                                    <UInput v-model="formRegistration.fullName" size="lg"
-                                        :disabled="isFieldDisabled('fullName')"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField :label="$ts('email')" :error="errors.email?.message"
-                                    help="Email aktif untuk pengiriman E-Ticket">
-                                    <UInput v-model="formRegistration.email" size="lg"
-                                        :disabled="isFieldDisabled('email')"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField v-if="!user" label="Konfirmasi Email" :error="errors.confirmEmail?.message"
-                                    help="Ulangi pengetikan email Anda">
-                                    <UInput v-model="formRegistration.confirmEmail" size="lg"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField :label="$ts('phone')" :error="errors.phone?.message"
-                                    help="Nomor WhatsApp yang bisa dihubungi">
-                                    <UInput v-model="formRegistration.phone" size="lg"
-                                        :disabled="isFieldDisabled('phone')"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField :label="$ts('class')" v-if="registerAs !== 'non-student'"
-                                    :error="errors.class?.message" help="Contoh: A, B, atau Reguler">
-                                    <UInput v-model="formRegistration.class" size="lg"
-                                        :disabled="isFieldDisabled('class')"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField :label="$ts('semester')" v-if="registerAs !== 'non-student'"
-                                    :error="errors.semester?.message" help="Semester saat ini">
-                                    <UInput v-model="formRegistration.semester" size="lg"
-                                        :disabled="isFieldDisabled('semester')"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField :label="$ts('prodi')" v-if="registerAs !== 'non-student'"
-                                    :error="errors.prodi?.message" help="Program Studi Anda">
-                                    <UInput v-model="formRegistration.prodi" size="lg"
-                                        :disabled="isFieldDisabled('prodi')"
-                                        class="focus:ring-2 focus:ring-primary-500" />
-                                </UFormField>
-                                <UFormField :label="$ts('instance')"
-                                    v-if="registerAs === 'non-student' || registerAs === 'student-guest'"
-                                    :error="errors.instance?.message" help="Asal Universitas / Instansi / Perusahaan">
-                                    <UInput v-model="formRegistration.instance" size="lg"
+
+                    <UFormField :error="errors.role?.message" class="max-w-4xl mx-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div v-for="option in registerAsOptions" :key="option.value"
+                                @click="registerAs = option.value"
+                                class="relative rounded-3xl p-6 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                                :class="registerAs === option.value ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-xl shadow-primary-500/10' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-300 hover:shadow-md'">
+                                <div class="flex items-start gap-4">
+                                    <div :class="registerAs === option.value ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'"
+                                        class="p-4 rounded-2xl transition-all duration-300">
+                                        <UIcon :name="option.icon" class="w-8 h-8" />
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-lg text-gray-900 dark:text-white">{{ option.label }}
+                                        </h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ option.description
+                                            }}</p>
+                                    </div>
+                                    <UIcon v-if="registerAs === option.value" name="i-heroicons-check-circle-solid"
+                                        class="w-6 h-6 text-primary-500 animate-in zoom-in" />
+                                </div>
+                            </div>
+                        </div>
+                    </UFormField>
+
+                    <UAlert v-if="!user" color="info" variant="soft" class="mt-8 max-w-4xl mx-auto shadow-sm"
+                        icon="i-heroicons-shield-check" title="Pendaftaran Aman Tanpa Password">
+                        <template #description>
+                            Sistem menggunakan mekanisme <b>Magic Link</b>. E-Ticket dan notifikasi akan dikirimkan
+                            langsung ke email Anda yang aktif. Pastikan Anda tidak salah mengetik alamat email.
+                        </template>
+                    </UAlert>
+                </div>
+
+                <div v-else-if="step?.id === 'data_diri'"
+                    class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <UAlert v-if="participant._id" color="success" :title="$ts('already_participant')"
+                        :description="$ts('already_participant_desc')" class="mb-6"></UAlert>
+
+                    <div class="mb-6 px-2">
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Data Diri</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Lengkapi formulir biodata di bawah ini.</p>
+                    </div>
+
+                    <div
+                        class="space-y-6 bg-white/50 dark:bg-gray-800/30 backdrop-blur-xl p-6 md:p-8 rounded-3xl shadow-sm ring-1 ring-gray-100 dark:ring-gray-800">
+                        <div :class="['grid gap-6', responsiveClasses.gridCols]">
+                            <UFormField :label="$ts('name')" :error="errors.fullName?.message"
+                                help="Nama lengkap sesuai identitas">
+                                <UInput v-model="formRegistration.fullName" size="xl"
+                                    :disabled="isFieldDisabled('fullName')"
+                                    class="focus:ring-2 focus:ring-primary-500" />
+                            </UFormField>
+
+                            <UFormField :label="$ts('email')" :error="errors.email?.message"
+                                help="Email aktif untuk pengiriman E-Ticket">
+                                <UInput v-model="formRegistration.email" size="xl" :disabled="isFieldDisabled('email')"
+                                    class="focus:ring-2 focus:ring-primary-500" />
+                            </UFormField>
+
+                            <UFormField v-if="!user" label="Konfirmasi Email" :error="errors.confirmEmail?.message"
+                                help="Ketik ulang email Anda">
+                                <UInput v-model="formRegistration.confirmEmail" size="xl"
+                                    class="focus:ring-2 focus:ring-primary-500" />
+                            </UFormField>
+
+                            <UFormField :label="$ts('phone')" :error="errors.phone?.message"
+                                help="Nomor WhatsApp aktif">
+                                <UInput v-model="formRegistration.phone" size="xl" :disabled="isFieldDisabled('phone')"
+                                    class="focus:ring-2 focus:ring-primary-500" />
+                            </UFormField>
+
+                            <template v-if="registerAs !== 'public'">
+                                <UFormField :label="$ts('instance')" :error="errors.instance?.message"
+                                    help="Nama Universitas / Perguruan Tinggi">
+                                    <UInput v-model="formRegistration.instance" size="xl"
                                         :disabled="isFieldDisabled('instance')"
                                         class="focus:ring-2 focus:ring-primary-500" />
                                 </UFormField>
-                                <p v-if="checkIfProdiIsInformatics"
-                                    class="md:col-span-2 text-red-500 dark:text-red-400">**
-                                    {{
-                                        $ts('is_informatics_message') }} <ULink to="/register"
-                                        class="text-blue-500 underline">{{
-                                            $ts('here')
-                                        }}</ULink>
-                                </p>
-                            </div>
+
+                                <UFormField :label="$ts('prodi')" :error="errors.prodi?.message"
+                                    help="Program Studi Anda">
+                                    <UInput v-model="formRegistration.prodi" size="xl"
+                                        :disabled="isFieldDisabled('prodi')"
+                                        class="focus:ring-2 focus:ring-primary-500" />
+                                </UFormField>
+
+                                <UFormField :label="$ts('NIM')" :error="errors.NIM?.message"
+                                    help="Nomor Induk Mahasiswa">
+                                    <UInput v-model="formRegistration.NIM" size="xl" :disabled="isFieldDisabled('NIM')"
+                                        class="focus:ring-2 focus:ring-primary-500" />
+                                </UFormField>
+
+                                <UFormField :label="$ts('semester')" :error="errors.semester?.message"
+                                    help="Semester saat ini (Angka)">
+                                    <UInput v-model="formRegistration.semester" size="xl"
+                                        :disabled="isFieldDisabled('semester')" type="number"
+                                        class="focus:ring-2 focus:ring-primary-500" />
+                                </UFormField>
+
+                                <UFormField :label="$ts('class')" v-if="registerAs === 'himatika-member'"
+                                    :error="errors.class?.message" help="Contoh: A, B, C">
+                                    <UInput v-model="formRegistration.class" size="xl"
+                                        :disabled="isFieldDisabled('class')"
+                                        class="focus:ring-2 focus:ring-primary-500" />
+                                </UFormField>
+                            </template>
+
+                            <template v-else>
+                                <UFormField :label="$ts('instance')" :error="errors.instance?.message"
+                                    help="Asal Instansi / Perusahaan (Opsional)">
+                                    <UInput v-model="formRegistration.instance" size="xl"
+                                        :disabled="isFieldDisabled('instance')"
+                                        class="focus:ring-2 focus:ring-primary-500" />
+                                </UFormField>
+                            </template>
+
+                            <p v-if="checkIfProdiIsInformatics"
+                                class="md:col-span-2 text-red-500 dark:text-red-400 mt-2 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                                <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 inline mr-2" />
+                                ** {{ $ts('is_informatics_message') }} <ULink to="/register"
+                                    class="font-bold underline">{{ $ts('here')
+                                    }}</ULink>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -778,7 +902,7 @@ watch(participant, (newValue) => {
                                         <template #label="{ item }">
                                             <div class="flex flex-col items-center justify-center p-2">
                                                 <span class="font-bold text-gray-700 dark:text-gray-200">{{ item.label
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </template>
                                     </URadioGroup>
@@ -794,7 +918,7 @@ watch(participant, (newValue) => {
                                         <template #label="{ item }">
                                             <div class="flex flex-col">
                                                 <span class="font-bold text-gray-900 dark:text-white">{{ item.label
-                                                }}</span>
+                                                    }}</span>
                                                 <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{
                                                     item.account }}</span>
                                                 <span class="text-xs text-gray-500">a.n {{ item.owner }}</span>
