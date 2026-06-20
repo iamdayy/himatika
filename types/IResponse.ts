@@ -217,7 +217,7 @@ export interface IProjectMeResponse extends IResponse {
 export interface IMemberResponse extends IResponse {
   data?: {
     /** An array of available filter options. */
-    filters?: string[] | number[];
+    filters?: string[] | number[] | null;
     /** An array of members matching the query. */
     members?: IMember[];
     length?: number;

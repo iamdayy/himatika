@@ -71,7 +71,7 @@ export interface IPoint {
     end: Date;
   };
   point: number;
-  activities: {
+  activities?: {
     agendas: {
       committees: number;
       participants: number;
@@ -313,6 +313,7 @@ export interface ITicketModel {
   name: string;
   price: number;
   quota?: number;
+  sold?: number;
   meetLink?: string;
 }
 

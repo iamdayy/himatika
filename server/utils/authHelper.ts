@@ -99,28 +99,19 @@ export const refreshAuth = async (event: H3Event) => {
  */
 export const killAuth = async (event: H3Event) => {
   const authHeaderValue = getRequestHeader(event, "Authorization");
-  if (typeof authHeaderValue === "undefined") {
-    throw createError({
-      statusCode: 401,
-      statusMessage:
-        "Perlu menyertakan header Authorization Bearer yang valid untuk mengakses endpoint ini",
-    });
+  const extractedToken = typeof authHeaderValue !== "undefined" ? extractToken(authHeaderValue) : undefined;
+  const refreshToken = getCookie(event, 'auth.refresh-token');
+
+  if (typeof extractedToken === "undefined" && typeof refreshToken === "undefined") {
+    // If no tokens are present, consider the user already logged out successfully
+    return true;
   }
 
-  const extractedToken = extractToken(authHeaderValue);
-  if (typeof extractedToken === "undefined") {
-    throw createError({
-      statusCode: 401,
-      statusMessage:
-        "Perlu menyertakan header Authorization Bearer yang valid untuk mengakses endpoint ini",
-    });
-  }
   try {
-    return await exitSession(extractedToken);
+    return await exitSession(extractedToken || "", refreshToken);
   } catch (error) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Anda harus login untuk menggunakan endpoint ini",
-    });
+    // Do not throw an error on logout. Just log it and allow the client to clear its state.
+    console.error("Logout error:", error);
+    return true;
   }
 };

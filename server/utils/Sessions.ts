@@ -123,7 +123,7 @@ export const refreshSession = async (payload: string) => {
       expiresIn: "60m",
     });
 
-    return { token: newToken };
+    return { token: newToken, refreshToken: payload };
   } catch (error: any) {
     console.error("Error refreshing session:", error);
     throw createError({
@@ -157,14 +157,21 @@ export const setSession = async (
   }
 };
 
-export const exitSession = async (payload: string) => {
+export const exitSession = async (accessToken: string, refreshToken?: string) => {
   try {
-    // Payload in killAuth is usually the access token. Let's decode it safely.
-    const decoded = jwt.decode(payload) as any;
-    if (decoded?.user) {
-      await SessionModel.deleteMany({ user: decoded.user });
-    } else if (decoded?.guest) {
-      await SessionModel.deleteMany({ guest: decoded.guest });
+    if (refreshToken) {
+      await SessionModel.deleteOne({ refreshToken });
+      return true;
+    }
+
+    if (accessToken) {
+      // Fallback: hapus semua session user jika refresh token tidak ditemukan
+      const decoded = jwt.decode(accessToken) as any;
+      if (decoded?.user) {
+        await SessionModel.deleteMany({ user: decoded.user });
+      } else if (decoded?.guest) {
+        await SessionModel.deleteMany({ guest: decoded.guest });
+      }
     }
     return true;
   } catch (error: any) {

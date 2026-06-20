@@ -64,13 +64,13 @@ export default defineEventHandler(async (event) => {
     let participants: any[] = [];
     let committees: any[] = [];
 
+    const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+    const allParticipants = await ParticipantModel.find({ agendaId: id }).lean();
+
     // Permission to see participants
     if (roles.includes(eventDataDoc.configuration.canSeeRegistered as string) || roles.includes("Organizer")) {
-      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
-      const rawParticipants = await ParticipantModel.find({ agendaId: id }).lean();
-      
       if (!event.context.organizer) {
-        participants = rawParticipants.map((p: any) => {
+        participants = allParticipants.map((p: any) => {
           if (p.member) {
             delete p.member.email;
             delete p.member.phone;
@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
           return p;
         });
       } else {
-        participants = rawParticipants;
+        participants = allParticipants;
       }
     }
     
@@ -129,14 +129,15 @@ export default defineEventHandler(async (event) => {
       myParticipant = await ParticipantModel.findOne({ agendaId: id, guest: user.guest._id }).lean();
     }
 
-    // Hapus meetLink untuk non-organizer agar link zoom tidak bocor di frontend
-    if (!event.context.organizer && eventDataDoc.configuration?.participant?.ticketModels) {
+    // Inject 'sold' property and mask meetLink for non-organizers
+    if (eventDataDoc.configuration?.participant?.ticketModels) {
       eventDataDoc.configuration.participant.ticketModels = eventDataDoc.configuration.participant.ticketModels.map(m => {
-        if (m.meetLink) {
-          // Ganti string meetLink menjadi nilai dummy sekadar untuk indikator boolean di frontend
-          return { ...m, meetLink: "true" };
+        const sold = allParticipants.filter((p: any) => p.ticketModelId === m._id?.toString() || p.ticketModelId === m.name).length;
+        let mapped = { ...(m as any), sold };
+        if (!event.context.organizer && mapped.meetLink) {
+          mapped.meetLink = "true";
         }
-        return m;
+        return mapped;
       });
     }
 
