@@ -254,6 +254,7 @@ const registerAsOptions = computed(() => {
 });
 
 watch(registerAs, (newVal) => {
+    formRegistration.registerAs = newVal;
     if (newVal === 'internal-student') {
         formRegistration.instance = 'ITSNU Pekalongan';
     } else if (newVal === 'himatika-member' && user.value?.member) {
@@ -495,17 +496,17 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         },
     };
 
-    if (formRegistration.registerAs === 'himatika-member' || formRegistration.registerAs === 'internal-student' || formRegistration.registerAs === 'external-student') {
+    if (registerAs.value === 'himatika-member' || registerAs.value === 'internal-student' || registerAs.value === 'external-student') {
         rules.NIM = (value: number) => value > 0 ? null : { message: $ts('NIM_required'), path: 'NIM' };
         rules.semester = (value: number) => value > 0 ? null : { message: $ts('semester_required'), path: 'semester' };
         rules.prodi = (value: string) => value ? null : { message: $ts('prodi_required'), path: 'prodi' };
     }
 
-    if (formRegistration.registerAs === 'himatika-member') {
+    if (registerAs.value === 'himatika-member') {
         rules.class = (value: string) => value ? null : { message: $ts('class_required'), path: 'class' };
     }
 
-    if (formRegistration.registerAs !== 'himatika-member') {
+    if (registerAs.value !== 'himatika-member') {
         rules.instance = (value: string) => value ? null : { message: $ts('instance_required'), path: 'instance' };
     }
 
@@ -514,10 +515,11 @@ const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => 
         delete rules.fullName;
         delete rules.email;
         delete rules.phone;
-        if (formRegistration.registerAs === 'himatika-member') {
+        if (registerAs.value === 'himatika-member') {
             delete rules.NIM;
             delete rules.class;
             delete rules.semester;
+            delete rules.prodi;
         }
     }
 
@@ -744,7 +746,7 @@ watch(participant, (newValue) => {
                                         <h4 class="font-bold text-lg text-gray-900 dark:text-white">{{ option.label }}
                                         </h4>
                                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ option.description
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <UIcon v-if="registerAs === option.value" name="i-heroicons-check-circle-solid"
                                         class="w-6 h-6 text-primary-500 animate-in zoom-in" />
@@ -937,7 +939,7 @@ watch(participant, (newValue) => {
                                                 </span>
                                                 <span class="text-sm font-mono text-gray-600 dark:text-gray-400 mt-1">{{
                                                     target.account
-                                                }}</span>
+                                                    }}</span>
                                                 <span class="text-xs text-gray-500 mt-0.5">a.n {{ target.owner }}</span>
                                             </div>
                                             <div v-if="formSelectPayment.manual_target === target.name"
