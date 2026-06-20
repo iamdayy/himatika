@@ -91,8 +91,8 @@ export const useStatsStore = defineStore("stats", () => {
   const agendasCanMeRegistered = computed<IAgenda[] | undefined>(() => {
     return rawAgendas.value.filter((agenda) =>
       canMeRegister(
-        agenda.configuration.participant.canRegister as string,
-        agenda.configuration.participant.canRegisterUntil.end
+        agenda?.configuration?.participant?.canRegister as string,
+        agenda?.configuration?.participant?.canRegisterUntil?.end
       )
     );
   });

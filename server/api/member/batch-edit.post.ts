@@ -1,6 +1,25 @@
+import { z } from "zod";
 import { MemberModel } from "~~/server/models/MemberModel";
+import { ProjectModel } from "~~/server/models/ProjectModel";
+import { AgendaModel } from "~~/server/models/AgendaModel";
+import { UserModel } from "~~/server/models/UserModel";
 import { IMember } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
+
+/**
+ * Strict schema for batch edit payload
+ */
+const batchEditSchema = z.array(
+  z.object({
+    NIM: z.number().int().positive(),
+    fullName: z.string().optional(),
+    email: z.string().email().or(z.literal("")).optional(),
+    class: z.string().optional(),
+    semester: z.number().min(1).max(14).optional(),
+    enteredYear: z.number().int().optional(),
+    status: z.enum(["active", "inactive", "free", "deleted"]).optional(),
+  })
+);
 
 /**
  * Handles POST requests for batch updating user members via Excel import.
@@ -33,8 +52,8 @@ export default defineEventHandler(
       });
     }
 
-    // Read the request body containing an array of member data
-    const body = await readBody<IMember[]>(event);
+    // Read the request body and validate with Zod strictly
+    const body = await readValidatedBody(event, batchEditSchema.parse);
 
     let savedCount = 0;
     let failedCount = 0;
@@ -45,9 +64,6 @@ export default defineEventHandler(
       const operations = body.map((member) => {
         const { NIM, ...rest } = member;
         const updateData: Record<string, any> = { ...rest };
-
-        // Just to be absolutely safe, avoid updating _id if it slipped in
-        delete updateData._id;
 
         // Clean email: if empty or null, remove it from updateData so it doesn't trigger E11000
         if (!updateData.email || (typeof updateData.email === 'string' && updateData.email.trim() === "")) {
@@ -66,15 +82,39 @@ export default defineEventHandler(
         ordered: false,
       });
 
+      // Handle deleted status side effects manually since bulkWrite skips Mongoose middleware
+      const deletedNIMs = body.filter(m => m.status === 'deleted').map(m => m.NIM);
+      if (deletedNIMs.length > 0) {
+        const deletedMembers = await MemberModel.find({ NIM: { $in: deletedNIMs } });
+        const deletedIds = deletedMembers.map(m => m._id);
+        
+        if (deletedIds.length > 0) {
+          await Promise.all([
+            ProjectModel.updateMany(
+              { members: { $in: deletedIds } },
+              { $pull: { members: { $in: deletedIds } } }
+            ),
+            AgendaModel.updateMany(
+              {
+                $or: [
+                  { "committee.user": { $in: deletedIds } },
+                  { "registered.member": { $in: deletedIds } },
+                ],
+              },
+              {
+                $pull: {
+                  committee: { user: { $in: deletedIds } },
+                  registered: { member: { $in: deletedIds } },
+                },
+              }
+            ),
+            UserModel.deleteMany({ member: { $in: deletedIds } } as any)
+          ]);
+        }
+      }
+
       savedCount = result.modifiedCount + (result.upsertedCount || 0);
       failedCount = body.length - savedCount;
-
-      // It's harder to get exactly which failed in a successful bulkWrite without errors, 
-      // but if the count mismatches, some NIMs were likely not found.
-      if (savedCount < body.length) {
-          // We can't easily identify which ones were skipped without querying, 
-          // but we won't throw an error for it.
-      }
 
     } catch (error: any) {
       console.log(error);
@@ -83,7 +123,7 @@ export default defineEventHandler(
         failedCount = error.writeErrors.length;
         failedMembers = error.writeErrors.map((writeError: any) => {
           const index = writeError.index;
-          return body[index];
+          return body[index] as IMember;
         });
       } else {
         failedCount = body.length;
@@ -97,3 +137,4 @@ export default defineEventHandler(
     };
   }
 );
+

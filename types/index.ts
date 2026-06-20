@@ -71,7 +71,7 @@ export interface IPoint {
     end: Date;
   };
   point: number;
-  activities: {
+  activities?: {
     agendas: {
       committees: number;
       participants: number;
