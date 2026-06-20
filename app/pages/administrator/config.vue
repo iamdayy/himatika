@@ -151,10 +151,9 @@ const onCropped = async (f: File) => {
 const onChangeImage = async (f?: File | null) => {
     if (!f) return;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        alwaysKeepResolution: true
+        useWebWorker: true
     }
     const compressedFile = await imageCompression(f, options);
     const blob = URL.createObjectURL(compressedFile);

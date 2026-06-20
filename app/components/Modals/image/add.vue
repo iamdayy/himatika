@@ -78,10 +78,9 @@ const onCropped = async (f: File) => {
 const onChangeImage = async (file?: File | null) => {
     loadingCompress.value = true;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        alwaysKeepResolution: true,
     };
     if (!file) return;
     try {

@@ -301,8 +301,8 @@ const handleProofUpload = async (event: Event) => {
         }
 
         const options = {
-            maxSizeMB: 1, 
-            maxWidthOrHeight: 1200,
+            maxSizeMB: 2, 
+            maxWidthOrHeight: 1920,
             useWebWorker: true,
         };
         

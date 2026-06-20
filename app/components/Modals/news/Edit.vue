@@ -125,7 +125,7 @@ const editNews = async () => {
 const onChangeImage = async (f?: File | null) => {
     if (!f) return;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true
     }

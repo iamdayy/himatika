@@ -87,8 +87,8 @@ const handleImageUpload = async (event: Event, index: number) => {
         }
 
         const options = {
-            maxSizeMB: 0.2,
-            maxWidthOrHeight: 800,
+            maxSizeMB: 2,
+            maxWidthOrHeight: 1920,
             useWebWorker: true,
         };
 

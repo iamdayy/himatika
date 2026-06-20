@@ -101,10 +101,9 @@ const onChangeImages = async (files: FileList, i: number) => {
     const f = files[0]!;
     loadingCompress.value = true;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        alwaysKeepResolution: true
+        useWebWorker: true
     }
     const compressedFile = await imageCompression(f, options);
     const blob = URL.createObjectURL(compressedFile);

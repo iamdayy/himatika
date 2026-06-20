@@ -64,7 +64,7 @@ const isMobile = computed(() => windowSize.width.value < 640);
 const onFileChange = async ($event: Event) => {
     const target = $event.target as HTMLInputElement;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
     }

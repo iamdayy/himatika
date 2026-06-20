@@ -131,10 +131,9 @@ const onChangeImage = async (f?: File | null) => {
         },
         async onCropped(f: File) {
             const options = {
-                maxSizeMB: 1,
+                maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
-                useWebWorker: true,
-                alwaysKeepResolution: true
+                useWebWorker: true
             }
             const compressedFile = await imageCompression(f, options);
             file.value = compressedFile;

@@ -59,10 +59,9 @@ const updatePhoto = async () => {
             const file = files.value[0] || null;
             if (!file) return;
             const compressedFile = await imageCompression(file, {
-                maxSizeMB: 1,
+                maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
                 useWebWorker: true,
-                alwaysKeepResolution: true,
             });
             formData.append('image', compressedFile);
         }
@@ -99,10 +98,9 @@ const onChangeImage = async (file?: File | null) => {
     if (!file) return;
     loading.value = true;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        alwaysKeepResolution: true,
     };
     try {
         const compressedFile = await imageCompression(file, options);
