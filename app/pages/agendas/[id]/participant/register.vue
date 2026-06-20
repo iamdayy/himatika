@@ -243,6 +243,8 @@ const registerAsOptions = computed(() => {
     ];
     if (user.value) {
         options.unshift({ label: 'Anggota Himatika', description: 'Anggota Himatika ITSNU Pekalongan', value: 'himatika-member', icon: 'i-heroicons-identification' });
+    } else {
+        options.unshift({ label: 'Anggota Himatika', description: 'Wajib Login sebagai Anggota', value: 'himatika-member', icon: 'i-heroicons-lock-closed' });
     }
     const canReg = agenda.value?.configuration?.participant?.canRegister;
     if (canReg === 'Member' || canReg === 'Organizer') {
@@ -264,7 +266,7 @@ watch(registerAs, (newVal) => {
 const paymentMethods = computed<{ label: string; value: IPaymentMethod; icon: string; }[]>(() => {
     const methods = [
         { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
-        { label: $ts('transfer'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
+        { label: $ts('transfer (VA)'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
         { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
     ] as { label: string; value: IPaymentMethod; icon: string; }[];
     if (agenda.value?.configuration?.manualPayments && agenda.value.configuration.manualPayments.length > 0) {
@@ -466,7 +468,13 @@ const responsiveClasses = computed(() => ({
 
 const validationRuleCover = { agreed: (val: boolean) => val ? null : { message: 'Anda harus menyetujui Syarat & Ketentuan', path: 'agreed' } };
 const validationRuleSelectTicket = { ticketModelId: (val: string) => val ? null : { message: 'Silakan pilih tiket yang tersedia', path: 'ticketModelId' } };
-const validationRuleRegisterAs = { role: (val: string) => val ? null : { message: 'Silakan pilih peran pendaftaran Anda', path: 'role' } };
+const validationRuleRegisterAs = {
+    role: (val: string) => {
+        if (!val) return { message: 'Silakan pilih peran pendaftaran Anda', path: 'role' };
+        if (val === 'himatika-member' && !user.value) return { message: 'Peran ini membutuhkan Anda untuk Login terlebih dahulu', path: 'role' };
+        return null;
+    }
+};
 
 const validationRuleRegistration: FieldValidationRules = reactiveComputed(() => {
     const rules: FieldValidationRules = {
@@ -670,9 +678,10 @@ watch(participant, (newValue) => {
                         </p>
                     </div>
                     <UFormField :error="errors.ticketModelId?.message">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                        <div class="flex flex-col md:flex-row flex-wrap justify-center gap-4 max-w-4xl mx-auto">
                             <div v-for="model in ticketModels" :key="(model as any)._id || model.name"
-                                class="relative rounded-2xl p-6 transition-all duration-300 transform group" :class="[
+                                class="w-full md:flex-1 min-w-[280px] max-w-md relative rounded-2xl p-6 transition-all duration-300 transform group"
+                                :class="[
                                     (model.quota && (model.sold || 0) >= model.quota) ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]',
                                     selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-lg shadow-primary-500/10' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-300 hover:shadow-md'
                                 ]"
@@ -705,10 +714,6 @@ watch(participant, (newValue) => {
                                                 (model.sold || 0)}` }}
                                         </p>
                                     </div>
-                                </div>
-                                <div v-if="selectedTicketModelId === ((model as any)._id || model.name)"
-                                    class="absolute top-4 right-4 text-primary-500 animate-in zoom-in duration-300">
-                                    <UIcon name="i-heroicons-check-circle-solid" class="w-6 h-6" />
                                 </div>
                             </div>
                         </div>
@@ -897,34 +902,49 @@ watch(participant, (newValue) => {
 
                             <div v-if="formSelectPayment.method === 'bank_transfer'" class="animate-fade-in mt-6">
                                 <UFormField label="Pilih Bank" help="Pilih bank untuk pembayaran Virtual Account">
-                                    <URadioGroup v-model="formSelectPayment.bank" :items="vaBanks"
-                                        class="grid grid-cols-2 sm:grid-cols-4 gap-3" :ui="{ fieldset: 'w-full' }">
-                                        <template #label="{ item }">
-                                            <div class="flex flex-col items-center justify-center p-2">
-                                                <span class="font-bold text-gray-700 dark:text-gray-200">{{ item.label
-                                                    }}</span>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <div v-for="bank in vaBanks" :key="bank.value"
+                                            class="relative rounded-xl p-4 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex items-center justify-center group"
+                                            :class="formSelectPayment.bank === bank.value ? 'bg-primary-50 dark:bg-primary-900/20 ring-2 ring-primary-500 shadow-sm' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-400'"
+                                            @click="formSelectPayment.bank = bank.value">
+                                            <span class="font-bold tracking-wider transition-colors"
+                                                :class="formSelectPayment.bank === bank.value ? 'text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'">
+                                                {{ bank.label }}
+                                            </span>
+                                            <div v-if="formSelectPayment.bank === bank.value"
+                                                class="absolute top-1.5 right-1.5 text-primary-500 animate-in zoom-in duration-300">
+                                                <UIcon name="i-heroicons-check-circle-solid" class="w-4 h-4" />
                                             </div>
-                                        </template>
-                                    </URadioGroup>
+                                        </div>
+                                    </div>
                                 </UFormField>
                             </div>
 
                             <div v-if="formSelectPayment.method === 'manual_transfer'" class="animate-fade-in mt-6">
                                 <UFormField label="Pilih Rekening Tujuan"
                                     help="Pilih rekening bank atau e-wallet yang dituju">
-                                    <URadioGroup v-model="formSelectPayment.manual_target"
-                                        :items="(agenda?.configuration?.manualPayments || []).map(p => ({ label: p.name, account: p.account, owner: p.owner, value: p.name }))"
-                                        class="grid grid-cols-1 md:grid-cols-2 gap-3" :ui="{ fieldset: 'w-full' }">
-                                        <template #label="{ item }">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div v-for="target in (agenda?.configuration?.manualPayments || [])"
+                                            :key="target.name"
+                                            class="relative rounded-xl p-4 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex items-start group"
+                                            :class="formSelectPayment.manual_target === target.name ? 'bg-primary-50 dark:bg-primary-900/20 ring-2 ring-primary-500 shadow-sm' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-400'"
+                                            @click="formSelectPayment.manual_target = target.name">
                                             <div class="flex flex-col">
-                                                <span class="font-bold text-gray-900 dark:text-white">{{ item.label
+                                                <span class="font-bold text-gray-900 dark:text-white transition-colors"
+                                                    :class="formSelectPayment.manual_target === target.name ? 'text-primary-700 dark:text-primary-400' : ''">
+                                                    {{ target.name }}
+                                                </span>
+                                                <span class="text-sm font-mono text-gray-600 dark:text-gray-400 mt-1">{{
+                                                    target.account
                                                     }}</span>
-                                                <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{
-                                                    item.account }}</span>
-                                                <span class="text-xs text-gray-500">a.n {{ item.owner }}</span>
+                                                <span class="text-xs text-gray-500 mt-0.5">a.n {{ target.owner }}</span>
                                             </div>
-                                        </template>
-                                    </URadioGroup>
+                                            <div v-if="formSelectPayment.manual_target === target.name"
+                                                class="absolute top-3 right-3 text-primary-500 animate-in zoom-in duration-300">
+                                                <UIcon name="i-heroicons-check-circle-solid" class="w-5 h-5" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </UFormField>
                             </div>
 
