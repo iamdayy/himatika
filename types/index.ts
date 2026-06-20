@@ -313,6 +313,7 @@ export interface ITicketModel {
   name: string;
   price: number;
   quota?: number;
+  sold?: number;
   meetLink?: string;
 }
 

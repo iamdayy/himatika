@@ -81,6 +81,7 @@ const links = computed(() => [
     { label: $ts('home'), to: '/' },
     { label: $ts('agenda'), to: '/agendas' },
     { label: agenda.value?.title || '', to: `/agendas/${id}` },
+    { label: $ts('participant') },
     { label: $ts('register') }
 ]);
 const steps = computed<Step[]>(() => {
@@ -225,12 +226,16 @@ const checkIfProdiIsInformatics = computed(() => {
     return ['informatics', 'informatika', 'computerscience', 'cs', 'it', 'informationtechnology'].includes(prodi);
 });
 const registerAsOptions = computed(() => {
-    const options = [
+    let options = [
         { label: $ts('non_student'), value: 'non-student' },
         { label: $ts('student_guest'), value: 'student-guest' },
     ];
     if (user.value) {
         options.unshift({ label: $ts('student'), value: 'student' });
+    }
+    const canReg = agenda.value?.configuration?.participant?.canRegister;
+    if (canReg === 'Member' || canReg === 'Organizer') {
+        options = options.filter(o => o.value === 'student');
     }
     return options;
 });
@@ -577,7 +582,7 @@ watch(participant, (newValue) => {
 })
 </script>
 <template>
-    <div class="items-center justify-center mb-24">
+    <div class="items-center justify-center mb-24 space-y-8">
         <UBreadcrumb :items="links" />
         <div v-if="pendingAgenda || pendingParticipant" class="mt-4">
             <USkeleton class="w-full h-12 mb-6" />
@@ -614,9 +619,12 @@ watch(participant, (newValue) => {
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Pilih Jenis Tiket</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div v-for="model in ticketModels" :key="(model as any)._id || model.name"
-                                class="relative rounded-2xl p-5 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] group"
-                                :class="selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-lg shadow-primary-500/10' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-300 hover:shadow-md'"
-                                @click="selectedTicketModelId = (model as any)._id || model.name">
+                                class="relative rounded-2xl p-5 transition-all duration-300 transform group"
+                                :class="[
+                                    (model.quota && (model.sold || 0) >= model.quota) ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]',
+                                    selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 ring-2 ring-primary-500 shadow-lg shadow-primary-500/10' : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-primary-300 hover:shadow-md'
+                                ]"
+                                @click="(model.quota && (model.sold || 0) >= model.quota) ? null : selectedTicketModelId = (model as any)._id || model.name">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
                                         <div :class="selectedTicketModelId === ((model as any)._id || model.name) ? 'bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 group-hover:text-primary-500'"
@@ -635,7 +643,8 @@ watch(participant, (newValue) => {
                                     <div class="text-right">
                                         <p class="text-lg font-black text-primary-600 dark:text-primary-400">Rp {{
                                             formatCurrency(model.price) }}</p>
-                                        <p v-if="model.quota" class="text-[10px] text-gray-400">Kuota: {{ model.quota }}
+                                        <p v-if="model.quota" class="text-[10px]" :class="((model.sold || 0) >= model.quota) ? 'text-red-500 font-bold' : 'text-gray-400'">
+                                            {{ ((model.sold || 0) >= model.quota) ? 'Habis (Sold Out)' : `Sisa Kuota: ${model.quota - (model.sold || 0)}` }}
                                         </p>
                                     </div>
                                 </div>
@@ -768,7 +777,8 @@ watch(participant, (newValue) => {
                                         class="grid grid-cols-2 sm:grid-cols-4 gap-3" :ui="{ fieldset: 'w-full' }">
                                         <template #label="{ item }">
                                             <div class="flex flex-col items-center justify-center p-2">
-                                                <span class="font-bold text-gray-700 dark:text-gray-200">{{ item.label }}</span>
+                                                <span class="font-bold text-gray-700 dark:text-gray-200">{{ item.label
+                                                }}</span>
                                             </div>
                                         </template>
                                     </URadioGroup>
@@ -783,8 +793,10 @@ watch(participant, (newValue) => {
                                         class="grid grid-cols-1 md:grid-cols-2 gap-3" :ui="{ fieldset: 'w-full' }">
                                         <template #label="{ item }">
                                             <div class="flex flex-col">
-                                                <span class="font-bold text-gray-900 dark:text-white">{{ item.label }}</span>
-                                                <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ item.account }}</span>
+                                                <span class="font-bold text-gray-900 dark:text-white">{{ item.label
+                                                }}</span>
+                                                <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{
+                                                    item.account }}</span>
                                                 <span class="text-xs text-gray-500">a.n {{ item.owner }}</span>
                                             </div>
                                         </template>
@@ -816,28 +828,35 @@ watch(participant, (newValue) => {
                                     </div>
                                     <div
                                         class="pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                                        <span class="font-bold text-gray-900 dark:text-white text-base font-sans">Total
+                                            Pembayaran</span>
                                         <span
-                                            class="font-bold text-gray-900 dark:text-white text-base font-sans">Total Pembayaran</span>
-                                        <span class="font-black text-2xl text-primary-600 dark:text-primary-400 drop-shadow-sm">Rp {{
-                                            formatCurrency(priceSummary.total) }}</span>
+                                            class="font-black text-2xl text-primary-600 dark:text-primary-400 drop-shadow-sm">Rp
+                                            {{
+                                                formatCurrency(priceSummary.total) }}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div v-else class="relative overflow-hidden bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10 p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm mt-8">
+                            <div v-else
+                                class="relative overflow-hidden bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10 p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm mt-8">
                                 <div class="flex gap-4 relative z-10">
                                     <div class="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-xl h-fit hidden sm:block">
-                                        <UIcon name="i-heroicons-wallet" class="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                                        <UIcon name="i-heroicons-wallet"
+                                            class="w-6 h-6 text-amber-600 dark:text-amber-400" />
                                     </div>
                                     <div class="space-y-1 text-sm text-amber-900 dark:text-amber-100 w-full">
                                         <p class="font-bold text-base flex items-center gap-2">
                                             <UIcon name="i-heroicons-wallet" class="w-5 h-5 sm:hidden" />
                                             Pembayaran Tunai (Cash)
                                         </p>
-                                        <p>Silakan datang ke sekretariat panitia untuk melakukan pembayaran secara tunai.</p>
-                                        <div class="mt-4 pt-3 border-t border-amber-200/50 dark:border-amber-800/50 flex items-center justify-between">
+                                        <p>Silakan datang ke sekretariat panitia untuk melakukan pembayaran secara
+                                            tunai.</p>
+                                        <div
+                                            class="mt-4 pt-3 border-t border-amber-200/50 dark:border-amber-800/50 flex items-center justify-between">
                                             <span class="font-medium">Total Tagihan:</span>
-                                            <strong class="text-xl text-amber-700 dark:text-amber-300 font-mono">Rp {{ formatCurrency(priceSummary.total) }}</strong>
+                                            <strong class="text-xl text-amber-700 dark:text-amber-300 font-mono">Rp {{
+                                                formatCurrency(priceSummary.total) }}</strong>
                                         </div>
                                     </div>
                                 </div>
