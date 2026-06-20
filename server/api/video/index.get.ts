@@ -21,9 +21,9 @@ export default defineEventHandler(async (event): Promise<IVideoResponse> => {
         path: "on",
         select: "_id slug title description",
         options: { autopopulate: false },
-      });
+      }).lean();
       const groupped = groupByOn(
-        videos.map((video) => video.toObject()) as IVideo[]
+        videos as IVideo[]
       );
       return {
         statusCode: 200,
@@ -60,9 +60,10 @@ export default defineEventHandler(async (event): Promise<IVideoResponse> => {
         select: "_id category title description tags",
         options: { autopopulate: false },
       })
-      .sort(sortQuery);
+      .sort(sortQuery)
+      .lean();
     const groupped = groupByOn(
-      videos.map((video) => video.toObject()) as IVideo[]
+      videos as IVideo[]
     );
 
     const paginated = groupped.slice(

@@ -36,7 +36,7 @@ export default defineCachedEventHandler(
       const project = await ProjectModel.findById(id).populate({
         path: "photos",
         model: PhotoModel,
-      });
+      }).lean();
       if (!project) {
         throw createError({
           statusCode: 404,
@@ -48,7 +48,7 @@ export default defineCachedEventHandler(
         statusCode: 200,
         statusMessage: "Project fetched",
         data: {
-          project: project.toObject() as IProject,
+          project: project as IProject,
         },
       };
     }
@@ -90,7 +90,8 @@ export default defineCachedEventHandler(
     const projects = await ProjectModel.find(query)
       .skip((Number(page) - 1) * Number(perPage))
       .limit(Number(perPage))
-      .sort(sortOpt);
+      .sort(sortOpt)
+      .lean();
 
     return {
       statusCode: 200,

@@ -16,11 +16,29 @@ export default defineEventHandler(async (event) => {
       });
     }
     const body = await readBody<IConfig>(event);
-    const config = await ConfigModel.create(body);
+    const config = await ConfigModel.find();
+    if(!config || config.length === 0) {
+        await ConfigModel.create(body);
+    }else {
+        await ConfigModel.updateOne({ _id: config[0]?._id }, body);
+    }
+
+    try {
+        const storage = useStorage();
+        const keys = await storage.getKeys();
+        for (const key of keys) {
+            if (key.includes('config-cache') || key.includes('api/config')) {
+                await storage.removeItem(key);
+            }
+        }
+    } catch (e) {
+        console.error("Cache clear error:", e);
+    }
+
     return {
       statusCode: 200,
-      statusMessage: "Config berhasil dibuat",
-      data: config,
+      statusMessage: "Config berhasil diperbarui",
+      data: body as unknown as IConfig,
     };
   } catch (error: any) {
     console.error(error);

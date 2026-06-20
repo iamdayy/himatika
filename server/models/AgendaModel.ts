@@ -575,22 +575,26 @@ agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
   if (typeof this.configuration.committee.canRegister === "string" && member) {
     const [roleName, rawValue] =
       this.configuration.committee.canRegister.split("<");
-    const memberValue = member[roleName as keyof IMember];
-    const numValue = Number(rawValue);
-    if (typeof memberValue === "number" && !isNaN(numValue)) {
-      if (memberValue < numValue) {
-        return true;
+    if (rawValue) {
+      const memberValue = member[roleName as keyof IMember];
+      const numValue = Number(rawValue.trim());
+      if (typeof memberValue === "number" && !isNaN(numValue)) {
+        if (memberValue < numValue) {
+          return true;
+        }
       }
     }
   }
   if (typeof this.configuration.committee.canRegister === "string" && member) {
     const [roleName, rawValue] =
       this.configuration.committee.canRegister.split(">");
-    const memberValue = member[roleName as keyof IMember];
-    const numValue = Number(rawValue);
-    if (typeof memberValue === "number" && !isNaN(numValue)) {
-      if (memberValue > numValue) {
-        return true;
+    if (rawValue) {
+      const memberValue = member[roleName as keyof IMember];
+      const numValue = Number(rawValue.trim());
+      if (typeof memberValue === "number" && !isNaN(numValue)) {
+        if (memberValue > numValue) {
+          return true;
+        }
       }
     }
   }
@@ -644,11 +648,13 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
   ) {
     const [roleName, rawValue] =
       this.configuration.participant.canRegister.split("<");
-    const memberValue = member[roleName as keyof IMember];
-    const numValue = Number(rawValue);
-    if (typeof memberValue === "number" && !isNaN(numValue)) {
-      if (memberValue < numValue) {
-        return true;
+    if (rawValue) {
+      const memberValue = member[roleName as keyof IMember];
+      const numValue = Number(rawValue.trim());
+      if (typeof memberValue === "number" && !isNaN(numValue)) {
+        if (memberValue < numValue) {
+          return true;
+        }
       }
     }
   }
@@ -658,11 +664,13 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
   ) {
     const [roleName, rawValue] =
       this.configuration.participant.canRegister.split(">");
-    const memberValue = member[roleName as keyof IMember];
-    const numValue = Number(rawValue);
-    if (typeof memberValue === "number" && !isNaN(numValue)) {
-      if (memberValue > numValue) {
-        return true;
+    if (rawValue) {
+      const memberValue = member[roleName as keyof IMember];
+      const numValue = Number(rawValue.trim());
+      if (typeof memberValue === "number" && !isNaN(numValue)) {
+        if (memberValue > numValue) {
+          return true;
+        }
       }
     }
   }

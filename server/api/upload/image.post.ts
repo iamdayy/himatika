@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 
 /**
  * POST /api/upload/image
@@ -22,44 +22,23 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 400, statusMessage: 'File required' });
         }
 
-        const BASE_PHOTO_FOLDER = `/signature`;
-            let imageUrl = "";
-            const file = filePart.data;
-            if (!file) {
-              throw createError({
-                statusCode: 400,
-                statusMessage: "No file uploaded",
-              });
-            }
-            if (typeof file === "string") {
-              throw createError({
-                statusCode: 400,
-                statusMessage: "Invalid file data",
-              });
-            }
-        
-            const fileName = `${BASE_PHOTO_FOLDER}/${hashText(`${filePart.filename}`)}.${
-              filePart.type?.split("/")[1] || "png"
-            }`;
-        
-            // Handle main image upload
-            if (filePart.type?.startsWith("image/")) {
-              await r2Client.send(
-                new PutObjectCommand({
-                  Bucket: R2_BUCKET_NAME,
-                  Key: fileName,
-                  Body: filePart.data,
-                  ContentType: filePart.type,
-                })
-              );
-        
-              imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
-            } else {
-              throw createError({
-                statusMessage: "Please upload nothing but images.",
-              });
-            }
+        let imageUrl = "";
 
+        const fileObj = {
+          name: filePart.filename || "signature.png",
+          data: filePart.data,
+          type: filePart.type
+        };
+    
+        // Handle main image upload
+        if (filePart.type?.startsWith("image/")) {
+          // This upload api seems specifically for signatures
+          imageUrl = await uploadToR2(fileObj, 'uploads/signatures');
+        } else {
+          throw createError({
+            statusMessage: "Please upload nothing but images.",
+          });
+        }
 
         return { success: true, url: imageUrl };
 

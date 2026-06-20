@@ -161,14 +161,14 @@ useHead({
                 <!-- User menu and theme toggle -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <!-- Language Dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
+                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }" :modal="false">
                         <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
                     </UDropdownMenu>
                     <!-- Theme toggle -->
                     <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
                         :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
                         @click="isDarkMode = !isDarkMode" />
-                    <UDropdownMenu :items="items" :content="{ side: 'bottom' }">
+                    <UDropdownMenu :items="items" :content="{ side: 'bottom' }" :modal="false">
                         <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" format="webp" preload
                             alt="Profile" />
@@ -202,14 +202,15 @@ useHead({
                 </div>
             </div>
         </nav>
-        <main>
-            <div class="px-2 py-6 pt-24 mx-auto md:px-8">
-                <UContainer class="py-16">
-                    <slot />
-                </UContainer>
-                <Footer />
+        <div class="pt-16 min-h-screen">
+            <UContainer v-if="!$route.meta.fluid" class="py-8">
+                <slot />
+            </UContainer>
+            <div v-else>
+                <slot />
             </div>
-        </main>
+        </div>
+        <Footer />
     </div>
 </template>
 <style scoped>

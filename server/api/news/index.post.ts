@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
@@ -29,7 +29,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const BASE_MAINIMAGE_FOLDER = "/uploads/img/newss";
     let imageUrl = "";
 
     const body = await customReadMultipartFormData<IReqNews>(event, {
@@ -53,20 +52,10 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Data berkas tidak valid",
       });
     }
-    const fileName = `${BASE_MAINIMAGE_FOLDER}/${hashText(file.name!)}.${
-      file.type?.split("/")[1]
-    }`;
+
     // Handle main image upload
     if (file.type?.startsWith("image/")) {
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: file.data,
-          ContentType: file.type,
-        })
-      );
-      imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      imageUrl = await uploadToR2(file, StoragePaths.NEWS);
     } else {
       throw createError({
         statusMessage: "Harap unggah gambar saja.",

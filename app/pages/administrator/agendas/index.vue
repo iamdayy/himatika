@@ -39,7 +39,7 @@ const perPage = ref(0);
 const upcomingOnly = ref(false);
 
 
-const { data: agendas, refresh: refreshAgendas, pending: agendasPending } = useLazyAsyncData("agendas", () => $api<IAgendaResponse>('/api/agenda', {
+const { data: agendas, refresh: refreshAgendas, pending: agendasPending } = useLazyAsyncData("admin-agendas-list", () => $api<IAgendaResponse>('/api/agenda', {
     method: 'GET',
     query: {
         page: page.value,

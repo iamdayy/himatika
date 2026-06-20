@@ -62,7 +62,7 @@ onBeforeUnmount(async () => {
 </script>
 
 <template>
-    <div class="relative w-full bg-black rounded-2xl overflow-hidden shadow-2xl">
+    <div class="relative w-full bg-black rounded-2xl overflow-hidden shadow-lg">
 
         <div :id="scannerId" class="w-full h-full min-h-[350px]"></div>
 

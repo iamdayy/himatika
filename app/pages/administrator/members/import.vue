@@ -133,6 +133,62 @@ const selectedCollegers = computed<IMember[]>(() => {
     }) || [];
 });
 
+    const RawData = ref<any[]>([]);
+    const currentStep = ref(1);
+    
+    const availableColumns = computed(() => {
+        if (RawData.value.length === 0) return [];
+        return Object.keys(RawData.value[0]);
+    });
+    
+    const columnMapping = ref({
+        NIM: '',
+        fullName: '',
+        email: '',
+        class: '',
+        semester: '',
+        enteredYear: '',
+    });
+    
+    const autoDetectMapping = () => {
+        const cols = availableColumns.value;
+        const findMatch = (keywords: string[]) => cols.find(c => keywords.some(k => c.toLowerCase().includes(k.toLowerCase())));
+        
+        columnMapping.value.NIM = findMatch(['nim', 'no induk']) || '';
+        columnMapping.value.fullName = findMatch(['nama', 'name', 'lengkap']) || '';
+        columnMapping.value.email = findMatch(['email', 'surel']) || '';
+        columnMapping.value.class = findMatch(['kelas', 'class']) || '';
+        columnMapping.value.semester = findMatch(['semester', 'smt']) || '';
+        columnMapping.value.enteredYear = findMatch(['tahun', 'masuk', 'year', 'angkatan']) || '';
+    };
+
+    const applyMapping = () => {
+        if (!columnMapping.value.NIM || !columnMapping.value.fullName) {
+            toast.add({ title: 'Error', description: 'NIM dan Nama Lengkap wajib dipetakan!', color: 'error' });
+            return;
+        }
+        
+        DataFromCSV.value = RawData.value.map((row: any) => ({
+            NIM: row[columnMapping.value.NIM],
+            fullName: row[columnMapping.value.fullName],
+            email: columnMapping.value.email ? row[columnMapping.value.email] : '',
+            class: columnMapping.value.class ? row[columnMapping.value.class] : '',
+            semester: columnMapping.value.semester ? parseInt(row[columnMapping.value.semester]) || 1 : 1,
+            enteredYear: columnMapping.value.enteredYear ? parseInt(row[columnMapping.value.enteredYear]) || new Date().getFullYear() : new Date().getFullYear(),
+            sex: 'male',
+        }));
+        
+        selectedRows.value = {
+            ...Object.fromEntries(DataFromCSV.value.map((_, index) => [index, true])),
+        };
+        currentStep.value = 3;
+    };
+
+    const cancelMapping = () => {
+        RawData.value = [];
+        currentStep.value = 1;
+    }
+
 /**
  * Handle file upload and parse CSV data
  * @param {File} file - The uploaded CSV file
@@ -147,16 +203,15 @@ const onChangeXlsx = async (file?: File | null) => {
     try {
         const body = new CustomFormData<{ file: File }>();
         body.append('file', file)
-        const uploaded = await $api<IResponse & { data: IMember[] }>("/api/sheet/import", {
+        const uploaded = await $api<IResponse & { data: any[] }>("/api/sheet/import", {
             method: "POST",
             body: body.getFormData()
         });
-        DataFromCSV.value = uploaded.data as IMember[];
-        selectedRows.value = {
-            ...Object.fromEntries(DataFromCSV.value.map((_, index) => [index, true])),
-        };
+        RawData.value = uploaded.data;
+        autoDetectMapping();
+        currentStep.value = 2; // Go to mapping step
         loading.value = false;
-        toast.add({ title: uploaded.statusMessage });
+        toast.add({ title: 'File berhasil dibaca, silakan petakan kolom' });
     } catch (error) {
         toast.add({ title: $ts('file_not_found') });
         loading.value = false;
@@ -177,6 +232,11 @@ const addCollegers = async () => {
         if (added.data) {
             DataFromCSV.value = added.data?.failedMembers;
             failedUpload.value = added.data?.failedMembers.length > 0;
+            if(added.data?.failedMembers.length === 0) {
+                 toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers', { success: added.data?.savedCount, failed: added.data?.failedCount }) });
+                 navigateTo('/administrator/members');
+                 return;
+            }
         }
         toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers', { success: added.data?.savedCount, failed: added.data?.failedCount }) });
     } catch (error) {
@@ -292,11 +352,13 @@ const links = computed(() => [{
             <template #header>
                 <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
                     <h1 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">
-                        {{ $ts('import') }}
+                        {{ $ts('import') }} Anggota Baru
                     </h1>
                 </div>
             </template>
-            <div class="px-2 py-6 md:py-12 md:px-8">
+            
+            <!-- STEP 1: UPLOAD -->
+            <div v-if="currentStep === 1" class="px-2 py-6 md:py-12 md:px-8">
                 <UFileUpload @update:model-value="onChangeXlsx" :label="$ts('drop_zone')"
                     :description="$ts('drop_zone_hint', { count: 1, format: '.xlsx', size: '5MB' })" layout="list"
                     position="inside" :max-file-size="5 * 1024 * 1024"
@@ -313,45 +375,88 @@ const links = computed(() => [{
                     </UButton>
                 </div>
             </div>
-            <USeparator class="my-2 md:my-4" />
-            <div class="flex justify-between p-2 md:p-4 items-center">
-                <div class="flex flex-col">
-                    <h2 class="text-md font-semibold text-gray-600 md:text-lg md:font-bold dark:text-gray-200">
-                        {{ $ts('preview_data') }}
-                    </h2>
-                    <p class="text-sm font-light text-gray-600 dark:text-gray-300">
-                        {{ $ts('preview_data_hint') }}
-                    </p>
+
+            <!-- STEP 2: MAPPING -->
+            <div v-if="currentStep === 2" class="px-2 py-4 md:px-8">
+                <div class="mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Pencocokan Kolom (Column Mapping)</h2>
+                    <p class="text-sm text-gray-500">Pilih kolom dari Excel Anda yang sesuai dengan data anggota. NIM dan Nama Lengkap wajib diisi.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <UFormField label="NIM (Wajib)" required>
+                        <USelect v-model="columnMapping.NIM" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                    </UFormField>
+                    <UFormField label="Nama Lengkap (Wajib)" required>
+                        <USelect v-model="columnMapping.fullName" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                    </UFormField>
+                    <UFormField label="Email">
+                        <USelect v-model="columnMapping.email" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                    </UFormField>
+                    <UFormField label="Kelas">
+                        <USelect v-model="columnMapping.class" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                    </UFormField>
+                    <UFormField label="Semester">
+                        <USelect v-model="columnMapping.semester" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                    </UFormField>
+                    <UFormField label="Tahun Masuk / Angkatan">
+                        <USelect v-model="columnMapping.enteredYear" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                    </UFormField>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-light text-gray-600 dark:text-gray-300">
-                        {{ selectedCollegers.length }} {{ $ts('selected') }}
-                    </span>
-                    <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
-                        :disabled="DataFromCSV.length <= 0"
-                        :label="$ts('add_member', { count: selectedCollegers.length })" variant="solid"
-                        color="primary" />
-                    <UButton v-if="failedUpload" @click="downloadFailedMembers" :size="responsiveUISizes.button"
-                        icon="i-heroicons-arrow-down-on-square" variant="outline" :loading="loading"
-                        :disabled="DataFromCSV.length <= 0" :label="$ts('download_failed_member')" color="error" />
+                <div class="flex justify-end gap-2 mt-6">
+                    <UButton @click="cancelMapping" color="neutral" variant="soft">Batal</UButton>
+                    <UButton @click="applyMapping" color="primary">Lanjut ke Preview</UButton>
                 </div>
             </div>
-            <UAlert v-if="DataFromCSV.length > 0" class="mx-2 mb-4" color="warning" close :title="$ts('warning')"
-                :description="$ts('import_warning_hint')" />
-            <UAlert v-if="DataFromCSV.length == 0" class="mx-2 mb-4" color="info" close :title="$ts('info')"
-                :description="$ts('no_data_hint')" />
-            <UAlert v-if="failedUpload" class="mx-2 mb-4" color="error" close :title="$ts('error_upload')"
-                :description="$ts('some_members_failed_to_upload')" />
-            <USeparator class="my-2 md:my-4" />
-            <!-- Table -->
-            <UTable v-model:row-selection="selectedRows" :data="DataFromCSV" :columns="columns" :loading="loading">
-            </UTable>
-            <template #footer>
-                <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
-                    :disabled="DataFromCSV.length <= 0" :label="$ts('add_member', { count: selectedCollegers.length })"
-                    variant="solid" color="primary" block />
-            </template>
+
+            <!-- STEP 3: PREVIEW & SUBMIT -->
+            <div v-if="currentStep === 3">
+                <div class="flex justify-between p-2 md:p-4 items-center">
+                    <div class="flex flex-col">
+                        <h2 class="text-md font-semibold text-gray-600 md:text-lg md:font-bold dark:text-gray-200">
+                            {{ $ts('preview_data') }}
+                        </h2>
+                        <p class="text-sm font-light text-gray-600 dark:text-gray-300">
+                            {{ $ts('preview_data_hint') }}
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-light text-gray-600 dark:text-gray-300">
+                            {{ selectedCollegers.length }} {{ $ts('selected') }}
+                        </span>
+                        <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
+                            :disabled="DataFromCSV.length <= 0"
+                            :label="$ts('add_member', { count: selectedCollegers.length })" variant="solid"
+                            color="primary" />
+                        <UButton v-if="failedUpload" @click="downloadFailedMembers" :size="responsiveUISizes.button"
+                            icon="i-heroicons-arrow-down-on-square" variant="outline" :loading="loading"
+                            :disabled="DataFromCSV.length <= 0" :label="$ts('download_failed_member')" color="error" />
+                    </div>
+                </div>
+                
+                <UAlert v-if="DataFromCSV.length > 0" class="mx-2 mb-4" color="warning" close :title="$ts('warning')"
+                    :description="$ts('import_warning_hint')" />
+                <UAlert v-if="DataFromCSV.length == 0" class="mx-2 mb-4" color="info" close :title="$ts('info')"
+                    :description="$ts('no_data_hint')" />
+                <UAlert v-if="failedUpload" class="mx-2 mb-4" color="error" close :title="$ts('error_upload')"
+                    :description="$ts('some_members_failed_to_upload')" />
+                
+                <!-- Table -->
+                <UTable v-model:row-selection="selectedRows" :data="DataFromCSV.slice(0, 50)" :columns="columns" :loading="loading">
+                </UTable>
+                <div v-if="DataFromCSV.length > 50" class="text-center p-4 text-sm text-gray-500 dark:text-gray-400">
+                    Menampilkan 50 data pertama sebagai preview. (Total {{ DataFromCSV.length }} data siap diimpor)
+                </div>
+                
+                <div class="p-4 border-t border-gray-100 flex justify-between">
+                    <UButton @click="currentStep = 2" color="neutral" variant="ghost" icon="i-heroicons-arrow-left">Kembali ke Mapping</UButton>
+                    <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
+                        :disabled="DataFromCSV.length <= 0" :label="$ts('add_member', { count: selectedCollegers.length })"
+                        variant="solid" color="primary" />
+                </div>
+            </div>
         </UCard>
     </div>
 </template>

@@ -130,14 +130,14 @@ const columns = computed<TableColumn<IAspiration>[]>(() => [
         accessorKey: 'upVotes',
         header: $ts('up_vote'),
         cell: ({ row }) => {
-            return row.original.votes?.filter((vote: IVote) => vote.voteType == 'upvote').length || 0;
+            return (row.original as any).upVotesCount || 0;
         },
     },
     {
         accessorKey: 'downVotes',
         header: $ts('down_vote'),
         cell: ({ row }) => {
-            return row.original.votes?.filter((vote: IVote) => vote.voteType == 'downvote').length || 0;
+            return (row.original as any).downVotesCount || 0;
         },
     },
     {
@@ -241,7 +241,7 @@ const { data, status, refresh } = useLazyAsyncData('users', () => $api<IAspirati
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0);
-const pageFrom = computed(() => (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
+const pageFrom = computed(() => pagination.value.pageIndex === 0 ? 0 : (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
 const pageTo = computed(() => Math.min(pagination.value.pageIndex * pagination.value.pageSize, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];
@@ -312,8 +312,8 @@ const generateXlsx = async () => {
                         'Subject': row.subject,
                         'Message': row.message,
                         'From': row.from ? (row.from as IMember)?.fullName : 'Anonymous',
-                        'Up Vote': row.votes?.filter((vote: IVote) => vote.voteType == 'upvote').length,
-                        'Down Vote': row.votes?.filter((vote: IVote) => vote.voteType == 'downvote').length,
+                        'Up Vote': (row as any).upVotesCount || 0,
+                        'Down Vote': (row as any).downVotesCount || 0,
                         'Status': row.deleted ? 'Deleted' : row.archived ? 'Archived' : row.read ? 'Read' : 'Unread',
                         'proofs Photo': row.proofs?.photos?.map(((photo: IPhoto) => config.public.public_uri + photo.image as string)).join(', '),
                         'proofs Video': row.proofs?.videos?.map(((video: IVideo) => config.public.public_uri + video.video as string)).join(', '),

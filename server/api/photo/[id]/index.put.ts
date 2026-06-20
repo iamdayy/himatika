@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, deleteFromR2 } from "~~/server/utils/storage";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { IReqPhoto } from "~~/types/IRequestPost";
 
@@ -37,32 +37,14 @@ export default defineEventHandler(async (event) => {
     
     if (image && typeof image === "object" && image.name) {
         // Delete old image if it exists and is on R2
-        if (photo.image && typeof photo.image === "string" && photo.image.startsWith(R2_PUBLIC_DOMAIN)) {
-            const oldKey = photo.image.replace(`${R2_PUBLIC_DOMAIN}/`, "");
-            try {
-                await r2Client.send(new DeleteObjectCommand({
-                    Bucket: R2_BUCKET_NAME,
-                    Key: oldKey,
-                }));
-            } catch (error) {
-                console.error("Failed to delete old image from R2", error);
-                // Continue execution even if delete fails
-            }
+        if (photo.image && typeof photo.image === "string") {
+            await deleteFromR2(photo.image);
         }
 
-        const fileName = `photos/${Date.now()}_${image.name.replace(/\s+/g, "-")}`;
-        
         // Handle image upload to R2
         if (image.type?.startsWith("image/")) {
-            await r2Client.send(
-                new PutObjectCommand({
-                    Bucket: R2_BUCKET_NAME,
-                    Key: fileName,
-                    Body: image.data,
-                    ContentType: image.type,
-                })
-            );
-            photo.image = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+            // General photos fallback. Could map to specific path if `onModel` was available, but "photos" is ok.
+            photo.image = await uploadToR2(image, "uploads/photos");
         } else {
             throw createError({
                 statusCode: 400,

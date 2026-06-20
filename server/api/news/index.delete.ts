@@ -1,6 +1,6 @@
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { NewsModel } from "~~/server/models/NewsModel";
 import { IResponse } from "~~/types/IResponse";
+import { deleteFromR2 } from "~~/server/utils/storage";
 
 const config = useRuntimeConfig();
 
@@ -41,13 +41,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Delete the associated main image file if it exists
     if (news.mainImage) {
-      const mainImageKey = (news.mainImage as string).split("/").pop(); //Get only file name without domain;
-      await r2Client.send(
-        new DeleteObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: mainImageKey,
-        })
-      );
+      await deleteFromR2(news.mainImage as string);
     }
 
     // Delete the news from the database

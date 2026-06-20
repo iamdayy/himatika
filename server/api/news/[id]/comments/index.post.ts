@@ -35,8 +35,10 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Failed to create comment",
       });
     }
-    news.comments?.push(comment._id as any);
-    news.save();
+    await NewsModel.updateOne(
+      { _id: id },
+      { $push: { comments: comment._id } }
+    );
     return {
       statusCode: 200,
       statusMessage: "Comment Created Successfully",

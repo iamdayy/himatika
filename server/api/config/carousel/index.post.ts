@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
@@ -30,7 +30,6 @@ export default defineEventHandler(
           statusMessage: "You are not authorized to perform this action",
         });
       }
-      const BASE_PHOTO_FOLDER = "/uploads/img/carousel/photos";
       let imageUrl = "";
       const file = photo.image;
 
@@ -47,21 +46,9 @@ export default defineEventHandler(
         });
       }
 
-      const fileName = `${BASE_PHOTO_FOLDER}/${file.name}.${
-        file.type?.split("/")[1]
-      }`;
-
       // Handle main image upload
       if (file.type?.startsWith("image/")) {
-        await r2Client.send(
-          new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: fileName,
-            Body: file.data,
-            ContentType: file.type,
-          })
-        );
-        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+        imageUrl = await uploadToR2(file, StoragePaths.CAROUSELS);
       } else {
         throw createError({
           statusCode: 400,

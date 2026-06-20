@@ -132,7 +132,8 @@ const openSlideOver = ref<boolean>(false);
 
                 <USlideover v-model:open="openSlideOver" :overlay="false" :title="'HIMAPP'" side="left"
                     v-if="(!route.fullPath.includes('/guest') && route.fullPath !== '/dashboard') || isMobile">
-                    <UButton variant="link" color="neutral" :padded="false" icon="i-heroicons-bars-3-center-left" aria-label="Open menu" />
+                    <UButton variant="link" color="neutral" :padded="false" icon="i-heroicons-bars-3-center-left"
+                        aria-label="Open menu" />
                     <template #content>
                         <div class="flex-1 p-4">
                             <div class="flex flex-row items-center justify-between">
@@ -153,7 +154,7 @@ const openSlideOver = ref<boolean>(false);
                                         <div class="overflow-ellipsis">
                                             <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">{{
                                                 user?.username
-                                            }}
+                                                }}
                                             </h2>
                                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
                                                 user?.member.NIM }}
@@ -173,17 +174,17 @@ const openSlideOver = ref<boolean>(false);
                 <!-- User actions -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <!-- Language dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
+                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }" :modal="false">
                         <UButton icon="i-heroicons-language" variant="link" color="neutral" />
                     </UDropdownMenu>
                     <!-- Dark mode toggle -->
                     <UButton id="theme-toggle" @click="isDarkMode = !isDarkMode"
-                        :icon="isDarkMode ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'"
-                        color="neutral" variant="ghost" aria-label="Toggle theme">
+                        :icon="isDarkMode ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'" color="neutral"
+                        variant="ghost" aria-label="Toggle theme">
                     </UButton>
 
                     <!-- User dropdown -->
-                    <UDropdownMenu :items="items">
+                    <UDropdownMenu :items="items" :modal="false">
                         <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" loading="lazy" alt="Profile" />
                         <UAvatar v-else icon="i-heroicons-arrow-right-end-on-rectangle" />
@@ -213,12 +214,10 @@ const openSlideOver = ref<boolean>(false);
         </nav>
 
         <!-- Main content -->
-        <main class="px-8 py-6 pt-12 mx-auto md:px-12 lg:px-28">
-            <UContainer class="py-16">
-                <slot />
-            </UContainer>
-            <Footer />
-        </main>
+        <UContainer class="py-16">
+            <slot />
+        </UContainer>
+        <Footer />
     </div>
 </template>
 

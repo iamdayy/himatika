@@ -424,7 +424,7 @@ definePageMeta({
                 <div v-else class="relative group perspective-1000">
                     <!-- Clean design with glassmorphism and subtle glow -->
                     <div
-                        class="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-2xl rounded-4xl shadow-2xl overflow-hidden ring-1 ring-gray-200/50 dark:ring-gray-700/50 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,141,211,0.3)] transition-all duration-700 ease-out">
+                        class="relative bg-white/90 dark:bg-gray-900/80 backdrop-blur-2xl rounded-4xl shadow-lg overflow-hidden ring-1 ring-gray-200/50 dark:ring-gray-700/50 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,141,211,0.3)] transition-all duration-700 ease-out">
 
                         <!-- Top Section: Visual & Header -->
                         <div class="h-64 relative bg-gray-900">

@@ -53,6 +53,9 @@ const paymentStatus = ref(true); // true = success, false = pending
 const paymentMethod = ref('cash');
 const isVisiting = ref(false);
 
+const failedUpload = ref<boolean>(false);
+const failedMembers = ref<any[]>([]);
+
 const paymentStatusOptions = ['pending', 'success', 'failed'];
 const paymentMethodOptions = ['cash', 'bank_transfer', 'qris', 'manual_transfer'];
 
@@ -167,6 +170,28 @@ const downloadTemplate = async () => {
     window.URL.revokeObjectURL(url);
 };
 
+const downloadFailedMembers = async () => {
+    const response = await $api<Blob>('/api/sheet/export', {
+        method: "post",
+        headers: {
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+        body: {
+            data: failedMembers.value,
+            title: 'failed-members'
+        }
+    });
+    const title = `failed-members-${new Date()}`;
+    const url = window.URL.createObjectURL(response);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
 const handleFileUpload = async () => {
     if (!file.value) return;
     loading.value = true;
@@ -196,7 +221,7 @@ const submitImport = async () => {
     }
     loading.value = true;
     try {
-        await $api(`/api/agenda/${id}/committee/batch`, {
+        const added = await $api<any>(`/api/agenda/${id}/committee/batch`, {
             method: 'POST',
             body: {
                 data: selectedMembers.value.map((m) => ({
@@ -211,8 +236,14 @@ const submitImport = async () => {
                 }))
             } // Kirim array nim & job
         });
-        toast.add({ title: 'Import Panitia sukses', color: 'success' });
-        navigateTo(`/administrator/agendas/${id}/committee`);
+        if (added.data?.failedMembers?.length > 0) {
+            failedMembers.value = added.data.failedMembers;
+            failedUpload.value = true;
+            toast.add({ title: `Berhasil import ${added.data.savedCount} data. Gagal ${added.data.failedCount} data.`, color: 'warning' });
+        } else {
+            toast.add({ title: 'Import Panitia sukses', color: 'success' });
+            navigateTo(`/administrator/agendas/${id}/committee`);
+        }
     } catch (e: any) {
         toast.add({ title: 'Gagal', description: e.statusMessage, color: 'error' });
     } finally { loading.value = false; }
@@ -266,15 +297,25 @@ const submitImport = async () => {
                 </div>
 
                 <USeparator class="my-2 md:my-4" />
-                <UTable v-model:row-selection="selectedRows" :data="parsedData" :columns="columns" :loading="loading">
+                <UAlert v-if="failedUpload" class="mb-4" color="error" close :title="$ts('error_upload')"
+                    :description="$ts('some_members_failed_to_upload')" />
+                <UTable v-model:row-selection="selectedRows" :data="parsedData.slice(0, 50)" :columns="columns" :loading="loading">
                 </UTable>
+                <div v-if="parsedData.length > 50" class="text-center p-4 text-sm text-gray-500 dark:text-gray-400">
+                    Menampilkan 50 data pertama sebagai preview. (Total {{ parsedData.length }} data siap diimpor)
+                </div>
 
-                <div class="flex justify-between pt-4">
+                <div class="flex justify-between pt-4 items-center">
                     <UButton variant="ghost" to="../committee">Batal</UButton>
-                    <UButton :loading="loading" :disabled="parsedData.length === 0 || selectedMembers.length === 0"
-                        @click="submitImport" color="primary">
-                        Eksekusi Import
-                    </UButton>
+                    <div class="flex gap-2">
+                        <UButton v-if="failedUpload" @click="downloadFailedMembers" color="error" variant="outline" icon="i-heroicons-arrow-down-on-square">
+                            Download Failed Members
+                        </UButton>
+                        <UButton :loading="loading" :disabled="parsedData.length === 0 || selectedMembers.length === 0"
+                            @click="submitImport" color="primary">
+                            Eksekusi Import
+                        </UButton>
+                    </div>
                 </div>
             </div>
         </UCard>

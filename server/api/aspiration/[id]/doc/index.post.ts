@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { DocModel } from "~~/server/models/DocModel";
@@ -38,7 +38,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Unauthorized",
       });
     }
-    const BASE_DOC_FOLDER = `/uploads/img/aspiration/${aspiration._id}/docs`;
     let docUrl = "";
     if (!file) {
       throw createError({
@@ -52,19 +51,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Invalid file data",
       });
     }
-    const fileName = `${BASE_DOC_FOLDER}/${hashText(file.name!)}.${
-      file.type?.split("/")[1]
-    }`;
     // Handle main doc upload
-    await r2Client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: fileName,
-        Body: file.data,
-        ContentType: file.type,
-      })
-    );
-    docUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+    docUrl = await uploadToR2(file, StoragePaths.ASPIRATIONS(aspiration._id.toString(), 'docs'));
     const saved = await DocModel.create({
       label: label as string,
       on: aspiration._id,

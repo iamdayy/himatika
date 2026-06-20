@@ -97,7 +97,8 @@ export default defineCachedEventHandler(
       const news = await NewsModel.find(query)
         .skip((Number(page) - 1) * Number(perPage))
         .limit(Number(perPage))
-        .sort(sortOpt);
+        .sort(sortOpt)
+        .lean();
 
       // Return newss and total count
       return {

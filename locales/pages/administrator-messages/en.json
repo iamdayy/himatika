@@ -1,1 +1,7 @@
-{}
+{
+  "actions": "Actions",
+  "delete_message": "Delete message",
+  "delete_message_confirmation": "Delete message confirmation",
+  "archive_message": "Archive message",
+  "archive_message_confirmation": "Archive message confirmation"
+}

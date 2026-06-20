@@ -1,4 +1,4 @@
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { deleteFromR2 } from "~~/server/utils/storage";
 import { VideoModel } from "~~/server/models/VideoModel";
 import { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -25,21 +25,16 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
     const video = await VideoModel.findById(id);
-    // Delete the associated main video file if it exists
-    if (video && video.video) {
-      const mainImageKey = (video.video as string).split("/").pop(); //Get only file name without domain;
-      await r2Client.send(
-        new DeleteObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: mainImageKey,
-        })
-      );
-    }
     if (!video) {
       throw createError({
         statusCode: 404,
         statusMessage: "Video tidak ditemukan",
       });
+    }
+
+    // Delete the associated main video file if it exists
+    if (video.video) {
+      await deleteFromR2(video.video as string);
     }
     await VideoModel.findByIdAndDelete(id);
     return { statusCode: 200, statusMessage: "Video berhasil dihapus" };

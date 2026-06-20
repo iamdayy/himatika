@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
@@ -43,7 +43,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Unauthorized",
       });
     }
-    const BASE_DOC_FOLDER = `/uploads/img/agenda/${agenda._id}/docs`;
     let docUrl = "";
     if (typeof doc === "string") {
       throw createError({
@@ -51,19 +50,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Invalid file data",
       });
     }
-    const fileName = `${BASE_DOC_FOLDER}/${doc.name}.${
-      doc.type?.split("/")[1] || "pdf"
-    }`;
     // Handle main doc upload
-    await r2Client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: fileName,
-        Body: doc.data,
-        ContentType: doc.type,
-      })
-    );
-    docUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+    docUrl = await uploadToR2(doc, StoragePaths.AGENDAS(agenda._id.toString(), 'docs'));
     const saved = await DocModel.create({
       label: label as string,
       on: agenda._id,

@@ -464,15 +464,15 @@ const perPageOptions = computed(() => {
         .filter(option => option <= totalPhotos);
 });
 const pageTotalPhotos = computed(() => aspiration.value.proofs?.photos?.length) // This value should be dynamic coming from the API
-const pageFromPhotos = computed(() => (page.value - 1) * perPage.value + 1)
+const pageFromPhotos = computed(() => page.value === 0 ? 0 : (page.value - 1) * perPage.value + 1)
 const pageToPhotos = computed(() => Math.min(page.value * perPage.value, pageTotalPhotos.value || 0));
 
 const pageTotalVideos = computed(() => aspiration.value.proofs?.videos?.length) // This value should be dynamic coming from the API
-const pageFromVideos = computed(() => (page.value - 1) * perPage.value + 1)
+const pageFromVideos = computed(() => page.value === 0 ? 0 : (page.value - 1) * perPage.value + 1)
 const pageToVideos = computed(() => Math.min(page.value * perPage.value, pageTotalVideos.value || 0))
 
 const pageTotalDocs = computed(() => aspiration.value.proofs?.docs?.length) // This value should be dynamic coming from the API
-const pageFromDocs = computed(() => (page.value - 1) * perPage.value + 1)
+const pageFromDocs = computed(() => page.value === 0 ? 0 : (page.value - 1) * perPage.value + 1)
 const pageToDocs = computed(() => Math.min(page.value * perPage.value, pageTotalDocs.value || 0));
 
 

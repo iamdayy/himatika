@@ -1,4 +1,4 @@
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { deleteFromR2 } from "~~/server/utils/storage";
 import { PointModel } from "~~/server/models/PointModel";
 import { IResponse } from "~~/types/IResponse";
 
@@ -26,18 +26,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     // Hapus file dari R2 jika ada
     if (achievement.proof) {
-      // proof url: https://pub-xxx.../uploads/achievements/...
-      // kita perlu ambil key-nya saja: uploads/achievements/...
-      const proofUrl = achievement.proof;
-      const key = proofUrl.replace(`${R2_PUBLIC_DOMAIN}/`, "");
-
       try {
-        await r2Client.send(
-          new DeleteObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: key,
-          })
-        );
+        await deleteFromR2(achievement.proof);
       } catch (err) {
         console.error("Failed to delete file from R2:", err);
         // Lanjut saja hapus data di DB meskipun file gagal dihapus (soft fail)

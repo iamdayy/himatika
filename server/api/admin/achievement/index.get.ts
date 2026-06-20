@@ -11,7 +11,8 @@ export default defineEventHandler(async (event) => {
     const achievements = await PointModel.find(query)
       .populate("member")
       .populate("admin")
-      .sort({ date: -1 });
+      .sort({ date: -1 })
+      .lean();
 
     return achievements;
   } catch (e: any) {

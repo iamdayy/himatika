@@ -71,7 +71,7 @@ const perPageOptions = computed(() => {
     return [length, 10, 20, 50, 100].map((value) => ({ label: value.toString(), value })).filter((value) => value.value <= length);
 });
 const pageTotal = computed(() => data.value.data?.length) // This value should be dynamic coming from the API
-const pageFrom = computed(() => (page.value - 1) * perPage.value + 1)
+const pageFrom = computed(() => page.value === 0 ? 0 : (page.value - 1) * perPage.value + 1)
 const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.value || 0))
 
 
@@ -126,7 +126,7 @@ const getImageStyles = (index: number, groupSize: number) => {
                 <div v-for="(group, groupIndex) in data.data?.data" :key="groupIndex" class="group">
                     <NuxtLink :to="`/${group.type}s/${group._id}`">
                         <div
-                            class="rounded-lg shadow-2xl ease-out transition-transform bg-gradient-to-b from-transparent from-60% to-primary-light dark:to-primary-dark h-full">
+                            class="rounded-lg shadow-lg ease-out transition-transform bg-gradient-to-b from-transparent from-60% to-primary-light dark:to-primary-dark h-full">
                             <div class="relative w-56 h-56 mx-auto mt-5 md:w-80 md:h-80">
                                 <div v-for="photo, i in group.photos.slice(0, 5)" :key="i"
                                     class="absolute overflow-hidden transition-all duration-300 ease-in-out bg-gray-200 rounded-lg shadow-md w-44 h-44 group-hover:scale-110 md:w-72 md:h-72 group/photo"

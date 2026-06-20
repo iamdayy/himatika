@@ -6,57 +6,53 @@ export default defineEventHandler(async (event) => {
   try {
     const { id } = event.context.params as { id: string };
     const user = event.context.user;
-    const like: {
-      by: "Guest" | "Member";
-      member?: Types.ObjectId;
-      ip?: string | string[];
-    } = {
-      by: "Guest",
-    };
     if (user) {
-      like.by = "Member";
+      // ... placeholder logic for TS, actual logic moved below ...
     }
-    // Menggunakan alamat IP sebagai identifier untuk guest
-    const userIp =
+    const userIpRaw =
       event.req.headers["x-forwarded-for"] ||
       event.req.connection.remoteAddress;
+    const ipStr = Array.isArray(userIpRaw) ? userIpRaw[0] : (userIpRaw as string);
 
-    // Mencari berita
-    const news = await NewsModel.findById(id);
-    if (!news) {
+    // Mencari eksistensi berita
+    const newsExists = await NewsModel.exists({ _id: id });
+    if (!newsExists) {
       throw createError({
         statusCode: 404,
         statusMessage: "News Not Found",
       });
     }
 
-    // Memeriksa apakah pengguna telah memberikan like
-    let likeIndex = news.likes?.findIndex((like) => like.ip === userIp);
-    if (likeIndex !== -1) {
-      news.likes?.splice(likeIndex as number, 1);
-      await news.save();
+    // Memeriksa apakah pengguna telah memberikan like menggunakan atomic query
+    const existingLike = await NewsModel.findOne({ _id: id, "likes.ip": ipStr }).lean();
+
+    if (existingLike) {
+      // Hapus like dengan Atomic Pull
+      await NewsModel.updateOne(
+        { _id: id },
+        { $pull: { likes: { ip: ipStr } } }
+      );
       return {
         statusCode: 200,
         statusMessage: "Like removed successfully",
       };
-    }
-
-    // Menentukan apakah user terautentikasi
-    if (user) {
-      like.member = (await getIdByNim(user.member.NIM)) as Types.ObjectId;
-      like.ip = userIp;
     } else {
-      like.ip = userIp; // Menyimpan alamat IP untuk guest
+      // Tambah like dengan Atomic Push
+      const likeObj: any = { by: "Guest", ip: ipStr };
+      if (user) {
+        likeObj.by = "Member";
+        likeObj.member = await getIdByNim(user.member.NIM);
+      }
+      
+      await NewsModel.updateOne(
+        { _id: id },
+        { $push: { likes: likeObj } }
+      );
+      return {
+        statusCode: 200,
+        statusMessage: "Like added successfully",
+      };
     }
-
-    // Menambahkan like ke berita
-    news.likes?.push(like);
-    await news.save();
-
-    return {
-      statusCode: 200,
-      statusMessage: "Like added successfully",
-    };
   } catch (error: any) {
     console.log(error);
 

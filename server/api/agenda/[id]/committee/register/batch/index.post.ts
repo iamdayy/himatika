@@ -27,21 +27,35 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Agenda not found",
       };
     }
-    const updatedCommittees = agenda.committees?.map((committee) => {
-      if (body.committees.includes(committee._id?.toString() || "")) {
-        if (body.field === "payment") {
-          if (committee.payment) {
-            committee.payment.status = "success";
-          }
-        } else if (body.field === "visiting") {
-          committee.visiting = !committee.visiting;
-          committee.visitTime = committee.visiting ? new Date() : undefined;
-        }
+    const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+    const committees = await CommitteeModel.find({ _id: { $in: body.committees }, agendaId: agenda._id });
+    
+    const bulkOps = committees.map((committee) => {
+      let updateDoc: any = {};
+      if (body.field === "payment") {
+        updateDoc = {
+          "payment.status": "success",
+          "payment.method": "cash",
+          "payment.time": new Date()
+        };
+      } else if (body.field === "visiting") {
+        const newVisiting = !committee.visiting;
+        updateDoc = {
+          visiting: newVisiting,
+          visitTime: newVisiting ? new Date() : undefined
+        };
       }
-      return committee;
+      return {
+        updateOne: {
+          filter: { _id: committee._id },
+          update: { $set: updateDoc }
+        }
+      };
     });
-    agenda.committees = updatedCommittees;
-    await agenda.save();
+
+    if (bulkOps.length > 0) {
+      await CommitteeModel.bulkWrite(bulkOps);
+    }
     return {
       statusCode: 200,
       statusMessage: "Committees updated successfully",

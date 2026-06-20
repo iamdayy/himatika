@@ -70,7 +70,7 @@ const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
         accessorKey: 'fullName',
         header: $ts('fullName'),
         cell: ({ row }) => {
-            return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.nim}` }, [
+            return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.nim}` }, () => [
                 h(NuxtImg, { src: row.original.avatar || '/img/profile-blank.png', size: 'sm', provider: 'localProvider', class: "object-cover rounded-full max-w-8 aspect-square", loading: 'lazy', alt: row.original.fullName }),
                 h('div', undefined, [
                     h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.fullName),
@@ -117,7 +117,7 @@ const { pending: pendingStats } = useLazyAsyncData('dashboard-stats', async () =
     return true; // Return sesuatu agar useAsyncData tahu proses selesai
 });
 const { agendasMe, projectsMe, agendasCanMeRegistered, points, aspirations, memberProfile } = storeToRefs(statsStore);
-const { data: projectsData, pending: pendingProjects } = useLazyAsyncData('projects', () => $api<IProjectsResponse>('/api/project'), {
+const { data: projectsData, pending: pendingProjects } = useLazyAsyncData('dashboard-projects-list', () => $api<IProjectsResponse>('/api/project'), {
     transform: (data) => ({
         data: data.data?.projects || [],
         count: data.data?.length || 0
@@ -133,6 +133,9 @@ const { data: configData, pending: pendingConfig } = useLazyAsyncData('config', 
 
 const isMobile = computed(() => width.value < 768);
 
+const recentAgendas = computed(() => {
+    return [(agendasMe.value?.committees || []), (agendasMe.value?.members || [])].flat().slice(0, 3);
+});
 
 const ClaimAchievementModal = overlay.create(ModalsAchievementClaim);
 const ActionsModal = overlay.create(ModalsActions);
@@ -177,15 +180,7 @@ const carouselRef = ref()
  * Set up carousel auto-rotation
  */
 onMounted(() => {
-    setInterval(() => {
-        if (!carouselRef.value) return;
-
-        if (carouselRef.value.page === carouselRef.value.pages) {
-            return carouselRef.value.select(0)
-        }
-
-        carouselRef.value.next()
-    }, 30000);
+    // Autoplay is already handled by UCarousel prop :autoplay="{ delay: 30000 }"
 });
 
 /**
@@ -208,10 +203,10 @@ const color = computed(() => {
     <div>
         <UBreadcrumb :items="[{ label: 'Dashboard', icon: 'i-heroicons-home' }]" class="ms-4" />
         
-        <div v-if="pendingStats || pendingProjects || pendingConfig" class="flex flex-col w-full mt-2 md:flex-row md:space-y-0 md:space-x-6">
+        <div v-if="pendingStats || pendingProjects || pendingConfig" class="flex flex-col w-full mt-2 md:flex-row md:space-y-0 md:space-x-6 items-start">
             <!-- Sidebar Skeleton -->
-            <div class="flex-col hidden w-full md:flex md:w-1/3 lg:w-1/4">
-                <UCard class="flex-1 w-full h-screen">
+            <div class="flex-col hidden w-full md:flex md:w-1/3 lg:w-1/4 sticky top-24 self-start h-fit z-10">
+                <UCard class="w-full">
                     <template #header>
                         <div class="flex items-center w-full gap-6">
                             <USkeleton class="w-16 h-16 rounded-full lg:w-24 lg:h-24" />
@@ -230,7 +225,7 @@ const color = computed(() => {
             <!-- Main Content Skeleton -->
             <div class="w-full space-y-6 md:w-2/3 lg:w-3/4">
                 <!-- Stats Grid -->
-                <div class="flex flex-col w-full gap-2 lg:flex-row">
+                <div class="flex flex-col w-full gap-4 lg:flex-row">
                     <UCard class="w-full lg:w-1/3" v-for="i in 3" :key="i">
                         <template #header>
                             <USkeleton class="h-6 w-24" />
@@ -262,12 +257,35 @@ const color = computed(() => {
                         </div>
                     </template>
                 </UCard>
+                
+                <!-- Bottom Skeleton -->
+                <UCard class="w-full mt-8">
+                    <template #header>
+                        <div class="flex justify-between w-full">
+                            <USkeleton class="h-6 w-24" />
+                            <USkeleton class="h-6 w-16" />
+                        </div>
+                    </template>
+                    <USkeleton class="h-32 w-full" />
+                </UCard>
+                
+                <UCard class="w-full mt-8">
+                    <template #header>
+                        <div class="flex justify-between w-full">
+                            <USkeleton class="h-6 w-24" />
+                            <USkeleton class="h-6 w-16" />
+                        </div>
+                    </template>
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <USkeleton class="h-64 w-full" v-for="i in 4" :key="i" />
+                    </div>
+                </UCard>
             </div>
         </div>
 
         <div v-else>
-            <div class="flex flex-col w-full mt-2 md:flex-row md:space-y-0 md:space-x-6">
-            <div class="flex-col hidden w-full md:flex md:w-1/3 lg:w-1/4">
+            <div class="flex flex-col w-full mt-2 md:flex-row md:space-y-0 md:space-x-6 items-start">
+            <div class="flex-col hidden w-full md:flex md:w-1/3 lg:w-1/4 sticky top-24 self-start h-fit z-10">
                 <UCard class="flex-1 w-full overflow-auto text-wrap">
                     <template #header>
                         <NuxtLink to="/profile">
@@ -296,8 +314,8 @@ const color = computed(() => {
                 </UCard>
             </div>
             <div class="w-full space-y-6 md:w-2/3 lg:w-3/4">
-                <div class="flex flex-col w-full gap-2 lg:flex-row">
-                    <UCard class="w-full lg:w-1/3" id="card-agendas">
+                <div class="flex flex-col w-full gap-4 lg:flex-row">
+                    <UCard class="w-full lg:w-1/3" id="card-stat-agendas">
                         <template #header>
                             <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('agenda') }}</h2>
                         </template>
@@ -310,7 +328,7 @@ const color = computed(() => {
                         <UProgress :model-value="(agendasMe?.committees?.length || 0) + (agendasMe?.members?.length || 0)"
                             :max="agendasCanMeRegistered?.length || 100" indicator />
                     </UCard>
-                    <UCard class="w-full lg:w-1/3" id="card-projects">
+                    <UCard class="w-full lg:w-1/3" id="card-stat-projects">
                         <template #header>
                             <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('project') }}</h2>
                         </template>
@@ -320,10 +338,10 @@ const color = computed(() => {
                                 }}</h2>
                             <UIcon name="i-heroicons-code-bracket" class="text-6xl" />
                         </div>
-                        <UProgress :model-value="projectsMe?.length || 0" :color="color" :max="projectsData?.count || 100"
+                        <UProgress :model-value="projectsMe?.length || 0" color="primary" :max="projectsData?.count || 100"
                             indicator />
                     </UCard>
-                    <UCard class="w-full lg:w-1/3" id="card-projects">
+                    <UCard class="w-full lg:w-1/3" id="card-stat-aspirations">
                         <template #header>
                             <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('aspiration') }}</h2>
                         </template>
@@ -363,20 +381,19 @@ const color = computed(() => {
                         </div>
                     </template>
                 </UCard>
-            </div>
-        </div>
-        <UCard class="w-full mt-8" id="card-agendas">
-            <template #header>
-                <div class="flex justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('agenda') }}</h2>
-                    <NuxtLink to="/dashboard/agendas">
-                        {{ $ts('see_more') }}...
-                    </NuxtLink>
-                </div>
-            </template>
-            <div>
-                <UCarousel ref="carouselRef"
-                    :items="[(agendasMe?.committees || []), (agendasMe?.members || [])].flat().slice(0, 3)"
+                
+                <UCard class="w-full mt-8" id="card-list-agendas">
+                    <template #header>
+                        <div class="flex justify-between w-full">
+                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('agenda') }}</h2>
+                            <NuxtLink to="/dashboard/agendas">
+                                {{ $ts('see_more') }}...
+                            </NuxtLink>
+                        </div>
+                    </template>
+                    <div>
+                        <UCarousel ref="carouselRef"
+                            :items="recentAgendas"
                     v-slot="{ item }" arrows dots loop :autoplay="{ delay: 30000 }" next-icon="i-lucide-chevron-right"
                     prev-icon="i-lucide-chevron-left" :next="{
                         variant: 'ghost',
@@ -428,30 +445,30 @@ const color = computed(() => {
                 </UCarousel>
             </div>
         </UCard>
-        <UCard class="w-full mt-8" id="card-projects">
-            <template #header>
-                <div class="flex justify-between w-full">
-                    <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('project') }}</h2>
-                    <NuxtLink to="/dashboard/projects">
-                        {{ $ts('see_more') }}...
-                    </NuxtLink>
-                </div>
-            </template>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <UCard v-for="project, i in projectsMe.slice(0, 4)" :key="i" class="">
+                <UCard class="w-full mt-8" id="card-list-projects">
                     <template #header>
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-2">
-                                <UBadge :label="(project.category as ICategory)?.title || 'Uncategorized'" color="info" variant="solid" />
-                                <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
-                                    Completed
-                                </UBadge>
-                                <UBadge v-else-if="project.progress === 0" color="error" variant="subtle" size="xs">Not
-                                    Started
-                                </UBadge>
-                                <UBadge v-else color="info" variant="subtle" size="xs">Onprogress
-                                </UBadge>
-                            </div>
+                        <div class="flex justify-between w-full">
+                            <h2 class="text-xl font-semibold dark:text-gray-200">{{ $ts('project') }}</h2>
+                            <NuxtLink to="/dashboard/projects">
+                                {{ $ts('see_more') }}...
+                            </NuxtLink>
+                        </div>
+                    </template>
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <UCard v-for="project, i in projectsMe.slice(0, 4)" :key="i" class="">
+                            <template #header>
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <UBadge :label="(project.category as ICategory)?.title || 'Uncategorized'" color="info" variant="solid" />
+                                        <UBadge v-if="project.progress === 100" color="success" variant="subtle" size="xs">
+                                            Completed
+                                        </UBadge>
+                                        <UBadge v-else-if="project.progress === 0" color="neutral" variant="subtle" size="xs">Not
+                                            Started
+                                        </UBadge>
+                                        <UBadge v-else color="info" variant="subtle" size="xs">Onprogress
+                                        </UBadge>
+                                    </div>
                             <UButton variant="link" :size="responsiveUISizes.button" color="neutral" :to="project.url"
                                 icon="i-heroicons-arrow-top-right-on-square" />
                         </div>
@@ -499,19 +516,21 @@ const color = computed(() => {
                             </div>
                         </div>
                     </template>
+                        </UCard>
+                    </div>
                 </UCard>
             </div>
-        </UCard>
-        <div class="fixed z-90 bottom-6 left-4">
+        </div>
+        </div>
+        <div class="fixed z-90 bottom-6 right-6">
             <UTooltip text="Scan to Presence!" placement="left"
                 :popper="{ strategy: 'absolute', scroll: true, arrow: true }">
                 <UButton
-                    class="flex items-center justify-center w-20 h-20 text-4xl text-white duration-300 bg-blue-600 rounded-full drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-2xl hover:animate-bounce"
+                    class="flex items-center justify-center w-20 h-20 text-4xl text-white duration-300 bg-blue-600 rounded-full drop-shadow-lg hover:bg-blue-700 hover:drop-shadow-lg hover:animate-bounce"
                     to="/agendas/scan" id="maido">
                     <UIcon name="i-heroicons-qr-code" class="w-16 h-16 text-white" />
                 </UButton>
             </UTooltip>
-        </div>
         </div>
     </div>
 </template>

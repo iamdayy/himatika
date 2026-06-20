@@ -6,32 +6,22 @@ import { ISessionSchema } from "~~/types/ISchemas";
  */
 const sessionSchema = new Schema<ISessionSchema>(
   {
-    token: {
-      type: String,
-      index: true,
-    },
     refreshToken: {
       type: String,
       required: true,
-      index: true,
-    },
-    previousRefreshToken: {
-      type: String,
-      index: true,
-    },
-    previousToken: {
-      type: String,
       index: true,
     },
     user: {
       type: Types.ObjectId,
       ref: "User",
       sparse: true,
+      index: true,
     },
     guest: {
         type: Types.ObjectId,
         ref: "Guest",
         sparse: true,
+        index: true,
     },
     createdAt: Date,
     updatedAt: Date,

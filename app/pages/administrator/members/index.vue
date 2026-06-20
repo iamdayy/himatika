@@ -283,6 +283,7 @@ const filterable = [
  * Search and filter state
  */
 const search = ref('');
+const debouncedSearch = refDebounced(search, 500);
 const NIM = ref(undefined);
 const filterBy = ref<"enteredYear" | "class" | "semester">();
 const filter = ref<string[]>([]);
@@ -311,7 +312,7 @@ const pagination = ref({
  */
 const { data, pending, refresh } = useLazyAsyncData('users', () => $api<IMemberResponse>('/api/member', {
     query: {
-        search: search.value,
+        search: debouncedSearch.value,
         page: pagination.value.pageIndex,
         perPage: pagination.value.pageSize,
         sort: sort.value.column,
@@ -329,7 +330,7 @@ const { data, pending, refresh } = useLazyAsyncData('users', () => $api<IMemberR
             length: 0
         }
     }),
-    watch: [() => pagination.value.pageIndex, search, () => pagination.value.pageSize, () => sort.value.column, () => sort.value.direction, filter, filterBy, deleted, NIM],
+    watch: [() => pagination.value.pageIndex, debouncedSearch, () => pagination.value.pageSize, () => sort.value.column, () => sort.value.direction, filter, filterBy, deleted, NIM],
 });
 
 const filters = computed(() => {
@@ -340,7 +341,7 @@ const filters = computed(() => {
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0);
-const pageFrom = computed(() => (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
+const pageFrom = computed(() => pagination.value.pageIndex === 0 ? 0 : (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1);
 const pageTo = computed(() => Math.min(pagination.value.pageIndex * pagination.value.pageSize, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];
@@ -423,7 +424,7 @@ const updateSemester = async () => {
 /**
  * Watch for changes in search and filter to reset page
  */
-watch([search, filter], () => {
+watch([debouncedSearch, filter], () => {
     pagination.value.pageIndex = 1;
 });
 
@@ -557,6 +558,8 @@ const links = computed(() => [{
                             class="mx-auto my-3" @click="addModal" />
                         <UButton :label="$ts('import')" :size="responsiveUISizes.button" class="mx-auto my-3"
                             v-if="isOrganizer" to="/administrator/members/import" />
+                        <UButton label="Batch Edit (Excel)" :size="responsiveUISizes.button" class="mx-auto my-3"
+                            v-if="isOrganizer" to="/administrator/members/batch-edit" color="neutral" variant="outline" />
                     </div>
                 </div>
                 <!-- Filters -->

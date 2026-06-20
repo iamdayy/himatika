@@ -2,7 +2,7 @@ import { H3Error } from "h3";
 import jwt from "jsonwebtoken";
 import { ISetSessionParams } from "~~/types/IParam";
 import { SessionModel } from "../models/SessionModel";
-import { UserModel } from "../models/UserModel";
+import { UserModel, UserPopulateOptions } from "../models/UserModel";
 
 const getSecretKey = () => {
   const secretKey = useRuntimeConfig().jwtSecret;
@@ -13,109 +13,35 @@ const getSecretKey = () => {
 };
 
 /**
- * Checks the validity of a session token.
+ * Checks the validity of a session token (Stateless).
  */
 export const checkSession = async (payload: string) => {
   try {
-    // 1. Cari session berdasarkan Access Token ATAU Previous Access Token
-    const session = await SessionModel.findOne({
-      $or: [{ token: payload }, { previousToken: payload }],
-    });
-
-    if (!session) {
+    // Verifikasi Signature JWT murni tanpa DB hit
+    const decoded = jwt.verify(payload, getSecretKey()) as jwt.JwtPayload;
+    if (!decoded || (!decoded.user && !decoded.guest)) {
       throw createError({
-        statusMessage: "Session expired or invalid",
+        statusMessage: "Invalid Session Data",
         statusCode: 401,
       });
     }
 
-    // 1.5 Cek Grace Period untuk Access Token
-    if (session.previousToken === payload) {
-      const timeDiff =
-        new Date().getTime() - new Date(session.updatedAt as Date).getTime();
-        
-      // Grace period 20 detik untuk Access Token (mengatasi race condition refresh)
-      if (timeDiff > 20000) {
-         throw createError({
-          statusMessage: "Access Token Expired (Grace Period Over)",
-          statusCode: 401,
-        });
-      }
-      // Jika < 20s, LANJUT (gunakan session ini seolah-olah valid)
+    // Stateful check to ensure the session hasn't been revoked
+    const query = decoded.user ? { user: decoded.user } : { guest: decoded.guest };
+    const sessionExists = await SessionModel.exists(query);
+    if (!sessionExists) {
+      throw createError({
+        statusMessage: "Session revoked",
+        statusCode: 401,
+      });
     }
 
-    // 2. Verifikasi Signature JWT
-    // Kita verify payload dengan secret. 
-    // Note: Jika tokennya "previousToken" (yg mungkin sudah expired secara waktu claims), 
-    // kita mungkin perlu ignoreExpiration? 
-    // Tapi biasanya refresh dilakukan SEBELUM expired, jadi token lama pun "signature" nya valid tapi belum expired.
-    // Jika benar-benar expired, jwt.verify akan throw error. 
-    // Solusi: Kita coba verify, jika TokenExpiredError TAPI masih dalam Grace Period DB, kita toleransi?
-    // 2. Verifikasi Signature JWT
-    if (session.previousToken === payload) {
-      // Jika token expired TAPI masih dalam grace period DB (validated above), kita allow.
-      jwt.verify(payload, getSecretKey(), { ignoreExpiration: true });
-    } else {
-      // Verifikasi Signature JWT Normal
-      jwt.verify(payload, getSecretKey());
-    }
-
-    // 3. Ambil user dengan populate member (Lite version)
-    // Cek apakah session punya user atau guest
-    if (session.user) {
-      const user = await UserModel.findById(session.user)
-        .select("username member")
-        .populate({
-          path: "member",
-          populate: [
-            { path: 'organizersConsiderationBoard' },
-            { path: 'organizersDailyManagement' },
-            { path: 'organizersDepartmentCoordinator' },
-            { path: 'organizersDepartmentMembers' },
-          ],
-          select: "NIM fullName avatar email organizer status semester class sex phone",
-          options: { autopopulate: false }, 
-        })
-        .populate({
-          path: "guest",
-        });
-
-      if (!user) {
-        throw createError({
-          statusMessage: "User context not found",
-          statusCode: 401,
-        });
-      }
-
-      return {
-        username: user.username,
-        member: user.member ? user.member : null,
-        guest: user.guest ? user.guest : null,
-      };
-    } else if (session.guest) {
-       // Load Guest
-       const { GuestModel } = await import("~~/server/models/GuestModel");
-       const guest = await GuestModel.findById(session.guest);
-       
-       if (!guest) {
-        throw createError({
-            statusMessage: "Guest context not found",
-            statusCode: 401,
-        });
-       }
-
-       return {
-         guest: guest
-       }
-    } else {
-        throw createError({
-            statusMessage: "Invalid Session Data",
-            statusCode: 401,
-        });
-    }
-
+    return {
+      username: decoded.username,
+      member: decoded.member,
+      guest: decoded.guest,
+    };
   } catch (error: any) {
-    // Jika error dari JWT (expired), kita lempar 401
     if (
       error.name === "TokenExpiredError" ||
       error.name === "JsonWebTokenError"
@@ -130,7 +56,7 @@ export const checkSession = async (payload: string) => {
 };
 
 /**
- * Refreshes a session with Grace Period logic for Race Conditions.
+ * Refreshes a session with heavy populate & lean payload injection.
  */
 export const refreshSession = async (payload: string) => {
   try {
@@ -139,7 +65,6 @@ export const refreshSession = async (payload: string) => {
       throw createError({ statusMessage: "Invalid Token", statusCode: 401 });
     }
 
-    // 1. Coba fetch session biasa untuk cek kondisi awal
     let session = await SessionModel.findOne({
       refreshToken: payload
     });
@@ -151,46 +76,54 @@ export const refreshSession = async (payload: string) => {
       });
     }
 
-    // Kita hanya update JIKA refreshToken di DB masih sama dengan payload (belum diubah orang lain)
-    if (session.refreshToken === payload) {
-      // Determine if it's a user or guest session for the new token payload
-      const tokenPayload = session.user ? { user: session.user } : { guest: session.guest };
+    let memberPayload = null;
+    let guestPayload = null;
+    let username = null;
+
+    if (session.user) {
+      // Do the heavy populate once per refresh
+      const user = await UserModel.findById(session.user)
+        .populate(UserPopulateOptions);
+
+      if (!user) throw createError({ statusCode: 401 });
       
-      const newToken = jwt.sign(tokenPayload, getSecretKey(), {
-        expiresIn: "1d",
-      });
-
-      const updatedSession = await SessionModel.findOneAndUpdate(
-        {
-          _id: session._id,
-          refreshToken: payload,
-        },
-        {
-          $set: {
-            token: newToken,
-            previousToken: session.token,
-            updatedAt: new Date(),
-          },
-        },
-        { returnDocument: "after" } // Return dokumen baru
-      );
-
-      // Jika berhasil update (atomic)
-      if (updatedSession) {
-        return {
-          token: newToken,
+      username = user.username;
+      if (user.member) {
+        const m = user.member as any;
+        memberPayload = {
+          NIM: m.NIM,
+          fullName: m.fullName,
+          avatar: m.avatar,
+          email: m.email,
+          status: m.status,
+          semester: m.semester,
+          class: m.class,
+          sex: m.sex,
+          phone: m.phone,
+          organizer: m.organizer ? { role: m.organizer.role, period: m.organizer.period } : null
         };
       }
-      throw createError({
-         statusMessage: "Concurrent Refresh Failed",
-         statusCode: 401,
-      });
+      if (user.guest) {
+        guestPayload = user.guest;
+      }
+    } else if (session.guest) {
+      const { GuestModel } = await import("~~/server/models/GuestModel");
+      const guest = await GuestModel.findById(session.guest);
+      guestPayload = guest;
     }
 
-    throw createError({
-      statusMessage: "Invalid Session State",
-      statusCode: 401,
+    const tokenPayload = {
+      user: session.user,
+      guest: session.guest,
+      username: username,
+      member: memberPayload,
+    };
+    
+    const newToken = jwt.sign(tokenPayload, getSecretKey(), {
+      expiresIn: "60m",
     });
+
+    return { token: newToken };
   } catch (error: any) {
     console.error("Error refreshing session:", error);
     throw createError({
@@ -207,10 +140,11 @@ export const setSession = async (
   payload: ISetSessionParams
 ): Promise<true | H3Error> => {
   try {
-    // Opsional: Hapus session lama user ini jika ingin "Single Device Login"
-    // await SessionModel.deleteMany({ user: payload.user });
-
-    const createdSession = await SessionModel.create(payload);
+    const createdSession = await SessionModel.create({
+        refreshToken: payload.refreshToken,
+        user: payload.user,
+        guest: payload.guest,
+    });
     if (!createdSession) {
       throw createError({
         statusCode: 500,
@@ -225,9 +159,14 @@ export const setSession = async (
 
 export const exitSession = async (payload: string) => {
   try {
-    // Decode tanpa verify dulu untuk mengambil ID user, atau cari langsung by token
-    const result = await SessionModel.deleteOne({ token: payload });
-    return result;
+    // Payload in killAuth is usually the access token. Let's decode it safely.
+    const decoded = jwt.decode(payload) as any;
+    if (decoded?.user) {
+      await SessionModel.deleteMany({ user: decoded.user });
+    } else if (decoded?.guest) {
+      await SessionModel.deleteMany({ guest: decoded.guest });
+    }
+    return true;
   } catch (error: any) {
     return error;
   }

@@ -60,9 +60,6 @@ const NewsSchema = new Schema<INewsSchema>(
           member: {
             type: Types.ObjectId,
             ref: "Member",
-            autopopulate: {
-              select: "fullName avatar NIM",
-            },
           },
           ip: { type: String || [String] },
         },

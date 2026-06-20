@@ -1,1 +1,7 @@
-{}
+{
+  "delete_document": "Delete document",
+  "delete_document_confirmation": "Delete document confirmation",
+  "success_to_delete_document": "Success to delete document",
+  "failed_to_delete_document": "Failed to delete document",
+  "no_documents_found": "No documents found"
+}

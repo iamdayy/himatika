@@ -34,7 +34,8 @@ export default defineEventHandler(async (event): Promise<IMessageResponse> => {
     const message = await MessageModel.find(query)
       .skip((Number(page) - 1) * Number(perPage))
       .limit(Number(perPage))
-      .sort(sortOpt);
+      .sort(sortOpt)
+      .lean();
     const length = await MessageModel.countDocuments(query);
     if (!message) {
       return {
@@ -46,7 +47,7 @@ export default defineEventHandler(async (event): Promise<IMessageResponse> => {
       statusCode: 200,
       statusMessage: "Pesan ditemukan",
       data: {
-        messages: message.map((s) => s.toObject()),
+        messages: message,
         length,
       },
     };

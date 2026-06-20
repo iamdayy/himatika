@@ -11,6 +11,7 @@ export type TRole =
   | "Committee"
   | "Participant";
 export interface ICarousel {
+  _id?: string | Types.ObjectId;
   title: string;
   description: string;
   image?: IPhoto;
@@ -29,7 +30,6 @@ export type IConfig = {
   };
   dailyManagements: string[];
   departments: string[];
-  carousels?: ICarousel[];
   enscriptActivinessLetter?: string | IEncryption | Types.ObjectId;
   minPoint?: number;
 };
@@ -157,10 +157,7 @@ export interface IUser {
  * Represents a user session with authentication tokens.
  */
 export interface ISession {
-  token: string;
   refreshToken: string;
-  previousRefreshToken?: string;
-  previousToken?: string;
   user?: Types.ObjectId | IUser;
   guest?: Types.ObjectId | IGuest;
 }
@@ -422,6 +419,8 @@ export interface IAgenda {
     committees?: ICommittee[];
     participants?: IParticipant[];
   };
+  participants?: IParticipant[];
+  committees?: ICommittee[];
   gallery?: {
     photos?: IPhoto[];
     videos?: IVideo[];

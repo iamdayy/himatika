@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { MemberModel } from "~~/server/models/MemberModel";
@@ -37,7 +37,6 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Unauthorized",
       });
     }
-    const BASE_VIDEO_FOLDER = `/uploads/img/agenda/${agenda._id}/videos`;
     let videoUrl = "";
     const file = video.video;
     if (!file) {
@@ -52,21 +51,10 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Invalid file data",
       });
     }
-    const fileName = `${BASE_VIDEO_FOLDER}/${hashText(`${agenda._id}`)}.${
-      file.type?.split("/")[1] || "mp4"
-    }`;
 
     // Handle main video upload
     if (file.type?.startsWith("video/")) {
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: file.data,
-          ContentType: file.type,
-        })
-      );
-      videoUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      videoUrl = await uploadToR2(file, StoragePaths.AGENDAS(agenda._id.toString(), 'videos'));
     } else {
       throw createError({
         statusMessage: "Please upload nothing but videos.",

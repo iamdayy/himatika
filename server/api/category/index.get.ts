@@ -40,7 +40,8 @@ export default defineEventHandler(
       const categories = await CategoryModel.find(query)
         .skip(skip || 0)
         .limit(limit || 0)
-        .sort(sortOpt);
+        .sort(sortOpt)
+        .lean();
 
       if (!categories) {
         throw createError({
@@ -52,7 +53,7 @@ export default defineEventHandler(
         statusCode: 200,
         statusMessage: "Categories found",
         data: {
-          categories: categories.map((category) => category.toObject()),
+          categories: categories,
           length,
         },
       };

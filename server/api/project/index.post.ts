@@ -1,7 +1,8 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { ProjectModel } from "~~/server/models/ProjectModel";
 import { IProject } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
+
 /**
  * Handles POST requests for creating a new project.
  * @param {H3Event} event - The H3 event object.
@@ -31,22 +32,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const file = body.image;
     let imageUrl = "";
     if (file && typeof file !== "string") {
-      const BASE_PHOTO_FOLDER = "/uploads/img/projects/";
-      const fileName = `${BASE_PHOTO_FOLDER}/${file.name}.${
-        file.type?.split("/")[1]
-      }`;
-
       // Handle main image upload
       if (file.type?.startsWith("image/")) {
-        await r2Client.send(
-          new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: fileName,
-            Body: file.data,
-            ContentType: file.type,
-          })
-        );
-        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+        imageUrl = await uploadToR2(file, StoragePaths.PROJECTS());
       } else {
         throw createError({
           statusMessage: "Harap unggah gambar saja.",

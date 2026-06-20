@@ -184,10 +184,10 @@
     </UCard>
 
     <UCard v-else-if="payment.status === 'success'"
-        :ui="{ root: 'ring-1 ring-green-200 dark:ring-green-900 shadow-2xl shadow-green-500/10 rounded-3xl', body: 'p-0 sm:p-0', header: 'p-0 sm:p-0' }">
+        :ui="{ root: 'ring-1 ring-green-200 dark:ring-green-900 shadow-lg shadow-green-500/10 rounded-3xl', body: 'p-0 sm:p-0', header: 'p-0 sm:p-0' }">
         <template #header>
             <div class="p-5 md:p-6 text-white bg-gradient-to-r from-green-500 to-emerald-600 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-3xl"></div>
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
                 <h1 class="text-2xl font-black tracking-tight mb-1 relative z-10">Payment Success</h1>
                 <p class="text-green-100 text-sm relative z-10">
                     Your payment has been successfully processed

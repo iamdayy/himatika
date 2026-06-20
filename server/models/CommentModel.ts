@@ -19,9 +19,6 @@ const CommentSchema = new Schema<ICommentSchema>(
           member: {
             type: Types.ObjectId,
             ref: "Member",
-            autopopulate: {
-              select: "fullName avatar NIM",
-            },
           },
           ip: {
             type: String || [String],

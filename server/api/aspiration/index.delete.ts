@@ -26,7 +26,10 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Unauthorized",
       });
     }
-    const isMine = (aspiration.from as IMember).NIM === (user as IMember).NIM;
+    const isMine = aspiration.from &&
+      typeof aspiration.from === 'object' &&
+      'NIM' in aspiration.from &&
+      (aspiration.from as IMember).NIM === user.member.NIM;
 
     const organizer = event.context.organizer;
 

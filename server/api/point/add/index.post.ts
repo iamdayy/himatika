@@ -23,6 +23,20 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
+    if (body.memberId === user.member._id.toString()) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Anda tidak dapat memberikan poin ke akun Anda sendiri",
+      });
+    }
+
+    if (body.amount > 255) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Jumlah poin tidak boleh melebihi batas wajar (255)",
+      });
+    }
+
     // Simpan Log Poin
     await PointModel.create({
       member: body.memberId,

@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { deleteFromR2, uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
 import { IOrganizer } from "~~/types";
@@ -6,7 +6,6 @@ import { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
-    const BASE_AVATAR_FOLDER = "/uploads/img/avatar";
     const user = event.context.user;
     if (!user) {
       throw createError({
@@ -84,37 +83,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       if (filePart && typeof filePart !== "string") {
         // Delete old image if exists
         if (organizer.council[index] && organizer.council[index].image) {
-          const oldImageKey = (organizer.council[index].image as string)
-            .split("/")
-            .pop();
-          if (oldImageKey) {
-            try {
-              await r2Client.send(
-                new DeleteObjectCommand({
-                  Bucket: R2_BUCKET_NAME,
-                  Key: oldImageKey,
-                })
-              );
-            } catch (e) {
-              console.warn("Failed to delete old image", e);
-            }
+          try {
+            await deleteFromR2(organizer.council[index].image as string);
+          } catch (e) {
+            console.warn("Failed to delete old image", e);
           }
         }
 
-        const fileExtension = filePart.type?.split("/")[1] || "jpg";
-        const fileName = `${BASE_AVATAR_FOLDER}/${
-          filePart.name || `council-${index}`
-        }.${fileExtension}`;
-
-        await r2Client.send(
-          new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: fileName,
-            Body: filePart.data,
-            ContentType: filePart.type,
-          })
-        );
-        imageUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+        imageUrl = await uploadToR2(filePart, StoragePaths.ORGANIZERS);
       }
       return {
         position: council.position,
@@ -129,35 +105,14 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     if (advisorFilePart && typeof advisorFilePart !== "string") {
       // Delete old advisor image if exists
       if (organizer.advisor && organizer.advisor.image) {
-        const oldImageKey = (organizer.advisor.image as string).split("/").pop();
-        if (oldImageKey) {
-          try {
-            await r2Client.send(
-              new DeleteObjectCommand({
-                Bucket: R2_BUCKET_NAME,
-                Key: oldImageKey,
-              })
-            );
-          } catch (e) {
-            console.warn("Failed to delete old advisor image", e);
-          }
+        try {
+          await deleteFromR2(organizer.advisor.image as string);
+        } catch (e) {
+          console.warn("Failed to delete old advisor image", e);
         }
       }
 
-      const fileExtension = advisorFilePart.type?.split("/")[1] || "jpg";
-      const fileName = `${BASE_AVATAR_FOLDER}/${
-        advisorFilePart.name || "advisor"
-      }.${fileExtension}`;
-
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: advisorFilePart.data,
-          ContentType: advisorFilePart.type,
-        })
-      );
-      imageUrlAdvisor = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      imageUrlAdvisor = await uploadToR2(advisorFilePart, StoragePaths.ORGANIZERS);
     }
 
     const advisor = {

@@ -66,9 +66,25 @@ export default defineEventHandler(async (event) => {
 
     // Permission to see participants
     if (roles.includes(eventDataDoc.configuration.canSeeRegistered as string) || roles.includes("Organizer")) {
-      // Import at the top dynamically or use global models
       const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
-      participants = await ParticipantModel.find({ agendaId: id }).lean();
+      const rawParticipants = await ParticipantModel.find({ agendaId: id }).lean();
+      
+      if (!event.context.organizer) {
+        participants = rawParticipants.map((p: any) => {
+          if (p.member) {
+            delete p.member.email;
+            delete p.member.phone;
+          }
+          if (p.guest) {
+            delete p.guest.email;
+            delete p.guest.phone;
+            delete p.guest.NIM;
+          }
+          return p;
+        });
+      } else {
+        participants = rawParticipants;
+      }
     }
     
     const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
@@ -85,7 +101,13 @@ export default defineEventHandler(async (event) => {
         (member: any) =>
           member.approved ||
           member.member?.NIM === user?.member?.NIM
-      );
+      ).map((c: any) => {
+        if (c.member && c.member.NIM !== user?.member?.NIM) {
+            delete c.member.email;
+            delete c.member.phone;
+        }
+        return c;
+      });
     } else {
       committees = fetchedCommittees;
     }

@@ -77,7 +77,7 @@ const { data, refresh, pending } = useLazyAsyncData('admin-news', () => $api<INe
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0)
-const pageFrom = computed(() => (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1)
+const pageFrom = computed(() => pagination.value.pageIndex === 0 ? 0 : (pagination.value.pageIndex - 1) * pagination.value.pageSize + 1)
 const pageTo = computed(() => Math.min(pagination.value.pageIndex * pagination.value.pageSize, pageTotal.value || 0))
 const perPageOptions = computed(() => [10, 20, 50, 100, 200, pageTotal.value || 0]);
 

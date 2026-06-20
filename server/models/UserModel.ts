@@ -213,6 +213,26 @@ userSchema.methods.verifyPassword = async (
 userSchema.plugin(mongooseAutoPopulate);
 
 /**
+ * Populate options for lean and specific user fetching
+ */
+export const UserPopulateOptions = [
+  {
+    path: "member",
+    populate: [
+      { path: 'organizersConsiderationBoard' },
+      { path: 'organizersDailyManagement' },
+      { path: 'organizersDepartmentCoordinator' },
+      { path: 'organizersDepartmentMembers' },
+    ],
+    select: "NIM fullName avatar email organizer status semester class sex phone",
+    options: { autopopulate: false }, 
+  },
+  {
+    path: "guest",
+  }
+];
+
+/**
  * Mongoose model for User
  */
 export const UserModel = mongoose.model("User", userSchema);

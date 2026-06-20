@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
@@ -48,20 +48,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const fileName = `${BASE_VIDEO_FOLDER}/${file.name}.${
-      file.type?.split("/")[1]
-    }`;
     // Handle main video upload
     if (file.type?.startsWith("video/")) {
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: fileName,
-          Body: file.data,
-          ContentType: file.type,
-        })
-      );
-      videoUrl = `${R2_PUBLIC_DOMAIN}/${fileName}`;
+      videoUrl = await uploadToR2(file, StoragePaths.ASPIRATIONS(aspiration._id.toString(), 'videos'));
     } else {
       throw createError({
         statusMessage: "Please upload nothing but videos.",

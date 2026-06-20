@@ -1,1 +1,8 @@
-{}
+{
+  "no_available": "No available",
+  "docs": "Docs",
+  "unarchive_aspiration_description": "Unarchive aspiration description",
+  "archive_aspiration_description": "Archive aspiration description",
+  "restore_aspiration_description": "Restore aspiration description",
+  "delete_aspiration_description": "Delete aspiration description"
+}

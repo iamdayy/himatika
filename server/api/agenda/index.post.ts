@@ -94,7 +94,6 @@ export default defineEventHandler(
         at: body.at,
         category: body.category,
         configuration: body.configuration,
-        committees: committees ? await Promise.all(committees) : [],
       });
       // Save the new agenda
       const savedAgenda = await newAgenda.save();
@@ -103,6 +102,23 @@ export default defineEventHandler(
           statusCode: 400,
           message: "Gagal menyimpan agenda",
         });
+      }
+
+      // Save initial committees to CommitteeModel
+      if (committees && committees.length > 0) {
+        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+        const resolvedCommittees = await Promise.all(committees);
+        const validCommittees = resolvedCommittees.filter(c => c.member);
+        const docs = validCommittees.map(c => ({
+          agendaId: savedAgenda._id,
+          job: c.job,
+          member: c.member?._id,
+          approved: c.approved,
+          approvedAt: c.approvedAt,
+        }));
+        if (docs.length > 0) {
+          await CommitteeModel.insertMany(docs);
+        }
       }
       let sender = {
         email: config.resend_from,

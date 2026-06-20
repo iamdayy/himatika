@@ -65,7 +65,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
 
 <template>
     <div
-        class="mx-auto max-w-md w-full border rounded-lg shadow-2xl card bg-linear-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
+        class="mx-auto max-w-md w-full border rounded-lg shadow-lg card bg-linear-to-tr from-teal-100/40 via-white/60 to-indigo-50/10 dark:from-gray-800/50 dark:via-gray-800/40 dark:to-gray-900/10 backdrop-blur-sm border-accent-1 dark:border-accent-2">
         <div class="card-wrap p-6">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm mb-6">
                 <nuxtImg provider="localProvider" class="w-auto h-10 mx-auto" src="/img/logo.png" alt="Himatika"

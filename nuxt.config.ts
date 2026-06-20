@@ -65,6 +65,9 @@ export default defineNuxtConfig({
         csrf: false,
       },
     },
+    "/api/stats": {
+      swr: 60 * 15, // Cache selama 15 menit
+    },
 
     // 2.2 Security Rate Limiting (Nuxt Security)
     "/api/signin": {
@@ -368,6 +371,7 @@ export default defineNuxtConfig({
           signInResponseRefreshTokenPointer: "/refreshToken",
           refreshResponseTokenPointer: "/token",
           refreshRequestTokenPointer: "/refreshToken",
+          maxAgeInSeconds: 7776000,
           sameSiteAttribute:
             process.env.NODE_ENV === "production" ? "none" : "lax",
           secureCookieAttribute: process.env.NODE_ENV === "production",
@@ -406,7 +410,8 @@ export default defineNuxtConfig({
       },
     },
     sessionRefresh: {
-      enableOnWindowFocus: false,
+      enablePeriodically: 1000 * 60 * 15,
+      enableOnWindowFocus: true,
     },
   },
   telemetry: false,

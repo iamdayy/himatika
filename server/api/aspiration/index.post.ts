@@ -1,14 +1,20 @@
 import { Types } from "mongoose";
+import { z } from "zod";
 import { AspirationModel } from "~~/server/models/AspirationModel";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IReqAspiration } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
+
+const aspirationSchema = z.object({
+  subject: z.string().min(3).max(100),
+  message: z.string().min(10),
+  anonymous: z.boolean().default(false),
+});
 
 export default defineEventHandler(
   async (event): Promise<IResponse & { data?: { id: string } }> => {
     try {
       const user = event.context.user;
-      const body = await readBody<IReqAspiration>(event);
+      const body = await readValidatedBody(event, aspirationSchema.parse);
 
       if (!user) {
         return {
@@ -33,7 +39,10 @@ export default defineEventHandler(
         statusMessage: "Aspiration created",
         data: { id: aspiration._id as string },
       };
-    } catch (error) {
+    } catch (error: any) {
+      if (error.statusCode === 400) {
+        throw error; // Let Nuxt handle 400 from validation
+      }
       throw createError({
         statusCode: 500,
         statusMessage: "Internal Server Error",

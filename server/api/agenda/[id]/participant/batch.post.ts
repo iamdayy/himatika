@@ -3,7 +3,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { IResponse } from "~~/types/IResponse";
 
-export default defineEventHandler(async (event): Promise<IResponse> => {
+export default defineEventHandler(async (event): Promise<any> => {
   try {
     // 1. Auth Check
     const user = event.context.user;
@@ -42,6 +42,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     
     let addedCount = 0;
     const newParticipants: any[] = [];
+    const failedMembers: any[] = [];
 
     body.data.forEach((reqItem) => {
       const member = members.find((m) => m.NIM === reqItem.nim);
@@ -59,6 +60,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
           visitTime: reqItem.visiting ? new Date() : undefined,
         });
         addedCount++;
+      } else {
+        failedMembers.push(reqItem);
       }
     });
 
@@ -68,7 +71,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     return {
       statusCode: 200,
-      statusMessage: `Berhasil menambahkan ${addedCount} peserta dari ${body.data.length} data.`,
+      statusMessage: `Berhasil menambahkan ${addedCount} peserta dari ${body.data.length} data. ${failedMembers.length} gagal.`,
+      data: {
+        savedCount: addedCount,
+        failedCount: failedMembers.length,
+        failedMembers
+      }
     };
   } catch (error: any) {
     console.error("Batch participant error:", error);
