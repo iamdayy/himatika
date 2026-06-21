@@ -35,6 +35,12 @@ export default defineNuxtConfig({
         csrf: false,
       },
     },
+    "/api/storage/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
     "/api/admin/achievement": {
       security: {
         xssValidator: false,

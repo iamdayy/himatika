@@ -86,5 +86,16 @@
     "terms": "الشروط والأحكام",
     "privacy": "سياسة الخصوصية",
     "about_us": "حولنا",
-    "contact_us": "اتصل بنا"
+    "contact_us": "اتصل بنا",
+    "file_size": "حجم الملف",
+    "video_presigned_mode": "رفع مباشر إلى السحابة",
+    "video_uploading_to_cloud": "جارٍ رفع الفيديو إلى السحابة...",
+    "video_upload_success": "تم رفع الفيديو بنجاح",
+    "video_upload_error": "فشل رفع الفيديو",
+    "video_processing_started": "يتم معالجة الفيديو. قد يستغرق هذا بضع دقائق.",
+    "video_processing": "جارٍ معالجة الفيديو...",
+    "video_processing_hint": "يتم ضغط الفيديو. ستتحدث هذه الصفحة تلقائيًا.",
+    "video_processing_failed": "فشلت معالجة الفيديو",
+    "processing": "قيد المعالجة",
+    "no_videos_yet": "لم يتم رفع أي فيديو بعد."
   }

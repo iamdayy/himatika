@@ -63,14 +63,17 @@ const addPhoto = () => {
             } catch (e) {
                 console.error(e);
                 toast.add({ title: 'Gagal mengunggah foto', color: 'error' });
+            } finally {
+                refresh();
+                AddPhotoModal.close();
             }
-            AddPhotoModal.close();
         }
     });
 };
 
 const addVideo = () => {
     AddVideoModal.open({
+        agendaId: id,
         onVideo: async (payload: { videos: IVideo[] }) => {
             let hasError = false;
             for (const video of payload.videos) {
@@ -92,16 +95,38 @@ const addVideo = () => {
                 } catch (e) {
                     console.error(e);
                     hasError = true;
+                } finally {
+                    refresh();
+                    AddVideoModal.close();
                 }
             }
             if (!hasError) {
-                toast.add({ title: 'Berhasil mengunggah video', color: 'success' });
+                toast.add({ title: $ts('video_upload_success'), color: 'success' });
             } else {
-                toast.add({ title: 'Gagal mengunggah video', color: 'error' });
+                toast.add({ title: $ts('video_upload_error'), color: 'error' });
             }
-            refresh();
-            AddVideoModal.close();
-        }
+        },
+        onVideoPresigned: async (payload: { fileKey: string; tags: string[] }) => {
+            // Video was already uploaded directly to R2 via presigned URL.
+            // Now tell the backend about it so it creates the DB record and triggers the worker.
+            try {
+                await $api(`/api/agenda/${id}/video`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: {
+                        fileKey: payload.fileKey,
+                        tags: payload.tags,
+                    },
+                });
+                toast.add({ title: $ts('video_processing_started'), color: 'info' });
+            } catch (e) {
+                console.error(e);
+                toast.add({ title: $ts('video_upload_error'), color: 'error' });
+            } finally {
+                refresh();
+                AddVideoModal.close();
+            }
+        },
     });
 };
 
@@ -125,9 +150,10 @@ const addDoc = () => {
             } catch (e) {
                 console.error(e);
                 toast.add({ title: 'Gagal mengunggah dokumen', color: 'error' });
+            } finally {
+                refresh();
+                AddDocModal.close();
             }
-            refresh();
-            AddDocModal.close();
         }
     });
 };
@@ -215,14 +241,40 @@ const tabs = [
                             </div>
                         </template>
                         <div v-if="!agenda.videos || agenda.videos.length === 0" class="text-center py-8 text-gray-500">
-                            Belum ada video yang diunggah.
+                            {{ $ts('no_videos_yet') }}
                         </div>
                         <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div v-for="(video, i) in agenda.videos" :key="i"
                                 class="relative group rounded-lg overflow-hidden border dark:border-gray-700 bg-black">
-                                <video controls class="w-full h-full">
-                                    <source :src="(video.video as string)" type="video/mp4" />
-                                </video>
+                                <!-- Processing overlay -->
+                                <div v-if="video.processingStatus === 'processing'"
+                                    class="flex flex-col items-center justify-center h-48 bg-gray-900/80 text-white">
+                                    <UIcon name="i-heroicons-arrow-path"
+                                        class="animate-spin text-4xl text-primary mb-3" />
+                                    <span class="text-sm font-medium">{{ $ts('video_processing') }}</span>
+                                    <span class="text-xs text-gray-400 mt-1">{{ $ts('video_processing_hint') }}</span>
+                                </div>
+                                <!-- Failed overlay -->
+                                <div v-else-if="video.processingStatus === 'failed'"
+                                    class="flex flex-col items-center justify-center h-48 bg-red-900/20 text-red-400">
+                                    <UIcon name="i-heroicons-exclamation-triangle" class="text-4xl mb-3" />
+                                    <span class="text-sm font-medium">{{ $ts('video_processing_failed') }}</span>
+                                </div>
+                                <!-- Normal video player -->
+                                <template v-else>
+                                    <video controls class="w-full h-full">
+                                        <source :src="(video.video as string)" type="video/mp4" />
+                                    </video>
+                                </template>
+                                <!-- Status badge -->
+                                <div v-if="video.processingStatus && video.processingStatus !== 'completed'"
+                                    class="absolute top-2 left-2">
+                                    <UBadge :color="video.processingStatus === 'processing' ? 'warning' : 'error'"
+                                        variant="solid" size="xs">
+                                        {{ video.processingStatus === 'processing' ? $ts('processing') : $ts('failed')
+                                        }}
+                                    </UBadge>
+                                </div>
                                 <div
                                     class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <UButton icon="i-heroicons-trash" color="error" size="xs" variant="solid"

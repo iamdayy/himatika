@@ -1,21 +1,37 @@
 <script setup lang='ts'>
 import { UFileUpload } from '#components';
+import { usePresignedUpload } from '~/composables/usePresignedUpload';
 import type { IVideo } from '~~/types';
 import type { ITagsResponse } from '~~/types/IResponse';
+
 /**
  * Composables
  */
-const { $api } = useNuxtApp();
+const { $api, $ts } = useNuxtApp();
 const { convert } = useImageToBase64();
 const { data } = useAsyncData(() => $api<ITagsResponse>("/api/video/tags"));
+const presignedUpload = usePresignedUpload();
+
+/**
+ * Props
+ */
+const props = defineProps<{
+    agendaId?: string;
+}>();
 
 /**
  * Emits
  */
 const emit = defineEmits<{
     video: [{ videos: IVideo[] }];
+    videoPresigned: [{ fileKey: string; tags: string[] }];
     close: [];
 }>();
+
+/**
+ * Constants
+ */
+const PRESIGNED_THRESHOLD = 20 * 1024 * 1024; // 20MB
 
 /**
  * Reactive references
@@ -33,20 +49,74 @@ const tagsOptions = computed({
 const tags = ref<string[]>([]);
 
 /**
- * Add new video
+ * Computed: check if any file exceeds the presigned threshold
+ */
+const hasLargeFile = computed(() => {
+    return file.value.some(f => f.size > PRESIGNED_THRESHOLD);
+});
+
+const fileSizeLabel = computed(() => {
+    if (file.value.length === 0) return '';
+    const totalSize = file.value.reduce((acc, f) => acc + f.size, 0);
+    if (totalSize > 1024 * 1024 * 1024) {
+        return `${(totalSize / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    }
+    if (totalSize > 1024 * 1024) {
+        return `${(totalSize / (1024 * 1024)).toFixed(1)} MB`;
+    }
+    return `${(totalSize / 1024).toFixed(0)} KB`;
+});
+
+/**
+ * Add new video — decides between legacy FormData or presigned URL flow
  */
 const addVideo = async () => {
+    if (file.value.length === 0) return;
     loading.value = true;
-    emit('video', {
-        videos: Array.from(file.value).map(f => ({
-            video: f,
-            tags: tags.value,
-            archived: false,
-        }))
-    });
+
+    try {
+        if (hasLargeFile.value && props.agendaId) {
+            // === PRESIGNED URL FLOW ===
+            for (const f of file.value) {
+                if (f.size > PRESIGNED_THRESHOLD) {
+                    // Upload directly to R2
+                    const result = await presignedUpload.upload(f, props.agendaId);
+                    if (result) {
+                        emit('videoPresigned', { fileKey: result.fileKey, tags: tags.value });
+                    }
+                } else {
+                    // Small file in a batch with large files — still use legacy
+                    emit('video', {
+                        videos: [{
+                            video: f,
+                            tags: tags.value,
+                            archived: false,
+                        }]
+                    });
+                }
+            }
+        } else {
+            // === LEGACY FORMDATA FLOW ===
+            emit('video', {
+                videos: Array.from(file.value).map(f => ({
+                    video: f,
+                    tags: tags.value,
+                    archived: false,
+                }))
+            });
+        }
+    } finally {
+        loading.value = false;
+    }
 }
 
-
+/**
+ * Cancel ongoing presigned upload
+ */
+const cancelUpload = () => {
+    presignedUpload.abort();
+    loading.value = false;
+};
 
 /**
  * Responsive design
@@ -95,7 +165,7 @@ const videoOptions = (file: File) => {
         <template #body>
             <div :class="['space-y-6 text-start', responsiveClasses.container]">
                 <div :class="responsiveClasses.grid">
-                    <!-- Image upload -->
+                    <!-- Video upload -->
                     <div :class="[responsiveClasses.fullSpan, 'min-h-36']">
                         <label for="Title"
                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Video</label>
@@ -107,6 +177,38 @@ const videoOptions = (file: File) => {
                                 </div>
                             </template>
                         </UFileUpload>
+                        <!-- File size info -->
+                        <div v-if="file.length > 0"
+                            class="mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <UIcon name="i-heroicons-information-circle" class="text-base" />
+                            <span>{{ $ts('file_size') }}: {{ fileSizeLabel }}</span>
+                            <UBadge v-if="hasLargeFile" color="warning" variant="soft" size="xs">
+                                {{ $ts('video_presigned_mode') }}
+                            </UBadge>
+                        </div>
+                    </div>
+
+                    <!-- Upload progress bar (presigned mode) -->
+                    <div v-if="presignedUpload.uploading.value" :class="responsiveClasses.fullSpan">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-700 dark:text-gray-300">{{ $ts('video_uploading_to_cloud')
+                                    }}</span>
+                                <span class="font-mono font-medium text-primary">{{ presignedUpload.progress.value
+                                    }}%</span>
+                            </div>
+                            <UProgress :value="presignedUpload.progress.value" />
+                            <UButton size="xs" color="error" variant="soft" icon="i-heroicons-x-mark"
+                                @click="cancelUpload">
+                                {{ $ts('cancel') }}
+                            </UButton>
+                        </div>
+                    </div>
+
+                    <!-- Error message -->
+                    <div v-if="presignedUpload.error.value" :class="responsiveClasses.fullSpan">
+                        <UAlert color="error" variant="soft" :title="$ts('error')"
+                            :description="presignedUpload.error.value" icon="i-heroicons-exclamation-triangle" />
                     </div>
 
                     <!-- Tags input -->
@@ -119,7 +221,7 @@ const videoOptions = (file: File) => {
         </template>
         <template #footer>
             <div class="flex items-center justify-end space-x-2">
-                <UButton :loading="loading" label="Save" @click="addVideo" />
+                <UButton :loading="loading || presignedUpload.uploading.value" label="Save" @click="addVideo" />
                 <UButton color="neutral" variant="soft" label="Cancel" @click="emit('close')" />
             </div>
         </template>

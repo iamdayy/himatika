@@ -56,9 +56,13 @@ const addPhoto = async () => {
  * Handle cropped image
  * @param {File} f - Cropped image file
  */
-const onCropped = async (f: File) => {
+const onCropped = async (f: File, originalFile: File) => {
     try {
+        // Remove the original uncropped file from the files array
+        files.value = files.value.filter(file => file !== originalFile);
+        // Add the cropped file
         files.value.push(f);
+        
         photos.value.push({
             image: f,
             tags: [],
@@ -83,12 +87,13 @@ const onChangeImage = async (newFiles: File[]) => {
         fileType: 'image/webp',
     };
     
-    // Proses file satu per satu
-    for (const file of newFiles) {
+    // Filter out files that are already cropped (we mark them with a custom property)
+    const filesToProcess = newFiles.filter(f => !(f as any).isCropped);
+
+    for (const file of filesToProcess) {
         try {
             const compressedFile = await imageCompression(file, options);
             const blob = URL.createObjectURL(compressedFile);
-            // Tunggu modal crop selesai sebelum melanjutkan ke file berikutnya
             await new Promise<void>((resolve) => {
                 ImageCropComp.open({
                     img: blob,
@@ -99,11 +104,14 @@ const onChangeImage = async (newFiles: File[]) => {
                         aspectRatio: 16 / 9,
                     },
                     onCropped: (croppedFile: File) => {
-                        onCropped(croppedFile);
+                        (croppedFile as any).isCropped = true;
+                        onCropped(croppedFile, file);
                         resolve();
                         ImageCropComp.close();
                     },
                     onClose: () => {
+                        // User cancelled cropping, remove the original file
+                        files.value = files.value.filter(f => f !== file);
                         resolve();
                         ImageCropComp.close();
                     }
@@ -112,19 +120,19 @@ const onChangeImage = async (newFiles: File[]) => {
         } catch (error) {
             console.error("Error processing file:", error);
             toast.add({ title: "Failed to compress image" });
+            files.value = files.value.filter(f => f !== file);
         }
     }
 
     loadingCompress.value = false;
-    // Clear files so the same files can be selected again if needed
-    files.value = [];
 };
 
-watch(files, (newFiles) => {
-    if (newFiles && newFiles.length > 0) {
-        onChangeImage(newFiles);
-    }
-});
+const onFilesUpdate = (newFiles: FileList | File[] | null | undefined) => {
+    if (!newFiles) return;
+    const arr = Array.from(newFiles);
+    files.value = arr;
+    onChangeImage(arr);
+};
 
 /**
  * Add new tag
@@ -164,7 +172,7 @@ const responsiveClasses = computed(() => ({
                     <div :class="[responsiveClasses.fullSpan, 'min-h-36']">
                         <label for="Title"
                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Image</label>
-                        <UFileUpload v-model="files" accept="image/*" multiple>
+                        <UFileUpload :model-value="files" @update:model-value="onFilesUpdate" accept="image/*" multiple>
                         </UFileUpload>
                     </div>
 

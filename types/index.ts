@@ -491,6 +491,8 @@ export interface IPhoto {
   on?: Types.ObjectId | IProject | IAgenda;
   onModel?: "Project" | "Agenda" | "Aspiration";
 }
+export type TVideoProcessingStatus = "pending" | "processing" | "completed" | "failed";
+
 export interface IVideo {
   _id?: string;
   video: string | File;
@@ -501,6 +503,8 @@ export interface IVideo {
   on?: Types.ObjectId | IProject | IAgenda;
   onModel?: "Project" | "Agenda" | "Aspiration";
   thumbnail?: string | IFile;
+  processingStatus?: TVideoProcessingStatus;
+  rawFileKey?: string;
 }
 
 export interface IPrivateKey {

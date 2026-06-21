@@ -502,5 +502,16 @@
   "failed_to_delete_option": "Failed to delete option",
   "gallery_document_description": "Gallery document description",
   "gallery_photo_description": "Gallery photo description",
-  "gallery_video_description": "Gallery video description"
+  "gallery_video_description": "Gallery video description",
+  "file_size": "Ukuran file",
+  "video_presigned_mode": "Upload Langsung ke Cloud",
+  "video_uploading_to_cloud": "Mengunggah video ke cloud...",
+  "video_upload_success": "Berhasil mengunggah video",
+  "video_upload_error": "Gagal mengunggah video",
+  "video_processing_started": "Video sedang diproses. Ini mungkin memakan beberapa menit.",
+  "video_processing": "Sedang Memproses Video...",
+  "video_processing_hint": "Video sedang dikompresi. Halaman ini akan otomatis memperbarui.",
+  "video_processing_failed": "Pemrosesan video gagal",
+  "processing": "Sedang Diproses",
+  "no_videos_yet": "Belum ada video yang diunggah."
 }
