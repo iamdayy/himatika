@@ -6,8 +6,8 @@ import { IBadge } from "~~/types";
 export const getTop5Leaderboard = defineCachedFunction(async (semester: number) => {
   const { AgendaModel } = await import("~~/server/models/AgendaModel");
   
-  // Ambil member aktif
-  const members = await MemberModel.find({ status: "active" })
+  // Ambil member aktif yang berada di semester yang sama (Cohort-based)
+  const members = await MemberModel.find({ status: "active", semester: semester })
     .populate({
       path: "committeesData",
       populate: { path: "agendaId", model: AgendaModel }

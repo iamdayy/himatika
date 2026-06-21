@@ -42,71 +42,7 @@ if ((user.value as any)?.guest) {
 }
 const { $pageGuide, $api } = useNuxtApp();
 
-const rankIcon = (rank: number, userNIM: number) => {
-    if (rank === 1) {
-        return h('span', { class: 'text-xl' }, '🥇')
-    } else if (rank === 2) {
-        return h('span', { class: 'text-xl' }, '🥈')
-    } else if (rank === 3) {
-        return h('span', { class: 'text-xl' }, '🥉')
-    } else if (user.value?.member.NIM === userNIM) {
-        return h('span', { class: 'text-xl bg-primary-500 text-white px-2 py-1 rounded-full' }, '#' + (rank))
-    } else {
-        return h('span', { class: 'text-xl' }, '#' + (rank))
-    }
-}
-
-const pointLeaderBoardColumn: TableColumn<ILeaderboard>[] = [
-    {
-        accessorKey: 'no',
-        header: $ts('rank'),
-        cell: ({ row }) => {
-            return h('span', undefined, [
-                rankIcon(row.original.number, row.original.nim)
-            ])
-        },
-    },
-    {
-        accessorKey: 'fullName',
-        header: $ts('fullName'),
-        cell: ({ row }) => {
-            return h(NuxtLink, { class: 'flex items-center gap-2', to: `/profile/${row.original.nim}` }, () => [
-                h(NuxtImg, { src: row.original.avatar || '/img/profile-blank.png', size: 'sm', provider: 'localProvider', class: "object-cover rounded-full max-w-8 aspect-square", loading: 'lazy', alt: row.original.fullName }),
-                h('div', undefined, [
-                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.fullName),
-                    h('p', { class: '' }, `${row.original.nim}`)
-                ])
-            ])
-        },
-    },
-    {
-        accessorKey: 'points',
-        header: $ts('point'),
-        cell: ({ row }) => {
-            if (!row.original.points || row.original.points === 0) {
-                return h('span', {
-                    class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
-                }, '0');
-            }
-            return h('span', {
-                class: 'text-sm font-semibold text-gray-600 dark:text-gray-200'
-            }, row.original.points || '0');
-        }
-    },
-    {
-        accessorKey: 'badges',
-        header: $ts('badges'),
-        cell: ({ row }) => {
-            return h('div', undefined, [
-                row.original.badges.length > 0
-                    ? row.original.badges.map((badge) => h(UTooltip, { text: badge.name }, () => h('div', { class: 'w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center ring-2 ring-white dark:ring-gray-800' }, [
-                        h(UIcon, { name: badge.icon, class: 'w-4 h-4 text-primary-500' })
-                    ])))
-                    : h('span', { class: 'text-sm font-semibold text-gray-600 dark:text-gray-200' }, '-')
-            ])
-        }
-    }
-]
+const config = useRuntimeConfig();
 
 /**
  * Get user stats
@@ -375,9 +311,62 @@ const color = computed(() => {
                         :model-value="((memberProfile?.point || [])?.find((p) => p.semester === memberProfile?.semester)?.point || 0)"
                         :max="configData?.data.minPoint || 100" indicator />
                     <template #footer>
-                        <div class="flex items-center justify-between w-full">
-                            <UTable :columns="pointLeaderBoardColumn" :data="points" class="w-full" responsive>
-                            </UTable>
+                        <div class="flex flex-col gap-2 w-full pt-4">
+                            <div v-for="(userPoint, index) in points" :key="userPoint.nim" 
+                                class="flex items-center justify-between p-3 sm:p-4 rounded-2xl transition-all duration-300 border border-transparent"
+                                :class="[
+                                    user?.member?.NIM === userPoint.nim 
+                                        ? 'bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-200 dark:ring-primary-800 shadow-sm border-primary-100 dark:border-primary-800/50 relative overflow-hidden' 
+                                        : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-200 dark:hover:border-gray-700 bg-white dark:bg-gray-900 shadow-sm ring-1 ring-gray-100 dark:ring-gray-800'
+                                ]"
+                            >
+                                <!-- Glow effect for "Me" -->
+                                <div v-if="user?.member?.NIM === userPoint.nim" class="absolute -left-1 top-0 bottom-0 w-2 bg-primary-500 dark:bg-primary-400 rounded-r-md"></div>
+
+                                <div class="flex items-center gap-3 sm:gap-4 pl-2">
+                                    <!-- Rank Badge -->
+                                    <div class="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-sm shadow-inner"
+                                        :class="{
+                                            'bg-gradient-to-br from-yellow-300 to-yellow-500 text-white ring-2 ring-yellow-200 dark:ring-yellow-700 shadow-yellow-200/50': userPoint.number === 1,
+                                            'bg-gradient-to-br from-gray-200 to-gray-400 text-gray-800 ring-2 ring-gray-100 dark:ring-gray-600': userPoint.number === 2,
+                                            'bg-gradient-to-br from-orange-300 to-orange-500 text-white ring-2 ring-orange-200 dark:ring-orange-800': userPoint.number === 3,
+                                            'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400': userPoint.number > 3
+                                        }"
+                                    >
+                                        <UIcon v-if="userPoint.number === 1" name="i-heroicons-trophy-20-solid" class="w-5 h-5" />
+                                        <span v-else class="text-base">{{ userPoint.number }}</span>
+                                    </div>
+                                    
+                                    <!-- User Info -->
+                                    <NuxtLink :to="`/profile/${userPoint.nim}`" class="flex items-center gap-3 group">
+                                        <NuxtImg :src="userPoint.avatar ? `${config.public.public_uri}${userPoint.avatar}` : '/img/profile-blank.png'" :alt="userPoint.fullName" class="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full ring-2 ring-white dark:ring-gray-800 shadow-sm group-hover:ring-primary-200 transition-all duration-300" provider="localProvider" loading="lazy" />
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-gray-900 dark:text-white group-hover:text-primary-500 transition-colors text-sm sm:text-base truncate max-w-[120px] sm:max-w-[180px]">{{ userPoint.fullName }}</span>
+                                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ userPoint.nim }}</span>
+                                        </div>
+                                    </NuxtLink>
+                                </div>
+                                
+                                <div class="flex items-center gap-4 sm:gap-6">
+                                    <!-- Badges -->
+                                    <div class="hidden sm:flex items-center -space-x-2" v-if="userPoint.badges?.length">
+                                        <UTooltip v-for="badge in userPoint.badges.slice(0, 3)" :key="badge._id" :text="badge.name">
+                                            <div class="w-8 h-8 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center ring-2 ring-gray-100 dark:ring-gray-700 shadow-sm z-10 hover:z-20 hover:scale-110 transition-transform">
+                                                <UIcon :name="badge.icon || 'i-heroicons-star-20-solid'" class="w-4 h-4 text-primary-500" />
+                                            </div>
+                                        </UTooltip>
+                                        <div v-if="userPoint.badges.length > 3" class="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-sm z-0">
+                                            <span class="text-[10px] font-bold text-gray-600 dark:text-gray-300">+{{ userPoint.badges.length - 3 }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Points -->
+                                    <div class="text-right flex flex-col justify-center">
+                                        <span class="font-mono text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 dark:from-primary-400 dark:to-primary-200">{{ userPoint.points || 0 }}</span>
+                                        <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider -mt-1">Points</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </template>
                 </UCard>

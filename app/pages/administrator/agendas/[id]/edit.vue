@@ -1,4 +1,3 @@
-// TODO:Kadang Error di bagian load data
 <script setup lang="ts">
 import { CoreStepper, ModalsCategoryAdd, ModalsConfirmation, ModalsJobAdd, ModalsJobEdit, ModalsReqruitmentAdd, ModalsReqruitmentEdit } from '#components';
 import { format } from 'date-fns';
@@ -61,14 +60,14 @@ const canSeeAndRegisterOptionsWithNone = [
     { label: $ts('member'), value: 'Member' },
     { label: $ts('none'), value: 'None' },
 ]
-const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/agenda/tags'), {
+const { data: tagsData } = useLazyAsyncData(`agenda-${id}-tags`, () => $api<ITagsResponse>('/api/agenda/tags'), {
     transform: (data) => {
         const tags = data.data?.tags || [];
         return tags;
     },
     default: () => undefined,
 });
-const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
+const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(`agenda-${id}-categories`, () => $api<ICategoriesResponse>('/api/category'), {
     transform: (data) => {
         const categories = data.data?.categories || [];
         return categories.map((category) => ({
@@ -80,7 +79,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     default: () => []
 });
 const memberSearchTerm = ref('');
-const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData("members", () => $api<IMemberResponse>("/api/member", {
+const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData(`agenda-${id}-members`, () => $api<IMemberResponse>("/api/member", {
     method: 'GET',
     params: {
         search: memberSearchTerm.value,
@@ -193,7 +192,14 @@ watch(agenda, (newAgenda) => {
     if (newAgenda) {
         // Update State
         state.title = newAgenda.title || '';
-        state.category = (newAgenda.category as ICategory)?._id as string || '';
+        
+        // Handle unpopulated or populated category safely
+        if (typeof newAgenda.category === 'object' && newAgenda.category !== null) {
+            state.category = (newAgenda.category as ICategory)._id as string || '';
+        } else {
+            state.category = (newAgenda.category as string) || '';
+        }
+
         state.tags = newAgenda.tags || [];
         state.description = newAgenda.description || '';
         state.at = newAgenda.at || '';
@@ -206,7 +212,21 @@ watch(agenda, (newAgenda) => {
 
         // Update Configuration
         if (newAgenda.configuration) {
-            Object.assign(configurationState, newAgenda.configuration);
+            // Deep merge to avoid undefined nested objects
+            configurationState.canSee = newAgenda.configuration.canSee || 'Public';
+            configurationState.canSeeRegistered = newAgenda.configuration.canSeeRegistered || 'Public';
+            configurationState.onlyParticipantCanVisit = newAgenda.configuration.onlyParticipantCanVisit || false;
+            configurationState.messageAfterRegister = newAgenda.configuration.messageAfterRegister || '';
+            
+            if (newAgenda.configuration.committee) {
+                Object.assign(configurationState.committee, newAgenda.configuration.committee);
+            }
+            if (newAgenda.configuration.participant) {
+                Object.assign(configurationState.participant, newAgenda.configuration.participant);
+            }
+            if (newAgenda.configuration.manualPayments) {
+                configurationState.manualPayments = newAgenda.configuration.manualPayments;
+            }
             
             if (configurationState.committee?.canRegisterUntil) {
                 configurationState.committee.canRegisterUntil.start = configurationState.committee.canRegisterUntil.start ? new Date(configurationState.committee.canRegisterUntil.start) : new Date();
