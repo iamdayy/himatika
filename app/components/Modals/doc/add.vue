@@ -136,12 +136,14 @@ const uiSize = computed(() => isMobile.value ? 'sm' : isTablet.value ? 'md' : 'l
                             name="tag" placeholder="Select Tags" />
                     </UFormField>
                 </div>
-                <!-- Submit button -->
-                <UButton @click.prevent="addDoc" :loading="loadingCompress" label="Save" icon="i-heroicons-clipboard"
-                    block trailing :class="responsiveClasses.button" />
             </div>
         </template>
-
+        <template #footer>
+            <div class="flex items-center justify-end space-x-2">
+                <UButton :loading="loadingCompress" label="Save" @click="addDoc" />
+                <UButton color="neutral" variant="soft" label="Cancel" @click="emit('close')" />
+            </div>
+        </template>
     </UModal>
 </template>
 <style scoped></style>

@@ -1,8 +1,6 @@
 <template>
     <div>
-        <ClientOnly fallback-tag="span" fallback="Loading player...">
-            <video ref="videoPlayer" class="video-js"></video>
-        </ClientOnly>
+        <video ref="videoPlayer" class="video-js"></video>
     </div>
 </template>
 

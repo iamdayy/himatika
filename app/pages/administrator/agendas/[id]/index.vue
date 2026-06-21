@@ -126,6 +126,13 @@ const shortcuts = [
         icon: 'i-heroicons-qr-code',
         to: `/administrator/agendas/${id}/scan`,
         color: 'neutral'
+    },
+    {
+        label: 'Galeri & Dokumen',
+        desc: 'Kelola foto, video, dan dokumen',
+        icon: 'i-heroicons-photo',
+        to: `/administrator/agendas/${id}/gallery`,
+        color: 'sky'
     }
 ];
 

@@ -33,32 +33,16 @@ const tagsOptions = computed({
 const tags = ref<string[]>([]);
 
 /**
- * Video data structure
- */
-const video = ref<IVideo[]>([]);
-
-const onVideoChange = async (files: FileList) => {
-    for (let i = 0; i < files.length; i++) {
-        const f = files[i];
-        if (!f) continue;
-        file.value.push(f);
-        const blob = await convert(f);
-        video.value.push({
-            video: blob,
-            tags: [],
-            archived: false,
-        });
-    }
-}
-
-/**
-
  * Add new video
  */
 const addVideo = async () => {
     loading.value = true;
     emit('video', {
-        videos: video.value
+        videos: Array.from(file.value).map(f => ({
+            video: f,
+            tags: tags.value,
+            archived: false,
+        }))
     });
 }
 
@@ -131,9 +115,12 @@ const videoOptions = (file: File) => {
                             name="tag" placeholder="Select Tags" />
                     </UFormField>
                 </div>
-                <!-- Submit button -->
-                <UButton :loading="loading" label="Save" @click="addVideo" icon="i-heroicons-clipboard" block trailing
-                    :class="responsiveClasses.button" />
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex items-center justify-end space-x-2">
+                <UButton :loading="loading" label="Save" @click="addVideo" />
+                <UButton color="neutral" variant="soft" label="Cancel" @click="emit('close')" />
             </div>
         </template>
     </UModal>

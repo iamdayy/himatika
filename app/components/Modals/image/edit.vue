@@ -198,7 +198,7 @@ const responsiveClasses = computed(() => ({
 </script>
 <template>
     <UModal v-model="model" title="Edit photo" :dismissible="!loading">
-        <div class="p-4">
+        <template #body>
             <h2 class="text-lg font-semibold mb-4">Edit Photo</h2>
             <div :class="['space-y-6 text-start', responsiveClasses.container]">
                 <div :class="responsiveClasses.grid">
@@ -218,10 +218,14 @@ const responsiveClasses = computed(() => ({
                             name="tag" placeholder="Select Tags" />
                     </UFormField>
                 </div>
-                <!-- Submit button -->
-                <UButton @click.prevent="updatePhoto" :loading="loading" label="Update" icon="i-heroicons-check" block
-                    trailing :class="responsiveClasses.button" />
             </div>
-        </div>
+
+        </template>
+        <template #footer>
+            <div class="flex items-center justify-end space-x-2">
+                <UButton :loading="loading" label="Save" @click="updatePhoto" />
+                <UButton color="neutral" variant="soft" label="Cancel" @click="emit('close')" />
+            </div>
+        </template>
     </UModal>
 </template>

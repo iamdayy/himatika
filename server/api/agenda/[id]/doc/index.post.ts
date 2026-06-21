@@ -1,9 +1,9 @@
-import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { IDoc, IMember, IRequestSign } from "~~/types";
+import { StoragePaths, uploadToR2 } from "~~/server/utils/storage";
+import { IDoc, IRequestSign } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
@@ -34,11 +34,18 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "No file uploaded",
       });
     }
-    if (
-      !agenda.committees
-        ?.map((committee) => (committee.member as IMember).NIM)
-        .includes(user.member.NIM)
-    ) {
+    const isOrganizer = event.context.organizer;
+    let isCommittee = false;
+    if (!isOrganizer) {
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const isRegisteredCommittee = await CommitteeModel.findOne({
+        agendaId: agenda._id,
+        member: user.member._id,
+      });
+      isCommittee = !!isRegisteredCommittee;
+    }
+
+    if (!isOrganizer && !isCommittee) {
       throw createError({
         statusMessage: "Unauthorized",
       });
@@ -76,7 +83,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       trails: [
         {
           user: (await findMemberByNim(user.member.NIM)) as Types.ObjectId,
-          action: "create",
+          action: "CREATE",
         },
       ],
     });

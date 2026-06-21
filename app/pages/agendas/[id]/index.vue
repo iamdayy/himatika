@@ -403,9 +403,14 @@ function formatCurrency(amount: number): string {
                             </div>
                         </div>
 
-                        <div v-if="agenda.photos && agenda.photos.length > 0" class="space-y-4">
-                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Galeri Kegiatan</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div v-if="(agenda.photos && agenda.photos.length > 0) || (agenda.videos && agenda.videos.length > 0) || (agenda.docs && agenda.docs.length > 0)" class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Galeri & Dokumen</h3>
+                                <UButton :to="`/agendas/${id}/gallery`" color="primary" variant="soft" size="sm" icon="i-heroicons-arrow-right">
+                                    Lihat Semua
+                                </UButton>
+                            </div>
+                            <div v-if="agenda.photos && agenda.photos.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 <div v-for="(photo, index) in agenda.photos.slice(0, 6)" :key="index"
                                     class="relative aspect-square rounded-2xl overflow-hidden group cursor-pointer shadow-md ring-1 ring-white/20">
                                     <NuxtImg :src="typeof photo.image === 'string' ? photo.image : ''"
@@ -416,7 +421,7 @@ function formatCurrency(amount: number): string {
                                 </div>
                             </div>
                             <div class="flex justify-center mt-2">
-                                <span class="text-xs text-gray-500 italic" v-if="agenda.photos.length > 6">+ {{
+                                <span class="text-xs text-gray-500 italic" v-if="agenda.photos && agenda.photos.length > 6">+ {{
                                     agenda.photos.length - 6 }} foto lainnya</span>
                             </div>
                         </div>

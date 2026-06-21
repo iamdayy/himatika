@@ -28,11 +28,18 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Agenda not found",
       };
     }
-    if (
-      !agenda.committees
-        ?.map((committee) => (committee.member as IMember).NIM)
-        .includes(user.member.NIM)
-    ) {
+    const isOrganizer = event.context.organizer;
+    let isCommittee = false;
+    if (!isOrganizer) {
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const isRegisteredCommittee = await CommitteeModel.findOne({
+        agendaId: agenda._id,
+        member: user.member._id,
+      });
+      isCommittee = !!isRegisteredCommittee;
+    }
+
+    if (!isOrganizer && !isCommittee) {
       throw createError({
         statusMessage: "Unauthorized",
       });
