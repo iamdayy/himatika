@@ -17,7 +17,7 @@ const
     return {
       left: `50%`,
       top: `0%`,
-      opacity: 1,
+      opacity: 0,
     };
   });
 
