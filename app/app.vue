@@ -107,6 +107,12 @@ setTimeout(() => {
   mix-blend-mode: screen;
 }
 
+.dark .light-effect {
+  display: none;
+}
+
+
+
 .content {
   position: relative;
   z-index: 10;
