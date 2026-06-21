@@ -90,6 +90,7 @@ const handleImageUpload = async (event: Event, index: number) => {
             maxSizeMB: 2,
             maxWidthOrHeight: 1920,
             useWebWorker: true,
+            fileType: 'image/webp',
         };
 
         try {

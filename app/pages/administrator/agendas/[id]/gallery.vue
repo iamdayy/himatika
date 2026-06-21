@@ -56,8 +56,8 @@ const addPhoto = () => {
                     body: formData
                 });
                 if (response?.data) {
-                    if (!agenda.value.photos) agenda.value.photos = [];
-                    agenda.value.photos.push(...response.data);
+                    if (agenda.value && !agenda.value.photos) agenda.value.photos = [];
+                    agenda.value?.photos?.push(...response.data);
                 }
                 toast.add({ title: 'Berhasil mengunggah foto', color: 'success' });
             } catch (e) {

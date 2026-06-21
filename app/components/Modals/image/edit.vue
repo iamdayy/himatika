@@ -101,6 +101,7 @@ const onChangeImage = async (file?: File | null) => {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
+        fileType: 'image/webp',
     };
     try {
         const compressedFile = await imageCompression(file, options);

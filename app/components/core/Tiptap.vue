@@ -154,6 +154,7 @@ const openImageCropped = async (file: File): Promise<void> => {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
+        fileType: 'image/webp'
     }
     const compressedFile = await imageCompression(file, options);
     let reader = new FileReader();

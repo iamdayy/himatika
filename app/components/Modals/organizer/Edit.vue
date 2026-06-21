@@ -96,27 +96,27 @@ const loadingCompress = ref<boolean>(false);
 const openModals = ref<boolean[]>([false, false, false]);
 const isMobile = computed(() => width.value < 768);
 
-const onChangeImages = async (files: FileList, i: number) => {
-    if (files.length === 0) return;
-    const f = files[0]!;
+const onChangeImages = async (i: number, file?: File | null) => {
     loadingCompress.value = true;
+    if (!file) return;
     const options = {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
-        useWebWorker: true
+        useWebWorker: true,
+        fileType: 'image/webp'
     }
-    const compressedFile = await imageCompression(f, options);
+    const compressedFile = await imageCompression(file, options);
     const blob = URL.createObjectURL(compressedFile);
     CropImageModal.open({
         img: blob,
-        title: f.name,
+        title: file.name,
         stencil: {
             movable: true,
             resizable: true,
             aspectRatio: 1 / 1,
         },
-        onCropped: (file: File) => {
-            onCropped(file, i);
+        onCropped: (f: File) => {
+            onCropped(f, i);
             CropImageModal.close();
         },
     });
@@ -259,7 +259,7 @@ onMounted(() => {
             <div class="my-4">
                 <label for="council" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('council')
-                    }}</label>
+                }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
                     <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
                         <UFormField class="col-span-12" :label="$ts('name')" required>
@@ -272,18 +272,8 @@ onMounted(() => {
                                 class="w-full" />
                         </UFormField>
                         <UFormField class="col-span-12" :label="$ts('image')" required>
-                            TODO: FIX THIS
-                            <DropFile :identifier="i" @change="v => onChangeImages(v, i)" accept="image/*">
-                                <div v-if="filesToCropped[i]!.blob">
-                                    <NuxtImg :src="filesToCropped[i]!.blob" :alt="filesToCropped[i]!.name"
-                                        class="mx-auto" loading="lazy" />
-                                </div>
-                                <div
-                                    v-else-if="organizer.council[i]!.image && typeof organizer.council[i]!.image === 'string'">
-                                    <NuxtImg provider="localProvider" :src="organizer.council[i]!.image"
-                                        :alt="organizer.council[i]!.name" class="mx-auto" loading="lazy" />
-                                </div>
-                            </DropFile>
+                            <UFileUpload @update:modelValue="v => onChangeImages(i, v)" accept="image/*">
+                            </UFileUpload>
                         </UFormField>
                     </div>
                 </div>
@@ -291,7 +281,7 @@ onMounted(() => {
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('advisor')
-                }}</label>
+                    }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="advisor">
                     <UFormField class="col-span-12" :label="$ts('name')" required>
                         <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
@@ -302,18 +292,9 @@ onMounted(() => {
                             :size="responsiveUISizes.input" v-model="organizer.advisor.position" class="w-full" />
                     </UFormField>
                     <UFormField class="col-span-12" :label="$ts('image')" required>
-                        <DropFile :identifier="organizer.council.length"
-                            @change="v => onChangeImages(v, organizer.council.length)" accept="image/*">
-                            <div v-if="filesToCropped[organizer.council.length]!.blob">
-                                <NuxtImg :src="filesToCropped[organizer.council.length]!.blob"
-                                    :alt="filesToCropped[organizer.council.length]!.name" class="mx-auto"
-                                    loading="lazy" />
-                            </div>
-                            <div v-else-if="organizer.advisor.image && typeof organizer.advisor.image === 'string'">
-                                <NuxtImg provider="localProvider" :src="(organizer.advisor.image as string)"
-                                    :alt="organizer.advisor.name" class="mx-auto" loading="lazy" />
-                            </div>
-                        </DropFile>
+                        <UFileUpload @update:modelValue="v => onChangeImages(organizer.council.length, v)"
+                            accept="image/*">
+                        </UFileUpload>
                     </UFormField>
                 </div>
             </div>

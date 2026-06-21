@@ -115,23 +115,26 @@ export async function customReadMultipartFormData<T>(
                 });
               }
 
-              // 2. Kompresi berdasarkan tipe file asli
+              // 2. Konversi ke WEBP
               const quality = options.compress.quality || 80;
-
-              if (fileType === "image/jpeg" || fileType === "image/jpg") {
-                pipeline = pipeline.jpeg({ quality, mozjpeg: true });
-              } else if (fileType === "image/png") {
-                pipeline = pipeline.png({ quality, compressionLevel: 8 });
-              } else if (fileType === "image/webp") {
-                pipeline = pipeline.webp({ quality });
-              }
-              // Format lain (gif, svg) biasanya dibiarkan atau perlu penanganan khusus
+              pipeline = pipeline.webp({ quality });
 
               // Simpan hasil kompresi ke buffer baru
               const compressedBuffer = await pipeline.toBuffer();
 
               // Ganti data asli dengan data terkompresi
               fileData = compressedBuffer;
+              fileType = "image/webp"; // Update fileType
+              
+              // Ubah ekstensi file menjadi .webp
+              if (data.filename) {
+                const lastDotIndex = data.filename.lastIndexOf(".");
+                if (lastDotIndex !== -1) {
+                  data.filename = data.filename.substring(0, lastDotIndex) + ".webp";
+                } else {
+                  data.filename += ".webp";
+                }
+              }
 
               // Opsional: Cek ukuran lagi setelah kompresi (biasanya tidak perlu karena pasti lebih kecil/mirip)
             } catch (error) {

@@ -304,6 +304,7 @@ const handleProofUpload = async (event: Event) => {
             maxSizeMB: 2, 
             maxWidthOrHeight: 1920,
             useWebWorker: true,
+            fileType: 'image/webp',
         };
         
         try {

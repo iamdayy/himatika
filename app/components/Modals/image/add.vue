@@ -80,6 +80,7 @@ const onChangeImage = async (newFiles: File[]) => {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
+        fileType: 'image/webp',
     };
     
     // Proses file satu per satu

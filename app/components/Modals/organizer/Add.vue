@@ -130,7 +130,8 @@ const onChangeImages = async (i: number, file?: File | null) => {
     const options = {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
-        useWebWorker: true
+        useWebWorker: true,
+        fileType: 'image/webp'
     }
     const compressedFile = await imageCompression(file, options);
     const blob = URL.createObjectURL(compressedFile);

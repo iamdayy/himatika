@@ -67,6 +67,7 @@ const onFileChange = async ($event: Event) => {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
+        fileType: 'image/webp',
     }
     if (target && target.files) {
         file.value = target.files[0]!;
@@ -593,8 +594,8 @@ const breadcumbs = computed(() => [
                                             <div class="grid grid-cols-4 gap-2 mt-2 text-xs">
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
-                                                        member.point[index]!.activities.agendas.committees +
-                                                        member.point[index]!.activities.agendas.participants }}</div>
+                                                        (member.point[index]!.activities?.agendas?.committees || 0) +
+                                                        (member.point[index]!.activities?.agendas?.participants || 0) }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
                                                         }}
                                                     </div>
