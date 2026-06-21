@@ -10,7 +10,7 @@ definePageMeta({
 });
 
 useHead({
-    title: 'Config'
+    title: () => $ts('configuration')
 });
 const searchQuery = ref('');
 const { $ts } = useI18n();

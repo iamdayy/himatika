@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { ModalsConfirmation, UBadge, UButton, UCheckbox, VideoPlayer } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import type { IAspiration, IDoc, IMember, IPhoto, IVideo, IVote } from '~~/types';
+import type { IAspiration, IDoc, IMember, IPhoto, IVideo } from '~~/types';
 import type { IAspirationResponse } from '~~/types/IResponse';
 
 const UDropdownMenu = resolveComponent('UDropdownMenu');
@@ -17,7 +17,7 @@ const config = useRuntimeConfig();
  * Set page title
  */
 useHead({
-    title: 'Aspirations',
+    title: () => $ts('aspiration'),
 });
 
 useSeoMeta({
@@ -462,7 +462,7 @@ const links = computed(() => [{
                         <div class="flex flex-col items-center gap-2">
                             <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">{{
                                 $ts('show_deleted')
-                            }}</label>
+                                }}</label>
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </div>
                         <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"

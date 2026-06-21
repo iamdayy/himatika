@@ -19,7 +19,7 @@ definePageMeta({
  * Set page title
  */
 useHead({
-    title: "Dashboard"
+    title: () => $ts('dashboard')
 });
 
 /**

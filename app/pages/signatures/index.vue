@@ -155,7 +155,7 @@ definePageMeta({
     layout: 'dashboard',
 });
 useHead({
-    title: () => $ts('signature'),
+    title:() =>  () => $ts('signature'),
     meta: [
         {
             name: 'description',

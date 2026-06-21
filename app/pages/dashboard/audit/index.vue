@@ -9,7 +9,7 @@ definePageMeta({
 });
 
 useHead({
-    title: "Audit Logs"
+    title: () => "Audit Logs"
 });
 const { $api } = useNuxtApp();
 

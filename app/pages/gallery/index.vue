@@ -6,7 +6,7 @@ definePageMeta({
 });
 const { $ts } = useI18n();
 useHead({
-    title: $ts('gallery'),
+    title: () => $ts('gallery'),
 });
 
 const links = computed(() => [{

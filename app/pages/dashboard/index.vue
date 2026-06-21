@@ -29,7 +29,7 @@ definePageMeta({
  * Set page title
  */
 useHead({
-    title: 'Home | Himatika ' + $ts('dashboard')
+    title: () => 'Home | Himatika ' + $ts('dashboard')
 })
 
 /**

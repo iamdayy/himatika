@@ -132,7 +132,7 @@ const responsiveUISizes = computed<{ [key: string]: 'sm' | 'md' }>(() => ({
 }));
 watch(data, () => {
     useHead({
-        title: `${(data.value?.data?.project as IProject)?.title} | Project`
+        title: () => `${(data.value?.data?.project as IProject)?.title} | Project`
     });
 });
 const links = computed(() => [{

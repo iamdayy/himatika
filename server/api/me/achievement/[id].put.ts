@@ -1,5 +1,5 @@
-import { uploadToR2, deleteFromR2, StoragePaths } from "~~/server/utils/storage";
 import { PointModel } from "~~/server/models/PointModel";
+import { deleteFromR2, StoragePaths, uploadToR2 } from "~~/server/utils/storage";
 import { IPointLog } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       }
 
       // 2. Upload file baru
-      proofUrl = await uploadToR2(file, StoragePaths.ACHIEVEMENTS(user.member._id.toString()));
+      proofUrl = await uploadToR2(file, StoragePaths.ACHIEVEMENTS(user.member.NIM));
     }
 
     // Update data di DB

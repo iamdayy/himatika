@@ -307,7 +307,7 @@ const links = computed(() => [{
  * Set page title
  */
 useHead({
-    title: 'News'
+    title: () => $ts('news')
 });
 useSeoMeta({
     title: 'News',
@@ -372,7 +372,7 @@ useSeoMeta({
                         <NuxtLink :to="`/news/${news.slug}`">
                             <h2 class="text-sm font-semibold sm:text-lg md:text-xl lg:text-2xl line-clamp-2">{{
                                 news.title
-                            }}</h2>
+                                }}</h2>
                         </NuxtLink>
                         <div class="line-clamp-3">
                             <CoreContent :content="news.body" size="sm" />

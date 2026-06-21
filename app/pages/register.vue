@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { useIntervalFn } from "@vueuse/core";
 import type { DriveStep } from "driver.js";
 import type { FieldValidationRules, FormError, Step } from "~~/types/component/stepper";
 import type { IReqGenerateOTP } from "~~/types/IRequestPost";
 import type { IGenerateOTPResponse, IResponse, IVerifyOTPResponse } from "~~/types/IResponse";
 import type { RegisterSchema, VerifyNIMSchema } from "~~/types/schemas/auth";
-import { useIntervalFn } from "@vueuse/core";
 
 const { $pageGuide } = useNuxtApp();
 const { $ts } = useI18n();
@@ -306,7 +306,7 @@ definePageMeta({
 });
 
 useHead({
-    title: "Register",
+    title: () => $ts('register'),
     meta: [
         {
             name: "description",
@@ -379,65 +379,65 @@ onMounted(() => {
             :skip-validation="hasVerificationParams" :ui="{
                 root: 'bg-transparent dark:bg-transparent shadow-none backdrop-blur-none ',
             }"><template #default="{ step, errors }">
-                    <div v-if="step?.id === 'verifyNIM'" class="px-2">
-                        <div class="px-1">
-                            <UFormField id="NIM" label="NIM" name="NIM" :error="errors.NIM?.message">
-                                <UInput type="number" color="neutral" :size="responsiveUISizes.input" variant="outline"
-                                    required v-model="stateVerifyNIM.NIM" />
-                            </UFormField>
-                        </div>
+                <div v-if="step?.id === 'verifyNIM'" class="px-2">
+                    <div class="px-1">
+                        <UFormField id="NIM" label="NIM" name="NIM" :error="errors.NIM?.message">
+                            <UInput type="number" color="neutral" :size="responsiveUISizes.input" variant="outline"
+                                required v-model="stateVerifyNIM.NIM" />
+                        </UFormField>
                     </div>
+                </div>
 
-                    <div v-if="step?.id === 'account'" class="space-y-3">
-                        <div class="px-1 space-y-6">
-                            <UFormField :label="$ts('NIM')" id="NIM" name="NIM" :error="errors.NIM?.message">
-                                <UInput type="number" :size="responsiveUISizes.input" disabled required
-                                    v-model="stateVerifyNIM.NIM" color="neutral" variant="outline" />
-                            </UFormField>
-                            <UFormField :label="$ts('username')" id="username" name="username"
-                                :error="errors.username?.message">
-                                <UInput type="text" autocomplete="username" :size="responsiveUISizes.input" required
-                                    v-model="stateForm.username" color="neutral" variant="outline" />
-                            </UFormField>
-                            <UFormField :label="$ts('email')" id="email-register" name="email"
-                                :error="errors.email?.message">
-                                <UInput type="email" autocomplete="email" :size="responsiveUISizes.input" required
-                                    v-model="stateForm.email" color="neutral" variant="outline" />
-                            </UFormField>
-                            <CorePasswordInput v-model="stateForm.password" />
-                            <UFormField :label="$ts('password_confirmation')" id="password-retype"
-                                name="password-retype" :error="errors.password_confirmation?.message">
-                                <div class="flex w-full gap-1 mt-2">
-                                    <UInput color="neutral" variant="outline" :size="responsiveUISizes.input"
-                                        :type="showPasswordReType ? 'text' : 'password'" autocomplete="current-password"
-                                        required v-model="stateForm.password_confirmation" class="flex-1" />
-                                    <UButton variant="link" color="neutral" :size="responsiveUISizes.button"
-                                        @click="showPasswordReType = !showPasswordReType" :icon="!showPasswordReType
-                                            ? 'heroicons-eye'
-                                            : 'heroicons-eye-slash'
-                                            " :padded="false" />
-                                </div>
-                            </UFormField>
-                        </div>
+                <div v-if="step?.id === 'account'" class="space-y-3">
+                    <div class="px-1 space-y-6">
+                        <UFormField :label="$ts('NIM')" id="NIM" name="NIM" :error="errors.NIM?.message">
+                            <UInput type="number" :size="responsiveUISizes.input" disabled required
+                                v-model="stateVerifyNIM.NIM" color="neutral" variant="outline" />
+                        </UFormField>
+                        <UFormField :label="$ts('username')" id="username" name="username"
+                            :error="errors.username?.message">
+                            <UInput type="text" autocomplete="username" :size="responsiveUISizes.input" required
+                                v-model="stateForm.username" color="neutral" variant="outline" />
+                        </UFormField>
+                        <UFormField :label="$ts('email')" id="email-register" name="email"
+                            :error="errors.email?.message">
+                            <UInput type="email" autocomplete="email" :size="responsiveUISizes.input" required
+                                v-model="stateForm.email" color="neutral" variant="outline" />
+                        </UFormField>
+                        <CorePasswordInput v-model="stateForm.password" />
+                        <UFormField :label="$ts('password_confirmation')" id="password-retype" name="password-retype"
+                            :error="errors.password_confirmation?.message">
+                            <div class="flex w-full gap-1 mt-2">
+                                <UInput color="neutral" variant="outline" :size="responsiveUISizes.input"
+                                    :type="showPasswordReType ? 'text' : 'password'" autocomplete="current-password"
+                                    required v-model="stateForm.password_confirmation" class="flex-1" />
+                                <UButton variant="link" color="neutral" :size="responsiveUISizes.button"
+                                    @click="showPasswordReType = !showPasswordReType" :icon="!showPasswordReType
+                                        ? 'heroicons-eye'
+                                        : 'heroicons-eye-slash'
+                                        " :padded="false" />
+                            </div>
+                        </UFormField>
                     </div>
-                    <div v-if="step?.id === 'verification'" class="px-2">
-                        <div class="flex flex-col px-1 space-y-6">
-                            <UFormField id="verification" label="Verification" name="verification"
-                                :error="errors.verification?.message">
+                </div>
+                <div v-if="step?.id === 'verification'" class="px-2">
+                    <div class="flex flex-col px-1 space-y-6">
+                        <UFormField id="verification" label="Verification" name="verification"
+                            :error="errors.verification?.message">
 
-                                <UPinInput v-model="OTPForm.otp" :length="6" :size="responsiveUISizes.input" />
-                            </UFormField>
+                            <UPinInput v-model="OTPForm.otp" :length="6" :size="responsiveUISizes.input" />
+                        </UFormField>
 
-                            <p class="text-gray-500 text-md dark:text-gray-400">
-                                {{ formatTime(remainingTime) }}
-                            </p>
-                            <UButton @click="SendOTPCode" :disabled="remainingTime > 0" block :loading="loading"
-                                :size="responsiveUISizes.button" color="primary" variant="solid">
-                                {{ $ts("resend_otp") }}
-                            </UButton>
-                        </div>
+                        <p class="text-gray-500 text-md dark:text-gray-400">
+                            {{ formatTime(remainingTime) }}
+                        </p>
+                        <UButton @click="SendOTPCode" :disabled="remainingTime > 0" block :loading="loading"
+                            :size="responsiveUISizes.button" color="primary" variant="solid">
+                            {{ $ts("resend_otp") }}
+                        </UButton>
                     </div>
-                </template>
-            </CoreStepper>
+                </div>
+            </template>
+        </CoreStepper>
     </AuthCard>
 </template>

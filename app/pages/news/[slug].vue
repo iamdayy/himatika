@@ -24,7 +24,7 @@ const news = computed(() => data.value?.data?.news as INews);
 const comments = computed(() => news.value.comments as IComment[] || []);
 watch(data, () => {
     useHead({
-        title: (data.value?.data?.news as INews)?.title
+        title: () => (data.value?.data?.news as INews)?.title
     });
 });
 const links = computed(() => [{

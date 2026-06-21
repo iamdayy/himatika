@@ -8,7 +8,7 @@ definePageMeta({
     auth: false
 });
 useHead({
-    title: 'Projects',
+    title: () => $ts('project'),
     meta: [
         {
             name: 'list',
@@ -181,7 +181,8 @@ const links = computed(() => [{
                     </div>
                     <div class="flex flex-col gap-2 md:items-center md:flex-row">
                         <USelectMenu v-model="selectedTags" :items="tags" multiple
-                            :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full sm:w-44" :loading="pendingTags" />
+                            :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full sm:w-44"
+                            :loading="pendingTags" />
                         <USelectMenu v-model="selectedCategory" :items="categoryOptions" label-key="title"
                             value-key="value" :placeholder="$ts('filter_by', { key: 'category' })"
                             class="w-full sm:w-44" :loading="pendingCategories" />

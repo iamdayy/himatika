@@ -81,6 +81,7 @@
     }
   },
   "active": "Aktif",
+  "messages": "Pesan",
   "male": "Laki-laki",
   "female": "Perempuan",
   "inactive": "Tidak Aktif",
@@ -114,6 +115,7 @@
   "upcoming": "Yang Akan Datang",
   "home": "Beranda",
   "profile": "Profil",
+  "my_profile": "Profil Saya",
   "generate": "Generate",
   "dashboard": "Dasbor",
   "agenda": "Agenda",
@@ -202,6 +204,7 @@
   "next": "Selanjutnya",
   "previous": "Sebelumnya",
   "edit": "Edit",
+  "batch_edit": "Edit Masal",
   "copy_link": "Salin Tautan",
   "delete": "Hapus",
   "delete_confirmation": "Apakah Anda yakin ingin menghapus {key} ini?",

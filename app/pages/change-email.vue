@@ -69,7 +69,7 @@ definePageMeta({
     auth: false
 })
 useHead({
-    title: "Change Email",
+    title: () => $ts('change_email'),
     meta: [
         {
             name: "description",
@@ -81,17 +81,17 @@ useHead({
 <template>
     <AuthCard :title="$ts('change_email')">
         <div class="pb-8 mt-2 sm:mx-auto sm:w-full sm:max-w-sm">
-                <UForm ref="form" :state="state" @submit="onSubmit" class="space-y-2">
-                    <UFormField label="NIM" id="NIM" name="NIM">
-                        <UInput type="number" color="neutral" variant="outline" disabled required v-model="state.NIM" />
-                    </UFormField>
-                    <UFormField label="Email" id="email" name="email">
-                        <UInput type="email" color="neutral" variant="outline" required v-model="state.email" />
-                    </UFormField>
-                    <div>
-                        <UButton type="submit" block :loading="loading">{{ $ts('send') }}</UButton>
-                    </div>
-                </UForm>
-            </div>
+            <UForm ref="form" :state="state" @submit="onSubmit" class="space-y-2">
+                <UFormField label="NIM" id="NIM" name="NIM">
+                    <UInput type="number" color="neutral" variant="outline" disabled required v-model="state.NIM" />
+                </UFormField>
+                <UFormField label="Email" id="email" name="email">
+                    <UInput type="email" color="neutral" variant="outline" required v-model="state.email" />
+                </UFormField>
+                <div>
+                    <UButton type="submit" block :loading="loading">{{ $ts('send') }}</UButton>
+                </div>
+            </UForm>
+        </div>
     </AuthCard>
 </template>

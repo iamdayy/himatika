@@ -17,7 +17,7 @@ definePageMeta({
  * Set page title
  */
 useHead({
-    title: 'Messages'
+    title: () => $ts('messages')
 });
 
 type responsive = {
@@ -389,7 +389,7 @@ const links = computed(() => [{
                 <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
                     <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
                         <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
-                        }}</span>
+                            }}</span>
                         <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
                     </div>
                     <div class="mb-2 sm:mb-0">

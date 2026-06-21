@@ -572,7 +572,7 @@ definePageMeta({
     auth: true,
 });
 useHead({
-    title: 'Profile - ' + (member.value?.fullName || 'Loading...'),
+    title: () => 'Profile - ' + (member.value?.fullName || 'Loading...'),
     meta: [
         { name: 'description', content: 'View and manage your profile information.' },
         { name: 'robots', content: 'noindex, nofollow' }

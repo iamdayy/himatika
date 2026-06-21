@@ -680,14 +680,20 @@ useHead({
                     <div class="flex items-center gap-2" v-if="isCommittee">
                         <template v-if="selectedParticipant.length > 0">
                             <span class="text-sm text-gray-500 mr-1">{{ selectedParticipant.length }} Terpilih:</span>
-                            <UButton @click="setBatch('visiting')" icon="i-heroicons-check-circle" size="sm" color="gray" variant="solid" tooltip="Tandai Hadir">Hadir</UButton>
-                            <UButton @click="setBatch('payment')" icon="i-heroicons-banknotes" size="sm" color="gray" variant="solid" tooltip="Tandai Lunas">Lunas</UButton>
-                            <UButton @click="printNametags" icon="i-heroicons-identification" size="sm" color="gray" variant="solid" tooltip="Cetak Nametag">Cetak</UButton>
-                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm" color="gray" variant="solid" tooltip="Export Excel">Export</UButton>
+                            <UButton @click="setBatch('visiting')" icon="i-heroicons-check-circle" size="sm"
+                                color="gray" variant="solid" tooltip="Tandai Hadir">Hadir</UButton>
+                            <UButton @click="setBatch('payment')" icon="i-heroicons-banknotes" size="sm" color="gray"
+                                variant="solid" tooltip="Tandai Lunas">Lunas</UButton>
+                            <UButton @click="printNametags" icon="i-heroicons-identification" size="sm" color="gray"
+                                variant="solid" tooltip="Cetak Nametag">Cetak</UButton>
+                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm" color="gray"
+                                variant="solid" tooltip="Export Excel">Export</UButton>
                         </template>
                         <template v-else>
-                            <UButton @click="printNametags" icon="i-heroicons-identification" size="sm" color="white" variant="solid">Cetak Semua</UButton>
-                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm" color="white" variant="solid">Export Semua</UButton>
+                            <UButton @click="printNametags" icon="i-heroicons-identification" size="sm" color="white"
+                                variant="solid">Cetak Semua</UButton>
+                            <UButton @click="generateXlsx" icon="i-heroicons-document-arrow-down" size="sm"
+                                color="white" variant="solid">Export Semua</UButton>
                         </template>
                     </div>
 

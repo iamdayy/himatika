@@ -91,6 +91,7 @@ export const refreshSession = async (payload: string) => {
       if (user.member) {
         const m = user.member as any;
         memberPayload = {
+          _id: m._id,
           NIM: m.NIM,
           fullName: m.fullName,
           avatar: m.avatar,

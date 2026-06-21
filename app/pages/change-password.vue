@@ -44,7 +44,7 @@ definePageMeta({
     layout: "auth",
 })
 useHead({
-    title: "Change Password",
+    title: () => $ts('change_password'),
     meta: [
         {
             name: "description",
@@ -56,23 +56,21 @@ useHead({
 <template>
     <AuthCard :title="$ts('change_password')">
         <div class="pb-8 mt-2 sm:mx-auto sm:w-full sm:max-w-sm">
-                <UForm ref="form" :state="state" @submit="onSubmit" class="space-y-2">
-                    <UFormField :label="$ts('old_password')" id="oldPassword" name="old_password">
-                        <UInput type="password" color="neutral" variant="outline" required
-                            v-model="state.old_password" />
-                    </UFormField>
-                    <UFormField :label="$ts('new_password')" id="newPassword" name="password">
-                        <UInput type="password" color="neutral" variant="outline" required v-model="state.password" />
-                    </UFormField>
-                    <UFormField :label="$ts('new_password_confirm')" id="confirmNewPassword"
-                        name="password_confirmation">
-                        <UInput type="password" color="neutral" variant="outline" required
-                            v-model="state.password_confirmation" />
-                    </UFormField>
-                    <div>
-                        <UButton type="submit" block :loading="loading">{{ $ts('change_password') }}</UButton>
-                    </div>
-                </UForm>
-            </div>
+            <UForm ref="form" :state="state" @submit="onSubmit" class="space-y-2">
+                <UFormField :label="$ts('old_password')" id="oldPassword" name="old_password">
+                    <UInput type="password" color="neutral" variant="outline" required v-model="state.old_password" />
+                </UFormField>
+                <UFormField :label="$ts('new_password')" id="newPassword" name="password">
+                    <UInput type="password" color="neutral" variant="outline" required v-model="state.password" />
+                </UFormField>
+                <UFormField :label="$ts('new_password_confirm')" id="confirmNewPassword" name="password_confirmation">
+                    <UInput type="password" color="neutral" variant="outline" required
+                        v-model="state.password_confirmation" />
+                </UFormField>
+                <div>
+                    <UButton type="submit" block :loading="loading">{{ $ts('change_password') }}</UButton>
+                </div>
+            </UForm>
+        </div>
     </AuthCard>
 </template>

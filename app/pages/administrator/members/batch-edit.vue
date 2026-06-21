@@ -15,7 +15,7 @@ definePageMeta({
 
 // Set page title
 useHead({
-    title: "Batch Edit"
+    title: () => $ts('batch_edit')
 })
 const { $api } = useNuxtApp();
 const { $ts } = useI18n();

@@ -152,7 +152,7 @@ definePageMeta({
     },
 });
 useHead({
-    title: "Forgot Password",
+    title: () => $ts("forgot_password"),
     meta: [
         {
             name: "description",
@@ -241,52 +241,51 @@ onBeforeUnmount(() => {
 </script>
 <template>
     <AuthCard :title="$ts('forgot_password')">
-            <CoreStepper :steps="steps" v-model="activeStep" @complete="onComplete" :target-step="targetStep"
-                :skip-validation="hasVerificationParams" :ui="{
-                    root: 'bg-transparent dark:bg-transparent shadow-none backdrop-blur-none ',
-                }">
-                <template #default="{ step, errors }">
-                    <div v-if="step?.id === 'account'" class="px-2">
-                        <UFormField label="NIM" id="NIM" name="NIM" :error="errors.NIM?.message">
-                            <UInput type="text" color="neutral" variant="outline" required v-model="stateAccount.NIM" />
+        <CoreStepper :steps="steps" v-model="activeStep" @complete="onComplete" :target-step="targetStep"
+            :skip-validation="hasVerificationParams" :ui="{
+                root: 'bg-transparent dark:bg-transparent shadow-none backdrop-blur-none ',
+            }">
+            <template #default="{ step, errors }">
+                <div v-if="step?.id === 'account'" class="px-2">
+                    <UFormField label="NIM" id="NIM" name="NIM" :error="errors.NIM?.message">
+                        <UInput type="text" color="neutral" variant="outline" required v-model="stateAccount.NIM" />
+                    </UFormField>
+                    <UFormField label="Email" id="email" name="email" :error="errors.email?.message">
+                        <UInput type="email" color="neutral" variant="outline" required v-model="stateAccount.email" />
+                    </UFormField>
+                </div>
+                <div v-if="step?.id === 'otp'" class="px-2">
+                    <div class="flex flex-col px-1 space-y-6">
+                        <UFormField id="otp" label="Verification" name="otp" :error="errors.otp?.message">
+                            <UPinInput v-model="stateOTP.otp" :length="6" />
                         </UFormField>
-                        <UFormField label="Email" id="email" name="email" :error="errors.email?.message">
-                            <UInput type="email" color="neutral" variant="outline" required
-                                v-model="stateAccount.email" />
-                        </UFormField>
-                    </div>
-                    <div v-if="step?.id === 'otp'" class="px-2">
-                        <div class="flex flex-col px-1 space-y-6">
-                            <UFormField id="otp" label="Verification" name="otp" :error="errors.otp?.message">
-                                <UPinInput v-model="stateOTP.otp" :length="6" />
-                            </UFormField>
 
-                            <p class="text-gray-500 text-md dark:text-gray-400">
-                                {{ formatTime(remainingTime) }}
-                            </p>
-                            <UButton @click="SendOTPCode()" :disabled="remainingTime > 0" block :loading="loading"
-                                color="primary" variant="solid">
-                                {{ $ts("resend_otp") }}
-                            </UButton>
+                        <p class="text-gray-500 text-md dark:text-gray-400">
+                            {{ formatTime(remainingTime) }}
+                        </p>
+                        <UButton @click="SendOTPCode()" :disabled="remainingTime > 0" block :loading="loading"
+                            color="primary" variant="solid">
+                            {{ $ts("resend_otp") }}
+                        </UButton>
+                    </div>
+                </div>
+                <div v-if="step?.id === 'reset-password'" class="px-2">
+                    <CorePasswordInput v-model="statePassword.password" />
+                    <UFormField :label="$ts('password_confirmation')" id="password-retype" name="password-retype"
+                        :error="errors.password_confirmation?.message">
+                        <div class="flex w-full gap-1 mt-2">
+                            <UInput color="neutral" variant="outline" :type="showPasswordReType ? 'text' : 'password'"
+                                autocomplete="current-password" required v-model="statePassword.password_confirmation"
+                                class="flex-1" />
+                            <UButton variant="link" color="neutral" @click="showPasswordReType = !showPasswordReType"
+                                :icon="!showPasswordReType
+                                    ? 'heroicons-eye'
+                                    : 'heroicons-eye-slash'
+                                    " :padded="false" />
                         </div>
-                    </div>
-                    <div v-if="step?.id === 'reset-password'" class="px-2">
-                        <CorePasswordInput v-model="statePassword.password" />
-                        <UFormField :label="$ts('password_confirmation')" id="password-retype" name="password-retype"
-                            :error="errors.password_confirmation?.message">
-                            <div class="flex w-full gap-1 mt-2">
-                                <UInput color="neutral" variant="outline"
-                                    :type="showPasswordReType ? 'text' : 'password'" autocomplete="current-password"
-                                    required v-model="statePassword.password_confirmation" class="flex-1" />
-                                <UButton variant="link" color="neutral"
-                                    @click="showPasswordReType = !showPasswordReType" :icon="!showPasswordReType
-                                        ? 'heroicons-eye'
-                                        : 'heroicons-eye-slash'
-                                        " :padded="false" />
-                            </div>
-                        </UFormField>
-                    </div>
-                </template>
-            </CoreStepper>
+                    </UFormField>
+                </div>
+            </template>
+        </CoreStepper>
     </AuthCard>
 </template>
