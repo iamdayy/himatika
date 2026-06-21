@@ -13,6 +13,7 @@ const { data } = useAsyncData(() => $api<ITagsResponse>("/api/doc/tags"));
  */
 const emit = defineEmits<{
     (event: 'doc', value: IDoc): void
+    (event: 'close'): void
 }>();
 
 /**

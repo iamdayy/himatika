@@ -16,6 +16,7 @@ const overlay = useOverlay();
  */
 const emit = defineEmits<{
     photo: [{ photos: IPhoto[] }];
+    close: [];
 }>();
 
 /**
@@ -26,14 +27,11 @@ const ImageCropComp = overlay.create(ModalsImageCrop);
 const model = defineModel<boolean>();
 const loadingCompress = ref<boolean>(false);
 const files = ref<File[]>([]);
-const tagsOptions = computed({
-    get: () => {
-        return data.value?.data?.tags || [];
-    },
-    set: (value) => {
-        tagsOptions.value = value;
-    }
-});
+const tagsOptions = ref<string[]>([]);
+
+watch(() => data.value?.data?.tags, (newTags) => {
+    if (newTags) tagsOptions.value = [...newTags];
+}, { immediate: true });
 const tags = ref<string[]>([]);
 
 /**
@@ -75,49 +73,55 @@ const onCropped = async (f: File) => {
  * Handle image change
  * @param {FileList} f - Selected image files
  */
-const onChangeImage = async (file?: File | null) => {
+const onChangeImage = async (newFiles: File[]) => {
+    if (!newFiles || newFiles.length === 0) return;
     loadingCompress.value = true;
     const options = {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
     };
-    if (!file) return;
-    try {
-        const compressedFile = await imageCompression(file, options);
-        const blob = URL.createObjectURL(compressedFile);
-        // Tunggu modal crop selesai sebelum melanjutkan ke file berikutnya
-        await new Promise<void>((resolve) => {
-            ImageCropComp.open({
-                img: blob,
-                title: file.name,
-                stencil: {
-                    movable: true,
-                    resizable: true,
-                    aspectRatio: 16 / 9,
-                },
-                onCropped: (croppedFile: File) => {
-                    onCropped(croppedFile);
-                    resolve();
-                    ImageCropComp.close();
-                },
+    
+    // Proses file satu per satu
+    for (const file of newFiles) {
+        try {
+            const compressedFile = await imageCompression(file, options);
+            const blob = URL.createObjectURL(compressedFile);
+            // Tunggu modal crop selesai sebelum melanjutkan ke file berikutnya
+            await new Promise<void>((resolve) => {
+                ImageCropComp.open({
+                    img: blob,
+                    title: file.name,
+                    stencil: {
+                        movable: true,
+                        resizable: true,
+                        aspectRatio: 16 / 9,
+                    },
+                    onCropped: (croppedFile: File) => {
+                        onCropped(croppedFile);
+                        resolve();
+                        ImageCropComp.close();
+                    },
+                    onClose: () => {
+                        resolve();
+                        ImageCropComp.close();
+                    }
+                });
             });
-        });
-    } catch (error) {
-        console.error("Error processing file:", error);
-        toast.add({ title: "Failed to compress image" });
+        } catch (error) {
+            console.error("Error processing file:", error);
+            toast.add({ title: "Failed to compress image" });
+        }
     }
 
-    // Proses file satu per satu
-    // for (const file of Array.from(f)) {
-    // }
-
     loadingCompress.value = false;
+    // Clear files so the same files can be selected again if needed
+    files.value = [];
 };
 
 watch(files, (newFiles) => {
     if (newFiles && newFiles.length > 0) {
-        onChangeImage(newFiles[0]);
+        onChangeImage(newFiles);
     }
 });
 

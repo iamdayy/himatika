@@ -136,8 +136,8 @@ const responsiveClasses = computed(() => ({
         </template>
         <template #footer>
             <div class="flex items-center justify-end space-x-2">
-                <UButton :loading="loading" label="Crop & Gunakan" @click="crop" />
-                <UButton color="neutral" variant="soft" label="Cancel" @click="emit('close')" />
+                <UButton :loading="loadingState" label="Crop & Gunakan" @click="crop" />
+                <UButton color="neutral" variant="soft" label="Cancel" @click="emits('close')" />
             </div>
         </template>
     </UModal>

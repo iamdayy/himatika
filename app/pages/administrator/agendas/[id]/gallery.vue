@@ -33,34 +33,37 @@ const AddDocModal = overlay.create(ModalsDocAdd);
 const addPhoto = () => {
     AddPhotoModal.open({
         onPhoto: async (payload: { photos: IPhoto[] }) => {
-            let hasError = false;
-            for (const photo of payload.photos) {
-                const formData = new FormData();
-                if ((photo.image as any) instanceof File) {
-                    formData.append('image', photo.image as Blob);
-                } else if ((photo.image as any) instanceof Blob) {
-                    formData.append('image', photo.image as Blob, 'image.jpg');
-                } else {
-                    formData.append('image', photo.image as string);
-                }
-                formData.append('tags', JSON.stringify(photo.tags || []));
-
-                try {
-                    await $api(`/api/agenda/${id}/photo`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                } catch (e) {
-                    console.error(e);
-                    hasError = true;
-                }
+            if (!payload.photos || payload.photos.length === 0) {
+                AddPhotoModal.close();
+                return;
             }
-            if (!hasError) {
+
+            const formData = new FormData();
+            payload.photos.forEach((photo, index) => {
+                if ((photo.image as any) instanceof File) {
+                    formData.append('images', photo.image as Blob);
+                } else if ((photo.image as any) instanceof Blob) {
+                    formData.append('images', photo.image as Blob, 'image.jpg');
+                } else {
+                    formData.append('images', photo.image as string);
+                }
+                formData.append(`tags_${index}`, JSON.stringify(photo.tags || []));
+            });
+
+            try {
+                const response = await $api<any>(`/api/agenda/${id}/photo/batch`, {
+                    method: 'POST',
+                    body: formData
+                });
+                if (response?.data) {
+                    if (!agenda.value.photos) agenda.value.photos = [];
+                    agenda.value.photos.push(...response.data);
+                }
                 toast.add({ title: 'Berhasil mengunggah foto', color: 'success' });
-            } else {
+            } catch (e) {
+                console.error(e);
                 toast.add({ title: 'Gagal mengunggah foto', color: 'error' });
             }
-            refresh();
             AddPhotoModal.close();
         }
     });
