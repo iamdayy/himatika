@@ -199,14 +199,6 @@ const openSlideOver = ref<boolean>(false);
                                 </p>
                             </div>
                         </template>
-
-                        <template #item="{ item }">
-                            <NuxtLink :to="item.to">
-                                <UIcon :name="item.icon" v-if="item.icon"
-                                    class="shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
-                                <span class="truncate">{{ item.label }}</span>
-                            </NuxtLink>
-                        </template>
                     </UDropdownMenu>
 
                 </div>

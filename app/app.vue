@@ -17,7 +17,7 @@ const
     return {
       left: `50%`,
       top: `0%`,
-      opacity: 0,
+      opacity: 1,
     };
   });
 
@@ -106,12 +106,6 @@ setTimeout(() => {
   opacity: var(--opacity);
   mix-blend-mode: screen;
 }
-
-.dark .light-effect {
-  display: none;
-}
-
-
 
 .content {
   position: relative;
