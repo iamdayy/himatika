@@ -7,6 +7,7 @@
     "generate": "cross-env NODE_OPTIONS=--max-old-space-size=8192 nuxt generate",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
+    "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare",
     "seed": "bun run scripts/seed.ts"
   },

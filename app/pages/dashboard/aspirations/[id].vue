@@ -149,7 +149,7 @@
                                         <div
                                             class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent h-[25px] backdrop-blur-sm">
                                         </div>
-                                        <UDropdownMenu :items="photosDropdownItems(photo)"
+                                        <UDropdownMenu :items="photosDropdownItems(photo)" :modal="false"
                                             class="absolute top-0 right-0 mx-2 mt-1"
                                             :popper="{ arrow: true, strategy: 'absolute' }"
                                             :size="responsiveUISizes.button">
@@ -199,7 +199,7 @@
                                         <div
                                             class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent h-[50px] backdrop-blur-md">
                                         </div>
-                                        <UDropdownMenu :items="videosDropdownItems(video)"
+                                        <UDropdownMenu :items="videosDropdownItems(video)" :modal="false"
                                             class="absolute top-0 right-0 m-px"
                                             :popper="{ arrow: true, strategy: 'absolute' }"
                                             :size="responsiveUISizes.button">

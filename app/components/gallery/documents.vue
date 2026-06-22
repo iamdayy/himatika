@@ -127,7 +127,7 @@ const editOptions = (doc: IDoc) => [
                                 <UBadge v-for="(tag, tIndex) in doc.tags.splice(0, 4)" :key="tIndex" size="sm"
                                     color="secondary">{{ tag }}
                                 </UBadge>
-                                <UDropdownMenu :items="editOptions(doc)">
+                                <UDropdownMenu :items="editOptions(doc)" :modal="false">
                                     <UButton color="neutral" variant="link" icon="i-heroicons-ellipsis-vertical" />
                                 </UDropdownMenu>
                             </div>

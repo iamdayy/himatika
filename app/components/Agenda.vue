@@ -250,7 +250,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                             <UButton :to="`/agendas/${agenda._id}`" variant="link" size="sm">
                                 {{ $ts('see_more') }}
                             </UButton>
-                            <UDropdownMenu :items="dropdownOptions(agenda)" :ui="{
+                            <UDropdownMenu :items="dropdownOptions(agenda)" :modal="false" :ui="{
                                 content: 'w-48'
                             }">
                                 <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="link" />
@@ -308,7 +308,7 @@ const responsiveUISizes = useResponsiveUiSizes();
                                                 </UButton>
                                             </div>
                                         </div>
-                                        <UDropdownMenu :items="dropdownOptions(agenda)" :ui="{
+                                        <UDropdownMenu :items="dropdownOptions(agenda)" :modal="false" :ui="{
                                             content: 'w-48'
                                         }">
                                             <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="link"

@@ -367,7 +367,7 @@ useHead({
             <div class="flex items-center gap-2">
                 <UButton icon="i-heroicons-arrow-path" color="gray" variant="ghost" @click="refresh()"
                     :loading="pending" />
-                <UDropdownMenu :items="exportDropdownItems">
+                <UDropdownMenu :items="exportDropdownItems" :modal="false">
                     <UButton icon="i-heroicons-arrow-down-tray" color="neutral" variant="outline"
                         trailing-icon="i-heroicons-chevron-down-20-solid">
                         Export

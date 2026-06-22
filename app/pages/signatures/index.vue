@@ -206,7 +206,7 @@ useSeoMeta({
                                     </ULink>
                                     <span
                                         class="inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400">
-                                        <UDropdownMenu class="flex items-center justify-center" :items="items(doc)">
+                                        <UDropdownMenu class="flex items-center justify-center" :items="items(doc)" :modal="false">
                                             <UButton color="neutral" variant="ghost"
                                                 icon="i-heroicons-ellipsis-vertical" />
                                         </UDropdownMenu>
@@ -254,7 +254,7 @@ useSeoMeta({
                                     </ULink>
                                     <span
                                         class="inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400">
-                                        <UDropdownMenu class="flex items-center justify-center" :items="items(doc)">
+                                        <UDropdownMenu class="flex items-center justify-center" :items="items(doc)" :modal="false">
                                             <UButton color="neutral" variant="ghost"
                                                 icon="i-heroicons-ellipsis-vertical" />
                                         </UDropdownMenu>
