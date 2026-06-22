@@ -19,7 +19,7 @@ const items = [
 const CropImageModal = overlay.create(ModalsImageCrop)
 const searchMember = ref('');
 const { data } = await useAsyncData<IConfigResponse>(() => $fetch<IConfigResponse>("/api/config"));
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public", { query: { search: searchMember.value } }), {
     transform: (data) => {
         const members = data.data?.members || [];
         return members.map((member) => ({
@@ -50,6 +50,7 @@ const dailyManagements = computed(() => {
     return data.value.data.dailyManagements.map((management) => ({
         position: management,
         member: 0,
+        staff: [] as number[],
     }));
 });
 
@@ -59,6 +60,7 @@ const departements = computed(() => {
         name: department,
         coordinator: 0,
         members: [],
+        staff: [] as number[],
     }));
 });
 
@@ -69,7 +71,8 @@ const organizer = ref<IOrganizer>({
     dailyManagement: dailyManagements.value.map((dayly) => {
         return {
             ...dayly,
-            member: (props.org.dailyManagement.find(d => d.position == dayly.position)?.member as IMember)?.NIM || 0
+            member: (props.org.dailyManagement.find(d => d.position == dayly.position)?.member as IMember)?.NIM || 0,
+            staff: props.org.dailyManagement.find(d => d.position == dayly.position)?.staff?.map(s => (s as IMember).NIM || 0) || []
         }
     }),
     department: departements.value.map((department) => {
@@ -77,7 +80,8 @@ const organizer = ref<IOrganizer>({
         return {
             ...department,
             coordinator: (props.org.department.find(d => d.name == department.name)?.coordinator as IMember)?.NIM || 0,
-            members: props.org.department.find(d => d.name == department.name)?.members.map(m => (m as IMember).NIM || 0) || []
+            members: props.org.department.find(d => d.name == department.name)?.members.map(m => (m as IMember).NIM || 0) || [],
+            staff: props.org.department.find(d => d.name == department.name)?.staff?.map(s => (s as IMember).NIM || 0) || []
         }
     }),
 });
@@ -96,30 +100,49 @@ const loadingCompress = ref<boolean>(false);
 const openModals = ref<boolean[]>([false, false, false]);
 const isMobile = computed(() => width.value < 768);
 
-const onChangeImages = async (i: number, file?: File | null) => {
+const onChangeImages = async (i: number, file?: File | FileList | File[] | null) => {
     loadingCompress.value = true;
-    if (!file) return;
+    if (!file) {
+        loadingCompress.value = false;
+        return;
+    }
+    
+    let actualFile: File;
+    if (file instanceof FileList || Array.isArray(file)) {
+        if (file.length === 0) {
+            loadingCompress.value = false;
+            return;
+        }
+        actualFile = file[0] as File;
+    } else {
+        actualFile = file as File;
+    }
+
     const options = {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
         fileType: 'image/webp'
     }
-    const compressedFile = await imageCompression(file, options);
-    const blob = URL.createObjectURL(compressedFile);
-    CropImageModal.open({
-        img: blob,
-        title: file.name,
-        stencil: {
-            movable: true,
-            resizable: true,
-            aspectRatio: 1 / 1,
-        },
-        onCropped: (f: File) => {
-            onCropped(f, i);
-            CropImageModal.close();
-        },
-    });
+    try {
+        const compressedFile = await imageCompression(actualFile, options);
+        const blob = URL.createObjectURL(compressedFile);
+        CropImageModal.open({
+            img: blob,
+            title: actualFile.name,
+            stencil: {
+                movable: true,
+                resizable: true,
+                aspectRatio: 1 / 1,
+            },
+            onCropped: (f: File) => {
+                onCropped(f, i);
+                CropImageModal.close();
+            },
+        });
+    } catch (error) {
+        toast.add({ title: "Failed to compress image" });
+    }
     loadingCompress.value = false;
 }
 
@@ -139,42 +162,33 @@ const onCropped = async (f: File, i: number) => {
 }
 
 const editOrganizer = async () => {
-    const body: IOrganizer = {
-        ...organizer.value,
-        council: await Promise.all(organizer.value.council.map(async (council, i) => {
-            if (files.value[i]) {
-                council.image = {
-                    name: files.value[i]?.name,
-                    content: await convert(files.value[i]),
-                    size: files.value[i]?.size.toString(),
-                    type: files.value[i]?.type,
-                    lastModified: files.value[i]?.lastModified.toString(),
+    try {
+        const formData = new FormData();
+        const organizerData = JSON.parse(JSON.stringify(organizer.value));
 
+        // Clear image content to avoid sending large data in JSON
+        organizerData.council.forEach((c: { image: any; }) => c.image = null);
+        organizerData.advisor.image = null;
+
+        formData.append('organizerData', JSON.stringify(organizerData));
+
+        // Append council and advisor images
+        files.value.forEach((file, index) => {
+            if (file) {
+                if (index < organizer.value.council.length) {
+                    formData.append(`council-image-${index}`, file, file.name);
+                } else {
+                    formData.append('advisor-image', file, file.name);
                 }
             }
-            return council;
-        })),
-        advisor: {
-            ...organizer.value.advisor,
-            image: files.value[organizer.value.council.length] ? {
-                name: files.value[organizer.value.council.length]!.name,
-                content: await convert(files.value[organizer.value.council.length]!),
-                size: files.value[organizer.value.council.length]!.size.toString(),
-                type: files.value[organizer.value.council.length]!.type,
-                lastModified: files.value[organizer.value.council.length]!.lastModified.toString(),
-            } : organizer.value.advisor.image
-        },
-    }
-    try {
+        });
+
         const response = await $api<IOrganizerResponse>("/api/organizer", {
             method: "PUT",
             query: {
-                period: `${new Date(organizer.value.period.start).getFullYear()}-${new Date(organizer.value.period.end).getFullYear()}`,
+                period: `${new Date(props.org.period.start).getFullYear()}-${new Date(props.org.period.end).getFullYear()}`,
             },
-            body: body,
-            headers: {
-                "Content-Type": "application/json"
-            }
+            body: formData,
         });
         if (response.statusCode !== 200) {
             toast.add({ title: $ts('failed'), color: 'error', description: $ts('edit_organizer_failed') });
@@ -259,7 +273,7 @@ onMounted(() => {
             <div class="my-4">
                 <label for="council" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('council')
-                }}</label>
+                    }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
                     <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
                         <UFormField class="col-span-12" :label="$ts('name')" required>
@@ -281,7 +295,7 @@ onMounted(() => {
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('advisor')
-                    }}</label>
+                }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="advisor">
                     <UFormField class="col-span-12" :label="$ts('name')" required>
                         <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
@@ -344,6 +358,20 @@ onMounted(() => {
                                     </template>
                                 </USelectMenu>
                             </UFormField>
+                            <UFormField class="col-span-12" :label="$ts('staff')">
+                                <USelectMenu :items="members" :loading="status === 'pending'"
+                                    :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                    :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                    v-model="organizer.dailyManagement[i]!.staff as number[]" multiple value-key="value"
+                                    class="w-full">
+                                    <template #item-label="{ item }">
+                                        {{ item.label }}
+                                        <span class="text-(--ui-text-muted)">
+                                            {{ item.email }}
+                                        </span>
+                                    </template>
+                                </USelectMenu>
+                            </UFormField>
                         </div>
                     </UCard>
                 </template>
@@ -378,6 +406,22 @@ onMounted(() => {
                                             :filter-fields="['label', 'email']" icon="i-lucide-user"
                                             :placeholder="$ts('search')" v-model:search-term="searchMember"
                                             v-model="organizer.department[index]!.members as number[]" multiple
+                                            value-key="value" class="w-full">
+
+                                            <template #item-label="{ item }">
+                                                {{ item.label }}
+
+                                                <span class="text-(--ui-text-muted)">
+                                                    {{ item.email }}
+                                                </span>
+                                            </template>
+                                        </USelectMenu>
+                                    </UFormField>
+                                    <UFormField class="col-span-12" :label="$ts('staff')">
+                                        <USelectMenu :items="members" :loading="status === 'pending'"
+                                            :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                            :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                            v-model="organizer.department[index]!.staff as number[]" multiple
                                             value-key="value" class="w-full">
 
                                             <template #item-label="{ item }">

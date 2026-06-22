@@ -158,6 +158,30 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
               }
             },
           },
+          {
+            path: "organizersDailyManagementStaff",
+            model: OrganizerModel,
+            transform: (doc: IOrganizer, id: any) => {
+              if (doc) {
+                return {
+                  role: "Staff Daily Management",
+                  period: doc.period,
+                };
+              }
+            },
+          },
+          {
+            path: "organizersDepartmentStaff",
+            model: OrganizerModel,
+            transform: (doc: IOrganizer, id: any) => {
+              if (doc) {
+                return {
+                  role: "Staff Department",
+                  period: doc.period,
+                };
+              }
+            },
+          },
         ],
       },
     },

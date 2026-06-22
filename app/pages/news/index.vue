@@ -206,16 +206,6 @@
 <script setup lang="ts">
 import type { ICategory, IMember, INews } from "~~/types";
 import type { ICategoriesResponse, INewsResponse, IResponse, ITagsResponse } from "~~/types/IResponse";
-definePageMeta({
-    layout: 'client',
-    auth: false,
-});
-useHead({
-    title: () => $ts('news'),
-    meta: [
-        { name: 'description', content: 'News' },
-    ],
-});
 
 
 const { width } = useWindowSize()
@@ -349,4 +339,14 @@ const links = computed(() => [{
     label: $ts('news'),
     icon: 'i-heroicons-clipboard-document-list',
 }]);
+definePageMeta({
+    layout: 'client',
+    auth: false,
+});
+useHead({
+    title: () => $ts('news'),
+    meta: [
+        { name: 'description', content: 'News' },
+    ],
+});
 </script>

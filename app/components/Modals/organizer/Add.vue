@@ -20,7 +20,7 @@ const config = useRuntimeConfig();
 
 const { data } = await useAsyncData<IConfigResponse>(() => $fetch<IConfigResponse>("/api/config"));
 const searchMember = ref('');
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member",
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public",
     {
         query: { search: searchMember.value }
     }), {
@@ -52,6 +52,7 @@ const dailyManagements = computed(() => {
         return {
             position: management,
             member: 0,
+            staff: [] as number[],
         }
     })
 });
@@ -63,6 +64,7 @@ const departements = computed(() => {
             name: department,
             coordinator: 0,
             members: [],
+            staff: [] as number[],
         }
     })
 });
@@ -124,30 +126,50 @@ const filesToCropped = ref<{ blob: string, name: string }[]>([{ blob: '', name: 
 const loadingCompress = ref<boolean>(false);
 const openModals = ref<boolean[]>([false, false, false]);
 const isMobile = computed(() => width.value < 768);
-const onChangeImages = async (i: number, file?: File | null) => {
+const onChangeImages = async (i: number, file?: File | FileList | File[] | null) => {
     loadingCompress.value = true;
-    if (!file) return;
+    if (!file) {
+        loadingCompress.value = false;
+        return;
+    }
+
+    let actualFile: File;
+    if (file instanceof FileList || Array.isArray(file)) {
+        if (file.length === 0) {
+            loadingCompress.value = false;
+            return;
+        }
+        actualFile = file[0] as File;
+    } else {
+        actualFile = file as File;
+    }
+
     const options = {
         maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
         fileType: 'image/webp'
     }
-    const compressedFile = await imageCompression(file, options);
-    const blob = URL.createObjectURL(compressedFile);
-    CropImageModal.open({
-        img: blob,
-        title: file.name,
-        stencil: {
-            movable: true,
-            resizable: true,
-            aspectRatio: 1 / 1,
-        },
-        onCropped: (f: File) => {
-            onCropped(f, i);
-            CropImageModal.close();
-        },
-    });
+    try {
+        const compressedFile = await imageCompression(actualFile, options);
+        const blob = URL.createObjectURL(compressedFile);
+        CropImageModal.open({
+            img: blob,
+            title: actualFile.name,
+            stencil: {
+                movable: true,
+                resizable: true,
+                aspectRatio: 1 / 1,
+            },
+            onCropped: (f: File) => {
+                onCropped(f, i);
+                CropImageModal.close();
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        toast.add({ title: "Failed to compress image" });
+    }
     loadingCompress.value = false;
 }
 
@@ -230,7 +252,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
             <div class="my-4">
                 <label for="council" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('council')
-                    }}</label>
+                }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
                     <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
                         <UFormField class="col-span-12" :label="$ts('name')" required>
@@ -252,7 +274,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('advisor')
-                }}</label>
+                    }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="advisor">
                     <UFormField class="col-span-12" :label="$ts('name')" required>
                         <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
@@ -315,6 +337,20 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                                     </template>
                                 </USelectMenu>
                             </UFormField>
+                            <UFormField class="col-span-12" :label="$ts('staff')">
+                                <USelectMenu :items="members" :loading="status === 'pending'"
+                                    :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                    :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                    v-model="organizer.dailyManagement[i]!.staff as number[]" multiple value-key="value"
+                                    class="w-full">
+                                    <template #item-label="{ item }">
+                                        {{ item.label }}
+                                        <span class="text-(--ui-text-muted)">
+                                            {{ item.email }}
+                                        </span>
+                                    </template>
+                                </USelectMenu>
+                            </UFormField>
                         </div>
                     </UCard>
                 </template>
@@ -349,6 +385,22 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                                             :filter-fields="['label', 'email']" icon="i-lucide-user"
                                             :placeholder="$ts('search')" v-model:search-term="searchMember"
                                             v-model="organizer.department[index]!.members as number[]" multiple
+                                            value-key="value" class="w-full">
+
+                                            <template #item-label="{ item }">
+                                                {{ item.label }}
+
+                                                <span class="text-(--ui-text-muted)">
+                                                    {{ item.email }}
+                                                </span>
+                                            </template>
+                                        </USelectMenu>
+                                    </UFormField>
+                                    <UFormField class="col-span-12" :label="$ts('staff')">
+                                        <USelectMenu :items="members" :loading="status === 'pending'"
+                                            :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                            :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                            v-model="organizer.department[index]!.staff as number[]" multiple
                                             value-key="value" class="w-full">
 
                                             <template #item-label="{ item }">

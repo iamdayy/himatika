@@ -7,20 +7,6 @@ import { Calendar as VCalendar } from 'v-calendar';
 import 'v-calendar/dist/style.css';
 import type { IAgenda, ICategory } from "~~/types";
 import type { IAgendaResponse, IResponse } from "~~/types/IResponse";
-/**
- * Define page metadata
- */
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-})
-
-/**
- * Set page title
- */
-useHead({
-    title: () => $ts('dashboard')
-});
 
 /**
  * Initialize composables
@@ -308,6 +294,21 @@ onMounted(() => {
 const selectDate = (date: Date) => {
     pickDate.value = date;
 }
+/**
+ * Define page metadata
+ */
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+})
+
+/**
+ * Set page title
+ */
+useHead({
+    title: () => $ts('agendas')
+});
+
 </script>
 <template>
     <div class="items-center justify-center mb-24">

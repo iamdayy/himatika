@@ -10,20 +10,6 @@ const UBadge = resolveComponent('UBadge');
 const UAvatar = resolveComponent('UAvatar');
 const UIcon = resolveComponent('UIcon');
 
-/**
- * Page metadata configuration
- */
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
-
-/**
- * Set page title
- */
-useHead({
-    title: () => $ts('messages')
-});
 
 type responsive = {
     [key: string]: 'xs' | 'md' | 'lg' | 'sm';
@@ -343,6 +329,21 @@ const links = computed(() => [{
     label: $ts('messages'),
     icon: 'i-heroicons-inbox',
 }]);
+
+/**
+ * Page metadata configuration
+ */
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+
+/**
+ * Set page title
+ */
+useHead({
+    title: () => $ts('messages')
+});
 </script>
 
 <template>
@@ -475,8 +476,8 @@ const links = computed(() => [{
                             <div>
                                 <h4 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">
                                     {{ `${selectedMessage.name?.first || ''} ${selectedMessage.name?.last || ''}`.trim()
-                                    ||
-                                    'Anonymous' }}
+                                        ||
+                                        'Anonymous' }}
                                 </h4>
                                 <div class="flex flex-col gap-1.5 mt-2">
                                     <a :href="`mailto:${selectedMessage.email}`"
@@ -516,7 +517,7 @@ const links = computed(() => [{
                             </h5>
                             <div class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed text-base">
                                 {{
-                                selectedMessage.message }}</div>
+                                    selectedMessage.message }}</div>
                         </div>
                     </div>
 

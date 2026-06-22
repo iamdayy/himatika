@@ -13,8 +13,10 @@ export default defineCachedEventHandler(
         const id = await getIdByNim(query.NIM as number);
         const organizer = await OrganizerModel.findOne().or([
           { "dailyManagement.member": id },
+          { "dailyManagement.staff": id },
           { "department.coordinator": id },
           { "department.members.member": id },
+          { "department.staff": id },
         ]);
         return {
           statusCode: 200,

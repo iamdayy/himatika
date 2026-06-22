@@ -4,15 +4,7 @@ import type { TabsItem } from "@nuxt/ui";
 import type { IMember } from "~~/types";
 import type { IOrganizerResponse } from "~~/types/IResponse";
 
-// Define page metadata for layout and authentication middleware
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth',
-});
 
-useHead({
-    title: () => $ts('organizer'),
-});
 const {
     data: organizers,
     refresh: refreshOrganizers,
@@ -182,6 +174,15 @@ const links = computed(() => [{
     label: $ts('organizer'),
     icon: 'i-heroicons-user-group',
 }]);
+// Define page metadata for layout and authentication middleware
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth',
+});
+
+useHead({
+    title: () => $ts('organizer'),
+});
 </script>
 <template>
     <div class="items-center justify-center mb-24">
@@ -291,6 +292,17 @@ const links = computed(() => [{
                             <ProfileCard v-for="dailyManager in organizer?.dailyManagement"
                                 :member="(dailyManager.member as IMember)" :subtitle="dailyManager.position" />
                         </div>
+                        <div v-for="dailyManager in organizer?.dailyManagement" :key="dailyManager.position">
+                            <div v-if="dailyManager.staff && dailyManager.staff.length > 0" class="mt-4">
+                                <h3 class="mb-2 text-lg font-semibold text-center text-gray-600 dark:text-gray-300">
+                                    {{ $ts('staff') }} - {{ dailyManager.position }}
+                                </h3>
+                                <div class="grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-3">
+                                    <ProfileCard v-for="staffMember in dailyManager.staff"
+                                        :member="(staffMember as IMember)" :subtitle="$ts('staff')" />
+                                </div>
+                            </div>
+                        </div>
                     </template>
                     <template #departments="{ item }">
                         <UTabs :items="departementsTabs">
@@ -301,6 +313,16 @@ const links = computed(() => [{
                                 <div class="grid w-full grid-cols-1 gap-4 py-3 mt-8 md:grid-cols-3">
                                     <ProfileCard v-for="member in organizer?.department[index]!.members"
                                         :member="(member as IMember)" subtitle="Member" />
+                                </div>
+                                <div v-if="organizer?.department[index]!.staff && organizer?.department[index]!.staff.length > 0"
+                                    class="mt-4">
+                                    <h3 class="mb-2 text-lg font-semibold text-center text-gray-600 dark:text-gray-300">
+                                        {{ $ts('staff') }}
+                                    </h3>
+                                    <div class="grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-3">
+                                        <ProfileCard v-for="staffMember in organizer?.department[index]!.staff"
+                                            :member="(staffMember as IMember)" :subtitle="$ts('staff')" />
+                                    </div>
                                 </div>
                             </template>
                         </UTabs>

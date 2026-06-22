@@ -100,14 +100,14 @@ export default defineEventHandler(async (event) => {
         advisor: { name: "Dosen Pembina", image: "https://api.dicebear.com/9.x/initials/svg?seed=DP", position: "Pembina" },
         considerationBoard: [membersList[6]._id, membersList[7]._id], // 2 DK
         dailyManagement: [
-          { member: admin._id, position: "Ketua Umum" },
-          { member: membersList[8]._id, position: "Wakil Ketua" },
-          { member: membersList[9]._id, position: "Sekretaris" }
+          { member: admin._id, position: "Ketua Umum", staff: [] },
+          { member: membersList[8]._id, position: "Wakil Ketua", staff: [] },
+          { member: membersList[9]._id, position: "Sekretaris", staff: [] }
         ],
         department: [
-          { name: "Pendidikan", coordinator: membersList[10]._id, members: [membersList[11]._id, membersList[12]._id] },
-          { name: "Kominfo", coordinator: membersList[13]._id, members: [membersList[14]._id, membersList[15]._id] },
-          { name: "Kewirausahaan", coordinator: membersList[16]._id, members: [membersList[17]._id, membersList[18]._id] },
+          { name: "Pendidikan", coordinator: membersList[10]._id, members: [membersList[11]._id, membersList[12]._id], staff: [] },
+          { name: "Kominfo", coordinator: membersList[13]._id, members: [membersList[14]._id, membersList[15]._id], staff: [] },
+          { name: "Kewirausahaan", coordinator: membersList[16]._id, members: [membersList[17]._id, membersList[18]._id], staff: [] },
         ]
       });
       await organizer.save({ session });

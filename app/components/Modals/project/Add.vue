@@ -130,14 +130,24 @@ const addNewCategory = async (category: string) => {
     })
 }
 
-const handleCropImage = (fileFromInput?: File | null) => {
+const handleCropImage = (fileFromInput?: File | FileList | File[] | null) => {
     if (!fileFromInput) return;
+
+    let actualFile: File;
+    if (fileFromInput instanceof FileList || Array.isArray(fileFromInput)) {
+        if (fileFromInput.length === 0) return;
+        actualFile = fileFromInput[0] as File;
+    } else {
+        actualFile = fileFromInput as File;
+    }
+
     CropImageModal.open({
-        img: URL.createObjectURL(fileFromInput),
-        title: fileFromInput.name,
+        img: URL.createObjectURL(actualFile),
+        title: actualFile.name,
         stencil: {
             movable: true,
             resizable: true,
+            aspectRatio: 16 / 9,
         },
         onCropped: (f: File) => {
             fileCropped.value = f;
@@ -225,7 +235,7 @@ const inputSize = computed(() => {
                         <UFormField class="space-y-4 col-span-full" :label="$ts('progress')">
                             <USlider v-model="stateProject.progress" :min="0" :max="100" :step="5" />
                             <p class="text-sm text-gray-500 dark:text-gray-400 text-end">{{ stateProject.progress
-                                }}%
+                            }}%
                             </p>
                         </UFormField>
                     </div>

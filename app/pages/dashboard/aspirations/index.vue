@@ -5,31 +5,7 @@ import type { IAspiration, IDoc, IMember, IPhoto, IVideo } from '~~/types';
 import type { IAspirationResponse } from '~~/types/IResponse';
 
 const UDropdownMenu = resolveComponent('UDropdownMenu');
-/**
- * Page metadata configuration
- */
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
-const config = useRuntimeConfig();
-/**
- * Set page title
- */
-useHead({
-    title: () => $ts('aspiration'),
-});
 
-useSeoMeta({
-    title: 'Aspirations',
-    description: 'View and manage aspirations',
-    keywords: 'aspirations, manage, view',
-    ogTitle: 'Aspirations',
-    ogDescription: 'View and manage aspirations',
-    ogType: 'website',
-    ogImage: '/img/logo.png',
-    ogUrl: `${config.public.public_uri}/aspirations`,
-})
 
 type responsive = {
     [key: string]: 'xs' | 'md';
@@ -406,6 +382,31 @@ const links = computed(() => [{
     label: $ts('aspiration'),
     icon: 'i-heroicons-clipboard-document-list',
 }]);
+/**
+ * Page metadata configuration
+ */
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+const config = useRuntimeConfig();
+/**
+ * Set page title
+ */
+useHead({
+    title: () => $ts('aspiration'),
+});
+
+useSeoMeta({
+    title: 'Aspirations',
+    description: 'View and manage aspirations',
+    keywords: 'aspirations, manage, view',
+    ogTitle: 'Aspirations',
+    ogDescription: 'View and manage aspirations',
+    ogType: 'website',
+    ogImage: '/img/logo.png',
+    ogUrl: `${config.public.public_uri}/aspirations`,
+})
 </script>
 <template>
     <div class="items-center justify-center mb-24">
@@ -462,7 +463,7 @@ const links = computed(() => [{
                         <div class="flex flex-col items-center gap-2">
                             <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">{{
                                 $ts('show_deleted')
-                                }}</label>
+                            }}</label>
                             <USwitch v-model="deleted" id="deleted" size="xs" />
                         </div>
                         <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"

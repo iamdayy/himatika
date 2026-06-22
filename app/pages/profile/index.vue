@@ -4,16 +4,6 @@ import type { AccordionItem, TabsItem } from "@nuxt/ui";
 import imageCompression from "browser-image-compression";
 import type { DriveStep } from "driver.js";
 import { type IMeResponse } from "~~/types/IResponse";
-// Define page metadata
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
-
-// Set page title
-useHead({
-    title: () => $ts('my_profile')
-});
 
 const { $ts } = useI18n();
 // Fetch user data and refresh function
@@ -364,6 +354,18 @@ const breadcumbs = computed(() => [
     { label: $ts('dashboard'), icon: 'i-heroicons-home', to: '/dashboard' },
     { label: $ts('profile'), icon: 'i-heroicons-user' }
 ]);
+
+// Define page metadata
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+
+// Set page title
+useHead({
+    title: () => $ts('my_profile')
+});
+
 </script>
 <template>
     <div class="items-center justify-center mb-2">
@@ -440,7 +442,7 @@ const breadcumbs = computed(() => [
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">{{ $ts('citizenship')
-                                        }}</dt>
+                                    }}</dt>
                                     <UInput v-model="member.citizen" v-if="editMode" />
                                     <dd v-else class="text-lg font-semibold">{{ member.citizen }}</dd>
                                 </div>
@@ -584,7 +586,7 @@ const breadcumbs = computed(() => [
                                                     }}</span>
                                                 <UBadge color="secondary" variant="subtle">{{
                                                     member.point[index]!.point
-                                                }} pts</UBadge>
+                                                    }} pts</UBadge>
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-300">
                                                 {{ formatDate(member.point[index]!.range.start) }} - {{
@@ -597,7 +599,7 @@ const breadcumbs = computed(() => [
                                                         (member.point[index]!.activities?.agendas?.participants || 0) }}
                                                     </div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
-                                                    }}
+                                                        }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -605,9 +607,9 @@ const breadcumbs = computed(() => [
                                                         getProjectsByRange(member.point[index]!.range)?.length
                                                         ||
                                                         0
-                                                        }}</div>
+                                                    }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('project')
-                                                    }}
+                                                        }}
                                                     </div>
                                                 </div>
                                                 <div class="text-center">
@@ -616,7 +618,7 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('aspiration')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
@@ -624,7 +626,7 @@ const breadcumbs = computed(() => [
                                                         0 }}</div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{
                                                         $ts('achievement')
-                                                    }}</div>
+                                                        }}</div>
                                                 </div>
                                             </div>
                                         </template>
@@ -669,11 +671,11 @@ const breadcumbs = computed(() => [
                                                                         <UBadge
                                                                             :color="committee.visiting ? 'success' : 'error'">
                                                                             {{ committee.visiting ? 'Telah Hadir' :
-                                                                            'Belum Hadir' }}
+                                                                                'Belum Hadir' }}
                                                                         </UBadge>
                                                                         <UBadge color="neutral" variant="subtle">{{
                                                                             committee.agendaId?.configuration?.committee?.point
-                                                                            }} Pts
+                                                                        }} Pts
                                                                         </UBadge>
                                                                     </div>
                                                                 </div>
@@ -699,11 +701,11 @@ const breadcumbs = computed(() => [
                                                                         <UBadge
                                                                             :color="participant.visiting ? 'success' : 'error'">
                                                                             {{ participant.visiting ? 'Telah Hadir' :
-                                                                            'Belum Hadir' }}
+                                                                                'Belum Hadir' }}
                                                                         </UBadge>
                                                                         <UBadge color="neutral" variant="subtle">{{
                                                                             participant.agendaId?.configuration?.participant?.point
-                                                                            }}
+                                                                        }}
                                                                             Pts
                                                                         </UBadge>
                                                                     </div>
@@ -726,7 +728,7 @@ const breadcumbs = computed(() => [
                                                                 getProjectsByRange(member.point[index]!.range)?.length
                                                                 ||
                                                                 0
-                                                                }} projects</UBadge>
+                                                            }} projects</UBadge>
                                                         </div>
                                                     </template>
 
@@ -740,7 +742,7 @@ const breadcumbs = computed(() => [
                                                                     <p class="font-medium">{{ project.title }}</p>
                                                                     <p class="text-sm text-gray-600">{{
                                                                         project.description
-                                                                        }}</p>
+                                                                    }}</p>
                                                                     <div class="flex items-center gap-2 mt-2">
                                                                         <div
                                                                             class="w-full bg-gray-200 rounded-full h-2">
@@ -766,7 +768,7 @@ const breadcumbs = computed(() => [
                                                     <template #header>
                                                         <div class="flex items-center justify-between">
                                                             <h3 class="text-lg font-semibold">{{ $ts('aspiration')
-                                                            }}
+                                                                }}
                                                             </h3>
                                                             <UBadge variant="subtle">{{
                                                                 getAspirationsByRange(member.point[index]!.range)?.length

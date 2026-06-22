@@ -20,6 +20,15 @@ const DailyManagementSchema = new Schema<IDailyManagementSchema>({
       select: "NIM avatar fullName email class semester createdAt",
     },
   },
+  staff: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+      autopopulate: {
+        select: "NIM avatar fullName email class semester createdAt",
+      },
+    },
+  ],
 });
 
 const DepartmentSchema = new Schema<IDepartmentSchema>({
@@ -43,6 +52,15 @@ const DepartmentSchema = new Schema<IDepartmentSchema>({
       required: true,
       autopopulate: {
         // model: MemberModel,
+        select: "NIM avatar fullName email class semester createdAt",
+      },
+    },
+  ],
+  staff: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+      autopopulate: {
         select: "NIM avatar fullName email class semester createdAt",
       },
     },

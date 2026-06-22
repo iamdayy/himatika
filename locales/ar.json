@@ -97,5 +97,6 @@
     "video_processing_hint": "يتم ضغط الفيديو. ستتحدث هذه الصفحة تلقائيًا.",
     "video_processing_failed": "فشلت معالجة الفيديو",
     "processing": "قيد المعالجة",
-    "no_videos_yet": "لم يتم رفع أي فيديو بعد."
+    "no_videos_yet": "لم يتم رفع أي فيديو بعد.",
+    "staff": "طاقم العمل"
   }

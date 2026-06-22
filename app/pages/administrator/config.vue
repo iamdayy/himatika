@@ -4,14 +4,6 @@ import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICarousel, IConfig, IPhoto } from "~~/types";
 import type { IConfigResponse, IEncryptionsResponse, IResponse } from '~~/types/IResponse';
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
-
-useHead({
-    title: () => $ts('configuration')
-});
 const searchQuery = ref('');
 const { $ts } = useI18n();
 const { token } = useAuth();
@@ -325,6 +317,14 @@ const links = computed(() => [{
 //     }
 // }, { deep: true });
 
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+
+useHead({
+    title: () => $ts('configuration')
+});
 </script>
 <template>
     <div class="items-center justify-center mb-24">

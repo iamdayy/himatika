@@ -124,6 +124,8 @@ export interface IMember {
   organizersDailyManagement?: IOrganizer[];
   organizersDepartmentCoordinator?: IOrganizer[];
   organizersDepartmentMembers?: IOrganizer[];
+  organizersDailyManagementStaff?: IOrganizer[];
+  organizersDepartmentStaff?: IOrganizer[];
   participantsData?: any[];
   committeesData?: any[];
 }
@@ -177,12 +179,14 @@ export interface IPeriod {
 export interface IDailyManagement {
   position: string;
   member: Types.ObjectId | IMember | number;
+  staff: Types.ObjectId[] | IMember[] | number[];
 }
 
 export interface IDepartment {
   name: string;
   coordinator: Types.ObjectId | IMember | number;
   members: Types.ObjectId[] | IMember[] | number[];
+  staff: Types.ObjectId[] | IMember[] | number[];
 }
 
 export interface IOrganizer {

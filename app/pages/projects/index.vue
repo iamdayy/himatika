@@ -3,19 +3,6 @@ import { ModalsProjectAdd } from '#components';
 import type { ICategory, IMember } from '~~/types';
 import type { ICategoriesResponse, IProjectsResponse, ITagsResponse } from '~~/types/IResponse';
 
-definePageMeta({
-    layout: 'client',
-    auth: false
-});
-useHead({
-    title: () => $ts('project'),
-    meta: [
-        {
-            name: 'list',
-            content: 'Projects'
-        }
-    ]
-})
 const overlay = useOverlay();
 const AddModalComp = overlay.create(ModalsProjectAdd)
 const { status } = useAuth();
@@ -135,6 +122,21 @@ const links = computed(() => [{
     label: $ts('project'),
     icon: 'i-heroicons-code-bracket',
 }]);
+
+
+definePageMeta({
+    layout: 'client',
+    auth: false
+});
+useHead({
+    title: () => $ts('project'),
+    meta: [
+        {
+            name: 'list',
+            content: 'Projects'
+        }
+    ]
+})
 </script>
 <template>
     <div class="items-center justify-center mb-24">
