@@ -33,9 +33,6 @@ setTimeout(() => {
     <div class="light-container" @mousemove="isActive = true" @mouseleave="isActive = false">
       <!-- Light effect -->
       <ClientOnly>
-        <div v-if="!isDarkMode" class="light-effect"
-          :style="`--left-position:${position.left};--top-position:${position.top};--opacity:${position.opacity}`">
-        </div>
       </ClientOnly>
       <!-- Logo -->
       <CoreSplashScreen :loading="isLoading" />
