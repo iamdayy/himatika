@@ -2,7 +2,9 @@
 import 'driver.js/dist/driver.css';
 const { x, y } = useMouse();
 const { width } = useWindowSize();
+const colorMode = useColorMode();
 const isMobile = computed(() => width.value < 768);
+const isDarkMode = computed(() => colorMode.value === 'dark');
 const isActive = ref(false);
 const isLoading = ref(true);
 const
@@ -31,7 +33,7 @@ setTimeout(() => {
     <div class="light-container" @mousemove="isActive = true" @mouseleave="isActive = false">
       <!-- Light effect -->
       <ClientOnly>
-        <div class="light-effect"
+        <div v-if="!isDarkMode" class="light-effect"
           :style="`--left-position:${position.left};--top-position:${position.top};--opacity:${position.opacity}`">
         </div>
       </ClientOnly>
