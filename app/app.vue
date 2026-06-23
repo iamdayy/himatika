@@ -58,9 +58,13 @@ setTimeout(() => {
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .light-effect {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   transition: transform 1s ease-in, opacity 0.5s ease;
 }
 
@@ -79,7 +83,12 @@ setTimeout(() => {
   left: var(--left-position);
   top: var(--top-position);
   opacity: var(--opacity);
-  /* mix-blend-mode: screen; */
+  mix-blend-mode: screen;
+}
+
+.dark .light-effect,
+.dark .light-effect::before {
+  display: none !important;
 }
 
 .content {
