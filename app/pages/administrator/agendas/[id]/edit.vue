@@ -79,7 +79,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(`ag
     default: () => []
 });
 const memberSearchTerm = ref('');
-const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData(`agenda-${id}-members`, () => $api<IMemberResponse>("/api/member", {
+const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData(`agenda-${id}-members`, () => $api<IMemberResponse>("/api/member/public", {
     method: 'GET',
     params: {
         search: memberSearchTerm.value,

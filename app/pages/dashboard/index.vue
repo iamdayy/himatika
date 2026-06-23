@@ -339,7 +339,7 @@ const color = computed(() => {
                                     
                                     <!-- User Info -->
                                     <NuxtLink :to="`/profile/${userPoint.nim}`" class="flex items-center gap-3 group">
-                                        <NuxtImg :src="userPoint.avatar ? `${config.public.public_uri}${userPoint.avatar}` : '/img/profile-blank.png'" :alt="userPoint.fullName" class="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full ring-2 ring-white dark:ring-gray-800 shadow-sm group-hover:ring-primary-200 transition-all duration-300" provider="localProvider" loading="lazy" />
+                                        <NuxtImg :src="userPoint.avatar || '/img/profile-blank.png'" :alt="userPoint.fullName" class="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full ring-2 ring-white dark:ring-gray-800 shadow-sm group-hover:ring-primary-200 transition-all duration-300" provider="localProvider" loading="lazy" />
                                         <div class="flex flex-col">
                                             <span class="font-bold text-gray-900 dark:text-white group-hover:text-primary-500 transition-colors text-sm sm:text-base truncate max-w-[120px] sm:max-w-[180px]">{{ userPoint.fullName }}</span>
                                             <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ userPoint.nim }}</span>

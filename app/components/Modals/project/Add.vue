@@ -29,7 +29,7 @@ const { data: categoryOptions, refresh: refreshCategory, pending: pendingCategor
     },
     default: () => undefined
 });
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public", { query: { search: searchMember.value } }), {
     transform: (data) => {
         const members = data.data?.members || [];
         return members.map((member) => ({

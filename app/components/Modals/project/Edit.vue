@@ -32,7 +32,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     },
     default: () => []
 });
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public", { query: { search: searchMember.value } }), {
     transform: (data: IMemberResponse) => {
         const members = data.data?.members || [];
         return members.map((member) => ({
@@ -212,9 +212,9 @@ const inputSize = computed(() => {
                         <UFormField class="col-span-full min-h-36" :label="$ts('image')">
                             <UFileUpload v-model="file" accept="image/*" @update:model-value="handleCropImage">
                                 <template #default="{ open }">
+                                    <div class="flex items-center justify-center h-32">
                                     <NuxtImg v-if="typeof stateProject.image === 'string'" :src="stateProject.image"
                                         :alt="stateProject.title" class="mx-auto" loading="lazy" />
-                                    <div v-else class="flex items-center justify-center h-32">
                                         <UButton @click="open()" icon="i-heroicons-plus" :size="buttonSize"
                                             variant="link" />
                                     </div>
