@@ -20,24 +20,24 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const chairmanText = [
-      "ketua",
-      "wakil ketua",
-      "ketua umum",
-      "chairman",
-      "vice chairman",
-      "ketua himpunan",
-      "wakil ketua himpunan"
-    ];
-    const isChairman = chairmanText.includes(
-      event.context.organizer?.role.toLowerCase() || ""
-    );
-    if (!isChairman) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: "Anda harus menjadi ketua untuk menggunakan endpoint ini",
-      });
-    }
+    // const chairmanText = [
+    //   "ketua",
+    //   "wakil ketua",
+    //   "ketua umum",
+    //   "chairman",
+    //   "vice chairman",
+    //   "ketua himpunan",
+    //   "wakil ketua himpunan"
+    // ];
+    // const isChairman = chairmanText.includes(
+    //   event.context.organizer?.role.toLowerCase() || ""
+    // );
+    // if (!isChairman) {
+    //   throw createError({
+    //     statusCode: 403,
+    //     statusMessage: "Anda harus menjadi ketua untuk menggunakan endpoint ini",
+    //   });
+    // }
     const { period } = getQuery<{ period: string }>(event);
     const [startYear, endYear] = period.split("-").map(Number);
     const organizer = await OrganizerModel.findOne({

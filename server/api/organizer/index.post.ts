@@ -26,25 +26,25 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "You must be member to use this endpoint",
       });
     }
-    const chairmanText = [
-      "ketua",
-      "wakil ketua",
-      "ketua umum",
-      "chairman",
-      "vice chairman",
-      "ketua himpunan",
-      "wakil ketua himpunan"
-    ];
-    const isChairman = chairmanText.includes(
-      org.organizer?.role.toLowerCase() || ""
-    );
+    // const chairmanText = [
+    //   "ketua",
+    //   "wakil ketua",
+    //   "ketua umum",
+    //   "chairman",
+    //   "vice chairman",
+    //   "ketua himpunan",
+    //   "wakil ketua himpunan"
+    // ];
+    // // const isChairman = chairmanText.includes(
+    // //   org.organizer?.role.toLowerCase() || ""
+    // // );
 
-    if (!isChairman) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: "You must be chairman to use this endpoint",
-      });
-    }
+    // // // if (!isChairman) {
+    // // //   throw createError({
+    // // //     statusCode: 403,
+    // // //     statusMessage: "You must be chairman to use this endpoint",
+    // // //   });
+    // // // }
     // const isOneMonthToEndPeriod =
     //   new Date(event.context.organizer.period.end).getTime() -
     //     1000 * 60 * 60 * 24 * 30 <=
