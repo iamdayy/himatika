@@ -94,3 +94,8 @@ body {
   opacity: 0;
   filter: blur(4px); /* Blur diperhalus */
 }
+
+/* Fix for AuthCard animated gradient in dark mode */
+html.dark .card-wrap #img:before {
+  opacity: 0.6;
+}

@@ -73,9 +73,7 @@ defineProps<{
     animation: border-transform 6s linear infinite;
 }
 
-:global(.dark) .card-wrap #img:before {
-    opacity: 0.6;
-}
+
 
 @keyframes border-transform {
 
