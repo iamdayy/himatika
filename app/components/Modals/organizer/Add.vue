@@ -284,7 +284,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                         </UFormField>
                     </div>
                 </div>
-                <UButton label="Tambah Council" class="mt-2" variant="solid" block :size="responsiveUISizes.button"
+                <UButton :label="$ts('add')" class="mt-2" variant="solid" block :size="responsiveUISizes.button"
                     @click="addNewCouncil" />
             </div>
             <div class="my-4">
