@@ -142,7 +142,7 @@ useHead({
 
 
                 <!-- Mobile slideover menu -->
-                <USlideover v-model="isOpen" side="left" close-icon="i-heroicons-chevron-left">
+                <USlideover v-model:open="isOpen" side="left" close-icon="i-heroicons-chevron-left">
                     <!-- Mobile menu button -->
                     <UButton @click="isOpen = !isOpen" icon="i-heroicons-bars-3-center-left" class="block md:hidden"
                         variant="link" color="neutral" />
@@ -161,14 +161,14 @@ useHead({
                 <!-- User menu and theme toggle -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <!-- Language Dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
+                    <UDropdownMenu :items="languages" :modal="false" :popper="{ placement: 'bottom-start' }">
                         <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
                     </UDropdownMenu>
                     <!-- Theme toggle -->
                     <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
                         :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
                         @click="isDarkMode = !isDarkMode" />
-                    <UDropdownMenu :items="items" :content="{ side: 'bottom' }">
+                    <UDropdownMenu :items="items" :modal="false" :content="{ side: 'bottom' }">
                         <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" format="webp" preload
                             alt="Profile" />

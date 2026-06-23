@@ -445,7 +445,7 @@ useHead({
         </UCard>
 
         <!-- Slideover for Message Details -->
-        <USlideover v-model="isSlideoverOpen" prevent-close class="z-50">
+        <USlideover v-model:open="isSlideoverOpen" prevent-close class="z-50">
             <UCard class="flex flex-col flex-1 h-full shadow-2xl ring-0 divide-y-0"
                 :ui="{ body: 'flex-1 overflow-y-auto px-6 py-6', header: 'bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 px-6 py-4', footer: 'bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-800 px-6 py-4' }">
                 <template #header>

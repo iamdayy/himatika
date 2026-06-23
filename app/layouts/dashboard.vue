@@ -174,7 +174,7 @@ const openSlideOver = ref<boolean>(false);
                 <!-- User actions -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <!-- Language dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }">
+                    <UDropdownMenu :items="languages" :modal="false" :popper="{ placement: 'bottom-start' }">
                         <UButton icon="i-heroicons-language" variant="link" color="neutral" />
                     </UDropdownMenu>
                     <!-- Dark mode toggle -->
@@ -184,7 +184,7 @@ const openSlideOver = ref<boolean>(false);
                     </UButton>
 
                     <!-- User dropdown -->
-                    <UDropdownMenu :items="items">
+                    <UDropdownMenu :items="items" :modal="false">
                         <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" loading="lazy" alt="Profile" />
                         <UAvatar v-else icon="i-heroicons-arrow-right-end-on-rectangle" />
