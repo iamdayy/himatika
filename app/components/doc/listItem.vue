@@ -56,7 +56,7 @@ const getFileSize = (doc: string) => {
                     </UBadge>
                 </div>
                 <div class="flex items-center justify-between">
-                    <UDropdownMenu :items="editOptions" :modal="false">
+                    <UDropdownMenu :items="editOptions">
                         <UButton color="neutral" variant="link" icon="i-heroicons-ellipsis-vertical" />
                     </UDropdownMenu>
                 </div>

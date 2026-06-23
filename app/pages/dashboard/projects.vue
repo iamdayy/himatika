@@ -381,7 +381,7 @@ onMounted(() => {
                                         :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
                                 </UAvatarGroup>
                             </div>
-                            <UDropdownMenu id="dropdown" :items="items(project)" :modal="false">
+                            <UDropdownMenu id="dropdown" :items="items(project)">
                                 <UButton icon="i-ion-ellipsis-vertical" variant="ghost" color="neutral" />
                             </UDropdownMenu>
                         </div>

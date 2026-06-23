@@ -628,7 +628,7 @@ const links = computed(() => [{
                                     e?.preventDefault()
                                 }
                             }))
-                            " :content="{ align: 'end' }" :modal="false">
+                            " :content="{ align: 'end' }">
                             <UButton :label="$ts('column')" color="neutral" variant="outline"
                                 trailing-icon="i-lucide-chevron-down" />
                         </UDropdownMenu>

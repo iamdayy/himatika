@@ -423,7 +423,7 @@ useSeoMeta({
                                     {{ $ts('not_published') }}
                                 </span>
                             </div>
-                            <UDropdownMenu :items="items(news)" :modal="false">
+                            <UDropdownMenu :items="items(news)">
                                 <UButton icon="i-ion-ellipsis-vertical" variant="link" color="neutral" />
                             </UDropdownMenu>
                         </div>

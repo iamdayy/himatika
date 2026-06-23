@@ -383,7 +383,7 @@ useHead({
                                     </NuxtLink>
                                 </p>
                             </div>
-                            <UDropdownMenu :items="dropdownOptions" :modal="false">
+                            <UDropdownMenu :items="dropdownOptions">
                                 <UButton icon="i-ion-ellipsis-vertical" variant="link" color="neutral" />
                             </UDropdownMenu>
                         </div>
