@@ -68,6 +68,7 @@ const departements = computed(() => {
 // Initialize organizer with existing data
 const organizer = ref<IOrganizer>({
     ...props.org,
+    advisor: props.org.advisor && !Array.isArray(props.org.advisor) ? props.org.advisor : { position: '', name: '', image: { name: '', content: '', size: '', type: '', lastModified: '' } },
     considerationBoard: props.org.considerationBoard.map(c => (c as IMember).NIM),
     dailyManagement: dailyManagements.value.map((dayly) => {
         return {
@@ -95,13 +96,12 @@ const departementsTabs = computed(() => {
 });
 
 
-const files = ref<File[]>([]);
-const filesToCropped = ref<{ blob: string, name: string }[]>([{ blob: '', name: '' }, { blob: '', name: '' }, { blob: '', name: '' }]);
+const councilFiles = ref<(File | null)[]>([]);
+const advisorFile = ref<File | null>(null);
 const loadingCompress = ref<boolean>(false);
-const openModals = ref<boolean[]>([false, false, false]);
 const isMobile = computed(() => width.value < 768);
 
-const onChangeImages = async (i: number, file?: File | FileList | File[] | null) => {
+const onChangeImages = async (type: 'council' | 'advisor', i: number, file?: File | FileList | File[] | null) => {
     loadingCompress.value = true;
     if (!file) {
         loadingCompress.value = false;
@@ -137,7 +137,7 @@ const onChangeImages = async (i: number, file?: File | FileList | File[] | null)
                 aspectRatio: 1 / 1,
             },
             onCropped: (f: File) => {
-                onCropped(f, i);
+                onCropped(f, type, i);
                 CropImageModal.close();
             },
         });
@@ -147,16 +147,13 @@ const onChangeImages = async (i: number, file?: File | FileList | File[] | null)
     loadingCompress.value = false;
 }
 
-const onCropped = async (f: File, i: number) => {
+const onCropped = async (f: File, type: 'council' | 'advisor', i: number) => {
     try {
-        openModals.value[i] = false;
-        if (files.value[i]) {
-            files.value[i] = f;
+        if (type === 'council') {
+            councilFiles.value[i] = f;
         } else {
-            files.value.push(f);
+            advisorFile.value = f;
         }
-        const blob = URL.createObjectURL(f);
-        filesToCropped.value[i]!.blob = blob;
     } catch (error) {
         toast.add({ title: "Failed to compress image" });
     }
@@ -174,15 +171,15 @@ const editOrganizer = async () => {
         formData.append('organizerData', JSON.stringify(organizerData));
 
         // Append council and advisor images
-        files.value.forEach((file, index) => {
+        councilFiles.value.forEach((file, index) => {
             if (file) {
-                if (index < organizer.value.council.length) {
-                    formData.append(`council-image-${index}`, file, file.name);
-                } else {
-                    formData.append('advisor-image', file, file.name);
-                }
+                formData.append(`council-image-${index}`, file, file.name);
             }
         });
+        
+        if (advisorFile.value) {
+            formData.append(`advisor-image`, advisorFile.value, advisorFile.value.name);
+        }
 
         const response = await $api<IOrganizerResponse>("/api/organizer", {
             method: "PUT",
@@ -200,6 +197,18 @@ const editOrganizer = async () => {
         toast.add({ title: $ts('failed'), color: 'error', description: $ts('edit_organizer_failed') });
     }
 }
+const addNewCouncil = () => {
+    organizer.value.council.push({
+        position: '',
+        name: '',
+        image: { name: '', content: '', size: '', type: '', lastModified: '' },
+    });
+}
+const removeCouncil = (i: number) => {
+    organizer.value.council.splice(i, 1);
+    councilFiles.value.splice(i, 1);
+}
+
 const addNewConsideration = () => {
     (organizer.value.considerationBoard as number[]).push(0);
 }
@@ -276,22 +285,25 @@ onMounted(() => {
                     $ts('council')
                     }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
-                    <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
-                        <UFormField class="col-span-12" :label="$ts('name')" required>
+                    <div class="grid grid-cols-12 col-span-12 gap-2 border border-gray-200 dark:border-gray-800 p-4 rounded-lg relative" v-for="(council, i) in organizer.council" :key="i">
+                        <UButton v-if="organizer.council.length > 1" icon="i-lucide-trash-2" color="error" variant="ghost" class="absolute top-2 right-2" @click="removeCouncil(i)" />
+                        <UFormField class="col-span-12 md:col-span-6" :label="$ts('name')" required>
                             <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.name" class="w-full" />
                         </UFormField>
-                        <UFormField class="col-span-12" :label="$ts('position')" required>
+                        <UFormField class="col-span-12 md:col-span-6" :label="$ts('position')" required>
                             <UInput type="text" name="Position" id="Position" placeholder="Rector, etc." required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.position"
                                 class="w-full" />
                         </UFormField>
                         <UFormField class="col-span-12" :label="$ts('image')" required>
-                            <UFileUpload @update:modelValue="v => onChangeImages(i, v)" accept="image/*">
+                            <UFileUpload @update:modelValue="v => onChangeImages('council', i, v)" accept="image/*">
                             </UFileUpload>
                         </UFormField>
                     </div>
                 </div>
+                <UButton label="Tambah Council" class="mt-2" variant="solid" block :size="responsiveUISizes.button"
+                    @click="addNewCouncil" />
             </div>
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
@@ -307,7 +319,7 @@ onMounted(() => {
                             :size="responsiveUISizes.input" v-model="organizer.advisor.position" class="w-full" />
                     </UFormField>
                     <UFormField class="col-span-12" :label="$ts('image')" required>
-                        <UFileUpload @update:modelValue="v => onChangeImages(organizer.council.length, v)"
+                        <UFileUpload @update:modelValue="v => onChangeImages('advisor', 0, v)"
                             accept="image/*">
                         </UFileUpload>
                     </UFormField>
