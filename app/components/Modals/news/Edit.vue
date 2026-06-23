@@ -43,7 +43,8 @@ const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api
             }
         }))
     },
-    default: () => []
+    default: () => [],
+    watch: [searchMember]
 });
 const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() => $api<ICategoriesResponse>('/api/category'), {
     transform: (data) => {

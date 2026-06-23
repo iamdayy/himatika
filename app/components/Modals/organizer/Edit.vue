@@ -32,7 +32,8 @@ const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api
             }
         }))
     },
-    default: () => []
+    default: () => [],
+    watch: [searchMember]
 });
 const { width } = useWindowSize();
 const props = defineProps({

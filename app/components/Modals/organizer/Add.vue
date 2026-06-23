@@ -36,7 +36,8 @@ const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api
             }
         }))
     },
-    default: () => []
+    default: () => [],
+    watch: [searchMember]
 });
 const overlay = useOverlay();
 const CropImageModal = overlay.create(ModalsImageCrop);
