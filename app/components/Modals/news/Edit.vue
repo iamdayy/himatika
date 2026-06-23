@@ -30,7 +30,7 @@ const loading = ref(false);
 
 const searchMember = ref('');
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/news/tags'));
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public", { query: { search: searchMember.value } }), {
     transform: (data) => {
         const members = data.data?.members || [];
         return members.map((member) => ({
