@@ -2,6 +2,8 @@ import { AgendaModel } from "~~/server/models/AgendaModel";
 import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { IPayReq } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
+import { himatikaPdfWorker } from "~~/server/utils/himatikaPdfWorker";
+import { sendWhatsappFile } from "~~/server/utils/whatsapp";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
@@ -79,6 +81,40 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         amount: participant.payment.amount || 0,
       },
     }).catch((e) => console.error("Failed to publish manual pay-success", e));
+
+    // E-Ticket via WhatsApp
+    const customerPhone = participant.member ? (participant.member as any).phone : (participant.guest as any)?.phone || "";
+    if (customerPhone) {
+      // Run in background
+      (async () => {
+        try {
+          const pdfBlob = await himatikaPdfWorker.generateTicket({
+            agenda: agenda as any,
+            participant: participant as any,
+            amount: participant.payment?.amount || 0,
+            role: "participant"
+          });
+          const arrayBuffer = await pdfBlob.arrayBuffer();
+          const base64String = Buffer.from(arrayBuffer).toString('base64');
+          const dataUri = `data:application/pdf;base64,${base64String}`;
+          
+          let memberName = customerName;
+          const filename = `Tiket-participant-${agenda.title.substring(0, 10)}-${memberName.substring(0, 10)}.pdf`.replace(/\s/g, '_');
+          
+          const caption = `*[HIMATIKA - E-Ticket]*\n\nHalo!\nPembayaran Anda untuk acara *${agenda.title}* telah berhasil diverifikasi. 🎉\n\nBerikut kami lampirkan E-Ticket Anda (di atas pesan ini). Silakan tunjukkan dokumen E-Ticket ini saat registrasi ulang di lokasi acara.\n\nTerima kasih atas partisipasi Anda dan sampai jumpa di acara!`;
+
+          await sendWhatsappFile(
+            customerPhone,
+            dataUri,
+            filename,
+            "application/pdf",
+            caption
+          );
+        } catch (err) {
+          console.error('[E-Ticket] Background WAHA send file error:', err);
+        }
+      })();
+    }
 
     return {
       statusCode: 200,

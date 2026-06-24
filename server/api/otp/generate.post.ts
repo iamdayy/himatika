@@ -3,6 +3,7 @@ import { ConfigModel } from "~~/server/models/ConfigModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { OTPModel } from "~~/server/models/OTPModel";
 import Email, { EmailTemplate } from "~~/server/utils/mailTemplate";
+import { sendWhatsappMessage } from "~~/server/utils/whatsapp";
 import { IReqGenerateOTP } from "~~/types/IRequestPost";
 import { IGenerateOTPResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -39,7 +40,7 @@ export default defineEventHandler(
       let linkTo = `${config.public.public_uri}${link}&code=${code}&expiresAt=${expiresAt}`;
       const sender = {
         email: config.resend_from,
-        name: `${configUse.name} App OTP Code`,
+        name: `${configUse?.name} App OTP Code`,
       };
 
       const t = await useTranslationServerMiddleware(event);
@@ -95,6 +96,14 @@ export default defineEventHandler(
           });
         }
       }
+
+      if (member && (member as any).phone) {
+        const waMessage = `*[HIMATIKA - Verifikasi OTP]*\n\nKode OTP Anda adalah: *${code}*\n\n_PENTING: Jangan berikan kode ini kepada siapapun, termasuk pihak yang mengatasnamakan HIMATIKA._\n\nKode ini akan kedaluwarsa dalam 10 menit.`;
+        sendWhatsappMessage((member as any).phone, waMessage).catch((err: any) => {
+          console.error('[OTP] Background WAHA send error:', err);
+        });
+      }
+
       return {
         statusCode: 200,
         statusMessage: "Kode OTP telah dikirim ke email Anda",
@@ -154,8 +163,8 @@ const emailText = (
     contentParagraph2: t(`emails.otp.${typeSlug}.content_p2`),
     contentTitle2: t('emails.otp.help.title'),
     contentListItems: [
-        t('emails.otp.help.content_1'),
-        t('emails.otp.help.content_2')
+      t('emails.otp.help.content_1'),
+      t('emails.otp.help.content_2')
     ],
     ctaTitle: t('emails.otp.help.cta_title'),
     ctaSubtitle: t('emails.otp.help.cta_subtitle'),
@@ -164,19 +173,19 @@ const emailText = (
     footerText: footerText,
     otpCode: code,
   };
-    
+
   // Since all types follow the same structure in our new JSON, we can return directly.
   // Unless there are specific deviations for specific types, but based on previous code they were very similar.
   // The only exception previously was contentListItems being empty for some.
-  
+
   // Let's refine based on previous switch cases if needed, but standardization is better.
   // Previous code had empty list items for 'Change Password' etc.
   // I will keep the help section for all as it is good UX.
-  
+
   if (!newMail) { // check technically redundant now but kept for logic safety if we add logic later
-      // ...
+    // ...
   }
-  
+
   const email = new Email(newMail);
   return email.render();
 };

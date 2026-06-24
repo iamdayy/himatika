@@ -181,6 +181,9 @@ export default defineNuxtConfig({
     },
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    wahaUrl: process.env.WAHA_URL,
+    wahaSession: process.env.WAHA_SESSION || "default",
+    wahaApiKey: process.env.WAHA_API_KEY,
   },
   app: {
     pageTransition: { name: "page", mode: "out-in" },
