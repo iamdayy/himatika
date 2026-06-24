@@ -284,6 +284,8 @@ export default defineNuxtConfig({
       maxRequestSizeInBytes: 10 * 1024 * 1024, // 10MB
     },
     rateLimiter: {
+      tokensPerInterval: 1500,
+      interval: 60000,
       driver: {
         name: "lruCache",
       },
