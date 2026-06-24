@@ -3,18 +3,7 @@ import { ModalsImageCrop, ModalsImageOpen, ModalsProfileActivinessLetter, NuxtIm
 import type { AccordionItem, TabsItem } from "@nuxt/ui";
 import imageCompression from "browser-image-compression";
 import type { DriveStep } from "driver.js";
-import type { IAgenda, IMember } from "~~/types";
 import { type IMeResponse } from "~~/types/IResponse";
-// Define page metadata
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
-
-// Set page title
-useHead({
-    title: "My Profile"
-});
 
 const { $ts } = useI18n();
 // Fetch user data and refresh function
@@ -64,9 +53,10 @@ const isMobile = computed(() => windowSize.width.value < 640);
 const onFileChange = async ($event: Event) => {
     const target = $event.target as HTMLInputElement;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
+        fileType: 'image/webp',
     }
     if (target && target.files) {
         file.value = target.files[0]!;
@@ -364,6 +354,18 @@ const breadcumbs = computed(() => [
     { label: $ts('dashboard'), icon: 'i-heroicons-home', to: '/dashboard' },
     { label: $ts('profile'), icon: 'i-heroicons-user' }
 ]);
+
+// Define page metadata
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+
+// Set page title
+useHead({
+    title: () => $ts('my_profile')
+});
+
 </script>
 <template>
     <div class="items-center justify-center mb-2">
@@ -593,8 +595,9 @@ const breadcumbs = computed(() => [
                                             <div class="grid grid-cols-4 gap-2 mt-2 text-xs">
                                                 <div class="text-center">
                                                     <div class="font-medium">{{
-                                                        member.point[index]!.activities.agendas.committees +
-                                                        member.point[index]!.activities.agendas.participants }}</div>
+                                                        (member.point[index]!.activities?.agendas?.committees || 0) +
+                                                        (member.point[index]!.activities?.agendas?.participants || 0) }}
+                                                    </div>
                                                     <div class="text-gray-500 dark:text-gray-300">{{ $ts('agenda')
                                                         }}
                                                     </div>
@@ -655,7 +658,8 @@ const breadcumbs = computed(() => [
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-green-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ committee.agendaId?.title }}</p>
+                                                                        <p class="font-medium">{{
+                                                                            committee.agendaId?.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
                                                                             {{ committee.agendaId?.at }}</p>
@@ -664,11 +668,14 @@ const breadcumbs = computed(() => [
                                                                         <UBadge color="success" variant="subtle">
                                                                             {{ committee.job }}
                                                                         </UBadge>
-                                                                        <UBadge :color="committee.visiting ? 'success' : 'error'">
-                                                                            {{ committee.visiting ? 'Telah Hadir' : 'Belum Hadir' }}
+                                                                        <UBadge
+                                                                            :color="committee.visiting ? 'success' : 'error'">
+                                                                            {{ committee.visiting ? 'Telah Hadir' :
+                                                                                'Belum Hadir' }}
                                                                         </UBadge>
                                                                         <UBadge color="neutral" variant="subtle">{{
-                                                                            committee.agendaId?.configuration?.committee?.point }} Pts
+                                                                            committee.agendaId?.configuration?.committee?.point
+                                                                        }} Pts
                                                                         </UBadge>
                                                                     </div>
                                                                 </div>
@@ -684,17 +691,21 @@ const breadcumbs = computed(() => [
                                                                     :key="i"
                                                                     class="flex items-center justify-between p-3 bg-blue-50/20 rounded-lg">
                                                                     <div>
-                                                                        <p class="font-medium">{{ participant.agendaId?.title }}</p>
+                                                                        <p class="font-medium">{{
+                                                                            participant.agendaId?.title }}</p>
                                                                         <p
                                                                             class="text-sm text-gray-600 dark:text-gray-300">
                                                                             {{ participant.agendaId?.at }}</p>
                                                                     </div>
                                                                     <div class="flex items-center gap-2">
-                                                                        <UBadge :color="participant.visiting ? 'success' : 'error'">
-                                                                            {{ participant.visiting ? 'Telah Hadir' : 'Belum Hadir' }}
+                                                                        <UBadge
+                                                                            :color="participant.visiting ? 'success' : 'error'">
+                                                                            {{ participant.visiting ? 'Telah Hadir' :
+                                                                                'Belum Hadir' }}
                                                                         </UBadge>
                                                                         <UBadge color="neutral" variant="subtle">{{
-                                                                            participant.agendaId?.configuration?.participant?.point }}
+                                                                            participant.agendaId?.configuration?.participant?.point
+                                                                        }}
                                                                             Pts
                                                                         </UBadge>
                                                                     </div>

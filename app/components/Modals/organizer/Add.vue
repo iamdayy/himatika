@@ -20,7 +20,7 @@ const config = useRuntimeConfig();
 
 const { data } = await useAsyncData<IConfigResponse>(() => $fetch<IConfigResponse>("/api/config"));
 const searchMember = ref('');
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member",
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public",
     {
         query: { search: searchMember.value }
     }), {
@@ -36,7 +36,8 @@ const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api
             }
         }))
     },
-    default: () => []
+    default: () => [],
+    watch: [searchMember]
 });
 const overlay = useOverlay();
 const CropImageModal = overlay.create(ModalsImageCrop);
@@ -52,6 +53,7 @@ const dailyManagements = computed(() => {
         return {
             position: management,
             member: 0,
+            staff: [] as number[],
         }
     })
 });
@@ -63,6 +65,7 @@ const departements = computed(() => {
             name: department,
             coordinator: 0,
             members: [],
+            staff: [] as number[],
         }
     })
 });
@@ -119,48 +122,64 @@ const departementsTabs = computed(() => {
 });
 
 
-const files = ref<File[]>([]);
-const filesToCropped = ref<{ blob: string, name: string }[]>([{ blob: '', name: '' }, { blob: '', name: '' }, { blob: '', name: '' }]);
+const councilFiles = ref<(File | null)[]>([]);
+const advisorFile = ref<File | null>(null);
 const loadingCompress = ref<boolean>(false);
-const openModals = ref<boolean[]>([false, false, false]);
 const isMobile = computed(() => width.value < 768);
-const onChangeImages = async (i: number, file?: File | null) => {
+const onChangeImages = async (type: 'council' | 'advisor', i: number, file?: File | FileList | File[] | null) => {
     loadingCompress.value = true;
-    if (!file) return;
+    if (!file) {
+        loadingCompress.value = false;
+        return;
+    }
+
+    let actualFile: File;
+    if (file instanceof FileList || Array.isArray(file)) {
+        if (file.length === 0) {
+            loadingCompress.value = false;
+            return;
+        }
+        actualFile = file[0] as File;
+    } else {
+        actualFile = file as File;
+    }
+
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        alwaysKeepResolution: true
+        fileType: 'image/webp'
     }
-    const compressedFile = await imageCompression(file, options);
-    const blob = URL.createObjectURL(compressedFile);
-    CropImageModal.open({
-        img: blob,
-        title: file.name,
-        stencil: {
-            movable: true,
-            resizable: true,
-            aspectRatio: 1 / 1,
-        },
-        onCropped: (f: File) => {
-            onCropped(f, i);
-            CropImageModal.close();
-        },
-    });
+    try {
+        const compressedFile = await imageCompression(actualFile, options);
+        const blob = URL.createObjectURL(compressedFile);
+        CropImageModal.open({
+            img: blob,
+            title: actualFile.name,
+            stencil: {
+                movable: true,
+                resizable: true,
+                aspectRatio: 1 / 1,
+            },
+            onCropped: (f: File) => {
+                onCropped(f, type, i);
+                CropImageModal.close();
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        toast.add({ title: "Failed to compress image" });
+    }
     loadingCompress.value = false;
 }
 
-const onCropped = async (f: File, i: number) => {
+const onCropped = async (f: File, type: 'council' | 'advisor', i: number) => {
     try {
-        openModals.value[i] = false;
-        if (files.value[i]) {
-            files.value[i] = f;
+        if (type === 'council') {
+            councilFiles.value[i] = f;
         } else {
-            files.value.push(f);
+            advisorFile.value = f;
         }
-        const blob = URL.createObjectURL(f);
-        filesToCropped.value[i]!.blob = blob;
     } catch (error) {
         console.log(error);
         toast.add({ title: "Failed to compress image" });
@@ -178,13 +197,16 @@ const addOrganizer = async () => {
         formData.append('organizerData', JSON.stringify(organizerData));
 
         // Append council images
-        files.value.forEach((file, index) => {
-            if (index < organizer.value.council.length) {
+        councilFiles.value.forEach((file, index) => {
+            if (file) {
                 formData.append(`council-image-${index}`, file, file.name);
-            } else {
-                formData.append('advisor-image', file, file.name);
             }
         });
+        
+        // Append advisor image
+        if (advisorFile.value) {
+            formData.append(`advisor-image`, advisorFile.value, advisorFile.value.name);
+        }
 
         const response = await $api<IOrganizerResponse>('/api/organizer', {
             method: 'POST',
@@ -206,6 +228,19 @@ const addOrganizer = async () => {
         toast.add({ title: $ts('failed'), description: $ts('add_organizer_failed'), color: 'error' });
     }
 }
+
+const addNewCouncil = () => {
+    organizer.value.council.push({
+        position: '',
+        name: '',
+        image: { name: '', content: '', size: '', type: '', lastModified: '' },
+    });
+}
+const removeCouncil = (i: number) => {
+    organizer.value.council.splice(i, 1);
+    councilFiles.value.splice(i, 1);
+}
+
 const addNewConsideration = () => {
     (organizer.value.considerationBoard as number[]).push(0);
 }
@@ -230,29 +265,32 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
             <div class="my-4">
                 <label for="council" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('council')
-                    }}</label>
+                }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
-                    <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
-                        <UFormField class="col-span-12" :label="$ts('name')" required>
+                    <div class="grid grid-cols-12 col-span-12 gap-2 border border-gray-200 dark:border-gray-800 p-4 rounded-lg relative" v-for="(council, i) in organizer.council" :key="i">
+                        <UButton v-if="organizer.council.length > 1" icon="i-lucide-trash-2" color="error" variant="ghost" class="absolute top-2 right-2" @click="removeCouncil(i)" />
+                        <UFormField class="col-span-12 md:col-span-6" :label="$ts('name')" required>
                             <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.name" class="w-full" />
                         </UFormField>
-                        <UFormField class="col-span-12" :label="$ts('position')" required>
+                        <UFormField class="col-span-12 md:col-span-6" :label="$ts('position')" required>
                             <UInput type="text" name="Position" id="Position" placeholder="Rector, etc." required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.position"
                                 class="w-full" />
                         </UFormField>
                         <UFormField class="col-span-12" :label="$ts('image')" required>
-                            <UFileUpload @update:modelValue="v => onChangeImages(i, v)" accept="image/*">
+                            <UFileUpload @update:modelValue="v => onChangeImages('council', i, v)" accept="image/*">
                             </UFileUpload>
                         </UFormField>
                     </div>
                 </div>
+                <UButton :label="$ts('add')" class="mt-2" variant="solid" block :size="responsiveUISizes.button"
+                    @click="addNewCouncil" />
             </div>
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
                     $ts('advisor')
-                }}</label>
+                    }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="advisor">
                     <UFormField class="col-span-12" :label="$ts('name')" required>
                         <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
@@ -263,7 +301,7 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                             :size="responsiveUISizes.input" v-model="organizer.advisor.position" class="w-full" />
                     </UFormField>
                     <UFormField class="col-span-12" :label="$ts('image')" required>
-                        <UFileUpload @update:modelValue="v => onChangeImages(organizer.council.length, v)"
+                        <UFileUpload @update:modelValue="v => onChangeImages('advisor', 0, v)"
                             accept="image/*">
                         </UFileUpload>
                     </UFormField>
@@ -315,6 +353,20 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                                     </template>
                                 </USelectMenu>
                             </UFormField>
+                            <UFormField class="col-span-12" :label="$ts('staff')">
+                                <USelectMenu :items="members" :loading="status === 'pending'"
+                                    :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                    :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                    v-model="organizer.dailyManagement[i]!.staff as number[]" multiple value-key="value"
+                                    class="w-full">
+                                    <template #item-label="{ item }">
+                                        {{ item.label }}
+                                        <span class="text-(--ui-text-muted)">
+                                            {{ item.email }}
+                                        </span>
+                                    </template>
+                                </USelectMenu>
+                            </UFormField>
                         </div>
                     </UCard>
                 </template>
@@ -349,6 +401,22 @@ const responsiveUISizes = computed<{ [key: string]: 'xs' | 'md' }>(() => ({
                                             :filter-fields="['label', 'email']" icon="i-lucide-user"
                                             :placeholder="$ts('search')" v-model:search-term="searchMember"
                                             v-model="organizer.department[index]!.members as number[]" multiple
+                                            value-key="value" class="w-full">
+
+                                            <template #item-label="{ item }">
+                                                {{ item.label }}
+
+                                                <span class="text-(--ui-text-muted)">
+                                                    {{ item.email }}
+                                                </span>
+                                            </template>
+                                        </USelectMenu>
+                                    </UFormField>
+                                    <UFormField class="col-span-12" :label="$ts('staff')">
+                                        <USelectMenu :items="members" :loading="status === 'pending'"
+                                            :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                            :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                            v-model="organizer.department[index]!.staff as number[]" multiple
                                             value-key="value" class="w-full">
 
                                             <template #item-label="{ item }">

@@ -15,7 +15,6 @@ export default defineCachedEventHandler(
       }
       const { search } = getQuery<IReqMemberQuery>(event);
       let query: any = {
-        status: "active",
       };
       if (search) {
         query = {

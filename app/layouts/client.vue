@@ -142,7 +142,7 @@ useHead({
 
 
                 <!-- Mobile slideover menu -->
-                <USlideover v-model="isOpen" side="left" close-icon="i-heroicons-chevron-left">
+                <USlideover v-model:open="isOpen" side="left" close-icon="i-heroicons-chevron-left">
                     <!-- Mobile menu button -->
                     <UButton @click="isOpen = !isOpen" icon="i-heroicons-bars-3-center-left" class="block md:hidden"
                         variant="link" color="neutral" />
@@ -161,14 +161,14 @@ useHead({
                 <!-- User menu and theme toggle -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <!-- Language Dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }" :modal="false">
+                    <UDropdownMenu :items="languages" :modal="false" :popper="{ placement: 'bottom-start' }">
                         <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
                     </UDropdownMenu>
                     <!-- Theme toggle -->
                     <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
                         :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
                         @click="isDarkMode = !isDarkMode" />
-                    <UDropdownMenu :items="items" :content="{ side: 'bottom' }" :modal="false">
+                    <UDropdownMenu :items="items" :modal="false" :content="{ side: 'bottom' }">
                         <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" format="webp" preload
                             alt="Profile" />
@@ -184,14 +184,6 @@ useHead({
                                     {{ (item as any).label }}
                                 </p>
                             </div>
-                        </template>
-
-                        <template #item="{ item }">
-                            <NuxtLink :to="item.to">
-                                <UIcon :name="item.icon" v-if="item.icon"
-                                    class="shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
-                                <span class="truncate">{{ item.label }}</span>
-                            </NuxtLink>
                         </template>
                     </UDropdownMenu>
                 </div>

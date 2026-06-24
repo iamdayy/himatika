@@ -421,6 +421,29 @@ memberSchema.virtual("organizersDepartmentMembers", {
     "period.end": { $gte: new Date() },
   },
 });
+
+// Virtual for dailyManagement staff
+memberSchema.virtual("organizersDailyManagementStaff", {
+  ref: "Organizer",
+  localField: "_id",
+  foreignField: "dailyManagement.staff",
+  justOne: true,
+  match: {
+    "period.end": { $gte: new Date() },
+  },
+});
+
+// Virtual for department staff
+memberSchema.virtual("organizersDepartmentStaff", {
+  ref: "Organizer",
+  localField: "_id",
+  foreignField: "department.staff",
+  justOne: true,
+  match: {
+    "period.end": { $gte: new Date() },
+  },
+});
+
 memberSchema.virtual("aspirations", {
   ref: "Aspiration",
   localField: "_id",
@@ -433,7 +456,9 @@ memberSchema.virtual("organizer").get(function () {
     this.organizersDailyManagement ||
     this.organizersConsiderationBoard ||
     this.organizersDepartmentCoordinator ||
-    this.organizersDepartmentMembers
+    this.organizersDepartmentMembers ||
+    this.organizersDailyManagementStaff ||
+    this.organizersDepartmentStaff
   );
 });
 

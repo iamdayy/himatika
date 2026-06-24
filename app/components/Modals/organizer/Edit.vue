@@ -19,7 +19,7 @@ const items = [
 const CropImageModal = overlay.create(ModalsImageCrop)
 const searchMember = ref('');
 const { data } = await useAsyncData<IConfigResponse>(() => $fetch<IConfigResponse>("/api/config"));
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public", { query: { search: searchMember.value } }), {
     transform: (data) => {
         const members = data.data?.members || [];
         return members.map((member) => ({
@@ -32,7 +32,8 @@ const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api
             }
         }))
     },
-    default: () => []
+    default: () => [],
+    watch: [searchMember]
 });
 const { width } = useWindowSize();
 const props = defineProps({
@@ -50,6 +51,7 @@ const dailyManagements = computed(() => {
     return data.value.data.dailyManagements.map((management) => ({
         position: management,
         member: 0,
+        staff: [] as number[],
     }));
 });
 
@@ -59,17 +61,20 @@ const departements = computed(() => {
         name: department,
         coordinator: 0,
         members: [],
+        staff: [] as number[],
     }));
 });
 
 // Initialize organizer with existing data
 const organizer = ref<IOrganizer>({
     ...props.org,
+    advisor: props.org.advisor && !Array.isArray(props.org.advisor) ? props.org.advisor : { position: '', name: '', image: { name: '', content: '', size: '', type: '', lastModified: '' } },
     considerationBoard: props.org.considerationBoard.map(c => (c as IMember).NIM),
     dailyManagement: dailyManagements.value.map((dayly) => {
         return {
             ...dayly,
-            member: (props.org.dailyManagement.find(d => d.position == dayly.position)?.member as IMember)?.NIM || 0
+            member: (props.org.dailyManagement.find(d => d.position == dayly.position)?.member as IMember)?.NIM || 0,
+            staff: props.org.dailyManagement.find(d => d.position == dayly.position)?.staff?.map(s => (s as IMember).NIM || 0) || []
         }
     }),
     department: departements.value.map((department) => {
@@ -77,7 +82,8 @@ const organizer = ref<IOrganizer>({
         return {
             ...department,
             coordinator: (props.org.department.find(d => d.name == department.name)?.coordinator as IMember)?.NIM || 0,
-            members: props.org.department.find(d => d.name == department.name)?.members.map(m => (m as IMember).NIM || 0) || []
+            members: props.org.department.find(d => d.name == department.name)?.members.map(m => (m as IMember).NIM || 0) || [],
+            staff: props.org.department.find(d => d.name == department.name)?.staff?.map(s => (s as IMember).NIM || 0) || []
         }
     }),
 });
@@ -90,92 +96,97 @@ const departementsTabs = computed(() => {
 });
 
 
-const files = ref<File[]>([]);
-const filesToCropped = ref<{ blob: string, name: string }[]>([{ blob: '', name: '' }, { blob: '', name: '' }, { blob: '', name: '' }]);
+const councilFiles = ref<(File | null)[]>([]);
+const advisorFile = ref<File | null>(null);
 const loadingCompress = ref<boolean>(false);
-const openModals = ref<boolean[]>([false, false, false]);
 const isMobile = computed(() => width.value < 768);
 
-const onChangeImages = async (files: FileList, i: number) => {
-    if (files.length === 0) return;
-    const f = files[0]!;
+const onChangeImages = async (type: 'council' | 'advisor', i: number, file?: File | FileList | File[] | null) => {
     loadingCompress.value = true;
+    if (!file) {
+        loadingCompress.value = false;
+        return;
+    }
+    
+    let actualFile: File;
+    if (file instanceof FileList || Array.isArray(file)) {
+        if (file.length === 0) {
+            loadingCompress.value = false;
+            return;
+        }
+        actualFile = file[0] as File;
+    } else {
+        actualFile = file as File;
+    }
+
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        alwaysKeepResolution: true
+        fileType: 'image/webp'
     }
-    const compressedFile = await imageCompression(f, options);
-    const blob = URL.createObjectURL(compressedFile);
-    CropImageModal.open({
-        img: blob,
-        title: f.name,
-        stencil: {
-            movable: true,
-            resizable: true,
-            aspectRatio: 1 / 1,
-        },
-        onCropped: (file: File) => {
-            onCropped(file, i);
-            CropImageModal.close();
-        },
-    });
+    try {
+        const compressedFile = await imageCompression(actualFile, options);
+        const blob = URL.createObjectURL(compressedFile);
+        CropImageModal.open({
+            img: blob,
+            title: actualFile.name,
+            stencil: {
+                movable: true,
+                resizable: true,
+                aspectRatio: 1 / 1,
+            },
+            onCropped: (f: File) => {
+                onCropped(f, type, i);
+                CropImageModal.close();
+            },
+        });
+    } catch (error) {
+        toast.add({ title: "Failed to compress image" });
+    }
     loadingCompress.value = false;
 }
 
-const onCropped = async (f: File, i: number) => {
+const onCropped = async (f: File, type: 'council' | 'advisor', i: number) => {
     try {
-        openModals.value[i] = false;
-        if (files.value[i]) {
-            files.value[i] = f;
+        if (type === 'council') {
+            councilFiles.value[i] = f;
         } else {
-            files.value.push(f);
+            advisorFile.value = f;
         }
-        const blob = URL.createObjectURL(f);
-        filesToCropped.value[i]!.blob = blob;
     } catch (error) {
         toast.add({ title: "Failed to compress image" });
     }
 }
 
 const editOrganizer = async () => {
-    const body: IOrganizer = {
-        ...organizer.value,
-        council: await Promise.all(organizer.value.council.map(async (council, i) => {
-            if (files.value[i]) {
-                council.image = {
-                    name: files.value[i]?.name,
-                    content: await convert(files.value[i]),
-                    size: files.value[i]?.size.toString(),
-                    type: files.value[i]?.type,
-                    lastModified: files.value[i]?.lastModified.toString(),
-
-                }
-            }
-            return council;
-        })),
-        advisor: {
-            ...organizer.value.advisor,
-            image: files.value[organizer.value.council.length] ? {
-                name: files.value[organizer.value.council.length]!.name,
-                content: await convert(files.value[organizer.value.council.length]!),
-                size: files.value[organizer.value.council.length]!.size.toString(),
-                type: files.value[organizer.value.council.length]!.type,
-                lastModified: files.value[organizer.value.council.length]!.lastModified.toString(),
-            } : organizer.value.advisor.image
-        },
-    }
     try {
+        const formData = new FormData();
+        const organizerData = JSON.parse(JSON.stringify(organizer.value));
+
+        // Clear image content to avoid sending large data in JSON
+        organizerData.council.forEach((c: { image: any; }) => c.image = null);
+        organizerData.advisor.image = null;
+
+        formData.append('organizerData', JSON.stringify(organizerData));
+
+        // Append council and advisor images
+        councilFiles.value.forEach((file, index) => {
+            if (file) {
+                formData.append(`council-image-${index}`, file, file.name);
+            }
+        });
+        
+        if (advisorFile.value) {
+            formData.append(`advisor-image`, advisorFile.value, advisorFile.value.name);
+        }
+
         const response = await $api<IOrganizerResponse>("/api/organizer", {
             method: "PUT",
             query: {
-                period: `${new Date(organizer.value.period.start).getFullYear()}-${new Date(organizer.value.period.end).getFullYear()}`,
+                period: `${new Date(props.org.period.start).getFullYear()}-${new Date(props.org.period.end).getFullYear()}`,
             },
-            body: body,
-            headers: {
-                "Content-Type": "application/json"
-            }
+            body: formData,
         });
         if (response.statusCode !== 200) {
             toast.add({ title: $ts('failed'), color: 'error', description: $ts('edit_organizer_failed') });
@@ -186,6 +197,18 @@ const editOrganizer = async () => {
         toast.add({ title: $ts('failed'), color: 'error', description: $ts('edit_organizer_failed') });
     }
 }
+const addNewCouncil = () => {
+    organizer.value.council.push({
+        position: '',
+        name: '',
+        image: { name: '', content: '', size: '', type: '', lastModified: '' },
+    });
+}
+const removeCouncil = (i: number) => {
+    organizer.value.council.splice(i, 1);
+    councilFiles.value.splice(i, 1);
+}
+
 const addNewConsideration = () => {
     (organizer.value.considerationBoard as number[]).push(0);
 }
@@ -262,32 +285,25 @@ onMounted(() => {
                     $ts('council')
                     }}</label>
                 <div class="grid grid-cols-12 gap-2 px-2 md:px-4" id="council">
-                    <div class="grid grid-cols-12 col-span-6 gap-2" v-for="(council, i) in organizer.council" :key="i">
-                        <UFormField class="col-span-12" :label="$ts('name')" required>
+                    <div class="grid grid-cols-12 col-span-12 gap-2 border border-gray-200 dark:border-gray-800 p-4 rounded-lg relative" v-for="(council, i) in organizer.council" :key="i">
+                        <UButton v-if="organizer.council.length > 1" icon="i-lucide-trash-2" color="error" variant="ghost" class="absolute top-2 right-2" @click="removeCouncil(i)" />
+                        <UFormField class="col-span-12 md:col-span-6" :label="$ts('name')" required>
                             <UInput type="text" name="Name" id="Name" :placeholder="$ts('name')" required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.name" class="w-full" />
                         </UFormField>
-                        <UFormField class="col-span-12" :label="$ts('position')" required>
+                        <UFormField class="col-span-12 md:col-span-6" :label="$ts('position')" required>
                             <UInput type="text" name="Position" id="Position" placeholder="Rector, etc." required
                                 :size="responsiveUISizes.input" v-model="organizer.council[i]!.position"
                                 class="w-full" />
                         </UFormField>
                         <UFormField class="col-span-12" :label="$ts('image')" required>
-                            TODO: FIX THIS
-                            <DropFile :identifier="i" @change="v => onChangeImages(v, i)" accept="image/*">
-                                <div v-if="filesToCropped[i]!.blob">
-                                    <NuxtImg :src="filesToCropped[i]!.blob" :alt="filesToCropped[i]!.name"
-                                        class="mx-auto" loading="lazy" />
-                                </div>
-                                <div
-                                    v-else-if="organizer.council[i]!.image && typeof organizer.council[i]!.image === 'string'">
-                                    <NuxtImg provider="localProvider" :src="organizer.council[i]!.image"
-                                        :alt="organizer.council[i]!.name" class="mx-auto" loading="lazy" />
-                                </div>
-                            </DropFile>
+                            <UFileUpload @update:modelValue="v => onChangeImages('council', i, v)" accept="image/*">
+                            </UFileUpload>
                         </UFormField>
                     </div>
                 </div>
+                <UButton :label="$ts('add')" class="mt-2" variant="solid" block :size="responsiveUISizes.button"
+                    @click="addNewCouncil" />
             </div>
             <div class="my-4">
                 <label for="advisor" class="block mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{
@@ -303,18 +319,9 @@ onMounted(() => {
                             :size="responsiveUISizes.input" v-model="organizer.advisor.position" class="w-full" />
                     </UFormField>
                     <UFormField class="col-span-12" :label="$ts('image')" required>
-                        <DropFile :identifier="organizer.council.length"
-                            @change="v => onChangeImages(v, organizer.council.length)" accept="image/*">
-                            <div v-if="filesToCropped[organizer.council.length]!.blob">
-                                <NuxtImg :src="filesToCropped[organizer.council.length]!.blob"
-                                    :alt="filesToCropped[organizer.council.length]!.name" class="mx-auto"
-                                    loading="lazy" />
-                            </div>
-                            <div v-else-if="organizer.advisor.image && typeof organizer.advisor.image === 'string'">
-                                <NuxtImg provider="localProvider" :src="(organizer.advisor.image as string)"
-                                    :alt="organizer.advisor.name" class="mx-auto" loading="lazy" />
-                            </div>
-                        </DropFile>
+                        <UFileUpload @update:modelValue="v => onChangeImages('advisor', 0, v)"
+                            accept="image/*">
+                        </UFileUpload>
                     </UFormField>
                 </div>
             </div>
@@ -364,6 +371,20 @@ onMounted(() => {
                                     </template>
                                 </USelectMenu>
                             </UFormField>
+                            <UFormField class="col-span-12" :label="$ts('staff')">
+                                <USelectMenu :items="members" :loading="status === 'pending'"
+                                    :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                    :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                    v-model="organizer.dailyManagement[i]!.staff as number[]" multiple value-key="value"
+                                    class="w-full">
+                                    <template #item-label="{ item }">
+                                        {{ item.label }}
+                                        <span class="text-(--ui-text-muted)">
+                                            {{ item.email }}
+                                        </span>
+                                    </template>
+                                </USelectMenu>
+                            </UFormField>
                         </div>
                     </UCard>
                 </template>
@@ -398,6 +419,22 @@ onMounted(() => {
                                             :filter-fields="['label', 'email']" icon="i-lucide-user"
                                             :placeholder="$ts('search')" v-model:search-term="searchMember"
                                             v-model="organizer.department[index]!.members as number[]" multiple
+                                            value-key="value" class="w-full">
+
+                                            <template #item-label="{ item }">
+                                                {{ item.label }}
+
+                                                <span class="text-(--ui-text-muted)">
+                                                    {{ item.email }}
+                                                </span>
+                                            </template>
+                                        </USelectMenu>
+                                    </UFormField>
+                                    <UFormField class="col-span-12" :label="$ts('staff')">
+                                        <USelectMenu :items="members" :loading="status === 'pending'"
+                                            :filter-fields="['label', 'email']" icon="i-lucide-users"
+                                            :placeholder="$ts('search')" v-model:search-term="searchMember"
+                                            v-model="organizer.department[index]!.staff as number[]" multiple
                                             value-key="value" class="w-full">
 
                                             <template #item-label="{ item }">

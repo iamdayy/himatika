@@ -9,9 +9,9 @@ export const StoragePaths = {
   AVATARS: "uploads/avatars",
   NEWS: "uploads/news",
   PROJECTS: (id?: string) => id ? `uploads/projects/${id}/photos` : "uploads/projects",
-  AGENDAS: (id: string, type: 'photos' | 'videos' | 'docs' | 'payments' | 'answers', suffix?: string) => 
+  AGENDAS: (id: string, type: 'photos' | 'videos' | 'docs' | 'payments' | 'answers', suffix?: string) =>
     `uploads/agendas/${id}/${type}${suffix ? `/${suffix}` : ''}`,
-  ASPIRATIONS: (id: string, type: 'photos' | 'videos' | 'docs') => 
+  ASPIRATIONS: (id: string, type: 'photos' | 'videos' | 'docs') =>
     `uploads/aspirations/${id}/${type}`,
   ACHIEVEMENTS: (memberId: string) => `uploads/achievements/${memberId}/proofs`,
   CAROUSELS: "uploads/carousels",
@@ -36,9 +36,9 @@ export const extractKeyFromUrl = (url: string): string => {
     // Fallback if not a valid URL
     const cleanDomain = R2_PUBLIC_DOMAIN.replace(/\/$/, "");
     if (url.startsWith(cleanDomain)) {
-        let key = url.replace(cleanDomain, "");
-        if (key.startsWith('/')) key = key.substring(1);
-        return key;
+      let key = url.replace(cleanDomain, "");
+      if (key.startsWith('/')) key = key.substring(1);
+      return key;
     }
     // If we can't parse it, just return the filename to avoid catastrophic failure
     return url.split("/").pop() || url;
@@ -59,7 +59,7 @@ export const uploadToR2 = async (file: any, folderPath: string): Promise<string>
   // Clean the folder path (remove leading/trailing slashes)
   const cleanPath = folderPath.replace(/^\/+|\/+$/g, '');
   const fileExt = file.type?.split("/")[1] || "bin";
-  
+
   // Create a clean filename avoiding spaces or special characters
   const safeOriginalName = (file.name || "upload").replace(/[^a-zA-Z0-9.-]/g, "_");
   const timestamp = Date.now();

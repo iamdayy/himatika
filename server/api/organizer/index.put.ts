@@ -1,6 +1,6 @@
-import { deleteFromR2, uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
+import { deleteFromR2, StoragePaths, uploadToR2 } from "~~/server/utils/storage";
 import { IOrganizer } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
@@ -20,22 +20,24 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       });
     }
 
-    const chairmanText = [
-      "ketua",
-      "wakil ketua",
-      "ketua umum",
-      "chairman",
-      "vice chairman",
-    ];
-    const isChairman = chairmanText.includes(
-      event.context.organizer?.role.toLowerCase() || ""
-    );
-    if (!isChairman) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: "Anda harus menjadi ketua untuk menggunakan endpoint ini",
-      });
-    }
+    // const chairmanText = [
+    //   "ketua",
+    //   "wakil ketua",
+    //   "ketua umum",
+    //   "chairman",
+    //   "vice chairman",
+    //   "ketua himpunan",
+    //   "wakil ketua himpunan"
+    // ];
+    // const isChairman = chairmanText.includes(
+    //   event.context.organizer?.role.toLowerCase() || ""
+    // );
+    // if (!isChairman) {
+    //   throw createError({
+    //     statusCode: 403,
+    //     statusMessage: "Anda harus menjadi ketua untuk menggunakan endpoint ini",
+    //   });
+    // }
     const { period } = getQuery<{ period: string }>(event);
     const [startYear, endYear] = period.split("-").map(Number);
     const organizer = await OrganizerModel.findOne({
@@ -129,9 +131,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     const dailyManagementPromises = body.dailyManagement.map(async (daily) => {
       const memberId = await getMemberIdByNim(daily.member as number);
+      const staffPromises = (daily.staff || []).map(async (staffNim) => {
+        return await getMemberIdByNim(staffNim as number);
+      });
       return {
         position: daily.position,
         member: memberId,
+        staff: await Promise.all(staffPromises),
       };
     });
 
@@ -140,11 +146,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       const memberPromises = department.members.map(async (member) => {
         return await getMemberIdByNim(member as number);
       });
+      const staffPromises = (department.staff || []).map(async (staffNim) => {
+        return await getMemberIdByNim(staffNim as number);
+      });
 
       return {
         name: department.name,
         coordinator: memberId,
         members: await Promise.all(memberPromises),
+        staff: await Promise.all(staffPromises),
       };
     });
 

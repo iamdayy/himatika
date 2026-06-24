@@ -16,10 +16,12 @@
                         </div>
                         <div class="flex flex-col gap-2 md:flex-row">
                             <USelectMenu v-model="selectedTags" :size="responsiveUISizes.select" :items="tags" multiple
-                                :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full md:w-48" :loading="pendingTags" />
+                                :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full md:w-48"
+                                :loading="pendingTags" />
                             <USelectMenu v-model="selectedCategory" :size="responsiveUISizes.select"
                                 :items="categoryOptions" option-attribute="title" by="title"
-                                :placeholder="$ts('filter_by', { key: 'category' })" multiple class="w-full md:w-48" :loading="pendingCategories" />
+                                :placeholder="$ts('filter_by', { key: 'category' })" multiple class="w-full md:w-48"
+                                :loading="pendingCategories" />
                             <UButton color="primary" variant="ghost" icon="i-heroicons-arrow-path" @click="refresh()">
                             </UButton>
                         </div>
@@ -204,16 +206,6 @@
 <script setup lang="ts">
 import type { ICategory, IMember, INews } from "~~/types";
 import type { ICategoriesResponse, INewsResponse, IResponse, ITagsResponse } from "~~/types/IResponse";
-definePageMeta({
-    layout: 'client',
-    auth: false,
-});
-useHead({
-    title: 'News',
-    meta: [
-        { name: 'description', content: 'News' },
-    ],
-});
 
 
 const { width } = useWindowSize()
@@ -347,4 +339,14 @@ const links = computed(() => [{
     label: $ts('news'),
     icon: 'i-heroicons-clipboard-document-list',
 }]);
+definePageMeta({
+    layout: 'client',
+    auth: false,
+});
+useHead({
+    title: () => $ts('news'),
+    meta: [
+        { name: 'description', content: 'News' },
+    ],
+});
 </script>

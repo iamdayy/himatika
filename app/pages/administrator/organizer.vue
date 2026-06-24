@@ -4,15 +4,7 @@ import type { TabsItem } from "@nuxt/ui";
 import type { IMember } from "~~/types";
 import type { IOrganizerResponse } from "~~/types/IResponse";
 
-// Define page metadata for layout and authentication middleware
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth',
-});
 
-useHead({
-    title: 'Organizers',
-});
 const {
     data: organizers,
     refresh: refreshOrganizers,
@@ -182,6 +174,15 @@ const links = computed(() => [{
     label: $ts('organizer'),
     icon: 'i-heroicons-user-group',
 }]);
+// Define page metadata for layout and authentication middleware
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth',
+});
+
+useHead({
+    title: () => $ts('organizer'),
+});
 </script>
 <template>
     <div class="items-center justify-center mb-24">
@@ -206,103 +207,127 @@ const links = computed(() => [{
                 <div class="space-y-8">
                     <USkeleton class="w-48 h-8 mx-auto my-4" />
                     <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-                        <USkeleton v-for="i in 2" :key="i" class="w-[180px] md:w-[240px] h-[320px] md:h-[420px] mx-auto rounded-3xl" />
+                        <USkeleton v-for="i in 2" :key="i"
+                            class="w-[180px] md:w-[240px] h-[320px] md:h-[420px] mx-auto rounded-3xl" />
                     </div>
                 </div>
             </template>
             <template v-else>
-            <div>
-                <div class="flex items-center justify-between w-full gap-2">
-                    <h1
-                        class="my-4 text-2xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-4xl dark:text-white">
-                        {{ selectedPeriod }}
-                    </h1>
-                    <UButton v-if="isOrganizer" icon="i-heroicons-pencil-square" color="neutral" variant="ghost"
-                        @click="editModal" :size="responsiveUISizes.button" />
-                </div>
-                <h1
-                    class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-2xl dark:text-white">
-                    Council
-                </h1>
-                <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-                    <div class="mx-auto wrapper" :style="wrapperDimensions" v-for="council in organizer?.council">
-                        <div class="card" :style="{ height: cardDimensions.height }">
-                            <div class="front" :style="{ height: cardDimensions.height }">
-                                <h2
-                                    :class="['font-semibold text-gray-800 dark:text-gray-200', responsiveClasses.subtitle]">
-                                    {{
-                                        council.position }}</h2>
-                                <NuxtImg :src="(council.image as string)" :alt="council.name" :style="imageDimensions"
-                                    class="object-cover mx-auto my-4 rounded-full max-w-48 aspect-square"
-                                    provider="localProvider" loading="lazy" />
-                                <div class="absolute bottom-16">
-                                    <h1
-                                        :class="['mb-2 font-semibold text-gray-800 dark:text-gray-200 -translate-x-14', responsiveClasses.title]">
-                                        {{ council.name }}
-                                    </h1>
-                                </div>
-                            </div>
-                        </div>
+                <div>
+                    <div class="flex items-center justify-between w-full gap-2">
+                        <h1
+                            class="my-4 text-2xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-4xl dark:text-white">
+                            {{ selectedPeriod }}
+                        </h1>
+                        <UButton v-if="isOrganizer" icon="i-heroicons-pencil-square" color="neutral" variant="ghost"
+                            @click="editModal" :size="responsiveUISizes.button" />
                     </div>
-                </div>
-            </div>
-            <div>
-                <h1
-                    class="mt-2 mb-2 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:-mt-12 md:mb-4 md:text-3xl dark:text-white">
-                    {{ $ts('advisor') }}
-                </h1>
-                <div class="mx-auto wrapper" :style="wrapperDimensions">
-                    <div class="card" :style="{ height: cardDimensions.height }">
-                        <div class="front" :style="{ height: cardDimensions.height }">
-                            <h2 :class="['font-semibold text-gray-800 dark:text-gray-200', responsiveClasses.subtitle]">
-                                {{
-                                    organizer?.advisor.position }}</h2>
-                            <NuxtImg :src="(organizer?.advisor.image as string)" :alt="organizer?.advisor.name"
-                                :style="imageDimensions"
-                                class="object-cover mx-auto my-4 rounded-full max-w-48 aspect-square"
-                                provider="localProvider" loading="lazy" />
-                            <div class="absolute bottom-16">
-                                <h1
-                                    :class="['mb-2 font-semibold text-gray-800 dark:text-gray-200 -translate-x-14', responsiveClasses.title]">
-                                    {{ organizer?.advisor.name }}
-                                </h1>
+                    <h1
+                        class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-2xl dark:text-white">
+                        Council
+                    </h1>
+                    <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+                        <div class="mx-auto wrapper" :style="wrapperDimensions" v-for="council in organizer?.council">
+                            <div class="card" :style="{ height: cardDimensions.height }">
+                                <div class="front" :style="{ height: cardDimensions.height }">
+                                    <h2
+                                        :class="['font-semibold text-gray-800 dark:text-gray-200', responsiveClasses.subtitle]">
+                                        {{
+                                            council.position }}</h2>
+                                    <NuxtImg :src="(council.image as string)" :alt="council.name"
+                                        :style="imageDimensions"
+                                        class="object-cover mx-auto my-4 rounded-full max-w-48 aspect-square"
+                                        provider="localProvider" loading="lazy" />
+                                    <div class="absolute bottom-16">
+                                        <h1
+                                            :class="['mb-2 font-semibold text-gray-800 dark:text-gray-200 -translate-x-14', responsiveClasses.title]">
+                                            {{ council.name }}
+                                        </h1>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div>
                     <h1
-                        class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-3xl dark:text-white">
-                        {{ $ts('considers') }}
+                        class="mt-2 mb-2 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:-mt-12 md:mb-4 md:text-3xl dark:text-white">
+                        {{ $ts('advisor') }}
                     </h1>
-                    <div
-                        :class="`grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-${organizer?.considerationBoard.length}`">
-                        <ProfileCard v-for="considerationBoard in organizer?.considerationBoard"
-                            :member="(considerationBoard as IMember)" subtitle="Consideration Board" />
+                    <div class="mx-auto wrapper" :style="wrapperDimensions">
+                        <div class="card" :style="{ height: cardDimensions.height }">
+                            <div class="front" :style="{ height: cardDimensions.height }">
+                                <h2
+                                    :class="['font-semibold text-gray-800 dark:text-gray-200', responsiveClasses.subtitle]">
+                                    {{
+                                        organizer?.advisor.position }}</h2>
+                                <NuxtImg :src="(organizer?.advisor.image as string)" :alt="organizer?.advisor.name"
+                                    :style="imageDimensions"
+                                    class="object-cover mx-auto my-4 rounded-full max-w-48 aspect-square"
+                                    provider="localProvider" loading="lazy" />
+                                <div class="absolute bottom-16">
+                                    <h1
+                                        :class="['mb-2 font-semibold text-gray-800 dark:text-gray-200 -translate-x-14', responsiveClasses.title]">
+                                        {{ organizer?.advisor.name }}
+                                    </h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h1
+                            class="my-4 text-xl font-bold leading-tight tracking-tight text-center text-gray-600 md:text-3xl dark:text-white">
+                            {{ $ts('considers') }}
+                        </h1>
+                        <div
+                            :class="`grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-${organizer?.considerationBoard.length}`">
+                            <ProfileCard v-for="considerationBoard in organizer?.considerationBoard"
+                                :member="(considerationBoard as IMember)" subtitle="Consideration Board" />
+                        </div>
                     </div>
                 </div>
-            </div>
-            <UTabs :items="items">
-                <template #dailyManager="{ item, index }">
-                    <div class="grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-3">
-                        <ProfileCard v-for="dailyManager in organizer?.dailyManagement"
-                            :member="(dailyManager.member as IMember)" :subtitle="dailyManager.position" />
-                    </div>
-                </template>
-                <template #departments="{ item }">
-                    <UTabs :items="departementsTabs">
-                        <template #department="{ item, index }">
-                            <ProfileCard v-if="organizer?.department[index]!.coordinator"
-                                :member="(organizer?.department[index].coordinator as IMember)" subtitle="Coordinator"
-                                class="mt-8" />
-                            <div class="grid w-full grid-cols-1 gap-4 py-3 mt-8 md:grid-cols-3">
-                                <ProfileCard v-for="member in organizer?.department[index]!.members"
-                                    :member="(member as IMember)" subtitle="Member" />
+                <UTabs :items="items">
+                    <template #dailyManager="{ item, index }">
+                        <div class="grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-3">
+                            <ProfileCard v-for="dailyManager in organizer?.dailyManagement"
+                                :member="(dailyManager.member as IMember)" :subtitle="dailyManager.position" />
+                        </div>
+                        <div v-for="dailyManager in organizer?.dailyManagement" :key="dailyManager.position">
+                            <div v-if="dailyManager.staff && dailyManager.staff.length > 0" class="mt-4">
+                                <h3 class="mb-2 text-lg font-semibold text-center text-gray-600 dark:text-gray-300">
+                                    {{ $ts('staff') }} - {{ dailyManager.position }}
+                                </h3>
+                                <div class="grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-3">
+                                    <ProfileCard v-for="staffMember in dailyManager.staff"
+                                        :member="(staffMember as IMember)" :subtitle="$ts('staff')" />
+                                </div>
                             </div>
-                        </template>
-                    </UTabs>
-                </template>
-            </UTabs>
+                        </div>
+                    </template>
+                    <template #departments="{ item }">
+                        <UTabs :items="departementsTabs">
+                            <template #department="{ item, index }">
+                                <ProfileCard v-if="organizer?.department[index]!.coordinator"
+                                    :member="(organizer?.department[index].coordinator as IMember)"
+                                    subtitle="Coordinator" class="mt-8" />
+                                <div class="grid w-full grid-cols-1 gap-4 py-3 mt-8 md:grid-cols-3">
+                                    <ProfileCard v-for="member in organizer?.department[index]!.members"
+                                        :member="(member as IMember)" subtitle="Member" />
+                                </div>
+                                <div v-if="organizer?.department[index]!.staff && organizer?.department[index]!.staff.length > 0"
+                                    class="mt-4">
+                                    <h3 class="mb-2 text-lg font-semibold text-center text-gray-600 dark:text-gray-300">
+                                        {{ $ts('staff') }}
+                                    </h3>
+                                    <div class="grid w-full grid-cols-1 gap-4 py-3 md:grid-cols-3">
+                                        <ProfileCard v-for="staffMember in organizer?.department[index]!.staff"
+                                            :member="(staffMember as IMember)" :subtitle="$ts('staff')" />
+                                    </div>
+                                </div>
+                            </template>
+                        </UTabs>
+                    </template>
+                </UTabs>
             </template>
         </UCard>
     </div>

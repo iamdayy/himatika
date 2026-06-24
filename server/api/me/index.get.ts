@@ -118,6 +118,32 @@ export default defineEventHandler(async (event): Promise<IMeResponse> => {
           },
         },
         {
+          path: "organizersDailyManagementStaff",
+          model: OrganizerModel,
+          transform: (doc: IOrganizer, id: any) => {
+            if (doc) {
+              return {
+                role: "Staff Daily Management",
+                period: doc.period,
+              };
+            }
+            return null;
+          },
+        },
+        {
+          path: "organizersDepartmentStaff",
+          model: OrganizerModel,
+          transform: (doc: IOrganizer, id: any) => {
+            if (doc) {
+              return {
+                role: "Staff Department",
+                period: doc.period,
+              };
+            }
+            return null;
+          },
+        },
+        {
           path: "aspirations",
         },
         {

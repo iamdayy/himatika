@@ -6,16 +6,7 @@ import type { IMember } from '~~/types';
 import type { IResponse } from '~~/types/IResponse';
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 const NuxtImg = resolveComponent('NuxtImg');
-// Define page metadata
-definePageMeta({
-    layout: 'dashboard',
-    middleware: ['sidebase-auth', 'organizer']
-});
 
-// Set page title
-useHead({
-    title: "Import"
-})
 const { $api } = useNuxtApp();
 const { $ts } = useI18n();
 // Responsive design
@@ -133,61 +124,61 @@ const selectedCollegers = computed<IMember[]>(() => {
     }) || [];
 });
 
-    const RawData = ref<any[]>([]);
-    const currentStep = ref(1);
-    
-    const availableColumns = computed(() => {
-        if (RawData.value.length === 0) return [];
-        return Object.keys(RawData.value[0]);
-    });
-    
-    const columnMapping = ref({
-        NIM: '',
-        fullName: '',
-        email: '',
-        class: '',
-        semester: '',
-        enteredYear: '',
-    });
-    
-    const autoDetectMapping = () => {
-        const cols = availableColumns.value;
-        const findMatch = (keywords: string[]) => cols.find(c => keywords.some(k => c.toLowerCase().includes(k.toLowerCase())));
-        
-        columnMapping.value.NIM = findMatch(['nim', 'no induk']) || '';
-        columnMapping.value.fullName = findMatch(['nama', 'name', 'lengkap']) || '';
-        columnMapping.value.email = findMatch(['email', 'surel']) || '';
-        columnMapping.value.class = findMatch(['kelas', 'class']) || '';
-        columnMapping.value.semester = findMatch(['semester', 'smt']) || '';
-        columnMapping.value.enteredYear = findMatch(['tahun', 'masuk', 'year', 'angkatan']) || '';
-    };
+const RawData = ref<any[]>([]);
+const currentStep = ref(1);
 
-    const applyMapping = () => {
-        if (!columnMapping.value.NIM || !columnMapping.value.fullName) {
-            toast.add({ title: 'Error', description: 'NIM dan Nama Lengkap wajib dipetakan!', color: 'error' });
-            return;
-        }
-        
-        DataFromCSV.value = RawData.value.map((row: any) => ({
-            NIM: row[columnMapping.value.NIM],
-            fullName: row[columnMapping.value.fullName],
-            email: columnMapping.value.email ? row[columnMapping.value.email] : '',
-            class: columnMapping.value.class ? row[columnMapping.value.class] : '',
-            semester: columnMapping.value.semester ? parseInt(row[columnMapping.value.semester]) || 1 : 1,
-            enteredYear: columnMapping.value.enteredYear ? parseInt(row[columnMapping.value.enteredYear]) || new Date().getFullYear() : new Date().getFullYear(),
-            sex: 'male',
-        }));
-        
-        selectedRows.value = {
-            ...Object.fromEntries(DataFromCSV.value.map((_, index) => [index, true])),
-        };
-        currentStep.value = 3;
-    };
+const availableColumns = computed(() => {
+    if (RawData.value.length === 0) return [];
+    return Object.keys(RawData.value[0]);
+});
 
-    const cancelMapping = () => {
-        RawData.value = [];
-        currentStep.value = 1;
+const columnMapping = ref({
+    NIM: '',
+    fullName: '',
+    email: '',
+    class: '',
+    semester: '',
+    enteredYear: '',
+});
+
+const autoDetectMapping = () => {
+    const cols = availableColumns.value;
+    const findMatch = (keywords: string[]) => cols.find(c => keywords.some(k => c.toLowerCase().includes(k.toLowerCase())));
+
+    columnMapping.value.NIM = findMatch(['nim', 'no induk']) || '';
+    columnMapping.value.fullName = findMatch(['nama', 'name', 'lengkap']) || '';
+    columnMapping.value.email = findMatch(['email', 'surel']) || '';
+    columnMapping.value.class = findMatch(['kelas', 'class']) || '';
+    columnMapping.value.semester = findMatch(['semester', 'smt']) || '';
+    columnMapping.value.enteredYear = findMatch(['tahun', 'masuk', 'year', 'angkatan']) || '';
+};
+
+const applyMapping = () => {
+    if (!columnMapping.value.NIM || !columnMapping.value.fullName) {
+        toast.add({ title: 'Error', description: 'NIM dan Nama Lengkap wajib dipetakan!', color: 'error' });
+        return;
     }
+
+    DataFromCSV.value = RawData.value.map((row: any) => ({
+        NIM: row[columnMapping.value.NIM],
+        fullName: row[columnMapping.value.fullName],
+        email: columnMapping.value.email ? row[columnMapping.value.email] : '',
+        class: columnMapping.value.class ? row[columnMapping.value.class] : '',
+        semester: columnMapping.value.semester ? parseInt(row[columnMapping.value.semester]) || 1 : 1,
+        enteredYear: columnMapping.value.enteredYear ? parseInt(row[columnMapping.value.enteredYear]) || new Date().getFullYear() : new Date().getFullYear(),
+        sex: 'male',
+    }));
+
+    selectedRows.value = {
+        ...Object.fromEntries(DataFromCSV.value.map((_, index) => [index, true])),
+    };
+    currentStep.value = 3;
+};
+
+const cancelMapping = () => {
+    RawData.value = [];
+    currentStep.value = 1;
+}
 
 /**
  * Handle file upload and parse CSV data
@@ -232,10 +223,10 @@ const addCollegers = async () => {
         if (added.data) {
             DataFromCSV.value = added.data?.failedMembers;
             failedUpload.value = added.data?.failedMembers.length > 0;
-            if(added.data?.failedMembers.length === 0) {
-                 toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers', { success: added.data?.savedCount, failed: added.data?.failedCount }) });
-                 navigateTo('/administrator/members');
-                 return;
+            if (added.data?.failedMembers.length === 0) {
+                toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers', { success: added.data?.savedCount, failed: added.data?.failedCount }) });
+                navigateTo('/administrator/members');
+                return;
             }
         }
         toast.add({ title: $ts('success'), description: $ts('success_to_add_collegers', { success: added.data?.savedCount, failed: added.data?.failedCount }) });
@@ -344,6 +335,17 @@ const links = computed(() => [{
     icon: 'i-heroicons-arrow-up-on-square'
 }
 ]);
+
+// Define page metadata
+definePageMeta({
+    layout: 'dashboard',
+    middleware: ['sidebase-auth', 'organizer']
+});
+
+// Set page title
+useHead({
+    title: () => $ts('import')
+})
 </script>
 <template>
     <div class="items-center justify-center mb-24">
@@ -356,7 +358,7 @@ const links = computed(() => [{
                     </h1>
                 </div>
             </template>
-            
+
             <!-- STEP 1: UPLOAD -->
             <div v-if="currentStep === 1" class="px-2 py-6 md:py-12 md:px-8">
                 <UFileUpload @update:model-value="onChangeXlsx" :label="$ts('drop_zone')"
@@ -379,28 +381,37 @@ const links = computed(() => [{
             <!-- STEP 2: MAPPING -->
             <div v-if="currentStep === 2" class="px-2 py-4 md:px-8">
                 <div class="mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Pencocokan Kolom (Column Mapping)</h2>
-                    <p class="text-sm text-gray-500">Pilih kolom dari Excel Anda yang sesuai dengan data anggota. NIM dan Nama Lengkap wajib diisi.</p>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Pencocokan Kolom (Column Mapping)
+                    </h2>
+                    <p class="text-sm text-gray-500">Pilih kolom dari Excel Anda yang sesuai dengan data anggota. NIM
+                        dan Nama
+                        Lengkap wajib diisi.</p>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <UFormField label="NIM (Wajib)" required>
-                        <USelect v-model="columnMapping.NIM" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                        <USelect v-model="columnMapping.NIM" :items="availableColumns"
+                            placeholder="Pilih Kolom Excel..." class="w-full" />
                     </UFormField>
                     <UFormField label="Nama Lengkap (Wajib)" required>
-                        <USelect v-model="columnMapping.fullName" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                        <USelect v-model="columnMapping.fullName" :items="availableColumns"
+                            placeholder="Pilih Kolom Excel..." class="w-full" />
                     </UFormField>
                     <UFormField label="Email">
-                        <USelect v-model="columnMapping.email" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                        <USelect v-model="columnMapping.email" :items="availableColumns"
+                            placeholder="Pilih Kolom Excel..." class="w-full" />
                     </UFormField>
                     <UFormField label="Kelas">
-                        <USelect v-model="columnMapping.class" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                        <USelect v-model="columnMapping.class" :items="availableColumns"
+                            placeholder="Pilih Kolom Excel..." class="w-full" />
                     </UFormField>
                     <UFormField label="Semester">
-                        <USelect v-model="columnMapping.semester" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                        <USelect v-model="columnMapping.semester" :items="availableColumns"
+                            placeholder="Pilih Kolom Excel..." class="w-full" />
                     </UFormField>
                     <UFormField label="Tahun Masuk / Angkatan">
-                        <USelect v-model="columnMapping.enteredYear" :items="availableColumns" placeholder="Pilih Kolom Excel..." class="w-full" />
+                        <USelect v-model="columnMapping.enteredYear" :items="availableColumns"
+                            placeholder="Pilih Kolom Excel..." class="w-full" />
                     </UFormField>
                 </div>
 
@@ -435,26 +446,30 @@ const links = computed(() => [{
                             :disabled="DataFromCSV.length <= 0" :label="$ts('download_failed_member')" color="error" />
                     </div>
                 </div>
-                
+
                 <UAlert v-if="DataFromCSV.length > 0" class="mx-2 mb-4" color="warning" close :title="$ts('warning')"
                     :description="$ts('import_warning_hint')" />
                 <UAlert v-if="DataFromCSV.length == 0" class="mx-2 mb-4" color="info" close :title="$ts('info')"
                     :description="$ts('no_data_hint')" />
                 <UAlert v-if="failedUpload" class="mx-2 mb-4" color="error" close :title="$ts('error_upload')"
                     :description="$ts('some_members_failed_to_upload')" />
-                
+
                 <!-- Table -->
-                <UTable v-model:row-selection="selectedRows" :data="DataFromCSV.slice(0, 50)" :columns="columns" :loading="loading">
+                <UTable v-model:row-selection="selectedRows" :data="DataFromCSV.slice(0, 50)" :columns="columns"
+                    :loading="loading">
                 </UTable>
                 <div v-if="DataFromCSV.length > 50" class="text-center p-4 text-sm text-gray-500 dark:text-gray-400">
                     Menampilkan 50 data pertama sebagai preview. (Total {{ DataFromCSV.length }} data siap diimpor)
                 </div>
-                
+
                 <div class="p-4 border-t border-gray-100 flex justify-between">
-                    <UButton @click="currentStep = 2" color="neutral" variant="ghost" icon="i-heroicons-arrow-left">Kembali ke Mapping</UButton>
+                    <UButton @click="currentStep = 2" color="neutral" variant="ghost" icon="i-heroicons-arrow-left">
+                        Kembali ke
+                        Mapping</UButton>
                     <UButton @click="addCollegers" :size="responsiveUISizes.button" :loading="loading"
-                        :disabled="DataFromCSV.length <= 0" :label="$ts('add_member', { count: selectedCollegers.length })"
-                        variant="solid" color="primary" />
+                        :disabled="DataFromCSV.length <= 0"
+                        :label="$ts('add_member', { count: selectedCollegers.length })" variant="solid"
+                        color="primary" />
                 </div>
             </div>
         </UCard>

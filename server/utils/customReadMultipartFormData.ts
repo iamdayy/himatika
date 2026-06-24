@@ -45,7 +45,7 @@ interface UploadOptions {
 export async function customReadMultipartFormData<T>(
   event: H3Event<EventHandlerRequest>,
   options: UploadOptions = {}
-): Promise<Partial<Record<keyof T, string | ParsedFile>>> {
+): Promise<Partial<Record<keyof T, any>>> {
   // 1. SETUP DEFAULT LIMITS
   const MAX_TOTAL_SIZE = options.maxTotalSize || 10 * 1024 * 1024; // Default 10MB
   const MAX_FILE_SIZE = options.maxFileSize || 2 * 1024 * 1024; // Default 2MB
@@ -65,7 +65,7 @@ export async function customReadMultipartFormData<T>(
 
   // 3. READ DATA
   const multiPartsData = await readMultipartFormData(event);
-  const parsedData: Partial<Record<keyof T, string | ParsedFile>> = {};
+  const parsedData: Partial<Record<keyof T, any>> = {};
 
   if (multiPartsData) {
     for (const data of multiPartsData) {
@@ -115,23 +115,26 @@ export async function customReadMultipartFormData<T>(
                 });
               }
 
-              // 2. Kompresi berdasarkan tipe file asli
+              // 2. Konversi ke WEBP
               const quality = options.compress.quality || 80;
-
-              if (fileType === "image/jpeg" || fileType === "image/jpg") {
-                pipeline = pipeline.jpeg({ quality, mozjpeg: true });
-              } else if (fileType === "image/png") {
-                pipeline = pipeline.png({ quality, compressionLevel: 8 });
-              } else if (fileType === "image/webp") {
-                pipeline = pipeline.webp({ quality });
-              }
-              // Format lain (gif, svg) biasanya dibiarkan atau perlu penanganan khusus
+              pipeline = pipeline.webp({ quality });
 
               // Simpan hasil kompresi ke buffer baru
               const compressedBuffer = await pipeline.toBuffer();
 
               // Ganti data asli dengan data terkompresi
               fileData = compressedBuffer;
+              fileType = "image/webp"; // Update fileType
+              
+              // Ubah ekstensi file menjadi .webp
+              if (data.filename) {
+                const lastDotIndex = data.filename.lastIndexOf(".");
+                if (lastDotIndex !== -1) {
+                  data.filename = data.filename.substring(0, lastDotIndex) + ".webp";
+                } else {
+                  data.filename += ".webp";
+                }
+              }
 
               // Opsional: Cek ukuran lagi setelah kompresi (biasanya tidak perlu karena pasti lebih kecil/mirip)
             } catch (error) {
@@ -143,15 +146,32 @@ export async function customReadMultipartFormData<T>(
             }
           }
 
-          parsedData[key] = {
+          const fileObj = {
             name: data.filename,
             data: fileData, // Buffer (bisa asli atau terkompresi)
             type: fileType,
           };
+          if (parsedData[key]) {
+            if (Array.isArray(parsedData[key])) {
+              (parsedData[key] as any[]).push(fileObj);
+            } else {
+              parsedData[key] = [parsedData[key], fileObj] as any;
+            }
+          } else {
+            parsedData[key] = fileObj as any;
+          }
         } else {
           // Field teks biasa
           const value = data.data.toString("utf8");
-          parsedData[key] = value;
+          if (parsedData[key]) {
+            if (Array.isArray(parsedData[key])) {
+              (parsedData[key] as any[]).push(value);
+            } else {
+              parsedData[key] = [parsedData[key], value] as any;
+            }
+          } else {
+            parsedData[key] = value as any;
+          }
         }
       }
     }

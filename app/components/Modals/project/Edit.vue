@@ -32,7 +32,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     },
     default: () => []
 });
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public", { query: { search: searchMember.value } }), {
     transform: (data: IMemberResponse) => {
         const members = data.data?.members || [];
         return members.map((member) => ({
@@ -107,6 +107,7 @@ const addProject = async (): Promise<void> => {
     } finally {
         loading.value = false;
         emit("close");
+
     }
 };
 
@@ -133,11 +134,20 @@ const addNewCategory = async (category: string) => {
     })
 }
 
-const handleCropImage = (fileFromInput?: File | null) => {
+const handleCropImage = (fileFromInput?: File | FileList | File[] | null) => {
     if (!fileFromInput) return;
+
+    let actualFile: File;
+    if (fileFromInput instanceof FileList || Array.isArray(fileFromInput)) {
+        if (fileFromInput.length === 0) return;
+        actualFile = fileFromInput[0] as File;
+    } else {
+        actualFile = fileFromInput as File;
+    }
+
     CropImageModal.open({
-        img: URL.createObjectURL(fileFromInput),
-        title: fileFromInput.name,
+        img: URL.createObjectURL(actualFile),
+        title: actualFile.name,
         stencil: {
             movable: true,
             resizable: true,
@@ -202,9 +212,9 @@ const inputSize = computed(() => {
                         <UFormField class="col-span-full min-h-36" :label="$ts('image')">
                             <UFileUpload v-model="file" accept="image/*" @update:model-value="handleCropImage">
                                 <template #default="{ open }">
+                                    <div class="flex items-center justify-center h-32">
                                     <NuxtImg v-if="typeof stateProject.image === 'string'" :src="stateProject.image"
                                         :alt="stateProject.title" class="mx-auto" loading="lazy" />
-                                    <div v-else class="flex items-center justify-center h-32">
                                         <UButton @click="open()" icon="i-heroicons-plus" :size="buttonSize"
                                             variant="link" />
                                     </div>
@@ -236,7 +246,7 @@ const inputSize = computed(() => {
                         <UFormField class="space-y-4 col-span-full" :label="$ts('progress')">
                             <USlider v-model="stateProject.progress" :min="0" :max="100" :step="5" />
                             <p class="text-sm text-gray-500 dark:text-gray-400 text-end">{{ stateProject.progress
-                                }}%
+                            }}%
                             </p>
                         </UFormField>
                     </div>

@@ -1,6 +1,6 @@
-import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { MemberModel } from "~~/server/models/MemberModel";
 import OrganizerModel from "~~/server/models/OrganizerModel";
+import { StoragePaths, uploadToR2 } from "~~/server/utils/storage";
 import { IMember, IOrganizer } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
@@ -26,35 +26,37 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "You must be member to use this endpoint",
       });
     }
-    const chairmanText = [
-      "ketua",
-      "wakil ketua",
-      "ketua umum",
-      "chairman",
-      "vice chairman",
-    ];
-    const isChairman = chairmanText.includes(
-      org.organizer?.role.toLowerCase() || ""
-    );
+    // const chairmanText = [
+    //   "ketua",
+    //   "wakil ketua",
+    //   "ketua umum",
+    //   "chairman",
+    //   "vice chairman",
+    //   "ketua himpunan",
+    //   "wakil ketua himpunan"
+    // ];
+    // // const isChairman = chairmanText.includes(
+    // //   org.organizer?.role.toLowerCase() || ""
+    // // );
 
-    if (!isChairman) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: "You must be chairman to use this endpoint",
-      });
-    }
-    const isOneMonthToEndPeriod =
-      new Date(event.context.organizer.period.end).getTime() -
-        1000 * 60 * 60 * 24 * 30 <=
-      Date.now();
+    // // // if (!isChairman) {
+    // // //   throw createError({
+    // // //     statusCode: 403,
+    // // //     statusMessage: "You must be chairman to use this endpoint",
+    // // //   });
+    // // // }
+    // const isOneMonthToEndPeriod =
+    //   new Date(event.context.organizer.period.end).getTime() -
+    //     1000 * 60 * 60 * 24 * 30 <=
+    //   Date.now();
 
-    if (!isOneMonthToEndPeriod) {
-      throw createError({
-        statusCode: 403,
-        statusMessage:
-          "You must be one month to end period to use this endpoint",
-      });
-    }
+    // if (!isOneMonthToEndPeriod) {
+    //   throw createError({
+    //     statusCode: 403,
+    //     statusMessage:
+    //       "You must be one month to end period to use this endpoint",
+    //   });
+    // }
 
     const uploadedData = await customReadMultipartFormData<any>(event, {
       allowedTypes: ["image/png", "image/jpeg", "image/webp"],
@@ -113,9 +115,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     const dailyManagementPromises = body.dailyManagement.map(async (daily) => {
       const memberId = await getMemberIdByNim(daily.member as number);
+      const staffPromises = (daily.staff || []).map(async (staffNim) => {
+        return await getMemberIdByNim(staffNim as number);
+      });
       return {
         position: daily.position,
         member: memberId,
+        staff: await Promise.all(staffPromises),
       };
     });
 
@@ -124,11 +130,15 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       const memberPromises = department.members.map(async (member) => {
         return await getMemberIdByNim(member as number);
       });
+      const staffPromises = (department.staff || []).map(async (staffNim) => {
+        return await getMemberIdByNim(staffNim as number);
+      });
 
       return {
         name: department.name,
         coordinator: memberId,
         members: await Promise.all(memberPromises),
+        staff: await Promise.all(staffPromises),
       };
     });
 

@@ -80,7 +80,7 @@ const { data: categoryOptions, refresh: refreshCategory } = useLazyAsyncData(() 
     default: () => []
 });
 const memberSearchTerm = ref('');
-const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData(() => $api<IMemberResponse>("/api/member", {
+const { data: members, status: memberstatus, pending: pendingMembers } = useLazyAsyncData(() => $api<IMemberResponse>("/api/member/public", {
     method: 'GET',
     params: {
         search: memberSearchTerm.value,

@@ -124,6 +124,8 @@ export interface IMember {
   organizersDailyManagement?: IOrganizer[];
   organizersDepartmentCoordinator?: IOrganizer[];
   organizersDepartmentMembers?: IOrganizer[];
+  organizersDailyManagementStaff?: IOrganizer[];
+  organizersDepartmentStaff?: IOrganizer[];
   participantsData?: any[];
   committeesData?: any[];
 }
@@ -177,12 +179,14 @@ export interface IPeriod {
 export interface IDailyManagement {
   position: string;
   member: Types.ObjectId | IMember | number;
+  staff: Types.ObjectId[] | IMember[] | number[];
 }
 
 export interface IDepartment {
   name: string;
   coordinator: Types.ObjectId | IMember | number;
   members: Types.ObjectId[] | IMember[] | number[];
+  staff: Types.ObjectId[] | IMember[] | number[];
 }
 
 export interface IOrganizer {
@@ -491,6 +495,8 @@ export interface IPhoto {
   on?: Types.ObjectId | IProject | IAgenda;
   onModel?: "Project" | "Agenda" | "Aspiration";
 }
+export type TVideoProcessingStatus = "pending" | "processing" | "completed" | "failed";
+
 export interface IVideo {
   _id?: string;
   video: string | File;
@@ -501,6 +507,8 @@ export interface IVideo {
   on?: Types.ObjectId | IProject | IAgenda;
   onModel?: "Project" | "Agenda" | "Aspiration";
   thumbnail?: string | IFile;
+  processingStatus?: TVideoProcessingStatus;
+  rawFileKey?: string;
 }
 
 export interface IPrivateKey {

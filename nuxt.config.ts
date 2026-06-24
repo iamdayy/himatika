@@ -35,6 +35,12 @@ export default defineNuxtConfig({
         csrf: false,
       },
     },
+    "/api/storage/**": {
+      security: {
+        xssValidator: false,
+        csrf: false,
+      },
+    },
     "/api/admin/achievement": {
       security: {
         xssValidator: false,
@@ -175,6 +181,9 @@ export default defineNuxtConfig({
     },
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    wahaUrl: process.env.WAHA_URL,
+    wahaSession: process.env.WAHA_SESSION || "default",
+    wahaApiKey: process.env.WAHA_API_KEY,
   },
   app: {
     pageTransition: { name: "page", mode: "out-in" },
@@ -278,6 +287,8 @@ export default defineNuxtConfig({
       maxRequestSizeInBytes: 10 * 1024 * 1024, // 10MB
     },
     rateLimiter: {
+      tokensPerInterval: 1500,
+      interval: 60000,
       driver: {
         name: "lruCache",
       },

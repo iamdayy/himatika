@@ -81,7 +81,7 @@ const runtimeConfig = useRuntimeConfig();
 const memberSearchTerm = ref('');
 const { data: members, status: memberSearchStatus } = useAsyncData(
     'cert-designer-members',
-    () => $api<IMemberResponse>('/api/member', {
+    () => $api<IMemberResponse>('/api/member/public', {
         method: 'GET',
         params: { search: memberSearchTerm.value, page: 0, perPage: 15 }
     }),

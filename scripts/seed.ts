@@ -155,10 +155,10 @@ const runSeed = async () => {
     // Daily Management (Pengurus Harian)
     const dailyManagementRoles = ["Wakil Ketua", "Sekretaris I", "Sekretaris II", "Bendahara I", "Bendahara II"];
     const dailyManagement = [
-      { position: "Ketua Himpunan", member: keyMember._id }, // Explicitly Dayyan Syauqi
+      { position: "Ketua Himpunan", member: keyMember._id, staff: [] }, // Explicitly Dayyan Syauqi
       ...dailyManagementRoles.map((role) => {
         const member = availableMembers.pop();
-        return { position: role, member: member._id };
+        return { position: role, member: member._id, staff: [] };
       })
     ];
 
@@ -174,7 +174,8 @@ const runSeed = async () => {
       return {
         name,
         coordinator: coordinator._id,
-        members: deptMembers
+        members: deptMembers,
+        staff: []
       };
     });
 

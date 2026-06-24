@@ -59,10 +59,9 @@ const updatePhoto = async () => {
             const file = files.value[0] || null;
             if (!file) return;
             const compressedFile = await imageCompression(file, {
-                maxSizeMB: 1,
+                maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
                 useWebWorker: true,
-                alwaysKeepResolution: true,
             });
             formData.append('image', compressedFile);
         }
@@ -99,10 +98,10 @@ const onChangeImage = async (file?: File | null) => {
     if (!file) return;
     loading.value = true;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        alwaysKeepResolution: true,
+        fileType: 'image/webp',
     };
     try {
         const compressedFile = await imageCompression(file, options);
@@ -131,49 +130,12 @@ const onChangeImage = async (file?: File | null) => {
     loading.value = false;
 };
 
-watch(files, (newFiles) => {
-    if (newFiles && newFiles.length > 0) {
-        // Only trigger if it's a fresh selection from UFileUpload input (which sets array)
-        // However, we set files manually in onCropped too. 
-        // We need to distinguish between user selection and our own setting.
-        // Actually UFileUpload emits File[]
-        // We can just rely on the fact that if we set it in onCropped, we likely don't want to re-trigger cropping??
-        // Wait, onCropped sets `files.value = [f]`. This triggers watch? Yes.
-        // But onChangeImage is async processing.
-        // To avoid infinite loop or re-processing cropped image:
-        // We can check if the file is already processed or just handle it carefully.
-        // Simplified: UFileUpload updates `files`. We intercept that.
-        // But `files` is bound to UFileUpload.
-        // Let's modify onChangeImage to NOT rely on watch if possible, or use a separate ref for input.
-        // But UFileUpload v-model binds the files.
-        // Let's stick to the pattern in add.vue for simplicity if it works there.
-        // In add.vue:
-        // watch(files, (newFiles) => { if (newFiles && newFiles.length > 0) onChangeImage(newFiles[0]); });
-        // And onCropped pushes to files? No, add.vue pushes to `files` ref BUT the watch also triggers?
-        // In add.vue:
-        // const files = ref<File[]>([]); 
-        // const photos = ref<IPhoto[]>([]); // this stores the final result
-        // onCropped pushes to `files` AND `photos`.
-        // If onCropped pushes to `files`, the watcher triggers again!
-        // That might be a bug in add.vue or I'm misreading.
-        // check add.vue: `files.value.push(f)` in onCropped.
-        // `watch(files)` calls `onChangeImage(newFiles[0])`.
-        // If onCropped adds a file, newFiles has that file. onChangeImage calls imageCompression on it.
-        // Recursion? 
-        // Let's avoid that potential issue here.
-    }
-});
-
-// Better approach for Edit: use a method for UFileUpload @change if possible, or just watch but check file type/name or something.
-// Or just let UFileUpload be for input, and store result elsewhere.
-// But UFileUpload v-model is convenient.
-// Let's duplicate the logic but add a check or use a separate ref for the file input.
-const inputFile = ref<File | null>(null);
-watch(inputFile, (newFiles) => {
-    if (newFiles) {
-        onChangeImage(newFiles);
-    }
-});
+const onFilesUpdate = (newFile: File | FileList | File[] | null | undefined) => {
+    if (!newFile) return;
+    const f = newFile instanceof File ? newFile : (newFile as FileList | File[])[0];
+    if (!f) return;
+    onChangeImage(f);
+};
 
 
 const addNewTag = async (tag: string) => {
@@ -200,7 +162,7 @@ const responsiveClasses = computed(() => ({
 </script>
 <template>
     <UModal v-model="model" title="Edit photo" :dismissible="!loading">
-        <div class="p-4">
+        <template #body>
             <h2 class="text-lg font-semibold mb-4">Edit Photo</h2>
             <div :class="['space-y-6 text-start', responsiveClasses.container]">
                 <div :class="responsiveClasses.grid">
@@ -211,7 +173,7 @@ const responsiveClasses = computed(() => ({
                         </div>
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Replace
                             Image</label>
-                        <UFileUpload v-model="inputFile" accept="image/*" />
+                        <UFileUpload :model-value="files.length > 0 ? files[0] : null" @update:model-value="onFilesUpdate" accept="image/*" />
                     </div>
 
                     <!-- Tags input -->
@@ -220,10 +182,14 @@ const responsiveClasses = computed(() => ({
                             name="tag" placeholder="Select Tags" />
                     </UFormField>
                 </div>
-                <!-- Submit button -->
-                <UButton @click.prevent="updatePhoto" :loading="loading" label="Update" icon="i-heroicons-check" block
-                    trailing :class="responsiveClasses.button" />
             </div>
-        </div>
+
+        </template>
+        <template #footer>
+            <div class="flex items-center justify-end space-x-2">
+                <UButton :loading="loading" label="Save" @click="updatePhoto" />
+                <UButton color="neutral" variant="soft" label="Cancel" @click="emit('close')" />
+            </div>
+        </template>
     </UModal>
 </template>

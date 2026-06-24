@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { IReqruitment } from '~/types';
+import type { IReqruitment } from '~~/types';
 
 
 // Define emits for parent component communication
@@ -75,7 +75,7 @@ const inputSize = computed(() => {
             <div class="flex items-center justify-between w-full">
                 <UButton @click="emit('close')" label="Close" icon="i-heroicons-x-mark" variant="ghost" color="error"
                     :size="buttonSize" />
-                <UButton type="submit" @click="emit('submit', stateReqruitment)" label="Save"
+                <UButton type="submit" label="Save"
                     icon="i-heroicons-clipboard" trailing :size="buttonSize" />
             </div>
         </template>

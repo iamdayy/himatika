@@ -28,7 +28,22 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Doc not found",
       });
     }
-    if ((doc.uploader as IMember).NIM !== user.member.NIM && !organizer) {
+    const isOrganizer = event.context.organizer;
+    let isCommittee = false;
+
+    if (!isOrganizer && doc.onModel === "Agenda") {
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const isRegisteredCommittee = await CommitteeModel.findOne({
+        agendaId: doc.on as any,
+        member: user.member._id as any,
+      });
+      isCommittee = !!isRegisteredCommittee;
+    }
+
+    const uploaderNIM = (doc.uploader as any)?.NIM;
+    const isUploader = uploaderNIM === user.member.NIM;
+
+    if (!isOrganizer && !isCommittee && !isUploader) {
       throw createError({
         statusCode: 403,
         statusMessage: "You are not authorized to delete this doc",

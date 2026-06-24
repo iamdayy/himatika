@@ -21,7 +21,7 @@ const loading = ref(false);
 
 const searchMember = ref('');
 const { data: tagsData } = useLazyAsyncData(() => $api<ITagsResponse>('/api/news/tags'));
-const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member", { query: { search: searchMember.value } }), {
+const { data: members, status } = useAsyncData(() => $api<IMemberResponse>("/api/member/public", { query: { search: searchMember.value } }), {
     transform: (data) => {
         const members = data.data?.members || [];
         return members.map((member) => ({
@@ -131,10 +131,10 @@ const onChangeImage = async (f?: File | null) => {
         },
         async onCropped(f: File) {
             const options = {
-                maxSizeMB: 1,
+                maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
                 useWebWorker: true,
-                alwaysKeepResolution: true
+                fileType: 'image/webp'
             }
             const compressedFile = await imageCompression(f, options);
             file.value = compressedFile;

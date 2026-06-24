@@ -114,6 +114,32 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
           },
         })
         .populate({
+          path: "organizersDailyManagementStaff",
+          model: OrganizerModel,
+          transform: (doc: IOrganizer, id: any) => {
+            if (doc) {
+              return {
+                role: "Staff Daily Management",
+                period: doc.period,
+              };
+            }
+            return null;
+          },
+        })
+        .populate({
+          path: "organizersDepartmentStaff",
+          model: OrganizerModel,
+          transform: (doc: IOrganizer, id: any) => {
+            if (doc) {
+              return {
+                role: "Staff Department",
+                period: doc.period,
+              };
+            }
+            return null;
+          },
+        })
+        .populate({
           path: "aspirations",
         })
         .populate({
@@ -311,6 +337,22 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
             foreignField: "considerationBoard",
             as: "orgCB",
          }
+      },
+      {
+         $lookup: {
+            from: "organizers",
+            localField: "_id",
+            foreignField: "dailyManagement.staff",
+            as: "orgDMStaff",
+         }
+      },
+      {
+         $lookup: {
+            from: "organizers",
+            localField: "_id",
+            foreignField: "department.staff",
+            as: "orgDeptStaff",
+         }
       }
     ]);
 
@@ -359,6 +401,8 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
          const dm = raw.orgDM[0].dailyManagement.find((d: any) => d.member.toString() === raw._id.toString());
          if (dm) organizer = { role: dm.position, period: raw.orgDM[0].period };
       }
+      else if (raw.orgDMStaff?.length) organizer = { role: "Staff Daily Management", period: raw.orgDMStaff[0].period };
+      else if (raw.orgDeptStaff?.length) organizer = { role: "Staff Department", period: raw.orgDeptStaff[0].period };
 
       return {
         _id: raw._id,

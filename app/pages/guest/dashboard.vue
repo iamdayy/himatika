@@ -123,7 +123,7 @@ definePageMeta({
 });
 
 useHead({
-    title: 'Guest Dashboard'
+    title: () => 'Guest Dashboard'
 });
 
 const { $api } = useNuxtApp();

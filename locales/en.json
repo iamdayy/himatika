@@ -89,6 +89,7 @@
   "considers": "Considers Council",
   "daily_manager": "Daily Manager",
   "department": "Department",
+  "staff": "Staff",
   "social_media": "Social Media",
   "enscript_activiness_letter": "Enscript Activiness Letter",
   "min_point": "Minimum Point",
@@ -378,5 +379,16 @@
   "failed_to_delete_option": "Failed to delete option",
   "gallery_document_description": "Gallery document description",
   "gallery_photo_description": "Gallery photo description",
-  "gallery_video_description": "Gallery video description"
+  "gallery_video_description": "Gallery video description",
+  "file_size": "File size",
+  "video_presigned_mode": "Direct Cloud Upload",
+  "video_uploading_to_cloud": "Uploading video to cloud...",
+  "video_upload_success": "Video uploaded successfully",
+  "video_upload_error": "Failed to upload video",
+  "video_processing_started": "Video is being processed. This may take a few minutes.",
+  "video_processing": "Processing Video...",
+  "video_processing_hint": "Video is being compressed. This page will refresh automatically.",
+  "video_processing_failed": "Video processing failed",
+  "processing": "Processing",
+  "no_videos_yet": "No videos uploaded yet."
 }

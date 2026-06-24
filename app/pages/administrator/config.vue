@@ -4,14 +4,6 @@ import imageCompression from 'browser-image-compression';
 import { CustomFormData } from '~/helpers/CustomFormData';
 import type { ICarousel, IConfig, IPhoto } from "~~/types";
 import type { IConfigResponse, IEncryptionsResponse, IResponse } from '~~/types/IResponse';
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
-
-useHead({
-    title: 'Config'
-});
 const searchQuery = ref('');
 const { $ts } = useI18n();
 const { token } = useAuth();
@@ -151,10 +143,10 @@ const onCropped = async (f: File) => {
 const onChangeImage = async (f?: File | null) => {
     if (!f) return;
     const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 2,
         maxWidthOrHeight: 1920,
         useWebWorker: true,
-        alwaysKeepResolution: true
+        fileType: 'image/webp'
     }
     const compressedFile = await imageCompression(f, options);
     const blob = URL.createObjectURL(compressedFile);
@@ -193,6 +185,8 @@ const addPhoto = async () => {
                 }
             } catch (error: any) {
                 toast.add({ title: $ts('failed'), description: $ts('failed_to_add_carrousel'), color: "error" })
+            } finally {
+                AddCarouselModal.close();
             }
         }
     })
@@ -323,6 +317,14 @@ const links = computed(() => [{
 //     }
 // }, { deep: true });
 
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+
+useHead({
+    title: () => $ts('configuration')
+});
 </script>
 <template>
     <div class="items-center justify-center mb-24">
@@ -502,12 +504,12 @@ const links = computed(() => [{
                     </div>
                     <div class="flex flex-wrap gap-2 my-2 md:my-4">
                         <div class="relative inline-block max-w-[240px]" v-for="img, i in carousels" :key="i">
-                            <NuxtImg v-if="(img as ICarousel).image?.image" provider="localProvider" :src="((img as ICarousel).image?.image as string)"
+                            <NuxtImg v-if="(img as ICarousel).image?.image" provider="localProvider"
+                                :src="((img as ICarousel).image?.image as string)"
                                 class="object-cover rounded-lg shadow-md" alt="Carousel Image" loading="lazy" />
                             <UButton icon="i-heroicons-x-mark" color="error" variant="soft" size="xs"
                                 class="absolute top-2 right-2 !bg-white/80 hover:!bg-white/100"
-                                @click="deletePhoto(i, img._id as string)"
-                                :disabled="notEditMode && !isSaving" />
+                                @click="deletePhoto(i, img._id as string)" :disabled="notEditMode && !isSaving" />
                         </div>
                     </div>
                     <!-- Image upload -->

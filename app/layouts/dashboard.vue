@@ -174,7 +174,7 @@ const openSlideOver = ref<boolean>(false);
                 <!-- User actions -->
                 <div class="flex items-center space-x-3 md:order-2 md:space-x-0 rtl:space-x-reverse">
                     <!-- Language dropdown -->
-                    <UDropdownMenu :items="languages" :popper="{ placement: 'bottom-start' }" :modal="false">
+                    <UDropdownMenu :items="languages" :modal="false" :popper="{ placement: 'bottom-start' }">
                         <UButton icon="i-heroicons-language" variant="link" color="neutral" />
                     </UDropdownMenu>
                     <!-- Dark mode toggle -->
@@ -198,14 +198,6 @@ const openSlideOver = ref<boolean>(false);
                                     {{ (item as any).label }}
                                 </p>
                             </div>
-                        </template>
-
-                        <template #item="{ item }">
-                            <NuxtLink :to="item.to">
-                                <UIcon :name="item.icon" v-if="item.icon"
-                                    class="shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500 ms-auto me-2" />
-                                <span class="truncate">{{ item.label }}</span>
-                            </NuxtLink>
                         </template>
                     </UDropdownMenu>
 

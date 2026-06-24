@@ -150,7 +150,7 @@ watch(selectedTab, (index: any) => {
 
 // Set page head metadata
 useHead({
-    title: "Login",
+    title: () => $ts('login'),
     meta: [
         {
             name: "description",
@@ -213,7 +213,9 @@ onMounted(() => {
             <h4 class="my-4 text-3xl font-bold text-center text-secondary-dark dark:text-secondary-light">{{
                 isMagicLink ? 'Guest Login' : $ts('login') }}</h4>
 
-            <UTabs v-model="selectedTab" :items="[{ label: 'Member', key: 'member', icon: 'i-heroicons-user' }, { label: 'Guest', key: 'guest', icon: 'i-heroicons-users' }]" class="px-2 mt-4" />
+            <UTabs v-model="selectedTab"
+                :items="[{ label: 'Member', key: 'member', icon: 'i-heroicons-user' }, { label: 'Guest', key: 'guest', icon: 'i-heroicons-users' }]"
+                class="px-2 mt-4" />
 
             <UForm ref="form" :state="state" @submit="onSubmit" class="px-2 mt-4 space-y-6">
 

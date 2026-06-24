@@ -1,35 +1,11 @@
 <script setup lang='ts'>
 import { ModalsConfirmation, UBadge, UButton, UCheckbox, VideoPlayer } from '#components';
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import type { IAspiration, IDoc, IMember, IPhoto, IVideo, IVote } from '~~/types';
+import type { IAspiration, IDoc, IMember, IPhoto, IVideo } from '~~/types';
 import type { IAspirationResponse } from '~~/types/IResponse';
 
 const UDropdownMenu = resolveComponent('UDropdownMenu');
-/**
- * Page metadata configuration
- */
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
-const config = useRuntimeConfig();
-/**
- * Set page title
- */
-useHead({
-    title: 'Aspirations',
-});
 
-useSeoMeta({
-    title: 'Aspirations',
-    description: 'View and manage aspirations',
-    keywords: 'aspirations, manage, view',
-    ogTitle: 'Aspirations',
-    ogDescription: 'View and manage aspirations',
-    ogType: 'website',
-    ogImage: '/img/logo.png',
-    ogUrl: `${config.public.public_uri}/aspirations`,
-})
 
 type responsive = {
     [key: string]: 'xs' | 'md';
@@ -406,6 +382,31 @@ const links = computed(() => [{
     label: $ts('aspiration'),
     icon: 'i-heroicons-clipboard-document-list',
 }]);
+/**
+ * Page metadata configuration
+ */
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+const config = useRuntimeConfig();
+/**
+ * Set page title
+ */
+useHead({
+    title: () => $ts('aspiration'),
+});
+
+useSeoMeta({
+    title: 'Aspirations',
+    description: 'View and manage aspirations',
+    keywords: 'aspirations, manage, view',
+    ogTitle: 'Aspirations',
+    ogDescription: 'View and manage aspirations',
+    ogType: 'website',
+    ogImage: '/img/logo.png',
+    ogUrl: `${config.public.public_uri}/aspirations`,
+})
 </script>
 <template>
     <div class="items-center justify-center mb-24">

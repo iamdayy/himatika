@@ -1,5 +1,5 @@
-import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
 import { PointModel } from "~~/server/models/PointModel";
+import { StoragePaths, uploadToR2 } from "~~/server/utils/storage";
 import { IPointLog } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
 
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     
     if (file) {
-      proofUrl = await uploadToR2(file, StoragePaths.ACHIEVEMENTS(user.member._id.toString()));
+      proofUrl = await uploadToR2(file, StoragePaths.ACHIEVEMENTS(user.member.NIM));
     }
 
     await PointModel.create({

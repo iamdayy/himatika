@@ -3,19 +3,6 @@ import { ModalsProjectAdd } from '#components';
 import type { ICategory, IMember } from '~~/types';
 import type { ICategoriesResponse, IProjectsResponse, ITagsResponse } from '~~/types/IResponse';
 
-definePageMeta({
-    layout: 'client',
-    auth: false
-});
-useHead({
-    title: 'Projects',
-    meta: [
-        {
-            name: 'list',
-            content: 'Projects'
-        }
-    ]
-})
 const overlay = useOverlay();
 const AddModalComp = overlay.create(ModalsProjectAdd)
 const { status } = useAuth();
@@ -135,6 +122,21 @@ const links = computed(() => [{
     label: $ts('project'),
     icon: 'i-heroicons-code-bracket',
 }]);
+
+
+definePageMeta({
+    layout: 'client',
+    auth: false
+});
+useHead({
+    title: () => $ts('project'),
+    meta: [
+        {
+            name: 'list',
+            content: 'Projects'
+        }
+    ]
+})
 </script>
 <template>
     <div class="items-center justify-center mb-24">
@@ -181,7 +183,8 @@ const links = computed(() => [{
                     </div>
                     <div class="flex flex-col gap-2 md:items-center md:flex-row">
                         <USelectMenu v-model="selectedTags" :items="tags" multiple
-                            :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full sm:w-44" :loading="pendingTags" />
+                            :placeholder="$ts('filter_by', { key: 'tags' })" class="w-full sm:w-44"
+                            :loading="pendingTags" />
                         <USelectMenu v-model="selectedCategory" :items="categoryOptions" label-key="title"
                             value-key="value" :placeholder="$ts('filter_by', { key: 'category' })"
                             class="w-full sm:w-44" :loading="pendingCategories" />

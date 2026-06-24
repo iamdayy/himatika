@@ -1,27 +1,18 @@
 <script setup lang='ts'>
-// TODO: improve this page
 import { ModalsConfirmation } from '#components';
 import type { TableColumn } from '@nuxt/ui';
 import type { IMessage } from '~~/types';
 import type { IMessageResponse } from '~~/types/IResponse';
-const UDropdownMenu = resolveComponent('UDropdownMenu');
-/**
- * Page metadata configuration
- */
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth'
-});
 
-/**
- * Set page title
- */
-useHead({
-    title: 'Messages'
-});
+const UDropdownMenu = resolveComponent('UDropdownMenu');
+const UButton = resolveComponent('UButton');
+const UBadge = resolveComponent('UBadge');
+const UAvatar = resolveComponent('UAvatar');
+const UIcon = resolveComponent('UIcon');
+
 
 type responsive = {
-    [key: string]: 'xs' | 'md';
+    [key: string]: 'xs' | 'md' | 'lg' | 'sm';
 }
 
 const { $api } = useNuxtApp();
@@ -45,12 +36,21 @@ const isMobile = computed(() => width.value < 640);
  * Responsive UI sizes based on screen width
  */
 const responsiveUISizes = computed<responsive>(() => ({
-    input: isMobile.value ? 'xs' : 'md',
-    button: isMobile.value ? 'xs' : 'md',
-    select: isMobile.value ? 'xs' : 'md',
+    input: isMobile.value ? 'sm' : 'md',
+    button: isMobile.value ? 'sm' : 'md',
+    select: isMobile.value ? 'sm' : 'md',
 }));
 
+/**
+ * Slideover State for viewing messages
+ */
+const isSlideoverOpen = ref(false);
+const selectedMessage = ref<(IMessage & { _id: string, createdAt?: Date }) | null>(null);
 
+function viewMessage(row: any) {
+    selectedMessage.value = row;
+    isSlideoverOpen.value = true;
+}
 
 /**
  * Selected rows management
@@ -58,25 +58,9 @@ const responsiveUISizes = computed<responsive>(() => ({
 const selectedRows = ref<any[]>([]);
 
 /**
- * Handle row selection
- * @param {any} row - The row to be selected or deselected
- */
-function select(row: any) {
-    const index = selectedRows.value.findIndex((item: { id: any; }) => item.id === row.id);
-    if (index === -1) {
-        selectedRows.value.push(row);
-    } else {
-        selectedRows.value.splice(index, 1);
-    }
-}
-
-
-/**
  * Search and filter state
  */
 const search = ref('');
-const filterBy = ref<{ value: "enteredYear" | "class" | "semester", label: string } | null>(null);
-const filter = ref<string[]>([]);
 const deleted = ref<boolean>(false);
 
 /**
@@ -84,29 +68,26 @@ const deleted = ref<boolean>(false);
  */
 const resetFilters = () => {
     search.value = '';
-    filter.value = [];
-    filterBy.value = null;
+    deleted.value = false;
 };
 
 /**
  * Pagination and sorting state
  */
-const sort = ref({ column: 'createdAt', direction: 'asc' as const });
+const sort = ref({ column: 'createdAt', direction: 'desc' as const });
 const page = ref(1);
 const perPage = ref(10);
 
 /**
  * Fetch data from API
  */
-const { data, pending, refresh } = useLazyAsyncData('users', () => $api<IMessageResponse>('/api/message', {
+const { data, pending, refresh } = useLazyAsyncData('messages', () => $api<IMessageResponse>('/api/message', {
     query: {
         search: search.value,
         page: page.value,
         perPage: perPage.value,
         sort: sort.value.column,
         order: sort.value.direction,
-        filterBy: filterBy.value?.value,
-        filter: filter.value,
         deleted: deleted.value
     }
 }), {
@@ -117,24 +98,23 @@ const { data, pending, refresh } = useLazyAsyncData('users', () => $api<IMessage
             length: 0
         }
     }),
-    watch: [page, search, perPage, sort, filter, filterBy, deleted]
+    watch: [page, search, perPage, sort, deleted]
 });
 
 /**
  * Computed properties for pagination
  */
 const pageTotal = computed(() => data.value.data?.length || 0);
-const pageFrom = computed(() => page.value === 0 ? 0 : (page.value - 1) * perPage.value + 1);
+const pageFrom = computed(() => pageTotal.value === 0 ? 0 : (page.value - 1) * perPage.value + 1);
 const pageTo = computed(() => Math.min(page.value * perPage.value, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];
-    const filteredOptions = baseOptions.filter((option) => option <= pageTotal.value);
+    const filteredOptions = baseOptions.filter((option) => option <= Math.max(pageTotal.value, 10));
 
     if (isMobile.value && filteredOptions.length > 3) {
         return filteredOptions.slice(0, 3);
     }
-
-    return filteredOptions;
+    return filteredOptions.length > 0 ? filteredOptions : baseOptions;
 });
 
 
@@ -143,27 +123,33 @@ const perPageOptions = computed(() => {
  */
 const columns = computed<TableColumn<IMessage>[]>(() => [
     {
-        id: 'id',
-        label: '#',
-        size: 50,
+        accessorKey: 'from',
+        header: $ts('from'),
+        size: 250,
         cell: ({ row }) => {
-            return row.index + 1;
+            const name = `${row.original.name?.first || ''} ${row.original.name?.last || ''}`.trim() || 'Anonymous';
+            return h('div', { class: 'flex items-center gap-3 cursor-pointer group', onClick: () => viewMessage(row.original) }, [
+                h(UAvatar, {
+                    alt: name,
+                    size: 'sm',
+                    ui: { background: 'bg-primary-100 dark:bg-primary-900/50', text: 'text-primary-600 dark:text-primary-300' }
+                }),
+                h('div', { class: 'flex flex-col' }, [
+                    h('span', { class: 'font-semibold text-gray-900 dark:text-white group-hover:text-primary-500 transition-colors' }, name),
+                    h('span', { class: 'text-xs text-gray-500' }, row.original.email)
+                ])
+            ]);
         },
     },
     {
         accessorKey: 'subject',
         header: $ts('subject'),
-        size: 200,
+        size: 300,
         cell: ({ row }) => {
-            return row.getValue('subject') || 'No Subject';
-        },
-    },
-    {
-        accessorKey: 'from',
-        header: $ts('from'),
-        size: 200,
-        cell: ({ row }) => {
-            return `${row.original.name.first} ${row.original.name.last}` || 'Anonymous';
+            return h('div', { class: 'cursor-pointer group flex flex-col justify-center', onClick: () => viewMessage(row.original) }, [
+                h('p', { class: 'font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[200px] md:max-w-[300px] group-hover:text-primary-500 transition-colors' }, row.original.subject || 'No Subject'),
+                h('p', { class: 'text-xs text-gray-500 truncate max-w-[200px] md:max-w-[300px] mt-0.5' }, row.original.message || '')
+            ])
         },
     },
     {
@@ -171,15 +157,27 @@ const columns = computed<TableColumn<IMessage>[]>(() => [
         header: $ts('status'),
         size: 100,
         cell: ({ row }) => {
-            return row.getValue('status') || 'Unknown';
+            const isArchived = row.original.archived;
+            return h('div', { onClick: () => viewMessage(row.original), class: 'cursor-pointer w-fit' }, [
+                h(UBadge, {
+                    color: isArchived ? 'neutral' : 'primary',
+                    variant: isArchived ? 'soft' : 'subtle',
+                    size: 'xs',
+                    class: 'rounded-full px-2.5'
+                }, () => isArchived ? $ts('archived') : $ts('active'))
+            ]);
         },
     },
     {
         id: 'actions',
-        header: $ts('actions'),
-        size: 100,
+        header: '',
+        size: 50,
         cell: ({ row }) => {
-            return h(UDropdownMenu)
+            return h('div', { class: 'text-right' }, [
+                h(UDropdownMenu, {
+                    items: items(row.original)
+                }, () => h(UButton, { color: 'gray', variant: 'ghost', icon: 'i-heroicons-ellipsis-vertical-20-solid' }))
+            ])
         },
     }
 ]);
@@ -187,7 +185,6 @@ const columns = computed<TableColumn<IMessage>[]>(() => [
 
 /**
  * Delete a message
- * @param {number} NIM - The NIM of the message to delete
  */
 const deleteMessage = async (id: string) => {
     try {
@@ -195,10 +192,9 @@ const deleteMessage = async (id: string) => {
             method: 'delete',
             query: { id }
         });
-        toast.add({ title: deleted.statusMessage });
-
+        toast.add({ title: deleted.statusMessage, color: 'success' });
     } catch (error: any) {
-        toast.add({ title: error.statusMessage });
+        toast.add({ title: error.statusMessage, color: 'error' });
     }
 };
 
@@ -208,16 +204,13 @@ const archiveMessage = async (id: string) => {
             method: 'post',
             query: { id }
         });
-        toast.add({ title: archived.statusMessage });
-
+        toast.add({ title: archived.statusMessage, color: 'success' });
     } catch (error: any) {
-        toast.add({ title: error.statusMessage });
+        toast.add({ title: error.statusMessage, color: 'error' });
     }
 };
 
-
 /**
-
  * Generate Excel file for export
  */
 const generateXlsx = async () => {
@@ -241,38 +234,35 @@ const generateXlsx = async () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `${title}-${new Date()}.xlsx`);
+        link.setAttribute('download', `${title}-${new Date().getTime()}.xlsx`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Error generating Excel file:', error);
+        toast.add({ title: 'Failed to export Excel', color: 'error' });
     }
 };
 
 /**
- * Watch for changes in search and filter to reset page
+ * Watch for changes in search to reset page
  */
-watch([search, filter], () => {
+watch([search, deleted], () => {
     page.value = 1;
 });
 
-
 /**
  * Open delete confirmation modal
- * @param {number} NIM - The NIM of the message to delete
  */
 const deleteModal = (id: string) => {
     ConfirmationModal.open({
         title: $ts('delete_message'),
-
         body: $ts('delete_message_confirmation', { id }),
         onConfirm() {
             deleteMessage(id).then(() => { ConfirmationModal.close(); refresh(); });
         }
     });
-
 };
 
 const archiveModal = (id: string) => {
@@ -286,123 +276,287 @@ const archiveModal = (id: string) => {
 };
 
 /**
-
  * Generate dropdown items for each row
- * @param {any} row - The row data
- * @returns {Array} Array of dropdown items
  */
 const items = (row: any) => [
     [
         {
-            label: $ts('delete'),
-            icon: 'i-heroicons-trash-20-solid',
-            disabled: row.status == 'deleted',
-            click: () => deleteModal(row._id)
+            label: 'View Details',
+            icon: 'i-heroicons-eye-20-solid',
+            click: () => viewMessage(row)
+        }
+    ],
+    [
+        {
+            label: row.archived ? 'Unarchive' : $ts('archive'),
+            icon: 'i-heroicons-archive-box-arrow-down-20-solid',
+            click: () => archiveModal(row._id)
         },
         {
-            label: $ts('archive'),
-            icon: 'i-heroicons-archive-box-x-mark-20-solid',
-            click: () => archiveModal(row._id)
+            label: $ts('delete'),
+            icon: 'i-heroicons-trash-20-solid',
+            disabled: row.deleted,
+            class: 'text-red-500 dark:text-red-400',
+            click: () => deleteModal(row._id)
         }
     ]
-
 ];
+
+const exportDropdownItems = computed(() => [
+    [
+        {
+            label: 'Export Selected',
+            icon: 'i-heroicons-document-check',
+            disabled: selectedRows.value.length === 0,
+            click: () => generateXlsx()
+        },
+        {
+            label: 'Export All',
+            icon: 'i-heroicons-document-arrow-down',
+            click: () => {
+                selectedRows.value = [];
+                generateXlsx();
+            }
+        }
+    ]
+]);
+
 const links = computed(() => [{
     label: $ts('dashboard'),
     icon: 'i-heroicons-home',
     to: '/dashboard'
 }, {
-    label: $ts('message'),
-    icon: 'i-heroicons-archive-box',
+    label: $ts('messages'),
+    icon: 'i-heroicons-inbox',
 }]);
+
+/**
+ * Page metadata configuration
+ */
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth'
+});
+
+/**
+ * Set page title
+ */
+useHead({
+    title: () => $ts('messages')
+});
 </script>
+
 <template>
-    <div class="items-center justify-center mb-24">
-        <UBreadcrumb :items="links" />
-        <UCard class="p-2 mt-2 md:p-4">
-            <template #header>
-                <div class="flex flex-row items-center justify-between w-full p-1 md:p-2">
-                    <h2 class="text-lg font-semibold text-gray-600 md:text-2xl md:font-bold dark:text-gray-200">Messages
-                    </h2>
+    <div class="mb-24">
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+            <div>
+                <UBreadcrumb :items="links" class="mb-3" />
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                        {{ $ts('messages') }}
+                    </h1>
+                    <UBadge v-if="pageTotal > 0" color="primary" variant="subtle" size="md" class="rounded-full px-2.5">
+                        {{ pageTotal }}
+                    </UBadge>
                 </div>
-            </template>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and respond to user inquiries.</p>
+            </div>
 
-            <div class="w-full py-3">
-                <!-- Filters -->
-                <div class="flex flex-col items-center justify-between gap-3 px-4 py-3 md:flex-row">
-                    <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid" placeholder="Search..."
-                        :size="responsiveUISizes.input" class="w-full md:w-auto" />
-                    <div class="flex flex-col w-full gap-3 md:flex-row md:w-auto">
-                        <!-- <USelectMenu v-model="filterBy" :items="filterable" placeholder="Filter By"
-                            :size="responsiveUISizes.select" class="w-full md:w-40" />
-                        <USelectMenu v-model="filter" :items="data.data.filters" multiple
-                            :placeholder="filterBy?.label || 'none'" :disabled="!filterBy"
-                            :size="responsiveUISizes.select" class="w-full md:w-40" /> -->
-                    </div>
-                </div>
-
-                <!-- Header and Action buttons -->
-                <div class="flex flex-col w-full gap-3 px-4 py-3 md:items-center md:justify-between md:flex-row">
-                    <UButton v-if="selectedRows.length > 1" icon="i-heroicons-arrow-down-tray" trailing color="neutral"
-                        :size="responsiveUISizes.button" @click="generateXlsx">
-                        Export Selected
+            <!-- Global Actions -->
+            <div class="flex items-center gap-2">
+                <UButton icon="i-heroicons-arrow-path" color="gray" variant="ghost" @click="refresh()"
+                    :loading="pending" />
+                <UDropdownMenu :items="exportDropdownItems">
+                    <UButton icon="i-heroicons-arrow-down-tray" color="neutral" variant="outline"
+                        trailing-icon="i-heroicons-chevron-down-20-solid">
+                        Export
                     </UButton>
-                    <UButton v-else icon="i-heroicons-arrow-down-tray" trailing color="neutral"
-                        :size="responsiveUISizes.button" @click="generateXlsx">
-                        Export All
-                    </UButton>
-                    <div class="flex flex-wrap gap-1.5 md:items-center justify-start md:justify-end">
-                        <!--
-    <USelectMenu v-model="selectedColumns" :items="columns" multiple v-if="!isMobile">
-        <UButton icon="i-heroicons-view-columns" color="gray" :size="responsiveUISizes.button">
-            Columns
-        </UButton>
-    </USelectMenu>
-                        -->
-                        <UButton icon="i-heroicons-funnel" color="neutral" :size="responsiveUISizes.button"
-                            v-if="!isMobile" :disabled="search === '' && filter.length === 0" @click="resetFilters">
-                            Reset
-                        </UButton>
-                        <div class="flex flex-col items-center gap-2">
-                            <label class="text-xs font-light text-gray-600 dark:text-gray-400" for="deleted">Show
-                                deleted</label>
-                            <USwitch v-model="deleted" id="deleted" size="xs" />
-                        </div>
-                        <UButton icon="i-heroicons-arrow-path" variant="ghost" :size="responsiveUISizes.button"
-                            @click="refresh()" :loading="pending">
-                        </UButton>
-                    </div>
+                </UDropdownMenu>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <UCard :ui="{
+            root: 'overflow-hidden transition-all duration-300 ring-1 ring-gray-200 dark:ring-gray-800 shadow-sm hover:shadow-md',
+            header: 'p-0 sm:p-0',
+            body: 'p-0 sm:p-0'
+        }">
+
+            <!-- Filters Toolbar -->
+            <div
+                class="border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
+                <div class="w-full sm:w-72">
+                    <UInput v-model="search" icon="i-heroicons-magnifying-glass-20-solid"
+                        placeholder="Search subject or sender..." :size="responsiveUISizes.input" />
                 </div>
 
-                <!-- Table -->
-                <div class="overflow-x-auto">
-
-
-                    <UTable v-model:sort="sort" :data="data.data?.messages" :columns="columns" :loading="pending"
-                        sort-asc-icon="i-heroicons-arrow-up" sort-desc-icon="i-heroicons-arrow-down" sort-mode="manual"
-                        class="w-full" @select="select">
-                    </UTable>
+                <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                    <div
+                        class="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <UIcon name="i-heroicons-trash-20-solid" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Show deleted</span>
+                        <USwitch v-model="deleted" size="sm" color="error" class="ml-1" />
+                    </div>
                 </div>
             </div>
-            <!-- Number of rows & Pagination -->
-            <template #footer>
-                <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
-                    <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
-                        <span class="text-xs leading-none md:text-sm md:leading-5">{{ $ts('rows_per_page')
-                        }}</span>
-                        <USelect v-model="perPage" :items="perPageOptions" class="w-20 me-2" size="xs" />
+
+            <!-- Table -->
+            <div class="overflow-x-auto relative min-h-[300px]">
+                <UTable v-model="selectedRows" v-model:sort="sort" :data="data.data?.messages" :columns="columns"
+                    :loading="pending" sort-asc-icon="i-heroicons-arrow-up" sort-desc-icon="i-heroicons-arrow-down"
+                    sort-mode="manual" class="w-full" :ui="{
+                        tr: 'hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-colors',
+                        td: 'py-3.5'
+                    }">
+                    <template #empty-state>
+                        <div class="flex flex-col items-center justify-center py-16 text-center">
+                            <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-full mb-4 shadow-inner">
+                                <UIcon name="i-heroicons-inbox-20-solid"
+                                    class="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                            </div>
+                            <p class="text-gray-900 dark:text-white font-semibold text-lg">No messages found</p>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-sm">
+                                Your inbox is clean. Try adjusting your search filters if you're looking for something
+                                specific.
+                            </p>
+                        </div>
+                    </template>
+                </UTable>
+            </div>
+
+            <!-- Footer Pagination -->
+            <div
+                class="border-t border-gray-200 dark:border-gray-800 px-4 py-3 bg-gray-50/50 dark:bg-gray-900/50 flex flex-col md:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span class="font-medium">Rows:</span>
+                    <USelect v-model="perPage" :items="perPageOptions" size="xs" color="neutral" variant="outline"
+                        class="w-20" />
+                    <span class="hidden sm:inline ml-2">
+                        Showing <span class="font-medium text-gray-900 dark:text-gray-200">{{ pageFrom }}</span> to
+                        <span class="font-medium text-gray-900 dark:text-gray-200">{{ pageTo }}</span> of <span
+                            class="font-medium text-gray-900 dark:text-gray-200">{{ pageTotal }}</span>
+                    </span>
+                </div>
+
+                <UPagination v-model:page="page" :items-per-page="perPage" :total="pageTotal"
+                    :sibling-count="isMobile ? 1 : 2" show-edges />
+            </div>
+        </UCard>
+
+        <!-- Slideover for Message Details -->
+        <USlideover v-model:open="isSlideoverOpen" prevent-close class="z-50">
+            <UCard class="flex flex-col flex-1 h-full shadow-2xl ring-0 divide-y-0"
+                :ui="{ body: 'flex-1 overflow-y-auto px-6 py-6', header: 'bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 px-6 py-4', footer: 'bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-800 px-6 py-4' }">
+                <template #header>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div
+                                class="p-1.5 bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-lg">
+                                <UIcon name="i-heroicons-envelope-open-20-solid" class="w-5 h-5" />
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                                Message Details
+                            </h3>
+                        </div>
+                        <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
+                            @click="isSlideoverOpen = false" />
                     </div>
-                    <div class="mb-2 sm:mb-0">
-                        <span class="text-xs leading-none md:text-sm md:leading-5">
-                            {{ $ts('showing_results', { start: pageFrom, end: pageTo, total: pageTotal }) }}
-                        </span>
+                </template>
+
+                <div v-if="selectedMessage" class="space-y-6">
+                    <!-- Sender Info -->
+                    <div
+                        class="flex items-start justify-between bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-2xl shadow-sm">
+                        <div class="flex gap-4 items-center">
+                            <UAvatar
+                                :alt="`${selectedMessage.name?.first || ''} ${selectedMessage.name?.last || ''}`.trim() || 'Anonymous'"
+                                size="lg" class="ring-2 ring-gray-100 dark:ring-gray-800"
+                                :ui="{ background: 'bg-primary-100 dark:bg-primary-900/50', text: 'text-primary-600 dark:text-primary-300 font-bold' }" />
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">
+                                    {{ `${selectedMessage.name?.first || ''} ${selectedMessage.name?.last || ''}`.trim()
+                                        ||
+                                        'Anonymous' }}
+                                </h4>
+                                <div class="flex flex-col gap-1.5 mt-2">
+                                    <a :href="`mailto:${selectedMessage.email}`"
+                                        class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 font-medium flex items-center gap-1.5 transition-colors">
+                                        <UIcon name="i-heroicons-envelope-20-solid" class="w-4 h-4" />
+                                        {{ selectedMessage.email }}
+                                    </a>
+                                    <a v-if="selectedMessage.phone" :href="`tel:${selectedMessage.phone}`"
+                                        class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium flex items-center gap-1.5 transition-colors">
+                                        <UIcon name="i-heroicons-phone-20-solid" class="w-4 h-4" />
+                                        {{ selectedMessage.phone }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <UBadge :color="selectedMessage.archived ? 'neutral' : 'success'"
+                            :variant="selectedMessage.archived ? 'soft' : 'subtle'" size="md" class="rounded-full">
+                            {{ selectedMessage.archived ? 'Archived' : 'Active' }}
+                        </UBadge>
                     </div>
 
-                    <UPagination v-model:page="page" :items-per-page="pageTotal" :total="pageTotal"
-                        :sibling-count="isMobile ? 1 : 2" show-edges />
+                    <!-- Message Content -->
+                    <div class="space-y-4">
+                        <div>
+                            <h5
+                                class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                                Subject</h5>
+                            <p class="text-gray-900 dark:text-white font-bold text-xl">{{ selectedMessage.subject || 'No Subject' }}</p>
+                        </div>
+
+                        <div
+                            class="bg-gray-50 dark:bg-gray-800/40 rounded-2xl p-5 border border-gray-100 dark:border-gray-800/80 shadow-inner">
+                            <h5
+                                class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                <UIcon name="i-heroicons-document-text-20-solid" class="w-4 h-4" />
+                                Content
+                            </h5>
+                            <div class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed text-base">
+                                {{
+                                    selectedMessage.message }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div v-if="selectedMessage.tags && selectedMessage.tags.length > 0">
+                        <h5 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Tags</h5>
+                        <div class="flex flex-wrap gap-2">
+                            <UBadge v-for="tag in selectedMessage.tags" :key="tag" color="gray" variant="soft"
+                                class="rounded-full font-medium">
+                                {{ tag }}
+                            </UBadge>
+                        </div>
+                    </div>
                 </div>
-            </template>
-        </UCard>
+
+                <template #footer v-if="selectedMessage">
+                    <div class="flex justify-between gap-3 w-full">
+                        <UButton color="error" variant="soft" icon="i-heroicons-trash-20-solid"
+                            @click="deleteModal(selectedMessage._id); isSlideoverOpen = false">
+                            Delete
+                        </UButton>
+                        <div class="flex gap-2">
+                            <UButton :color="selectedMessage.archived ? 'primary' : 'neutral'" variant="soft"
+                                :icon="selectedMessage.archived ? 'i-heroicons-archive-box-arrow-up-20-solid' : 'i-heroicons-archive-box-arrow-down-20-solid'"
+                                @click="archiveModal(selectedMessage._id); isSlideoverOpen = false">
+                                {{ selectedMessage.archived ? 'Unarchive' : 'Archive' }}
+                            </UButton>
+                            <UButton color="primary" icon="i-heroicons-paper-airplane-20-solid"
+                                :to="`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`"
+                                target="_blank">
+                                Reply
+                            </UButton>
+                        </div>
+                    </div>
+                </template>
+            </UCard>
+        </USlideover>
     </div>
 </template>
+
 <style scoped></style>

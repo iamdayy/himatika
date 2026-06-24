@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import type { IPhotoGrouped } from '~~/types';
 import type { IPhotoResponse, ITagsResponse } from '~~/types/IResponse';
-definePageMeta({
-    layout: 'dashboard',
-    middleware: 'sidebase-auth',
-});
-useHead({
-    title: 'Gallery',
-});
 
-const { $api } = useNuxtApp();
+const { $api, $ts } = useNuxtApp();
 
 const { width } = useWindowSize();
 
@@ -88,6 +81,13 @@ const links = computed(() => [{
     label: 'Gallery',
     icon: 'i-heroicons-photo',
 }]);
+definePageMeta({
+    layout: 'dashboard',
+    middleware: 'sidebase-auth',
+});
+useHead({
+    title: () => $ts('gallery')
+});
 </script>
 
 

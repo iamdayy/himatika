@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { GalleryDocuments, GalleryPhotos, GalleryVideos } from '#components';
-definePageMeta({
-    layout: 'client',
-    auth: false
-});
-const { $ts } = useI18n();
-useHead({
-    title: $ts('gallery'),
-});
 
+const { $ts } = useI18n();
 const links = computed(() => [{
     label: $ts('home'),
     icon: 'i-heroicons-home',
@@ -37,6 +30,13 @@ const items = [
         description: 'This is the documents grouped by agenda/project',
     }
 ]
+definePageMeta({
+    layout: 'client',
+    auth: false
+});
+useHead({
+    title: () => $ts('gallery'),
+});
 </script>
 
 

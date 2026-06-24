@@ -7,16 +7,7 @@ import type { IMember } from '~~/types';
 import type { IResponse } from '~~/types/IResponse';
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 const NuxtImg = resolveComponent('NuxtImg');
-// Define page metadata
-definePageMeta({
-    layout: 'dashboard',
-    middleware: ['sidebase-auth', 'organizer']
-});
 
-// Set page title
-useHead({
-    title: "Batch Edit"
-})
 const { $api } = useNuxtApp();
 const { $ts } = useI18n();
 // Responsive design
@@ -308,6 +299,16 @@ const links = computed(() => [{
     icon: 'i-heroicons-pencil-square-20-solid'
 }
 ]);
+// Define page metadata
+definePageMeta({
+    layout: 'dashboard',
+    middleware: ['sidebase-auth', 'organizer']
+});
+
+// Set page title
+useHead({
+    title: () => $ts('batch_edit')
+})
 </script>
 <template>
     <div class="items-center justify-center mb-24">

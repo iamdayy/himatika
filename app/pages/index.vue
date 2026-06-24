@@ -2,7 +2,7 @@
 import StatCard from '~/components/StatCard.vue';
 import { useResponsiveUiSizes } from '~/composables/useResponsiveUiSizes';
 import type { ICarousel } from '~~/types';
-import type { IConfigResponse, IStatsResponse } from '~~/types/IResponse';
+import type { IConfigResponse, IResponse, IStatsResponse } from '~~/types/IResponse';
 /**
  * Home page for the client layout
  */
@@ -20,7 +20,7 @@ const { data: dataConfig, pending: pendingConfig } = useFetch<IConfigResponse>('
     lazy: false,
     server: true,
 });
-const { data: carouselData, pending: pendingCarousel } = useFetch<IResponse & {data: ICarousel[]}>('/api/carousel');
+const { data: carouselData, pending: pendingCarousel } = useFetch<IResponse & { data: ICarousel[] }>('/api/carousel');
 const config = computed(() => dataConfig.value?.data);
 
 /**
@@ -61,7 +61,7 @@ useSeoMeta({
     <div>
         <!-- Hero Section -->
         <section
-            class="relative w-full min-h-[70vh] flex flex-col justify-center overflow-hidden bg-radial from-cyan-500/5 via-fuchsia-500/5 to-transparent dark:from-cyan-500/10 dark:via-fuchsia-500/10 dark:to-transparent">
+            class="relative w-full min-h-[60vh] flex flex-col justify-center overflow-hidden bg-radial from-cyan-500/5 via-fuchsia-500/5 to-transparent dark:from-cyan-500/10 dark:via-fuchsia-500/10 dark:to-transparent">
             <!-- Glow background effect -->
             <div
                 class="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 dark:bg-cyan-400/10 rounded-full blur-3xl -z-10 animate-pulse">
@@ -83,7 +83,7 @@ useSeoMeta({
             </div>
         </section>
 
-        <section class="py-16 md:py-24 mx-12 md:mx-28" id="about">
+        <section class="pb-8 md:pb-12 mx-12 md:mx-28" id="about">
             <div class="grid grid-cols-1 gap-6 px-4 md:px-12 lg:px-24 pt-2 md:grid-cols-3">
                 <template v-if="pendingStats">
                     <UCard v-for="i in 3" :key="i" class="text-center">

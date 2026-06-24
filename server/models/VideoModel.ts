@@ -25,9 +25,16 @@ const videoSchema = new Schema<IVideoSchema>({
     enum: ["Project", "Agenda", "Aspiration"],
     required: false,
   },
+  processingStatus: {
+    type: String,
+    enum: ["pending", "processing", "completed", "failed"],
+    default: "completed",
+  },
+  rawFileKey: { type: String, default: null },
 });
 
 videoSchema.index({ title: "text", description: "text", tags: "text" });
 videoSchema.plugin(mongooseAutoPopulate);
 
 export const VideoModel = model<IVideoSchema>("Video", videoSchema);
+

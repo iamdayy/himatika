@@ -132,9 +132,12 @@ const responsiveClasses = computed(() => ({
                     <Cropper :src="img" :auto-zoom="true" :stencil-props="stencil" ref="cropper"
                         :background-class="transparency ? 'cropper-transparent-bg' : 'cropper-white-bg'" />
                 </div>
-
-                <UButton label="Crop & Gunakan" :size="uiSize" block @click="crop" :loading="loadingState"
-                    :class="responsiveClasses.button" />
+            </div>
+        </template>
+        <template #footer>
+            <div class="flex items-center justify-end space-x-2">
+                <UButton :loading="loadingState" label="Crop & Gunakan" @click="crop" />
+                <UButton color="neutral" variant="soft" label="Cancel" @click="emits('close')" />
             </div>
         </template>
     </UModal>

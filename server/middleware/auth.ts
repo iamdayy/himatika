@@ -6,8 +6,18 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
+  // Skip auth middleware for signout to allow users with expired tokens to log out
+  if (path === "/api/signout") {
+    return;
+  }
+
   if (checkAuth(event)) {
-    event.context.user = await ensureAuth(event);
-    event.context.organizer = event.context.user.member?.organizer;
+    try {
+      event.context.user = await ensureAuth(event);
+      event.context.organizer = event.context.user.member?.organizer;
+    } catch (error) {
+      // Ignore authentication errors at the middleware level.
+      // Protected endpoints should handle authorization and throw their own errors.
+    }
   }
 });
