@@ -619,7 +619,7 @@ watch(participant, (newValue) => {
 })
 </script>
 <template>
-    <div class="items-center justify-center mb-24 space-y-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 items-center justify-center mb-24 space-y-8 mt-4 md:mt-8">
         <UBreadcrumb :items="links" />
         <div v-if="pendingAgenda || pendingParticipant" class="mt-4">
             <USkeleton class="w-full h-12 mb-6" />
