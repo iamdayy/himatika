@@ -58,6 +58,22 @@ export const sendWhatsappFile = async (
 
   const chatId = formatPhoneNumber(phone);
 
+  const fileObj: any = {
+    mimetype: mimetype,
+    filename: fileName,
+  };
+
+  if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
+    fileObj.url = fileUrl;
+  } else {
+    // Treat as base64 data
+    if (fileUrl.startsWith("data:")) {
+      fileObj.data = fileUrl.split(",")[1];
+    } else {
+      fileObj.data = fileUrl;
+    }
+  }
+
   try {
     const response = await $fetch(`${url}/api/sendFile`, {
       method: "POST",
@@ -69,11 +85,7 @@ export const sendWhatsappFile = async (
       body: {
         session: session,
         chatId: chatId,
-        file: {
-          mimetype: mimetype,
-          filename: fileName,
-          url: fileUrl,
-        },
+        file: fileObj,
         caption: caption,
       },
     });
