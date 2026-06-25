@@ -1,4 +1,6 @@
 <script setup lang='ts'>
+import type { TableColumn } from '@nuxt/ui';
+
 definePageMeta({
     layout: 'dashboard',
     middleware: ['sidebase-auth', 'organizer']
@@ -8,7 +10,15 @@ const route = useRoute();
 const id = route.params.id as string;
 const { $api } = useNuxtApp();
 const toast = useToast();
-
+interface ScanResult {
+    code: string;
+    name: string;
+    role: string;
+    detail: string;
+    class: string;
+    status: string;
+    timestamp: Date;
+}
 // Ambil data agenda untuk menampilkan judul
 const { data: agenda } = useLazyAsyncData(`agenda-${id}`, () => $api<any>(`/api/agenda/${id}`));
 
@@ -68,7 +78,7 @@ const handleScan = async (code: string) => {
         // Feedback Sukses
         if (audioSuccess.value) audioSuccess.value.play();
 
-        const resultData = {
+        const resultData: ScanResult = {
             code, // Simpan untuk referensi debounce, tapi tidak ditampilkan di UI
             name: res.participant.name,
             role: res.role, // 'Committee' atau 'Participant'
@@ -112,10 +122,10 @@ const clearHistory = () => {
 };
 
 // Konfigurasi kolom UTable
-const tableColumns = [
-    { key: 'time', label: 'Waktu' },
-    { key: 'name', label: 'Nama' },
-    { key: 'status', label: 'Status' }
+const tableColumns: TableColumn<ScanResult>[] = [
+    { accessorKey: 'time', header: 'Waktu' },
+    { accessorKey: 'name', header: 'Nama' },
+    { accessorKey: 'status', header: 'Status' }
 ];
 </script>
 
@@ -187,19 +197,19 @@ const tableColumns = [
                 <UButton size="xs" color="neutral" variant="ghost" @click="clearHistory">Clear</UButton>
             </div>
             
-            <UTable :rows="scanHistory" :columns="tableColumns" :ui="{ td: { padding: 'py-3' } }">
+            <UTable :rows="scanHistory" :columns="tableColumns" :ui="{ td: 'py-3' }">
                 <template #time-data="{ row }">
-                    <span class="font-mono text-xs opacity-75">{{ row.timestamp.toLocaleTimeString() }}</span>
+                    <span class="font-mono text-xs opacity-75">{{ row.original.timestamp.toLocaleTimeString() }}</span>
                 </template>
                 <template #name-data="{ row }">
                     <div class="flex flex-col">
-                        <span class="font-medium text-sm">{{ row.name }}</span>
-                        <span class="text-xs opacity-70" v-if="row.detail">{{ row.detail }}</span>
+                        <span class="font-medium text-sm">{{ row.original.name }}</span>
+                        <span class="text-xs opacity-70" v-if="row.original.detail">{{ row.original.detail }}</span>
                     </div>
                 </template>
                 <template #status-data="{ row }">
-                    <UBadge :color="row.status === 'success' ? 'success' : 'error'" variant="subtle" size="xs">
-                        {{ row.status === 'success' ? 'OK' : 'FAIL' }}
+                    <UBadge :color="row.original.status === 'success' ? 'success' : 'error'" variant="subtle" size="xs">
+                        {{ row.original.status === 'success' ? 'OK' : 'FAIL' }}
                     </UBadge>
                 </template>
                 <template #empty-state>

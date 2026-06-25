@@ -102,11 +102,15 @@ const steps = computed<Step[]>(() => {
         if (step.id === 'answer_question') {
             return agenda.value?.configuration?.participant?.questions && agenda.value?.configuration?.participant?.questions.length > 0;
         }
+        
+        const hasPayConfig = agenda.value?.configuration?.participant?.pay || agenda.value?.configuration?.committee?.pay;
+        const isFree = selectedTicketModel.value ? selectedTicketModel.value.price === 0 : ((agenda.value?.configuration?.participant?.amount || 0) === 0);
+        
         if (step.id === 'select_payment') {
-            return agenda.value?.configuration?.participant?.pay || agenda.value?.configuration?.committee?.pay;
+            return hasPayConfig && !isFree;
         }
         if (step.id === 'payment') {
-            return agenda.value?.configuration?.participant?.pay || agenda.value?.configuration?.committee?.pay;
+            return hasPayConfig && !isFree;
         }
         return true;
     });
@@ -124,6 +128,15 @@ const selectedTicketModel = computed(() => {
     if (!selectedTicketModelId.value) return null;
     return ticketModels.value.find((m: any) => (m._id || m.name) === selectedTicketModelId.value) || null;
 });
+
+watch(ticketModels, (newVal) => {
+    if (newVal.length > 0 && !selectedTicketModelId.value) {
+        const firstAvailable = newVal.find((m: any) => !m.quota || (m.sold || 0) < m.quota);
+        if (firstAvailable) {
+            selectedTicketModelId.value = (firstAvailable as any)._id || firstAvailable.name;
+        }
+    }
+}, { immediate: true });
 const draftRegistration = useLocalStorage(`draft_registration_${id}`, {
     registerAs: registerAs.value,
     fullName: '',
@@ -265,7 +278,7 @@ watch(registerAs, (newVal) => {
     }
 }, { immediate: true });
 const paymentMethods = computed<{ label: string; value: IPaymentMethod; icon: string; }[]>(() => {
-    const methods = [
+    let methods = [
         { label: $ts('cash'), value: 'cash', icon: 'i-heroicons-banknotes' },
         { label: $ts('transfer (VA)'), value: 'bank_transfer', icon: 'i-heroicons-credit-card' },
         { label: $ts('qris'), value: 'qris', icon: 'i-heroicons-qr-code' }
@@ -273,6 +286,12 @@ const paymentMethods = computed<{ label: string; value: IPaymentMethod; icon: st
     if (agenda.value?.configuration?.manualPayments && agenda.value.configuration.manualPayments.length > 0) {
         methods.push({ label: 'Transfer Manual', value: 'manual_transfer', icon: 'i-heroicons-document-text' });
     }
+    
+    const allowed = agenda.value?.configuration?.allowedPaymentMethods;
+    if (allowed && allowed.length > 0) {
+        methods = methods.filter(m => allowed.includes(m.value));
+    }
+    
     return methods;
 });
 const vaBanks = ref([
@@ -344,7 +363,19 @@ const register = async (): Promise<boolean | FormError> => {
             if (!user.value && (data as any).participantId) {
                 const pCookie = useCookie(`agenda-participant-${id}`, { maxAge: 60 * 60 * 24 * 30 });
                 pCookie.value = (data as any).participantId;
-                router.replace({ query: { ...route.query, participantId: (data as any).participantId, tab: agenda.value?.configuration?.participant?.questions && agenda.value?.configuration?.participant?.questions.length > 0 ? 'answer_question' : 'select_payment' } });
+                
+                const hasQuestions = agenda.value?.configuration?.participant?.questions && agenda.value?.configuration?.participant?.questions.length > 0;
+                const hasPayConfig = agenda.value?.configuration?.participant?.pay || agenda.value?.configuration?.committee?.pay;
+                const isFree = selectedTicketModel.value ? selectedTicketModel.value.price === 0 : ((agenda.value?.configuration?.participant?.amount || 0) === 0);
+                
+                let nextTab = 'success';
+                if (hasQuestions) {
+                    nextTab = 'answer_question';
+                } else if (hasPayConfig && !isFree) {
+                    nextTab = 'select_payment';
+                }
+                
+                router.replace({ query: { ...route.query, participantId: (data as any).participantId, tab: nextTab } });
             }
             toast.add({
                 title: $ts('success'),
@@ -387,15 +418,13 @@ const register = async (): Promise<boolean | FormError> => {
             return false;
         }
 
-        if (error?.data?.statusCode === 409) {
-            router.replace({
-                query: {
-                    ...route.query,
-                    participantId: (error?.data as any).participantId,
-                    tab: steps.value?.[1]?.id
-                }
+        if (error?.statusCode === 409 || error?.response?.status === 409 || error?.data?.statusCode === 409) {
+            toast.add({
+                title: $ts('failed'),
+                description: errorMsg,
+                color: 'error',
             });
-            return true;
+            return false;
         }
 
         toast.add({
