@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
@@ -37,12 +38,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Agenda not found",
       });
     }
-    agenda.committees?.push({
+    await CommitteeModel.create({
+      agendaId: id,
       member: body.member,
       job: body.job,
       approved: true,
     });
-    await agenda.save();
 
     return {
       statusCode: 200,

@@ -1,5 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { AnswerModel } from "~~/server/models/AnswerModel";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
 
 export default defineEventHandler(async (event) => {
   const { id, registeredId, questionId } = event.context.params as {
@@ -15,9 +16,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Agenda not found",
     });
   }
-  const committee = agenda.committees?.find(
-    (committee) => committee._id === registeredId
-  );
+  const committee = await CommitteeModel.findById(registeredId);
   if (!committee) {
     throw createError({
       statusCode: 404,
