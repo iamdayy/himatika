@@ -1,5 +1,7 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { IError, IResponse } from "~~/types/IResponse";
 /**
  * Handles DELETE requests for removing an agenda.
@@ -30,6 +32,8 @@ export default defineEventHandler(
       // Attempt to find and delete the agenda
       const deleted = await AgendaModel.findByIdAndDelete(id);
       await PhotoModel.deleteMany({ on: id });
+      await ParticipantModel.deleteMany({ agendaId: id });
+      await CommitteeModel.deleteMany({ agendaId: id });
 
       // If the agenda wasn't found, throw an error
       if (!deleted) {
