@@ -88,8 +88,8 @@ const submitLike = async (id: string) => {
                         <div class="flex flex-wrap items-center gap-2 px-2 md:px-4">
                             <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $ts('by') }}</span>
                             <UAvatarGroup size="3xs" :max="3">
-                                <UAvatar v-for="member in featuredNews.authors" :key="(member as IMember).NIM"
-                                    :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
+                                <UAvatar v-for="member in featuredNews.authors" :key="(member as IMember)?.NIM"
+                                    :src="(member as IMember)?.avatar" :alt="(member as IMember)?.fullName" />
                             </UAvatarGroup>
                         </div>
                     </ULink>
@@ -148,8 +148,8 @@ const submitLike = async (id: string) => {
                         <div class="flex items-center gap-2 px-2 md:px-4">
                             <span class="text-xs text-gray-700 dark:text-gray-300">By</span>
                             <UAvatarGroup size="3xs" :max="3">
-                                <UAvatar v-for="member in featuredNews?.authors" :key="(member as IMember).NIM"
-                                    :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
+                                <UAvatar v-for="member in item?.authors" :key="(member as IMember)?.NIM"
+                                    :src="(member as IMember)?.avatar" :alt="(member as IMember)?.fullName" />
                             </UAvatarGroup>
                         </div>
                         <p class="text-xs text-gray-500 dark:text-gray-300">{{ new
