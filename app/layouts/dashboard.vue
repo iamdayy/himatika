@@ -148,7 +148,7 @@ const openSlideOver = ref<boolean>(false);
                                 <NuxtLink to="/profile">
                                     <div class="flex items-center w-full gap-2">
                                         <NuxtImg provider="localProvider"
-                                            :src="user?.member.avatar || '/img/profile-blank.png'"
+                                            :src="user?.member?.avatar || '/img/profile-blank.png'"
                                             class="object-cover rounded-full max-w-12 max-h-12 aspect-square"
                                             loading="lazy" alt="Profile" />
                                         <div class="overflow-ellipsis">
@@ -157,7 +157,7 @@ const openSlideOver = ref<boolean>(false);
                                                 }}
                                             </h2>
                                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
-                                                user?.member.NIM }}
+                                                user?.member?.NIM }}
                                             </h2>
                                         </div>
                                     </div>

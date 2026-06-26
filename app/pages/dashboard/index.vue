@@ -226,9 +226,9 @@ const color = computed(() => {
                     <template #header>
                         <NuxtLink to="/profile">
                             <div class="flex items-center w-full gap-6">
-                                <NuxtImg provider="localProvider" :src="user?.member.avatar || '/img/profile-blank.png'"
+                                <NuxtImg provider="localProvider" :src="user?.member?.avatar || '/img/profile-blank.png'"
                                     class="object-cover rounded-full max-w-16 lg:max-w-24 aspect-square" loading="lazy"
-                                    :alt="user?.member.fullName || 'Profile Image'" />
+                                    :alt="user?.member?.fullName || 'Profile Image'" />
                                 <div>
                                     <h2
                                         class="text-lg font-semibold text-gray-800 lg:text-2xl lg:font-bold dark:text-gray-100">
@@ -239,7 +239,7 @@ const color = computed(() => {
                                     <h2
                                         class="font-medium text-gray-800 text-md lg:text-lg lg:font-semibold dark:text-gray-200">
                                         {{
-                                            user?.member.NIM }}
+                                            user?.member?.NIM }}
                                     </h2>
                                 </div>
                             </div>

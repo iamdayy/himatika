@@ -154,28 +154,28 @@ const initialFormData = computed(() => {
     if (user.value?.member) {
         return {
             registerAs: 'himatika-member',
-            fullName: user.value.member.fullName || '',
-            email: user.value.member.email || '',
-            phone: user.value.member.phone || '',
-            NIM: user.value.member.NIM || 0,
-            class: user.value.member.class || '',
-            semester: user.value.member.semester || 0,
+            fullName: user.value?.member?.fullName || '',
+            email: user.value?.member?.email || '',
+            phone: user.value?.member?.phone || '',
+            NIM: user.value?.member?.NIM || 0,
+            class: user.value?.member?.class || '',
+            semester: user.value?.member?.semester || 0,
             prodi: (user.value.member as any).prodi || '',
             instance: '',
-            confirmEmail: user.value.member.email || ''
+            confirmEmail: user.value?.member?.email || ''
         };
     } else if (user.value?.guest) {
         return {
-            registerAs: user.value.guest.instance === 'ITSNU Pekalongan' ? 'internal-student' : 'external-student',
-            fullName: user.value.guest.fullName || '',
-            email: user.value.guest.email || '',
-            phone: user.value.guest.phone || '',
-            NIM: user.value.guest.NIM || 0,
-            class: user.value.guest.class || '',
-            semester: user.value.guest.semester || 0,
-            prodi: user.value.guest.prodi || '',
-            instance: user.value.guest.instance || '',
-            confirmEmail: user.value.guest.email || ''
+            registerAs: user.value?.guest?.instance === 'ITSNU Pekalongan' ? 'internal-student' : 'external-student',
+            fullName: user.value?.guest?.fullName || '',
+            email: user.value?.guest?.email || '',
+            phone: user.value?.guest?.phone || '',
+            NIM: user.value?.guest?.NIM || 0,
+            class: user.value?.guest?.class || '',
+            semester: user.value?.guest?.semester || 0,
+            prodi: user.value?.guest?.prodi || '',
+            instance: user.value?.guest?.instance || '',
+            confirmEmail: user.value?.guest?.email || ''
         };
     }
     return draftRegistration.value;

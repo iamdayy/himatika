@@ -75,7 +75,7 @@ const onFileChange = async ($event: Event) => {
                     await $api("/api/member/avatar", {
                         method: "put",
                         query: {
-                            NIM: user?.value?.member.NIM
+                            NIM: user?.value?.member?.NIM
                         },
                         body
                     });
@@ -128,7 +128,7 @@ const member = ref({
     aspirations: fullProfile.value?.aspirations || [],
     manualPoints: fullProfile.value?.manualPoints || [],
     badges: fullProfile.value?.badges || [],
-    organizer: user?.value?.member.organizer || undefined,
+    organizer: user?.value?.member?.organizer || undefined,
 })
 
 // Watch fullProfile changes (e.g. after first hydration)
@@ -178,7 +178,7 @@ watch(fullProfile, (newVal) => {
 const openImage = () => {
     ImageModal.open({
         photo: {
-            image: user?.value?.member.avatar || '/img/member-blank.png',
+            image: user?.value?.member?.avatar || '/img/member-blank.png',
             archived: false,
         },
         canRemove: false
@@ -189,7 +189,7 @@ const saveProfile = async () => {
         const response = await $api("/api/member", {
             method: "put",
             query: {
-                NIM: user?.value?.member.NIM
+                NIM: user?.value?.member?.NIM
             },
             body: member.value
         });
@@ -401,7 +401,7 @@ useHead({
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
                                         $ts('name') }}
                                     </dt>
-                                    <dd class="text-base font-semibold sm:text-lg">{{ user?.member.fullName }}</dd>
+                                    <dd class="text-base font-semibold sm:text-lg">{{ user?.member?.fullName }}</dd>
                                 </div>
                                 <div class="flex flex-col py-2">
                                     <dt class="mb-1 text-sm text-gray-500 sm:text-base dark:text-gray-400">{{
@@ -835,7 +835,7 @@ useHead({
                 <UCard class="px-4 pt-8 md:px-8 md:pt-12" id="profile" :ui="{ root: 'overflow-visible' }">
                     <!-- User avatar and member summary -->
                     <div id="avatar" class="relative w-56 h-56 mx-auto -mt-32 overflow-hidden rounded-full group">
-                        <NuxtImg provider="localProvider" :src="user?.member.avatar || '/img/profile-blank.png'"
+                        <NuxtImg provider="localProvider" :src="user?.member?.avatar || '/img/profile-blank.png'"
                             class="object-cover w-full aspect-square" loading="lazy" />
                         <div
                             class="absolute top-0 left-0 flex items-center justify-center w-full h-0 gap-2 duration-500 rounded-full opacity-0 bg-accent-2/60 bg-opacity-95 group-hover:h-full group-hover:opacity-100">
@@ -857,23 +857,23 @@ useHead({
                         <dl class="w-full text-gray-900 dark:text-white">
                             <!-- User member summary -->
                             <div class="flex flex-col pb-6">
-                                <dd class="text-lg font-semibold">{{ user?.member.email }}</dd>
+                                <dd class="text-lg font-semibold">{{ user?.member?.email }}</dd>
                             </div>
                             <div class="flex flex-col py-3">
                                 <dt class="text-sm text-gray-500 dark:text-gray-400">NIM</dt>
-                                <dd class="text-lg font-semibold">{{ user?.member.NIM }}
+                                <dd class="text-lg font-semibold">{{ user?.member?.NIM }}
                                 </dd>
                             </div>
                             <div class="flex flex-col py-3">
                                 <dt class="text-sm text-gray-500 dark:text-gray-400">{{ $ts('class') }}</dt>
                                 <UInput v-model="member.class" placeholder="Class" v-if="editMode" />
-                                <dd v-else class="text-lg font-semibold">{{ user?.member.class }}</dd>
+                                <dd v-else class="text-lg font-semibold">{{ user?.member?.class }}</dd>
                             </div>
                             <div class="flex flex-col py-3">
                                 <dt class="text-sm text-gray-500 dark:text-gray-400">{{ $ts('semester') }}</dt>
 
                                 <UInput v-model="member.semester" placeholder="Semester" v-if="editMode" />
-                                <dd class="text-lg font-semibold" v-else>{{ user?.member.semester }}</dd>
+                                <dd class="text-lg font-semibold" v-else>{{ user?.member?.semester }}</dd>
                             </div>
                             <div class="flex flex-col">
                                 <dt class="text-sm text-gray-500 dark:text-gray-400">{{ $ts('generation') }}</dt>
@@ -888,7 +888,7 @@ useHead({
                             @click="generateActivinessLetterConfirm" />
                         <div class="flex flex-row gap-2">
                             <UButton block class="flex-1" :label="$ts('change_email')" size="sm" color="success"
-                                :to="{ path: '/change-email', query: { NIM: user?.member.NIM, email: user?.member.email, username: user?.username } }" />
+                                :to="{ path: '/change-email', query: { NIM: user?.member?.NIM, email: user?.member?.email, username: user?.username } }" />
                             <UButton block class="flex-1" :label="$ts('change_password')" size="sm" color="error"
                                 :to="{ path: '/change-password' }" />
                         </div>

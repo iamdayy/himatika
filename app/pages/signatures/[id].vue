@@ -94,7 +94,7 @@ const signDocument = () => {
 const download = () => {
     const link = document.createElement('a');
     link.href = doc.value.doc as string;
-    link.download = `Surat Keterangan Aktif ${user?.value?.member.NIM} Semester ${user.value?.member.semester}.pdf`;
+    link.download = `Surat Keterangan Aktif ${user?.value?.member?.NIM} Semester ${user.value?.member?.semester}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -203,7 +203,7 @@ const links = computed(() => [{
                 <UButton :label="$ts('sign')" @click="signDocument" block :loading="loading"
                     v-if="data?.data?.signedByMe === false" />
                 <UButton :label="$ts('download')" block @click="download" :loading="loading"
-                    v-else-if="user?.member.NIM == (doc.uploader as IMember | undefined)?.NIM"
+                    v-else-if="user?.member?.NIM == (doc.uploader as IMember | undefined)?.NIM"
                     :disabled="docFullSigned === false" />
             </template>
         </UCard>
