@@ -1,16 +1,43 @@
 import otpGenerator from "otp-generator";
+import { z } from "zod";
 import { ConfigModel } from "~~/server/models/ConfigModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { OTPModel } from "~~/server/models/OTPModel";
 import Email, { EmailTemplate } from "~~/server/utils/mailTemplate";
 import { sendWhatsappMessage } from "~~/server/utils/whatsapp";
-import { IReqGenerateOTP } from "~~/types/IRequestPost";
 import { IGenerateOTPResponse } from "~~/types/IResponse";
 const config = useRuntimeConfig();
+
+const generateOTPSchema = z.object({
+  email: z.string().email("Format email tidak valid"),
+  NIM: z.union([z.string(), z.number()]).transform(val => Number(val)),
+  type: z.enum([
+    "Verify Account",
+    "Change Password",
+    "Reset Password",
+    "Change Email",
+    "Change Phone",
+    "Verify Email",
+    "Verify Phone",
+  ]),
+  link: z.string().min(1, "Link diperlukan"),
+});
+
 export default defineEventHandler(
   async (event): Promise<IGenerateOTPResponse> => {
     try {
-      const { email, type, link, NIM } = await readBody<IReqGenerateOTP>(event);
+      const rawBody = await readBody(event);
+      const validation = generateOTPSchema.safeParse(rawBody);
+
+      if (!validation.success) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Validasi gagal",
+          data: validation.error.format(),
+        });
+      }
+
+      const { email, type, link, NIM } = validation.data;
 
       const member = await MemberModel.findOne({ email, NIM });
       if (!member) {
@@ -26,6 +53,23 @@ export default defineEventHandler(
           },
         };
       }
+
+      // Rate-limit: cek apakah OTP untuk email+type ini masih valid
+      const existingOTP = await OTPModel.findOne({ email, type });
+      if (existingOTP && existingOTP.expiresAt > new Date()) {
+        const remainingMs = existingOTP.expiresAt.getTime() - Date.now();
+        const remainingSec = Math.ceil(remainingMs / 1000);
+        throw createError({
+          statusCode: 429,
+          statusMessage: `Kode OTP masih aktif. Silakan tunggu ${remainingSec} detik sebelum meminta ulang.`,
+          data: { 
+            message: `Tunggu ${remainingSec} detik`, 
+            name: "rate_limit",
+            expiresAt: existingOTP.expiresAt.toString(),
+          },
+        });
+      }
+
       const configuration = await ConfigModel.find().select("-id");
       const configUse = configuration[configuration.length - 1];
       // Generate OTP
@@ -37,64 +81,39 @@ export default defineEventHandler(
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 menit
 
-      let linkTo = `${config.public.public_uri}${link}&code=${code}&expiresAt=${expiresAt}`;
+      const linkTo = `${config.public.public_uri}${link}&code=${code}&expiresAt=${expiresAt}`;
       const sender = {
         email: config.resend_from,
         name: `${configUse?.name} App OTP Code`,
       };
 
       const t = await useTranslationServerMiddleware(event);
-      const otp = await OTPModel.findOne({ email });
-      if (otp) {
-        otp.code = code;
-        otp.expiresAt = expiresAt;
-        await otp.save();
-        linkTo = `${config.public.public_uri}${link}&code=${otp.code}&expiresAt=${otp.expiresAt}`;
-        // Simpan OTP ke database
-        const mailed = await sendEmail(
-          sender,
-          email,
-          `${t('emails.otp.' + otp.type.toLowerCase().replace(/ /g, '_') + '.subject')}`,
-          emailText(otp.type, linkTo, code, {
-            fullName: member?.fullName || "",
-            email: member?.email || "",
-          }, t),
-          "OTP Code"
-        );
 
-        if (!mailed) {
-          throw createError({
-            statusCode: 500,
-            statusMessage: "Terjadi Kesalahan Server",
-            data: { message: "Email gagal dikirim", name: "email" },
-          });
-        }
-      } else {
-        // Simpan OTP ke database
-        const newOTP = await OTPModel.create({
-          email,
-          code,
-          NIM,
-          expiresAt,
-          type,
+      // Upsert: update existing atau create baru berdasarkan {email, type}
+      await OTPModel.findOneAndUpdate(
+        { email, type },
+        { code, NIM, expiresAt, createdAt: now },
+        { upsert: true, new: true }
+      );
+
+      // Kirim email
+      const mailed = await sendEmail(
+        sender,
+        email,
+        `${t('emails.otp.' + type.toLowerCase().replace(/ /g, '_') + '.subject')}`,
+        emailText(type, linkTo, code, {
+          fullName: member?.fullName || "",
+          email: member?.email || "",
+        }, t),
+        "OTP Code"
+      );
+
+      if (!mailed) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: "Terjadi Kesalahan Server",
+          data: { message: "Email gagal dikirim", name: "email" },
         });
-        const mailed = await sendEmail(
-          sender,
-          email,
-          `${t('emails.otp.' + type.toLowerCase().replace(/ /g, '_') + '.subject')}`,
-          emailText(type, linkTo, code, {
-            fullName: member?.fullName || "",
-            email: member?.email || "",
-          }, t),
-          "OTP Code"
-        );
-        if (!mailed) {
-          throw createError({
-            statusCode: 500,
-            statusMessage: "Terjadi Kesalahan Server",
-            data: { message: "Email gagal dikirim", name: "email" },
-          });
-        }
       }
 
       if (member && (member as any).phone) {
@@ -115,8 +134,8 @@ export default defineEventHandler(
     } catch (error: any) {
       console.error("Error generating OTP:", error);
       throw createError({
-        statusCode: error.statusCode,
-        statusMessage: error.statusMessage,
+        statusCode: error.statusCode || 500,
+        statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
         data: error.data,
       });
     }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IAgendaConfiguration } from '~~/types';
+import type { IAgendaConfiguration, IPaymentMethod } from '~~/types';
 import type { IAgendaResponse, IResponse } from '~~/types/IResponse';
 
 definePageMeta({
@@ -24,6 +24,7 @@ const configurationState = reactive<IAgendaConfiguration>({
     committee: {} as any,
     participant: {} as any,
     manualPayments: [],
+    allowedPaymentMethods: ['cash', 'bank_transfer', 'qris', 'manual_transfer'],
 });
 
 watch(agenda, (newAgenda) => {
@@ -32,8 +33,26 @@ watch(agenda, (newAgenda) => {
         if (!configurationState.manualPayments) {
             configurationState.manualPayments = [];
         }
+        if (!configurationState.allowedPaymentMethods || configurationState.allowedPaymentMethods.length === 0) {
+            configurationState.allowedPaymentMethods = ['cash', 'bank_transfer', 'qris', 'manual_transfer'];
+        }
     }
 }, { immediate: true });
+
+const togglePaymentMethod = (method: IPaymentMethod, enabled: any) => {
+    const isEnabled = !!enabled;
+    if (!configurationState.allowedPaymentMethods) configurationState.allowedPaymentMethods = [];
+    if (isEnabled) {
+        if (!configurationState.allowedPaymentMethods.includes(method)) {
+            configurationState.allowedPaymentMethods.push(method);
+        }
+    } else {
+        configurationState.allowedPaymentMethods = configurationState.allowedPaymentMethods.filter(m => m !== method);
+    }
+}
+const isMethodEnabled = (method: IPaymentMethod) => {
+    return configurationState.allowedPaymentMethods?.includes(method) ?? false;
+}
 
 const loading = ref(false);
 
@@ -106,15 +125,32 @@ const links = computed(() => [
                     <div class="flex justify-between items-center">
                         <div>
                             <h2 class="text-xl font-bold flex items-center gap-2">
-                                <UIcon name="i-heroicons-credit-card" class="text-primary" />
-                                Metode Transfer Manual
+                                <UIcon name="i-heroicons-adjustments-horizontal" class="text-primary" />
+                                Pengaturan Metode Pembayaran
                             </h2>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tambahkan rekening Bank atau
-                                E-Wallet yang bisa digunakan peserta untuk mentransfer uang pendaftaran. Jika
-                                dikosongkan, opsi transfer manual tidak akan muncul.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pilih metode pembayaran yang akan ditampilkan kepada peserta saat mendaftar.</p>
                         </div>
                     </div>
                 </template>
+                
+                <div class="space-y-4 mb-8">
+                    <UCheckbox :model-value="isMethodEnabled('cash')" @update:model-value="togglePaymentMethod('cash', $event)" label="Tunai (Cash)" />
+                    <UCheckbox :model-value="isMethodEnabled('bank_transfer')" @update:model-value="togglePaymentMethod('bank_transfer', $event)" label="Transfer Virtual Account (Otomatis)" />
+                    <UCheckbox :model-value="isMethodEnabled('qris')" @update:model-value="togglePaymentMethod('qris', $event)" label="QRIS (Otomatis)" />
+                    <UCheckbox :model-value="isMethodEnabled('manual_transfer')" @update:model-value="togglePaymentMethod('manual_transfer', $event)" label="Transfer Manual (Verifikasi Admin)" />
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-800 my-6"></div>
+
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <UIcon name="i-heroicons-credit-card" class="text-primary" />
+                            Metode Transfer Manual
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tambahkan rekening Bank atau E-Wallet yang bisa digunakan peserta untuk mentransfer uang pendaftaran secara manual.</p>
+                    </div>
+                </div>
 
                 <div class="space-y-6">
                     <div v-for="(payment, index) in configurationState.manualPayments" :key="index"

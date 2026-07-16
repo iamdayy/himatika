@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { ICommittee, IMember } from "~~/types";
 import { ICommitteeResponse, IError } from "~~/types/IResponse";
 
@@ -16,16 +17,14 @@ export default defineEventHandler(
           statusMessage: "Agenda not found",
         };
       }
-      let committee: ICommittee | undefined;
+      let committee: ICommittee | null = null;
       if (user) {
-        committee = agenda.committees?.find(
-          (r) => (r.member as IMember | undefined)?.NIM === user.member.NIM
-        );
+        committee = (await CommitteeModel.findOne({
+          agendaId: id,
+          member: user.member._id,
+        }).populate("member")) as unknown as ICommittee;
       } else {
-        // const ip =;
-        // committee = agenda.committee?.find(
-        //     (r) => r.guest?.ip === ip
-        //     );
+        // guest committee lookup logic if needed
       }
       if (!committee) {
         return {

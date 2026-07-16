@@ -39,7 +39,7 @@ const ConfirmationModal = overlay.create(ModalsConfirmation);
 const id = route.params.id;
 const search = ref('');
 const debouncedSearch = refDebounced(search, 500);
-const { data, refresh, pending } = useLazyAsyncData<IAgendaParticipantResponse>('agenda-participant', () => $fetch(`/api/agenda/${id}/participant`, {
+const { data, refresh, pending } = useLazyAsyncData<IAgendaParticipantResponse>('agenda-participant', () => $api(`/api/agenda/${id}/participant`, {
     method: 'GET',
     query: {
         page: pagination.value.pageIndex,
@@ -110,7 +110,7 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
                     modelValue: table.getIsSomePageRowsSelected()
                         ? 'indeterminate'
                         : table.getIsAllPageRowsSelected(),
-                    'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                    'onUpdate:modelValue': (value: any) =>
                         table.toggleAllPageRowsSelected(!!value),
                     'aria-label': 'Select all'
                 }),
@@ -118,7 +118,7 @@ const columns = computed<TableColumn<IParticipant>[]>(() => {
                 h(UCheckbox, {
                     modelValue: row.getIsSelected(),
                     size: responsiveUISizes.value.input,
-                    'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                    'onUpdate:modelValue': (value: any) => row.toggleSelected(!!value),
                     'aria-label': 'Select row'
                 })
         },
@@ -413,6 +413,7 @@ const generateXlsx = async () => {
             throw new Error('No data to export');
         }
         const headers = [
+            { header: "Kode Tiket", key: "_id" },
             { header: "Nama Lengkap", key: "fullName" },
             { header: "NIM", key: "NIM" },
             { header: "Email", key: "email" },

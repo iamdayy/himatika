@@ -176,7 +176,7 @@ const submit = async () => {
                 </div> -->
 
                 <UFormField label="Posisi / Jabatan">
-                    <USelectMenu v-model="jobTitle" :items="jobOptions" searchable creatable
+                    <USelectMenu v-model="jobTitle" :items="jobOptions" searchable create-item
                         placeholder="Pilih atau ketik jabatan baru..." @create="createJob" class="w-full" />
                 </UFormField>
 

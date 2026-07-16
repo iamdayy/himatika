@@ -331,7 +331,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="items-center justify-center mb-24">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 items-center justify-center mb-24 mt-4 md:mt-8">
         <UBreadcrumb :links="links" />
         <div v-if="pendingAgenda || pendingCommittee" class="mt-4">
             <USkeleton class="w-full h-12 mb-6" />

@@ -33,10 +33,14 @@ export default defineCachedEventHandler(
 
     // If an ID is provided, return a single project
     if (id) {
-      const project = await ProjectModel.findById(id).populate({
-        path: "photos",
-        model: PhotoModel,
-      }).lean();
+      const project = await ProjectModel.findById(id).populate([
+        {
+          path: "photos",
+          model: PhotoModel,
+        },
+        { path: "category" },
+        { path: "members" }
+      ]).lean();
       if (!project) {
         throw createError({
           statusCode: 404,
@@ -88,6 +92,7 @@ export default defineCachedEventHandler(
     const projectsLength = await ProjectModel.countDocuments(query);
 
     const projects = await ProjectModel.find(query)
+      .populate(["category", "members"])
       .skip((Number(page) - 1) * Number(perPage))
       .limit(Number(perPage))
       .sort(sortOpt)

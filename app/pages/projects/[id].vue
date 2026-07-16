@@ -113,7 +113,7 @@ const addPhotoModal = () => {
 const openImageModal = (photo: IPhoto) => {
     ImageOpenComp.open({
         photo,
-        canRemove: project.value?.members.map(member => (member as IMember).NIM).includes(user.value?.member.NIM as number),
+        canRemove: project.value?.members.map(member => (member as IMember).NIM).includes(user.value?.member?.NIM as number),
         onRemove: () => {
             photoId.value = photo._id as string;
             modalConfirmation.value = true;
@@ -301,7 +301,7 @@ const links = computed(() => [{
                 <template #footer>
                     <UButton class="flex-1" color="secondary" block variant="solid" :size="responsiveUISizes.button"
                         icon="i-heroicons-user-plus"
-                        v-if="project.members.map(member => (member as IMember).NIM).includes(user?.member.NIM as number)"
+                        v-if="project.members.map(member => (member as IMember).NIM).includes(user?.member?.NIM as number)"
                         @click="addPhotoModal">Add Photo</UButton>
                 </template>
             </UCard>

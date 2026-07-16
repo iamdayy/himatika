@@ -342,6 +342,11 @@ const configurationSchema = new Schema<IAgendaConfigurationSchema>({
     type: [manualPaymentTargetSchema],
     default: [],
   },
+  allowedPaymentMethods: {
+    type: [String],
+    enum: ["cash", "bank_transfer", "qris", "manual_transfer"],
+    default: undefined,
+  },
 });
 /**
  * Schema for representing a committee member.

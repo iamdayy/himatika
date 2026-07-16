@@ -69,8 +69,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // 6. Update Status Presensi
+  const scanTime = new Date();
   participant.visiting = true;
-  participant.visitAt = new Date();
+  participant.visitAt = scanTime.toISOString();
   await participant.save();
 
   let memberData: IMember | IGuest | undefined;
@@ -99,7 +100,7 @@ export default defineEventHandler(async (event) => {
         agendaId: agenda._id.toString(),
         name: memberData.fullName,
         email: memberData.email,
-        visitTime: participant.visitAt.toISOString(),
+        visitTime: scanTime.toISOString(),
       }
     }).catch((e) => console.error("Failed to publish check-in to QStash", e));
   }

@@ -226,9 +226,9 @@ const color = computed(() => {
                     <template #header>
                         <NuxtLink to="/profile">
                             <div class="flex items-center w-full gap-6">
-                                <NuxtImg provider="localProvider" :src="user?.member.avatar || '/img/profile-blank.png'"
+                                <NuxtImg provider="localProvider" :src="user?.member?.avatar || '/img/profile-blank.png'"
                                     class="object-cover rounded-full max-w-16 lg:max-w-24 aspect-square" loading="lazy"
-                                    :alt="user?.member.fullName || 'Profile Image'" />
+                                    :alt="user?.member?.fullName || 'Profile Image'" />
                                 <div>
                                     <h2
                                         class="text-lg font-semibold text-gray-800 lg:text-2xl lg:font-bold dark:text-gray-100">
@@ -239,7 +239,7 @@ const color = computed(() => {
                                     <h2
                                         class="font-medium text-gray-800 text-md lg:text-lg lg:font-semibold dark:text-gray-200">
                                         {{
-                                            user?.member.NIM }}
+                                            user?.member?.NIM }}
                                     </h2>
                                 </div>
                             </div>
@@ -380,7 +380,11 @@ const color = computed(() => {
                             </NuxtLink>
                         </div>
                     </template>
-                    <div>
+                    <div v-if="recentAgendas.length === 0" class="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+                        <UIcon name="i-heroicons-calendar" class="w-12 h-12 mb-2 opacity-50" />
+                        <p>{{ $ts('no_agenda_yet') || 'Belum ada agenda' }}</p>
+                    </div>
+                    <div v-else>
                         <UCarousel ref="carouselRef"
                             :items="recentAgendas"
                     v-slot="{ item }" arrows dots loop :autoplay="{ delay: 30000 }" next-icon="i-lucide-chevron-right"
@@ -399,7 +403,7 @@ const color = computed(() => {
                         arrows: 'w-full top-1/2 transform -translate-y-1/2 absolute',
                         dot: 'w-6 h-1'
                     }">
-                    <div class="px-12">
+                    <div class="w-full px-12">
                         <span class="mt-4 text-sm text-gray-400 whitespace-nowrap dark:text-white">Title</span>
                         <h3
                             class="self-center font-semibold text-gray-500 ms-2 text-md whitespace-nowrap dark:text-white/60">
@@ -443,7 +447,11 @@ const color = computed(() => {
                             </NuxtLink>
                         </div>
                     </template>
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div v-if="projectsMe.length === 0" class="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+                        <UIcon name="i-heroicons-code-bracket" class="w-12 h-12 mb-2 opacity-50" />
+                        <p>{{ $ts('no_project_yet') || 'Belum ada proyek' }}</p>
+                    </div>
+                    <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <UCard v-for="project, i in projectsMe.slice(0, 4)" :key="i" class="">
                             <template #header>
                                 <div class="flex items-center justify-between mb-2">

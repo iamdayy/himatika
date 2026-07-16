@@ -54,8 +54,8 @@ const OTPForm = reactive({
 
 
 const SendOTPCode = async () => {
+    const link = `/register?NIM=${stateVerifyNIM.NIM}&username=${stateForm.username}&email=${stateForm.email}`;
     try {
-        const link = `/register?NIM=${stateVerifyNIM.NIM}&username=${stateForm.username}&email=${stateForm.email}`;
         const response = await $fetch<IGenerateOTPResponse>("/api/otp/generate", {
             method: "post",
             body: {
@@ -73,7 +73,17 @@ const SendOTPCode = async () => {
             toast.add({ title: $ts("otp_send_success"), color: "success" });
         }
     } catch (error: any) {
+        // Jika rate-limited (429), OTP sebelumnya masih aktif — set expiresAt dan lanjutkan
+        if (error?.data?.statusCode === 429 && error?.data?.data?.expiresAt) {
+            OTPForm.expiresAt = error.data.data.expiresAt;
+            if (import.meta.client) {
+                sessionStorage.setItem('otpExpiresAt', OTPForm.expiresAt);
+            }
+            toast.add({ title: $ts("otp_send_success"), color: "success" });
+            return; // OTP masih aktif, bisa lanjut ke step verifikasi
+        }
         toast.add({ title: $ts("otp_send_failed"), color: "error" });
+        throw error; // Re-throw agar caller tahu OTP gagal
     }
 };
 const finish = async () => {
@@ -105,14 +115,15 @@ const register = async (): Promise<boolean | FormError> => {
         });
         if (registered.statusCode == 200) {
             toast.add({ title: $ts("register_success"), description: $ts('register_success_desc'), color: "success" });
-            SendOTPCode();
+            // Await OTP — jangan lanjutkan ke step verifikasi jika gagal
+            await SendOTPCode();
             return true;
         } else {
             toast.add({ title: $ts("register_failed"), description: $ts('register_failed_desc'), color: "error" });
             return false;
         }
     } catch (error: any) {
-        const errMsg = error?.data?.data?.message || 'Terjadi kesalahan pada sistem';
+        const errMsg = error?.data?.data?.message || error?.data?.statusMessage || 'Terjadi kesalahan pada sistem';
         const errPath = error?.data?.data?.path || 'server';
         toast.add({ title: errMsg, color: "error" });
         return { path: errPath, message: errMsg };
@@ -412,7 +423,7 @@ onMounted(() => {
                                     :type="showPasswordReType ? 'text' : 'password'" autocomplete="current-password"
                                     required v-model="stateForm.password_confirmation" class="flex-1" />
                                 <UButton variant="link" color="neutral" :size="responsiveUISizes.button"
-                                    @click="showPasswordReType = !showPasswordReType" :icon="!showPasswordReType
+                                    @click="() => { showPasswordReType = !showPasswordReType }" :icon="!showPasswordReType
                                         ? 'heroicons-eye'
                                         : 'heroicons-eye-slash'
                                         " :padded="false" />

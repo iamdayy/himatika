@@ -405,6 +405,7 @@ export interface IAgendaConfiguration {
   certificate?: ICertificateConfiguration;
   sponsors?: ISponsor[];
   manualPayments?: IManualPaymentTarget[];
+  allowedPaymentMethods?: IPaymentMethod[];
 }
 
 /**

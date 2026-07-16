@@ -72,13 +72,13 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
             populate: {
               path: "agendaId",
               select: "title date at description configuration participants -_id",
-              transform: (doc: IAgenda) => ({
+              transform: (doc: IAgenda) => doc ? ({
                 title: doc.title,
                 date: doc.date,
                 at: doc.at,
                 description: doc.description,
                 configuration: doc.configuration,
-              }),
+              }) : null,
             }
           },
           {
@@ -86,13 +86,13 @@ const userSchema = new Schema<IUserSchema, IUserModel, IUserMethods>(
             populate: {
               path: "agendaId",
               select: "title date at description configuration committees -_id",
-              transform: (doc: IAgenda) => ({
+              transform: (doc: IAgenda) => doc ? ({
                 title: doc.title,
                 date: doc.date,
                 at: doc.at,
                 description: doc.description,
                 configuration: doc.configuration,
-              }),
+              }) : null,
             }
           },
           {

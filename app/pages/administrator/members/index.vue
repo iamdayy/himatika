@@ -103,7 +103,7 @@ const columns = computed<TableColumn<IMember>[]>(() => [
                 modelValue: table.getIsSomePageRowsSelected()
                     ? 'indeterminate'
                     : table.getIsAllPageRowsSelected(),
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+                'onUpdate:modelValue': (value: any) =>
                     table.toggleAllPageRowsSelected(!!value),
                 'aria-label': 'Select all'
             }),
@@ -111,7 +111,7 @@ const columns = computed<TableColumn<IMember>[]>(() => [
             h(UCheckbox, {
                 modelValue: row.getIsSelected(),
                 size: responsiveUISizes.value.input,
-                'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                'onUpdate:modelValue': (value: any) => row.toggleSelected(!!value),
                 'aria-label': 'Select row'
             })
     },
@@ -508,7 +508,7 @@ const fieldsToUpdate = computed(() => [
     { label: $ts('generation'), value: 'enteredYear' }
 ]);
 const selectedFieldToUpdate = ref<string>('status');
-const valueToUpdate = ref<string | number>('');
+const valueToUpdate = ref<string>('');
 const batchUpdate = async () => {
     if (selectedMember.value.length === 0) {
         toast.add({ title: $ts('no_member_selected'), color: 'warning' });

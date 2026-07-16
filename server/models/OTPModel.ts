@@ -3,7 +3,7 @@ import type { IOTPSchema } from "~~/types/ISchemas";
 
 // OTP Schema
 const otpSchema: Schema<IOTPSchema> = new Schema<IOTPSchema>({
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   code: { type: String, required: true },
   NIM: { type: Number, required: true },
   type: {
@@ -19,8 +19,11 @@ const otpSchema: Schema<IOTPSchema> = new Schema<IOTPSchema>({
       "Verify Phone",
     ],
   },
-  createdAt: { type: Date, default: Date.now, expires: "10m" },
-  expiresAt: { type: Date, required: true },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true, expires: 0 },
 });
+
+// Compound unique: satu email bisa punya OTP aktif untuk tipe yang berbeda
+otpSchema.index({ email: 1, type: 1 }, { unique: true });
 
 export const OTPModel = model<IOTPSchema>("OTP", otpSchema);

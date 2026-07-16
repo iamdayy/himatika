@@ -1,6 +1,8 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
 import { MemberModel } from "~~/server/models/MemberModel";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 
 // Resolve member ObjectId from NIM string/number
 async function findMemberByNim(nim: string | number) {
@@ -23,8 +25,12 @@ export default defineEventHandler(async (event) => {
         if (agendaId && participantId && participantType) {
             const agenda = await AgendaModel.findById(agendaId).lean();
             if (agenda) {
-                const list = participantType === 'committee' ? agenda.committees : agenda.participants;
-                const entry = (list as any[])?.find((e: any) => e._id?.toString() === participantId);
+                let entry: any;
+                if (participantType === 'committee') {
+                    entry = await CommitteeModel.findById(participantId).lean();
+                } else {
+                    entry = await ParticipantModel.findById(participantId).lean();
+                }
                 if (entry?.certificateDoc) {
                     const existingDoc = await DocModel.findById(entry.certificateDoc).lean();
                     if (existingDoc) {
@@ -127,11 +133,11 @@ const codeItem = (items as any[])?.find((i: any) => i.type === 'code');
         // 7. Save certificateDoc reference on participant/committee sub-document
         if (agendaId && participantId && participantType) {
             try {
-                const field = participantType === 'committee' ? 'committees' : 'participants';
-                await AgendaModel.updateOne(
-                    { _id: agendaId, [`${field}._id`]: participantId },
-                    { $set: { [`${field}.$.certificateDoc`]: newDoc._id } }
-                );
+                if (participantType === 'committee') {
+                    await CommitteeModel.updateOne({ _id: participantId }, { $set: { certificateDoc: newDoc._id } });
+                } else {
+                    await ParticipantModel.updateOne({ _id: participantId }, { $set: { certificateDoc: newDoc._id } });
+                }
             } catch (e) {
                 console.error('Failed to store certificateDoc ref:', e);
             }

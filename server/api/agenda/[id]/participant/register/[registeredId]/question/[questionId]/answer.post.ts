@@ -1,5 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { AnswerModel } from "~~/server/models/AnswerModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -16,9 +17,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Agenda not found",
       });
     }
-    const participant = agenda.participants?.find(
-      (participant) => participant._id === registeredId
-    );
+    const participant = await ParticipantModel.findById(registeredId);
     if (!participant) {
       throw createError({
         statusCode: 404,

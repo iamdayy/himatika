@@ -139,8 +139,8 @@ const AddModal = () => {
                                     new Date(project.publishedAt!).toLocaleDateString('id-ID', { dateStyle: 'long' })
                                 }}</h1>
                             <UAvatarGroup size="sm" :max="3">
-                                <UAvatar v-for="member in project.members" :key="(member as IMember).NIM"
-                                    :src="(member as IMember).avatar" :alt="(member as IMember).fullName" />
+                                <UAvatar v-for="member in project.members" :key="(member as IMember)?.NIM"
+                                    :src="(member as IMember)?.avatar" :alt="(member as IMember)?.fullName" />
                             </UAvatarGroup>
                         </div>
                     </div>

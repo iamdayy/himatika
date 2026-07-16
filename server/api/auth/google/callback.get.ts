@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { GuestModel } from "~~/server/models/GuestModel";
 import { MemberModel } from "~~/server/models/MemberModel";
-import { UserModel } from "~~/server/models/UserModel";
+import { UserModel, UserPopulateOptions } from "~~/server/models/UserModel";
 import { getGoogleUser } from "~~/server/utils/googleAuth";
 import { setSession } from "~~/server/utils/Sessions";
 
@@ -33,96 +33,131 @@ export default defineEventHandler(async (event) => {
 
     // Find member by email
     const member = await MemberModel.findOne({ email: googleUser.email });
-    
+
     if (member) {
-      if (member.status !== 'active') { 
-         // If member is not active, try to find if they are a guest
-         const guest = await GuestModel.findOne({ email: googleUser.email });
-         if (guest) {
-             // Generate Tokens (Guest)
-            const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
-                expiresIn: "1d",
-            });
-            const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
-                expiresIn: "30d",
-            });
+      if (member.status !== 'active') {
+        // If member is not active, try to find if they are a guest
+        const guest = await GuestModel.findOne({ email: googleUser.email });
+        if (guest) {
+          // Generate Tokens (Guest)
+          const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
+            expiresIn: "1d",
+          });
+          const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
+            expiresIn: "30d",
+          });
 
-            // Set Session (Guest)
-            await setSession({
-                token,
-                refreshToken,
-                guest: guest._id as Types.ObjectId,
-            });
-            
-            setCookie(event, 'auth.token', token, {
-                maxAge: 60 * 60 * 24, 
-                secure: process.env.NODE_ENV === "production",
-                sameSite: 'lax'
-            });
-             setCookie(event, 'auth.refresh-token', refreshToken, {
-                maxAge: 60 * 60 * 24 * 30, 
-                secure: process.env.NODE_ENV === "production",
-                sameSite: 'lax'
-            });
+          // Set Session (Guest)
+          await setSession({
+            refreshToken,
+            guest: guest._id as Types.ObjectId,
+          });
 
-            return sendRedirect(event, '/guest/dashboard');
-         }
+          setCookie(event, 'auth.token', token, {
+            maxAge: 60 * 60 * 24,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: 'lax'
+          });
+          setCookie(event, 'auth.refresh-token', refreshToken, {
+            maxAge: 60 * 60 * 24 * 30,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: 'lax'
+          });
+
+          return sendRedirect(event, '/guest/dashboard');
+        }
       }
 
       // Find or create user
-      let user = await UserModel.findOne({ member: member });
-      
+      let user = await UserModel.findOne({ member: member }).populate(UserPopulateOptions);
+
       if (!user) {
-          user = new UserModel({
-              username: member.NIM.toString(), 
-              password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8), 
-              member: member._id,
-              verified: true, 
-              token: "",
-              key: ""
-          });
-          await user.save();
-      } else {
-          if (!user.verified && googleUser.email_verified) {
-              user.verified = true;
-              await user.save();
+        throw createError({
+          statusCode: 403,
+          statusMessage: "Email tidak terdaftar",
+          data: {
+            message: "Email tidak terdaftar (Member atau Guest). Silahkan daftar terlebih dahulu.",
           }
+        });
+      } else {
+        if (!user.verified && googleUser.email_verified) {
+          user.verified = true;
+          await user.save();
+        }
+
+        if (user.member.status !== 'active') {
+          throw createError({
+            statusCode: 403,
+            statusMessage: "Member tidak aktif",
+            data: {
+              message: "Member tidak aktif. Silahkan hubungi admin untuk informasi lebih lanjut.",
+            }
+          });
+        }
       }
 
+      let memberPayload = null;
+      if (user && user.member) {
+        const m = user.member as any;
+        memberPayload = {
+          NIM: m.NIM,
+          fullName: m.fullName,
+          avatar: m.avatar,
+          email: m.email,
+          status: m.status,
+          semester: m.semester,
+          class: m.class,
+          sex: m.sex,
+          phone: m.phone,
+          organizer: m.organizer ? { role: m.organizer.role, period: m.organizer.period } : null
+        };
+      }
+
+      let guestPayload = null;
+      if (user && user.guest) {
+        guestPayload = user.guest;
+      }
+
+      const tokenPayload = {
+        user: user!._id,
+        username: user!.username,
+        member: memberPayload,
+        guest: guestPayload
+      };
+
       // Generate Tokens (User)
-      const token = jwt.sign({ user: user._id }, getSecretKey(), {
-        expiresIn: "1d",
+      const token = jwt.sign(tokenPayload, getSecretKey(), {
+        expiresIn: "60m",
       });
-      const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
+      const refreshToken = jwt.sign({ user: user!._id }, getSecretKey(), {
         expiresIn: "90d",
       });
 
       // Set Session (User)
       await setSession({
-        token,
         refreshToken,
-        user: user._id as Types.ObjectId,
+        user: user!._id as Types.ObjectId,
       });
 
       // Audit Log (User)
       const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
       await AuditLogModel.create({
-          action: 'LOGIN',
-          user: member._id,
-          ip: ip,
-          details: { username: user.username, method: 'google' },
-          target: 'Auth'
+        action: 'LOGIN',
+        user: member._id,
+        ip: ip,
+        details: { username: user!.username, method: 'google' },
+        target: 'Auth'
       });
-      
+
       setCookie(event, 'auth.token', token, {
-          maxAge: 60 * 60 * 24, 
-          secure: process.env.NODE_ENV === "production",
-          sameSite: 'lax'
+        maxAge: 60 * 60 * 24,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: 'lax'
       });
       setCookie(event, 'auth.refresh-token', refreshToken, {
-          maxAge: 60 * 60 * 24 * 90, 
-          secure: process.env.NODE_ENV === "production",
-          sameSite: 'lax'
+        maxAge: 60 * 60 * 24 * 90,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: 'lax'
       });
 
       return sendRedirect(event, '/profile');
@@ -134,32 +169,31 @@ export default defineEventHandler(async (event) => {
       if (guest) {
         // Generate Tokens (Guest)
         const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
-            expiresIn: "1d",
+          expiresIn: "1d",
         });
         const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
-            expiresIn: "30d",
+          expiresIn: "30d",
         });
 
         // Set Session (Guest)
         await setSession({
-            token,
-            refreshToken,
-            guest: guest._id as Types.ObjectId,
+          refreshToken,
+          guest: guest._id as Types.ObjectId,
         });
 
         // Audit Log (Guest - simplified or skipped depending on model)
         // AuditLog usually links to Member. We might need to update AuditLog to support Guest or just skip / store string.
         // For now, let's skip or try to conform.
-        
+
         setCookie(event, 'auth.token', token, {
-            maxAge: 60 * 60 * 24, 
-            secure: process.env.NODE_ENV === "production",
-            sameSite: 'lax'
+          maxAge: 60 * 60 * 24,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: 'lax'
         });
         setCookie(event, 'auth.refresh-token', refreshToken, {
-            maxAge: 60 * 60 * 24 * 30, 
-            secure: process.env.NODE_ENV === "production",
-            sameSite: 'lax'
+          maxAge: 60 * 60 * 24 * 30,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: 'lax'
         });
 
         return sendRedirect(event, '/guest/dashboard');
@@ -170,7 +204,7 @@ export default defineEventHandler(async (event) => {
         statusCode: 403,
         statusMessage: "Email not registered",
         data: {
-            message: "Email not associated with any account (Member or Guest). Please register first.",
+          message: "Email not associated with any account (Member or Guest). Please register first.",
         }
       });
     }

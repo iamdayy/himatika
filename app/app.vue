@@ -29,7 +29,7 @@ setTimeout(() => {
 }, 1500);
 </script>
 <template>
-  <UApp>
+  <UApp :toaster="{position: 'top-center'}">
     <div class="light-container" @mousemove="isActive = true" @mouseleave="isActive = false">
       <!-- Light effect -->
       <ClientOnly>

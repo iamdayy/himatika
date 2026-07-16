@@ -83,7 +83,7 @@ useSeoMeta({
             </div>
         </section>
 
-        <section class="pb-8 md:pb-12 mx-12 md:mx-28" id="about">
+        <section class="pb-8 md:pb-12 px-4 md:px-12 lg:px-28" id="about">
             <div class="grid grid-cols-1 gap-6 px-4 md:px-12 lg:px-24 pt-2 md:grid-cols-3">
                 <template v-if="pendingStats">
                     <UCard v-for="i in 3" :key="i" class="text-center">
@@ -103,7 +103,7 @@ useSeoMeta({
             </div>
         </section>
         <!-- carousel Section -->
-        <section class="py-8 md:py-12 carousel mx-12 md:mx-28" id="carousel">
+        <section class="py-8 md:py-12 carousel px-4 md:px-12 lg:px-28" id="carousel">
             <div v-if="pendingCarousel" class="px-4 md:px-12 lg:px-24">
                 <USkeleton class="w-full h-[400px] rounded-xl" />
             </div>
@@ -136,27 +136,27 @@ useSeoMeta({
         </section>
 
         <!-- About Section -->
-        <section class="py-16 md:py-24 about mx-12 md:mx-28" id="about">
+        <section class="py-16 md:py-24 about px-4 md:px-12 lg:px-28" id="about">
             <About />
         </section>
         <!-- News Section -->
-        <section class="pb-16 md:pb-24 mx-12 md:mx-28" id="news">
+        <section class="pb-16 md:pb-24 px-4 md:px-12 lg:px-28" id="news">
             <USeparator :label="$ts('news')" class="my-4" />
             <News />
         </section>
 
         <!-- Events Section -->
-        <section class="py-16 md:py-24 mx-12 md:mx-28" id="events" data-aos="fade-right">
+        <section class="py-16 md:py-24 px-4 md:px-12 lg:px-28" id="events" data-aos="fade-right">
             <Agenda />
         </section>
 
         <!-- Projects Section -->
-        <section class="py-16 md:py-24 mx-12 md:mx-28" id="projects" data-aos="zoom-in-up">
+        <section class="py-16 md:py-24 px-4 md:px-12 lg:px-28" id="projects" data-aos="zoom-in-up">
             <Projects />
         </section>
         <USeparator :label="$ts('contact')" class="my-12" />
         <!-- Contacts Sections -->
-        <section class="py-16 md:py-24 mx-12 md:mx-28" id="contacts" data-aos="zoom-in-up">
+        <section class="py-16 md:py-24 px-4 md:px-12 lg:px-28" id="contacts" data-aos="zoom-in-up">
             <Contacts />
         </section>
         <UButton

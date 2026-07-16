@@ -142,13 +142,13 @@ const openSlideOver = ref<boolean>(false);
                                         loading="lazy" />
                                 </NuxtLink>
                                 <UButton color="neutral" variant="ghost" size="sm" icon="i-heroicons-x-mark-20-solid"
-                                    square padded @click="openSlideOver = false" aria-label="Close menu" />
+                                    square padded @click="() => { openSlideOver = false }" aria-label="Close menu" />
                             </div>
                             <div class="mt-8">
                                 <NuxtLink to="/profile">
                                     <div class="flex items-center w-full gap-2">
                                         <NuxtImg provider="localProvider"
-                                            :src="user?.member.avatar || '/img/profile-blank.png'"
+                                            :src="user?.member?.avatar || '/img/profile-blank.png'"
                                             class="object-cover rounded-full max-w-12 max-h-12 aspect-square"
                                             loading="lazy" alt="Profile" />
                                         <div class="overflow-ellipsis">
@@ -157,7 +157,7 @@ const openSlideOver = ref<boolean>(false);
                                                 }}
                                             </h2>
                                             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{
-                                                user?.member.NIM }}
+                                                user?.member?.NIM }}
                                             </h2>
                                         </div>
                                     </div>
@@ -178,7 +178,7 @@ const openSlideOver = ref<boolean>(false);
                         <UButton icon="i-heroicons-language" variant="link" color="neutral" />
                     </UDropdownMenu>
                     <!-- Dark mode toggle -->
-                    <UButton id="theme-toggle" @click="isDarkMode = !isDarkMode"
+                    <UButton id="theme-toggle" @click="() => { isDarkMode = !isDarkMode }"
                         :icon="isDarkMode ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'" color="neutral"
                         variant="ghost" aria-label="Toggle theme">
                     </UButton>

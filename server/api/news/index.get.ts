@@ -28,10 +28,14 @@ export default defineCachedEventHandler(
 
       // Jika slug disediakan, ambil satu berita
       if (slug) {
-        const news = await NewsModel.findOne({ slug }).populate({
-          path: "comments",
-          model: CommentModel,
-        });
+        const news = await NewsModel.findOne({ slug }).populate([
+          {
+            path: "comments",
+            model: CommentModel,
+          },
+          { path: "category" },
+          { path: "authors" }
+        ]);
         if (!news) {
           throw createError({
             statusCode: 404,
@@ -95,6 +99,7 @@ export default defineCachedEventHandler(
 
       // Fetch newss with pagination and sorting
       const news = await NewsModel.find(query)
+        .populate(["category", "authors"])
         .skip((Number(page) - 1) * Number(perPage))
         .limit(Number(perPage))
         .sort(sortOpt)

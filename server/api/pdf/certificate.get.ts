@@ -1,5 +1,7 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { DocModel } from "~~/server/models/DocModel";
+import { CommitteeModel } from "~~/server/models/CommitteeModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 
 /**
  * GET /api/pdf/certificate?agendaId=&participantId=&participantType=
@@ -25,8 +27,12 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 404, statusMessage: "Agenda not found" });
         }
 
-        const list = participantType === 'committee' ? agenda.committees : agenda.participants;
-        const entry = (list as any[])?.find((e: any) => e._id?.toString() === participantId);
+        let entry: any;
+        if (participantType === 'committee') {
+            entry = await CommitteeModel.findById(participantId).lean();
+        } else {
+            entry = await ParticipantModel.findById(participantId).lean();
+        }
 
         if (!entry) {
             throw createError({ statusCode: 404, statusMessage: "Participant not found" });
