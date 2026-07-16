@@ -18,7 +18,6 @@ export default defineEventHandler(async (event) => {
     const eventDataDoc = await AgendaModel.findById(id)
       .populate({
         path: "category",
-        select: "_id title",
       })
       .populate({
         path: "photos",

@@ -104,21 +104,6 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
         username: deleteWhiteSpaceOnFirstAndLastChar(body.username),
         member: memberFound.id,
       };
-      
-      const userAlreadyExists = await UserModel.findOne({
-        member: memberFound._id as any,
-      });
-      
-      if (userAlreadyExists) {
-        throw createError({
-          statusCode: 405,
-          statusMessage: t("register_page.member_already_registered"),
-          data: {
-            message: t("register_page.check_member"),
-            path: "email",
-          },
-        });
-      }
 
       const user = new UserModel(form);
       registered = await user.save({ session });

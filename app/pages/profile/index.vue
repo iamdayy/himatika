@@ -117,7 +117,7 @@ const member = ref({
         city: fullProfile.value?.address?.city || "",
         province: fullProfile.value?.address?.province || "",
         country: fullProfile.value?.address?.country || "",
-        zip: fullProfile.value?.address?.zip || "",
+        zip: String(fullProfile.value?.address?.zip || ""),
     },
     enteredYear: fullProfile.value?.enteredYear || "",
     // Data berat diambil dari fullProfile
@@ -155,7 +155,7 @@ watch(fullProfile, (newVal) => {
             city: newVal.address?.city || "",
             province: newVal.address?.province || "",
             country: newVal.address?.country || "",
-            zip: newVal.address?.zip || "",
+            zip: String(newVal.address?.zip || ""),
         };
         member.value.enteredYear = newVal.enteredYear || "";
         member.value.point = newVal.point || [];
@@ -392,7 +392,7 @@ useHead({
                                         {{ $ts('personal_information') }}
                                     </h5>
                                     <UButton id="edit" icon="i-heroicons-pencil-square" color="neutral" variant="ghost"
-                                        @click="editMode = !editMode" />
+                                        @click="() => { editMode = !editMode }" />
                                 </div>
                             </template>
                             <dl class="text-gray-800 dark:text-white">
@@ -893,7 +893,7 @@ useHead({
                                 :to="{ path: '/change-password' }" />
                         </div>
                         <UButton block :label="editMode ? $ts('cancel') : $ts('edit')"
-                            :color="editMode ? 'error' : 'success'" @click="editMode = !editMode" />
+                            :color="editMode ? 'error' : 'success'" @click="() => { editMode = !editMode }" />
                         <UButton block label="Save" @click="saveProfile" class="pt-2" v-if="editMode" />
                     </div>
                 </UCard>

@@ -23,9 +23,10 @@ export default defineEventHandler(async (event) => {
       statusCode: 200,
       statusMessage: t("register_page.member_free"),
       status: true,
+      fullName: member.fullName,
     };
   } catch (error: any) {
-    return createError({
+    throw createError({
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
       data: error.data || {},

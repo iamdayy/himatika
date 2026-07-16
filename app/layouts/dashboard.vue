@@ -142,7 +142,7 @@ const openSlideOver = ref<boolean>(false);
                                         loading="lazy" />
                                 </NuxtLink>
                                 <UButton color="neutral" variant="ghost" size="sm" icon="i-heroicons-x-mark-20-solid"
-                                    square padded @click="openSlideOver = false" aria-label="Close menu" />
+                                    square padded @click="() => { openSlideOver = false }" aria-label="Close menu" />
                             </div>
                             <div class="mt-8">
                                 <NuxtLink to="/profile">
@@ -178,7 +178,7 @@ const openSlideOver = ref<boolean>(false);
                         <UButton icon="i-heroicons-language" variant="link" color="neutral" />
                     </UDropdownMenu>
                     <!-- Dark mode toggle -->
-                    <UButton id="theme-toggle" @click="isDarkMode = !isDarkMode"
+                    <UButton id="theme-toggle" @click="() => { isDarkMode = !isDarkMode }"
                         :icon="isDarkMode ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'" color="neutral"
                         variant="ghost" aria-label="Toggle theme">
                     </UButton>

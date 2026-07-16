@@ -80,10 +80,13 @@ export default defineCachedEventHandler(
       const length = await AgendaModel.countDocuments(query);
       const agendas = await AgendaModel.find(query)
         .select('title date category at configuration tags description')
-        .populate({
-          path: "photos",
-          model: PhotoModel,
-        })
+        .populate([
+          {
+            path: "photos",
+            model: PhotoModel,
+          },
+          { path: "category" }
+        ])
         .skip(skip || 0)
         .limit(limit || 0)
         .sort(sortOpt)
