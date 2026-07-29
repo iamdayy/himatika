@@ -1,5 +1,6 @@
 {
   "set_visit_status": "Set Visit Status",
+  "cancel_visit_status": "Cancel Attendance",
   "set_visit_status_confirmation": "Are you sure you want to set the visit status of this participant?",
   "success_to_set_visit_status": "Successfully set the visit status of the participant",
   "failed_to_set_visit_status": "Failed to set the visit status of the participant",
