@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
     const blob = new Blob([new Uint8Array(uploadedFile.data)], { type: uploadedFile.type });
     formData.append('file', blob, uploadedFile.name);
 
-    const response = await fetch(`${config.pdf_worker_api_url}/sheet/import`, {
+    const response = await fetch(`${config.pdf_worker_api_url}/api/sheet/import`, {
         method: 'POST',
         body: formData
     });

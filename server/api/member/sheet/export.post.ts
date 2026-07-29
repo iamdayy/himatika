@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
 
       const config = useRuntimeConfig();
       // Call Worker
-      const response = await fetch(`${config.pdf_worker_api_url}/sheet/export`, {
+      const response = await fetch(`${config.pdf_worker_api_url}/api/sheet/export`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
