@@ -182,13 +182,13 @@ const columns = computed<TableColumn<ICommittee>[]>(() => {
             header: ({ table }) =>
                 h(UCheckbox, {
                     modelValue: table.getIsSomePageRowsSelected() ? 'indeterminate' : table.getIsAllPageRowsSelected(),
-                    'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
+                    'onUpdate:modelValue': (value: unknown) => table.toggleAllPageRowsSelected(!!value),
                 }),
             cell: ({ row }) =>
                 h(UCheckbox, {
                     modelValue: row.getIsSelected(),
                     size: responsiveUISizes.value.input,
-                    'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+                    'onUpdate:modelValue': (value: unknown) => row.toggleSelected(!!value),
                 })
         },
         {
@@ -293,9 +293,9 @@ function getRowItems(row: Row<ICommittee>): DropdownMenuItem[] {
         },
         { type: 'separator' },
         {
-            icon: 'i-heroicons-check-circle',
-            label: 'Tandai Hadir',
-            disabled: row.original.visiting,
+            icon: row.original.visiting ? 'i-heroicons-x-circle' : 'i-heroicons-check-circle',
+            label: row.original.visiting ? 'Batalkan Kehadiran' : 'Tandai Hadir',
+            disabled: false,
             onSelect: () => openSetVisitedModal(row.original._id as string)
         },
         {
@@ -396,7 +396,7 @@ const setPaid = async (registeredId: string) => {
 
 const setVisited = async (registeredId: string) => {
     try {
-        await $api(`/api/agenda/${id}/committee/register/${registeredId}/visited`);
+        await $api(`/api/agenda/${id}/committee/register/${registeredId}/visited`, { method: 'PUT' });
         toast.add({ title: 'Status Kehadiran Diupdate', color: 'success' });
         refresh();
     } catch (error) {

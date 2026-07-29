@@ -44,7 +44,7 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
-      const response = await $fetch<IWorkerResponse<any>>(`${workerUrl}/pdf/activiness-letter`, {
+      const response = await $fetch<IWorkerResponse<any>>(`${workerUrl}/api/pdf/activiness-letter`, {
         method: "POST",
         body: payload,
       });
@@ -74,7 +74,7 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
-      const response = await $fetch<Blob>(`${workerUrl}/pdf/ticket`, {
+      const response = await $fetch<Blob>(`${workerUrl}/api/pdf/ticket`, {
         method: "POST",
         body: payload,
         responseType: "blob", 
@@ -99,7 +99,7 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
-      const response = await $fetch<IWorkerResponse<string>>(`${workerUrl}/sign/process`, {
+      const response = await $fetch<IWorkerResponse<string>>(`${workerUrl}/api/sign/process`, {
         method: "POST",
         body: payload,
       });

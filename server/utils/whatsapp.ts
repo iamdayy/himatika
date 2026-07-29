@@ -13,7 +13,7 @@ export const sendWhatsappMessage = async (phone: string, text: string) => {
   const apiKey = config.wahaApiKey as string;
 
   if (!url || !apiKey) {
-    console.error("[WAHA] URL or API Key is missing in runtimeConfig");
+    console.log("[WAHA] WAHA is disabled or missing URL/API Key. Skipping WhatsApp message.");
     return;
   }
 
@@ -52,7 +52,7 @@ export const sendWhatsappFile = async (
   const apiKey = config.wahaApiKey as string;
 
   if (!url || !apiKey) {
-    console.error("[WAHA] URL or API Key is missing in runtimeConfig");
+    console.log("[WAHA] WAHA is disabled or missing URL/API Key. Skipping WhatsApp file.");
     return;
   }
 

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
         const blob = new Blob([uploadedFile.data as any], { type: uploadedFile.type });
         formData.append('file', blob, uploadedFile.filename);
 
-        const response = await fetch(`${config.pdf_worker_api_url}/pdf/certificate-preview`, {
+        const response = await fetch(`${config.pdf_worker_api_url}/api/pdf/certificate-preview`, {
             method: 'POST',
             body: formData
         });

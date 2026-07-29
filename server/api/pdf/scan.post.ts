@@ -7,11 +7,14 @@ export default defineEventHandler(async (event) => {
         }
         
         const uploadedFile = files[0];
+        if (!uploadedFile || !uploadedFile.data) {
+           throw createError({ statusCode: 400, statusMessage: "Invalid file data" });
+        }
         const formData = new FormData();
         const blob = new Blob([uploadedFile.data as any], { type: uploadedFile.type });
         formData.append('file', blob, uploadedFile.filename);
 
-        const response = await fetch(`${config.pdf_worker_api_url}/pdf/scan-qr`, {
+        const response = await fetch(`${config.pdf_worker_api_url}/api/pdf/scan-qr`, {
             method: 'POST',
             body: formData
         });

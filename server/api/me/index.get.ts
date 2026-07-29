@@ -34,10 +34,9 @@ export default defineEventHandler(async (event): Promise<IMeResponse> => {
   // Di Sessions.ts: select: "NIM fullName...". Default _id included.
   
   try {
-    // Kita query UserModel full power (dengan autopopulate nyala sesuai default schema)
-    const user = await UserModel.findOne({ username: sessionUser.username }, { autopopulate: {
+    // Query UserModel dan populate member dengan seluruh relasi aktivitas dan dokumen
+    const user = await UserModel.findOne({ username: sessionUser.username }).populate({
       path: "member",
-      select: "NIM avatar fullName email class semester enteredYear createdAt status",
       populate: [
         {
           path: "committeesData",
@@ -157,7 +156,7 @@ export default defineEventHandler(async (event): Promise<IMeResponse> => {
           model: DocModel,
         },
       ]
-    } });
+    });
     
     if (!user || !user.member) {
        throw createError({

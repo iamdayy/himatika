@@ -196,7 +196,12 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       ];
     }
 
-    if (!user.member.organizer) {
+    let isOrganizer = Boolean(user?.member?.organizer);
+    if (!isOrganizer && user?.member?._id) {
+      const dbMember = await MemberModel.findById(user.member._id).populate("organizer").lean();
+      isOrganizer = Boolean((dbMember as any)?.organizer);
+    }
+    if (!isOrganizer) {
       throw createError({
         statusCode: 401,
         statusMessage: "You must be admin / departement to access this",
@@ -215,12 +220,17 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
       filters = [...new Set(membersFilters.map((v) => v[filterBy as keyof IMember]))];
     }
 
+    // Menghitung parameter paginasi secara aman dari NaN dan konsisten dengan 1-indexed page
+    const pageNum = Math.max(1, Number(page) || 1);
+    const perPageNum = Math.max(1, Number(perPage) || 10);
+    const skipNum = (pageNum - 1) * perPageNum;
+
     // === AGGREGATION PIPELINE UNTUK LIST ===
     const membersRaw = await MemberModel.aggregate([
       { $match: query },
       { $sort: Object.keys(sortOpt).length ? (sortOpt as Record<string, 1 | -1>) : { createdAt: -1 } },
-      { $skip: Number(page) * Number(perPage) },
-      { $limit: Number(perPage) },
+      { $skip: skipNum },
+      { $limit: perPageNum },
       
       // Lookups minimalis untuk poin
       {
