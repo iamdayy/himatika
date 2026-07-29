@@ -353,11 +353,8 @@ memberSchema.virtual("point").get(function () {
   if (this.status === "inactive") {
     return 0; // No points for inactive members
   }
-  if (this.status === "free") {
-    return 0; // No points for free members
-  }
-  // Calculate points for active members
-  if (this.status === "active") {
+  // Calculate points for active and free members
+  if (this.status === "active" || this.status === "free") {
     return rangeDates.map((range) => {
       const point = this.calculatePoints(
         {

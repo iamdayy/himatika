@@ -6,8 +6,9 @@ import { IBadge } from "~~/types";
 export const getTop5Leaderboard = defineCachedFunction(async (semester: number) => {
   const { AgendaModel } = await import("~~/server/models/AgendaModel");
   
-  // Ambil member aktif yang berada di semester yang sama (Cohort-based)
-  const members = await MemberModel.find({ status: "active", semester: semester })
+  // Ambil member yang aktif atau free (cohort semester)
+  const targetSemester = semester || 1;
+  const members = await MemberModel.find({ status: { $in: ["active", "free"] }, semester: targetSemester })
     .populate({
       path: "committeesData",
       populate: { path: "agendaId", model: AgendaModel }
@@ -26,8 +27,12 @@ export const getTop5Leaderboard = defineCachedFunction(async (semester: number) 
       const pointsData = member.point;
       let totalPoints = 0;
 
-      const pointThisSemester = pointsData?.filter((p) => p.semester == semester);
-      totalPoints = pointThisSemester?.reduce((sum, p) => sum + (p.point || 0), 0) || 0;
+      if (Array.isArray(pointsData)) {
+        const pointThisSemester = pointsData?.filter((p: any) => p.semester == targetSemester);
+        totalPoints = pointThisSemester?.reduce((sum: number, p: any) => sum + (p.point || 0), 0) || 0;
+      } else if (typeof pointsData === 'number') {
+        totalPoints = pointsData;
+      }
 
       return {
         _id: member._id,
@@ -39,7 +44,6 @@ export const getTop5Leaderboard = defineCachedFunction(async (semester: number) 
         badges: member.badges as IBadge[],
       };
     })
-    .filter(m => m.points > 0)
     .sort((a, b) => b.points - a.points);
   
   // Re-assign rank numbers
