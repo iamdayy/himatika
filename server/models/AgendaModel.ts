@@ -18,10 +18,9 @@ import { AnswerModel } from "./AnswerModel";
 import CategoryModel from "./CategoryModel";
 import { QuestionModel } from "./QuestionModel";
 interface IAgendaMethods {
-  canMeRegisterAsParticipant(user?: IUser): boolean;
-  canMeRegisterAsCommittee(user?: IUser): boolean;
-  isRegisterd(user?: IUser): ICommittee | IParticipant | false;
-  isRegisterdById(registeredId: string): ICommittee | IParticipant | false;
+  canMeRegisterAsParticipant(user?: IUser): Promise<boolean>;
+  canMeRegisterAsCommittee(user?: IUser): Promise<boolean>;
+  isRegisterd(user?: IUser): Promise<ICommittee | IParticipant | false>;
 }
 type IAgendaModel = mongoose.Model<IAgendaSchema, {}, IAgendaMethods>;
 
@@ -540,7 +539,7 @@ agendaSchema.virtual("gallery").get(function (this: IAgendaSchema) {
 });
 // presences virtual removed due to decoupling
 
-agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
+agendaSchema.methods.canMeRegisterAsCommittee = async function (user?: IUser) {
   const member = user?.member;
   
   // Committee is usually redundant for Guests, assume Guest CANNOT be committee? 
@@ -549,7 +548,7 @@ agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
 
   const organizer = member?.organizer;
   const now = new Date(Date.now());
-  if (this.isRegisterd(user)) {
+  if (await this.isRegisterd(user)) {
     return false;
   }
   // Enforce registration period only when configured
@@ -606,14 +605,14 @@ agendaSchema.methods.canMeRegisterAsCommittee = function (user?: IUser) {
   return false;
 };
 
-agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
+agendaSchema.methods.canMeRegisterAsParticipant = async function (user?: IUser) {
   const member = user?.member;
   const guest = user?.guest;
   
   const organizer = member?.organizer;
   const now = new Date(Date.now());
   
-  if (this.isRegisterd(user)) {
+  if (await this.isRegisterd(user)) {
     return false;
   }
   // Enforce registration period only when configured
@@ -682,15 +681,46 @@ agendaSchema.methods.canMeRegisterAsParticipant = function (user?: IUser) {
   return false;
 };
 
-agendaSchema.methods.isRegisterd = function (
+agendaSchema.methods.isRegisterd = async function (
   user?: IUser
-): false {
-  return false;
-};
+): Promise<ICommittee | IParticipant | false> {
+  if (!user) return false;
 
-agendaSchema.methods.isRegisterdById = function (
-  registeredId: string
-): false {
+  const { CommitteeModel } = await import("./CommitteeModel");
+  const { ParticipantModel } = await import("./ParticipantModel");
+
+  const agendaId = this._id;
+
+  if (user.member) {
+    const { MemberModel } = await import("./MemberModel");
+    const memberDoc = await MemberModel.findOne({ NIM: user.member.NIM }).select("_id");
+    if (memberDoc) {
+      const committee = await CommitteeModel.findOne({
+        agendaId,
+        member: memberDoc._id,
+      });
+      if (committee) return committee;
+
+      const participant = await ParticipantModel.findOne({
+        agendaId,
+        member: memberDoc._id,
+      });
+      if (participant) return participant;
+    }
+  }
+
+  if (user.guest) {
+    const { GuestModel } = await import("./GuestModel");
+    const guestDoc = await GuestModel.findOne({ email: user.guest.email }).select("_id");
+    if (guestDoc) {
+      const participant = await ParticipantModel.findOne({
+        agendaId,
+        guest: guestDoc._id,
+      });
+      if (participant) return participant;
+    }
+  }
+
   return false;
 };
 

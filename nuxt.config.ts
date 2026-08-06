@@ -305,7 +305,6 @@ export default defineNuxtConfig({
     locales: [
       { code: "en", iso: "en-US", dir: "ltr" },
       { code: "id", iso: "id-ID", dir: "ltr" },
-      { code: "ar", iso: "ar-SA", dir: "rtl" },
     ],
     defaultLocale: "id",
     translationDir: "locales",

@@ -82,7 +82,7 @@ export default defineEventHandler(
 
       // Bypass permission check for guest registrations
       if (user) {
-        const canRegister = agenda.canMeRegisterAsParticipant(user as IUser);
+        const canRegister = await agenda.canMeRegisterAsParticipant(user as IUser);
         if (!canRegister) {
           throw createError({
             statusCode: 403,
