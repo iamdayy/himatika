@@ -42,4 +42,4 @@ CategorySchema.virtual("news", {
   justOne: false,
 });
 
-export default model<ICategorySchema>("Category", CategorySchema);
+export default mongoose.models.Category || model<ICategorySchema>("Category", CategorySchema);

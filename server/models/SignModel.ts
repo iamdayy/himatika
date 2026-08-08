@@ -36,4 +36,4 @@ SignSchema.virtual("document", {
   justOne: true,
 });
 
-export default model<ISignSchema>("Sign", SignSchema);
+export default mongoose.models.Sign || model<ISignSchema>("Sign", SignSchema);
