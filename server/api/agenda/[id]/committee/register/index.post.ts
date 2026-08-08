@@ -52,7 +52,7 @@ export default defineEventHandler(
         email = me.email;
         name = me.fullName;
         // Check if the user can register for the agenda
-        const canRegister = agenda.canMeRegisterAsCommittee(user as IUser);
+        const canRegister = await agenda.canMeRegisterAsCommittee(user as IUser);
         if (!canRegister) {
           throw createError({
             statusCode: 403,
