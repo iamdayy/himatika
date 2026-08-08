@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import mongoose, {  Schema, model  } from \"mongoose\";
 import type { IOTPSchema } from "~~/types/ISchemas";
 
 // OTP Schema

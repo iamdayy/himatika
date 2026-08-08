@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import mongoose, {  model, Schema, Types  } from \"mongoose\";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IAnswerSchema } from "~~/types/ISchemas";
 const AnswerSchema = new Schema<IAnswerSchema>({
