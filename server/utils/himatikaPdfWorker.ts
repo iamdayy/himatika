@@ -74,6 +74,36 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
+      const certConfig = payload.agenda.configuration?.certificate;
+      if (certConfig && certConfig.active && certConfig.templateUrl) {
+        const member = payload.role === 'participant' 
+                 ? ((payload.participant as any).member || (payload.participant as any).guest) 
+                 : (payload.participant as any).member;
+        
+        const certificateData = {
+          name: member?.fullName || "Peserta",
+          role: payload.role === 'participant' ? 'Peserta' : (payload.participant as any).job?.name || 'Panitia',
+          date: payload.agenda.date?.start?.toString().split('T')[0],
+          qr_data: `${config.public_url || 'https://himatika.org'}/verify/ticket/${payload.participant._id}`
+        };
+
+        const response = await $fetch<IWorkerResponse<any>>(`${workerUrl}/pdf/certificate`, {
+          method: "POST",
+          body: {
+            templateUrl: certConfig.templateUrl,
+            items: certConfig.items,
+            data: certificateData
+          }
+        });
+
+        if (response.error || !response.url) {
+          throw new Error(response.error || "Failed to generate certificate");
+        }
+
+        const pdfResponse = await fetch(response.url);
+        return await pdfResponse.blob();
+      }
+
       const response = await $fetch<Blob>(`${workerUrl}/pdf/ticket`, {
         method: "POST",
         body: payload,
