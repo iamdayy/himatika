@@ -19,6 +19,35 @@ interface ISignatureLocation {
     height: number;
 }
 
+import jwt from "jsonwebtoken";
+
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
+
+async function fetchWithRetry<T>(url: string, options: any, retries = MAX_RETRIES): Promise<T> {
+  const config = useRuntimeConfig();
+  const serviceToken = jwt.sign({ service: 'himatika-backend' }, config.jwtSecret, { expiresIn: '5m' });
+  const headers = {
+    "Authorization": `Bearer ${serviceToken}`,
+    ...options.headers,
+  };
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await $fetch<T>(url, { ...options, headers });
+    } catch (error: any) {
+      const isLastAttempt = attempt === retries;
+      const isRetryable = error?.statusCode >= 500 || error?.code === 'ECONNREFUSED';
+      
+      if (isLastAttempt || !isRetryable) throw error;
+      
+      console.warn(`PDF Worker call failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${RETRY_DELAY_MS}ms...`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (attempt + 1)));
+    }
+  }
+  throw new Error("Unreachable");
+}
+
 export const himatikaPdfWorker = {
   async generateActivinessLetter(payload: {
     member: IMember;
@@ -44,7 +73,7 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
-      const response = await $fetch<IWorkerResponse<any>>(`${workerUrl}/api/pdf/activiness-letter`, {
+      const response = await fetchWithRetry<IWorkerResponse<any>>(`${workerUrl}/pdf/activiness-letter`, {
         method: "POST",
         body: payload,
       });
@@ -74,7 +103,7 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
-      const response = await $fetch<Blob>(`${workerUrl}/api/pdf/ticket`, {
+      const response = await fetchWithRetry<Blob>(`${workerUrl}/pdf/ticket`, {
         method: "POST",
         body: payload,
         responseType: "blob", 
@@ -99,7 +128,7 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
-      const response = await $fetch<IWorkerResponse<string>>(`${workerUrl}/api/sign/process`, {
+      const response = await fetchWithRetry<IWorkerResponse<string>>(`${workerUrl}/sign/process`, {
         method: "POST",
         body: payload,
       });
