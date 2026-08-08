@@ -41,7 +41,6 @@ export interface EmailTemplate {
     here?: string;
   };
 }
-const config = useRuntimeConfig();
 class Email {
   private recipientName: string;
   private emailTitle: string;
@@ -66,13 +65,13 @@ class Email {
   private ctaSubtitle: string;
   private ctaButtonLink: string;
   private ctaButtonText: string;
-  private websiteLink: string = config.public.public_uri;
-  private logoURL: string = `${config.public.public_uri}/img/logo.png`;
-  private companyName: string = config.public.appname;
+  private websiteLink: string;
+  private logoURL: string;
+  private companyName: string;
   private privacyPolicyLink?: string;
   private termsAndConditionsLink?: string;
   private unsubscribeLink?: string;
-  private serviceName: string = config.public.appname;
+  private serviceName: string;
   private currentYear: number = new Date().getFullYear();
   private qrCodeDataUrl?: string;
   private otpCode?: string;
@@ -111,6 +110,12 @@ class Email {
     otpCode,
     footerText,
   }: EmailTemplate) {
+    const config = useRuntimeConfig();
+    this.websiteLink = config.public.public_uri;
+    this.logoURL = `${config.public.public_uri}/img/logo.png`;
+    this.companyName = config.public.appname;
+    this.serviceName = config.public.appname;
+
     const escapeHtml = (unsafe: string) => {
       return (unsafe || "")
         .replace(/&/g, "&amp;")
