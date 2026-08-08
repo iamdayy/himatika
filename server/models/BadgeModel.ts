@@ -28,4 +28,4 @@ const badgeSchema = new Schema<IBadgeSchema>(
   { timestamps: true }
 );
 
-export const BadgeModel = mongoose.model<IBadgeSchema>("Badge", badgeSchema);
+export const BadgeModel = mongoose.models.Badge || mongoose.model<IBadgeSchema>("Badge", badgeSchema);

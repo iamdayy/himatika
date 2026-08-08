@@ -72,7 +72,7 @@ participantSchema.plugin(mongooseAutoPopulate);
 /**
  * Mongoose model for the Participant collection.
  */
-export const ParticipantModel = model<IParticipantSchema>(
+export const ParticipantModel = mongoose.models.Participant || model<IParticipantSchema>(
   "Participant",
   participantSchema
 );

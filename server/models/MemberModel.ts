@@ -502,7 +502,7 @@ memberSchema.post("save", async function (next) {
 /**
  * Mongoose model for the Member collection.
  */
-export const MemberModel = mongoose.model<IMemberSchema>(
+export const MemberModel = mongoose.models.Member || mongoose.model<IMemberSchema>(
   "Member",
   memberSchema
 );

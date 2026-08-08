@@ -35,8 +35,8 @@ describe('Agenda QR Scan Handler', () => {
   it('should return 400 Bad Request when QR code is not valid JSON', async () => {
     // Malformed JSON (missing quotes)
     const payload = { code: '{ id: 123, role: Participant }' }
-    vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
-    vi.mocked((globalThis as any).getRouterParam).mockReturnValue('agenda123')
+    ;((globalThis as any).readBody as any).mockResolvedValue(payload)
+    ;((globalThis as any).getRouterParam as any).mockReturnValue('agenda123')
 
     const handler = (await import('../../../server/api/agenda/[id]/scan.post')).default
     
@@ -50,8 +50,8 @@ describe('Agenda QR Scan Handler', () => {
   it('should return 400 Bad Request when QR code is missing required fields', async () => {
     // Valid JSON but missing 'role'
     const payload = { code: '{"id":"123"}' }
-    vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
-    vi.mocked((globalThis as any).getRouterParam).mockReturnValue('agenda123')
+    ;((globalThis as any).readBody as any).mockResolvedValue(payload)
+    ;((globalThis as any).getRouterParam as any).mockReturnValue('agenda123')
 
     const handler = (await import('../../../server/api/agenda/[id]/scan.post')).default
     

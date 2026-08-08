@@ -18,7 +18,7 @@ const carouselSchema = new mongoose.Schema<ICarouselSchema>({
 
 carouselSchema.plugin(mongooseAutoPopulate);
 
-export const CarouselModel = mongoose.model<ICarouselSchema>(
+export const CarouselModel = mongoose.models.Carousel || mongoose.model<ICarouselSchema>(
   "Carousel",
   carouselSchema
 );

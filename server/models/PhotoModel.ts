@@ -30,4 +30,4 @@ const photoSchema = new Schema<IPhotoSchema>({
 photoSchema.index({ title: "text", description: "text", tags: "text" });
 photoSchema.plugin(mongooseAutoPopulate);
 
-export const PhotoModel = model<IPhotoSchema>("Photo", photoSchema);
+export const PhotoModel = mongoose.models.Photo || model<IPhotoSchema>("Photo", photoSchema);

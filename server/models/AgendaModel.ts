@@ -727,4 +727,4 @@ agendaSchema.methods.isRegisterd = async function (
 /**
  * Mongoose model for the Event collection.
  */
-export const AgendaModel = model("Agenda", agendaSchema);
+export const AgendaModel = mongoose.models.Agenda || model("Agenda", agendaSchema);

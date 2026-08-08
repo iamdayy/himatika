@@ -51,4 +51,4 @@ const pointSchema = new Schema<IPointLogSchema>(
   { timestamps: true }
 );
 
-export const PointModel = mongoose.model("PointLog", pointSchema);
+export const PointModel = mongoose.models.PointLog || mongoose.model("PointLog", pointSchema);

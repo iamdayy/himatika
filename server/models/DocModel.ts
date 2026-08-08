@@ -210,4 +210,4 @@ docSchema.post("findOneAndUpdate", async function (doc: IDoc) {
   }
 });
 
-export const DocModel = model<IDocSchema>("Doc", docSchema);
+export const DocModel = mongoose.models.Doc || model<IDocSchema>("Doc", docSchema);

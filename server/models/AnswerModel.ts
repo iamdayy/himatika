@@ -26,4 +26,4 @@ const AnswerSchema = new Schema<IAnswerSchema>({
 });
 AnswerSchema.plugin(mongooseAutoPopulate);
 
-export const AnswerModel = model<IAnswerSchema>("Answer", AnswerSchema);
+export const AnswerModel = mongoose.models.Answer || model<IAnswerSchema>("Answer", AnswerSchema);

@@ -138,7 +138,7 @@ NewsSchema.methods.findRelated = async function (limit = 3) {
 /**
  * Mongoose model for the News collection.
  */
-export const NewsModel: Model<INewsSchema> = mongoose.model<INewsSchema>(
+export const NewsModel: Model<INewsSchema> = mongoose.models.News as Model<INewsSchema> || mongoose.model<INewsSchema>(
   "News",
   NewsSchema
 );

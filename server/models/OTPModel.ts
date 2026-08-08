@@ -26,4 +26,4 @@ const otpSchema: Schema<IOTPSchema> = new Schema<IOTPSchema>({
 // Compound unique: satu email bisa punya OTP aktif untuk tipe yang berbeda
 otpSchema.index({ email: 1, type: 1 }, { unique: true });
 
-export const OTPModel = model<IOTPSchema>("OTP", otpSchema);
+export const OTPModel = mongoose.models.OTP || model<IOTPSchema>("OTP", otpSchema);

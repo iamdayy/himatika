@@ -77,7 +77,7 @@ committeeSchema.plugin(mongooseAutoPopulate);
 /**
  * Mongoose model for the Committee collection.
  */
-export const CommitteeModel = model<ICommitteeSchema>(
+export const CommitteeModel = mongoose.models.Committee || model<ICommitteeSchema>(
   "Committee",
   committeeSchema
 );

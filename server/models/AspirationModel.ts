@@ -98,7 +98,7 @@ AspirationSchema.virtual("totalVotes").get(function () {
   return totalVotes > 0 ? totalVotes : 0;
 });
 
-export const AspirationModel = model<IAspirationSchema>(
+export const AspirationModel = mongoose.models.Aspiration || model<IAspirationSchema>(
   "Aspiration",
   AspirationSchema
 );

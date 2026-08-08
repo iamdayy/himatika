@@ -30,7 +30,7 @@ const auditLogSchema = new Schema<IAuditLogSchema>(
 // Adjust as needed for compliance/storage
 auditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
 
-export const AuditLogModel = mongoose.model<IAuditLogSchema>(
+export const AuditLogModel = mongoose.models.AuditLog || mongoose.model<IAuditLogSchema>(
   "AuditLog",
   auditLogSchema
 );

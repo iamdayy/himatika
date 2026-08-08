@@ -36,4 +36,4 @@ const guestSchema = new Schema<IGuestSchema>(
   }
 );
 
-export const GuestModel = mongoose.model<IGuestSchema>("Guest", guestSchema);
+export const GuestModel = mongoose.models.Guest || mongoose.model<IGuestSchema>("Guest", guestSchema);
