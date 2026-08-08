@@ -2,7 +2,7 @@ import forge from "node-forge";
 
 // Function to generate a key pair
 export function generateKeyPair() {
-  const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair(512);
+  const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair(2048);
   return {
     privateKey: forge.pki.privateKeyToPem(privateKey),
     publicKey: forge.pki.publicKeyToPem(publicKey),

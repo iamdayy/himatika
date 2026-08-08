@@ -214,8 +214,23 @@ export default defineEventHandler(
         });
       }
 
-      // Create Participant Record
-      await ParticipantModel.create(newParticipantData);
+      // Create Participant Record (Atomic Upsert to prevent race conditions)
+      const query: any = { agendaId: id };
+      if (newParticipantData.member) query.member = newParticipantData.member;
+      if (newParticipantData.guest) query.guest = newParticipantData.guest;
+
+      const existingRecord = await ParticipantModel.findOneAndUpdate(
+        query,
+        { $setOnInsert: newParticipantData },
+        { upsert: true, new: false }
+      );
+
+      if (existingRecord) {
+        throw createError({
+          statusCode: 409,
+          statusMessage: "Anda sudah terdaftar sebagai peserta pada agenda ini (terdeteksi duplikasi otomatis).",
+        });
+      }
 
       // Send confirmation email via QStash
       const { Client } = await import("@upstash/qstash");

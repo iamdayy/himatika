@@ -6,18 +6,50 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
-  // Skip auth middleware for signout to allow users with expired tokens to log out
-  if (path === "/api/signout") {
+  const whitelist = [
+    "/api/auth",
+    "/api/signin",
+    "/api/signup",
+    "/api/reset-password",
+    "/api/otp",
+    "/api/signout",
+    "/api/payment/notification",
+    "/api/webhooks/qstash",
+    "/api/sign/verify",
+    "/api/ip"
+  ];
+
+  // Some endpoints are GET-only public
+  const getOnlyWhitelist = [
+    "/api/news",
+    "/api/agenda",
+    "/api/config",
+    "/api/stats"
+  ];
+
+  const isWhitelisted = whitelist.some(w => path.startsWith(w));
+  const isGetWhitelisted = getOnlyWhitelist.some(w => path.startsWith(w)) && event.method === "GET";
+
+  if (isWhitelisted || isGetWhitelisted) {
+    if (checkAuth(event)) {
+      try {
+        event.context.user = await ensureAuth(event);
+        event.context.organizer = event.context.user?.member?.organizer;
+      } catch (error) {
+        // Safe to ignore for public whitelisted endpoints, they don't require valid tokens
+      }
+    }
     return;
   }
 
-  if (checkAuth(event)) {
-    try {
-      event.context.user = await ensureAuth(event);
-      event.context.organizer = event.context.user.member?.organizer;
-    } catch (error) {
-      // Ignore authentication errors at the middleware level.
-      // Protected endpoints should handle authorization and throw their own errors.
-    }
+  // Secure by Default: Block non-whitelisted endpoints
+  try {
+    event.context.user = await ensureAuth(event);
+    event.context.organizer = event.context.user?.member?.organizer;
+  } catch (error: any) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: "Unauthenticated: Token is missing or invalid",
+    });
   }
 });

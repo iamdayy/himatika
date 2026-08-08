@@ -89,15 +89,28 @@ export default defineEventHandler(
           }
         }
 
-        // Insert new committee member
-        await CommitteeModel.create({
-          _id: committeeId,
-          agendaId: id,
-          job: job,
-          member: me._id,
-          approved: false,
-          ticketModelId: ticketModelId || undefined,
-        });
+        // Insert new committee member (Atomic Upsert)
+        const existingCommittee = await CommitteeModel.findOneAndUpdate(
+          { agendaId: id, member: me._id },
+          {
+            $setOnInsert: {
+              _id: committeeId,
+              agendaId: id,
+              job: job,
+              member: me._id,
+              approved: false,
+              ticketModelId: ticketModelId || undefined,
+            }
+          },
+          { upsert: true, new: false }
+        );
+
+        if (existingCommittee) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "You are already registered for this agenda (duplicate detected).",
+          });
+        }
       } else {
         throw createError({
           statusCode: 401,

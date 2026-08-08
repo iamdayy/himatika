@@ -1,15 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { verifySignature } from '../../../server/utils/midtrans'
+
+// Mock useRuntimeConfig
+vi.stubGlobal('useRuntimeConfig', () => ({
+  midtrans_server_key: 'dummy-server-key'
+}))
 
 describe('Midtrans Utils', () => {
   it('should verify a valid signature correctly', () => {
     // Generate a valid signature simulation
     const crypto = require('crypto')
-    const config = useRuntimeConfig()
-    
-    // We need to mock useRuntimeConfig for this to work in unit test if it's not fully mocked
-    // The test environment will have access to config via @nuxt/test-utils if properly set up
-    const serverKey = config.midtrans_server_key || 'dummy-server-key'
+    // We mocked useRuntimeConfig globally above, so the internal function will use this key
+    const serverKey = 'dummy-server-key'
     
     const mockPayload = {
       order_id: 'order-123',

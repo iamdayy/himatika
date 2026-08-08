@@ -517,5 +517,7 @@
   "video_processing_hint": "Video sedang dikompresi. Halaman ini akan otomatis memperbarui.",
   "video_processing_failed": "Pemrosesan video gagal",
   "processing": "Sedang Diproses",
-  "no_videos_yet": "Belum ada video yang diunggah."
+  "no_videos_yet": "Belum ada video yang diunggah.",
+  "otp_code": "OTP Code",
+  "non_student_guest": "Non-Student Guest"
 }
