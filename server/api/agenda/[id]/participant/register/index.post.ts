@@ -94,6 +94,17 @@ export default defineEventHandler(
 
       const { ParticipantModel } =
         await import("~~/server/models/ParticipantModel");
+
+      if (agenda.quota && agenda.quota > 0) {
+        const currentCount = await ParticipantModel.countDocuments({ agendaId: id });
+        if (currentCount >= agenda.quota) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: "Mohon maaf, kuota peserta untuk agenda ini sudah penuh.",
+          });
+        }
+      }
+
       const { CommitteeModel } =
         await import("~~/server/models/CommitteeModel");
       const { GuestModel } = await import("~~/server/models/GuestModel");

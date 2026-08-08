@@ -57,6 +57,9 @@ const participantSchema = new Schema<IParticipantSchema>(
   { timestamps: true }
 );
 
+participantSchema.index({ agendaId: 1, member: 1 }, { unique: true, sparse: true });
+participantSchema.index({ agendaId: 1, guest: 1 }, { unique: true, sparse: true });
+
 participantSchema.virtual("answers", {
   ref: AnswerModel,
   localField: "_id",
