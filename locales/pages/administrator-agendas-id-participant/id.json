@@ -1,5 +1,6 @@
 {
   "set_visit_status": "Atur Status Kunjungan",
+  "cancel_visit_status": "Batalkan Kehadiran",
   "set_visit_status_confirmation": "Apakah Anda yakin ingin mengatur status kunjungan peserta ini?",
   "success_to_set_visit_status": "Berhasil mengatur status kunjungan peserta",
   "failed_to_set_visit_status": "Gagal mengatur status kunjungan peserta",

@@ -1,3 +1,4 @@
+import { DocModel } from "~~/server/models/DocModel";
 import { IUser } from "~~/types";
 import { IActivinessLetterResponse } from "~~/types/IResponse";
 
@@ -6,16 +7,20 @@ export default defineEventHandler(
     try {
       // Ensure user is authenticated and authorized
       const user = event.context.user as IUser;
-      if (!user) {
+      if (!user || !user.member) {
         throw createError({
           statusCode: 403,
           statusMessage: "You must be logged in to access this",
         });
       }
 
-      const documents = user.member.documents?.filter((doc) =>
-        doc.tags.includes("Surat Keterangan Aktif")
-      );
+      const documents = await DocModel.find({
+        uploader: (user.member as any)._id || (user.member as any).id,
+        tags: { $in: ["Surat Keterangan Aktif"] },
+        archived: { $ne: true },
+      })
+        .populate("signs.user", "fullName NIM avatar")
+        .lean();
 
       if (!documents || documents.length === 0) {
         return {
@@ -26,16 +31,16 @@ export default defineEventHandler(
       return {
         statusCode: 200,
         statusMessage: "Active letters fetched successfully",
-        data: documents,
+        data: documents as any,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         "Error in /api/me/documents/activiness_letter/index.get.ts:",
         error
       );
       throw createError({
-        statusCode: 500,
-        statusMessage: "System error",
+        statusCode: error.statusCode || 500,
+        statusMessage: error.statusMessage || "System error",
       });
     }
   }

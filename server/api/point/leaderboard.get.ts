@@ -2,8 +2,8 @@ import { getTop5Leaderboard } from "~~/server/utils/leaderboard";
 import { ILeaderboardResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<ILeaderboardResponse> => {
-  const semester = event.context.user.member.semester;
-  const nim = event.context.user.member.NIM;
+  const semester = event.context.user?.member?.semester || 1;
+  const nim = event.context.user?.member?.NIM;
 
   // Memanggil fungsi cache (akan mengeksekusi DB query hanya setiap 1 jam sekali per semester)
   const cachedData = await getTop5Leaderboard(semester);

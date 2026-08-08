@@ -251,9 +251,9 @@ function getRowItems(row: Row<IParticipant>): DropdownMenuItem[] {
             disabled: !isCommittee.value && !isOrganizer.value && !row.original.member,
         },
         {
-            icon: 'i-heroicons-check-circle',
-            label: $ts('set_visit_status'),
-            disabled: !user.value || row.original.visiting || !isCommittee.value,
+            icon: row.original.visiting ? 'i-heroicons-x-circle' : 'i-heroicons-check-circle',
+            label: row.original.visiting ? $ts('cancel_visit_status') : $ts('set_visit_status'),
+            disabled: !user.value || !isCommittee.value,
             onSelect: () => openSetVisitedModal(row.original._id as string)
         },
         {
@@ -552,7 +552,7 @@ const setPaid = async (registeredId: string) => {
 
 const setVisited = async (registeredId: string) => {
     try {
-        const response = await $api<IResponse>(`/api/agenda/${id}/participant/register/${registeredId}/visited`);
+        const response = await $api<IResponse>(`/api/agenda/${id}/participant/register/${registeredId}/visited`, { method: 'PUT' });
         if (response.statusCode != 200) {
             return toast.add({ title: $ts('failed'), description: $ts('failed_to_set_visit_status'), color: 'error' });
         }
