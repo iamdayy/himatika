@@ -1,4 +1,4 @@
-import mongoose, {  Schema, Types, model  } from \"mongoose\";
+import mongoose, {  Schema, Types, model  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { ICommentSchema } from "~~/types/ISchemas";
 

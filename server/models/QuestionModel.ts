@@ -1,4 +1,4 @@
-import mongoose, {  model, Schema  } from \"mongoose\";
+import mongoose, {  model, Schema  } from "mongoose";
 import { IOptionSchema, IQuestionSchema } from "~~/types/ISchemas";
 
 const OptionSchema = new Schema<IOptionSchema>({

@@ -1,5 +1,5 @@
 import { IAspirationSchema } from "@/types/ISchemas";
-import mongoose, {  Schema, model  } from \"mongoose\";
+import mongoose, {  Schema, model  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 
 const AspirationSchema = new Schema<IAspirationSchema>(

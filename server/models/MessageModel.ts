@@ -1,4 +1,4 @@
-import mongoose, {  Schema, model  } from \"mongoose\";
+import mongoose, {  Schema, model  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IMessageSchema } from "~~/types/ISchemas";
 

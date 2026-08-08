@@ -1,4 +1,4 @@
-import mongoose, {  model, Schema, Types  } from \"mongoose\";
+import mongoose, {  model, Schema, Types  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import type { IVideoSchema } from "~~/types/ISchemas";
 

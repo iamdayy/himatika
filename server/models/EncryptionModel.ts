@@ -1,4 +1,4 @@
-import mongoose, {  model, Schema  } from \"mongoose\";
+import mongoose, {  model, Schema  } from "mongoose";
 import { IEncryptionSchema } from "~~/types/ISchemas";
 
 
