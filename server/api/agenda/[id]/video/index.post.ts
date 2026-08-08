@@ -73,10 +73,16 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       const config = useRuntimeConfig();
       if (config.pdf_worker_api_url) {
         const callbackUrl = `${config.public.public_uri}/api/storage/webhook-media`;
+        
+        // Use JWT auth for cross-service call (matching himatikaPdfWorker pattern)
+        const jwt = await import("jsonwebtoken");
+        const serviceToken = jwt.default.sign({ service: 'himatika-backend' }, config.jwtSecret, { expiresIn: '5m' });
+        
         $fetch(`${config.pdf_worker_api_url}/api/media/compress-video`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${serviceToken}`,
           },
           body: {
             fileKey,

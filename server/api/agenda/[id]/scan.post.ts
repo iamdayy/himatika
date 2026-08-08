@@ -8,7 +8,16 @@ export default defineEventHandler(async (event) => {
   const payload = await readBody(event);
   const agendaId = getRouterParam(event, "id");
   const { code } = payload; // code = registeredId (misal: "REG-123456")
-  const { id, role } = JSON.parse(code);
+
+  let id: string;
+  let role: string;
+  try {
+    const parsed = JSON.parse(code);
+    id = parsed.id;
+    role = parsed.role;
+  } catch {
+    throw createError({ statusCode: 400, message: "QR Code tidak valid (format JSON salah)" });
+  }
 
   if (!code || !id || !role) {
     throw createError({ statusCode: 400, message: "QR Code tidak valid" });

@@ -34,6 +34,10 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: "This registration does not use manual transfer" });
     }
 
+    if (registration.payment.status === "success" || registration.payment.status === "failed") {
+      throw createError({ statusCode: 400, statusMessage: "Payment is already processed" });
+    }
+
     registration.payment = {
       ...registration.payment,
       status: body.status,

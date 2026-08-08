@@ -1,3 +1,6 @@
+# ⚠️ DEPRECATED: This Dockerfile is NOT used in production.
+# Production deployment uses Vercel. This file is kept for local development reference only.
+# See vercel.json for the actual deployment configuration.
 FROM node:24-slim AS builder
 
 RUN npm install -g bun

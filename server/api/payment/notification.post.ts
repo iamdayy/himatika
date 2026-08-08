@@ -20,20 +20,26 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
   const { status_code, transaction_status, order_id, fraud_status } = body;
   const registeredId = order_id.split(":")[0];
   try {
-    // Generate a new ID for the registration
-    // Find the agenda by ID
-    // Verify signature first (fail fast)
-    if (status_code === "200") {
-      const verified = verifySignature(body);
-      if (!verified) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: "Tanda tangan tidak valid",
-        });
-      }
+    // Midtrans sends status_code "200" for settlement and "202" for expire/deny/cancel.
+    // Verify signature for ALL valid notification status codes.
+    const validStatusCodes = ["200", "201", "202"];
+    if (!validStatusCodes.includes(status_code)) {
+      return {
+        statusCode: 200,
+        statusMessage: "Notifikasi dengan status_code tidak dikenali, diabaikan",
+      };
+    }
 
-      // 1. Handle SUCCESS (Settlement)
-      if (transaction_status === "settlement" && fraud_status === "accept") {
+    const verified = verifySignature(body);
+    if (!verified) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Tanda tangan tidak valid",
+      });
+    }
+
+    // 1. Handle SUCCESS (Settlement) — only status_code "200"
+    if (status_code === "200" && transaction_status === "settlement" && fraud_status === "accept") {
         const updateDoc = {
           "payment.status": "success",
           $unset: {
@@ -125,47 +131,46 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
             })();
           }
         }
-      } 
-      
-      // 2. Handle FAILURE (Cancel, Deny, Expire)
-      else if (
-        transaction_status === "cancel" ||
-        transaction_status === "deny" ||
-        transaction_status === "expire"
-      ) {
-        const updateDoc = {
-          "payment.status": "canceled",
-          $unset: {
-            "payment.expiry": "",
-            "payment.va_number": ""
-          }
-        };
-
-        const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
-        const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
-
-        let result = await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
-
-        if (result.matchedCount === 0) {
-            const participant = await ParticipantModel.findById(registeredId);
-
-            if (participant) {
-                // Atomic Deletion for Guest
-                if (participant.guest) {
-                    await ParticipantModel.deleteOne({ _id: registeredId });
-                    
-                    // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
-                    const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
-                    if (otherParticipationsCount === 0) {
-                        const { GuestModel } = await import("~~/server/models/GuestModel");
-                        await GuestModel.deleteOne({ _id: participant.guest as any });
-                    }
-                } else {
-                    // Atomic Update for Registered User
-                    await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
-                }
-            }
+    }
+    
+    // 2. Handle FAILURE (Cancel, Deny, Expire) — status_code "200" OR "202"
+    else if (
+      transaction_status === "cancel" ||
+      transaction_status === "deny" ||
+      transaction_status === "expire"
+    ) {
+      const updateDoc = {
+        "payment.status": "canceled",
+        $unset: {
+          "payment.expiry": "",
+          "payment.va_number": ""
         }
+      };
+
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+
+      let result = await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
+
+      if (result.matchedCount === 0) {
+          const participant = await ParticipantModel.findById(registeredId);
+
+          if (participant) {
+              // Atomic Deletion for Guest
+              if (participant.guest) {
+                  await ParticipantModel.deleteOne({ _id: registeredId });
+                  
+                  // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
+                  const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
+                  if (otherParticipationsCount === 0) {
+                      const { GuestModel } = await import("~~/server/models/GuestModel");
+                      await GuestModel.deleteOne({ _id: participant.guest as any });
+                  }
+              } else {
+                  // Atomic Update for Registered User
+                  await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
+              }
+          }
       }
     }
     return {
