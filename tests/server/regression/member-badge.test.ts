@@ -51,8 +51,8 @@ describe('Member Badge Gamification', async () => {
       verified: true
     })
 
-    const config = useRuntimeConfig()
-    authToken = jwt.sign({ id: user._id }, config.jwtSecret, { expiresIn: '1h' })
+    const jwtSecret = process.env.NUXT_JWT_SECRET || 'secret'
+    authToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' })
   })
 
   it('should not evaluate any badge if points are below minPoints', async () => {
@@ -63,7 +63,7 @@ describe('Member Badge Gamification', async () => {
       status: 'approved'
     })
 
-    const res = await $fetch('/api/member/badge/evaluate', {
+    const res = await $fetch<any>('/api/member/badge/evaluate', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authToken}`
@@ -85,7 +85,7 @@ describe('Member Badge Gamification', async () => {
       status: 'approved'
     })
 
-    const res = await $fetch('/api/member/badge/evaluate', {
+    const res = await $fetch<any>('/api/member/badge/evaluate', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authToken}`

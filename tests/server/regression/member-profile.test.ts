@@ -36,8 +36,8 @@ describe('Member Profile Address Feature', async () => {
       verified: true
     })
 
-    const config = useRuntimeConfig()
-    authToken = jwt.sign({ id: user._id }, config.jwtSecret, { expiresIn: '1h' })
+    const jwtSecret = process.env.NUXT_JWT_SECRET || 'secret'
+    authToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' })
   })
 
   it('should update member address fields', async () => {
@@ -50,7 +50,7 @@ describe('Member Profile Address Feature', async () => {
       place: 'Jalan Raya No 1'
     }
 
-    const res = await $fetch('/api/member/profile', {
+    const res = await $fetch<any>('/api/member/profile', {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${authToken}`
