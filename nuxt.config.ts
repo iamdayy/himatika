@@ -199,6 +199,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "nuxt-security",
     "@vite-pwa/nuxt",
+    "@nuxt/test-utils/module"
     // "@vercel/speed-insights",
   ],
   pwa: {

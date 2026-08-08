@@ -22,7 +22,7 @@ const mockCommitteeFindById = vi.fn()
 const mockCommitteeUpdateOne = vi.fn()
 const mockAgendaFindById = vi.fn()
 
-vi.mock('~~/server/models/ParticipantModel', () => ({
+vi.mock('../../../server/models/ParticipantModel', () => ({
   ParticipantModel: {
     findById: (...args: unknown[]) => mockParticipantFindById(...args),
     updateOne: (...args: unknown[]) => mockParticipantUpdateOne(...args),
@@ -32,24 +32,24 @@ vi.mock('~~/server/models/ParticipantModel', () => ({
   }
 }))
 
-vi.mock('~~/server/models/CommitteeModel', () => ({
+vi.mock('../../../server/models/CommitteeModel', () => ({
   CommitteeModel: {
     findById: (...args: unknown[]) => mockCommitteeFindById(...args),
     updateOne: (...args: unknown[]) => mockCommitteeUpdateOne(...args),
   }
 }))
 
-vi.mock('~~/server/models/AgendaModel', () => ({
+vi.mock('../../../server/models/AgendaModel', () => ({
   AgendaModel: {
     findById: (...args: unknown[]) => mockAgendaFindById(...args),
   }
 }))
 
-vi.mock('~~/server/utils/himatikaPdfWorker', () => ({
+vi.mock('../../../server/utils/himatikaPdfWorker', () => ({
   himatikaPdfWorker: { generateTicket: vi.fn() }
 }))
 
-vi.mock('~~/server/utils/whatsapp', () => ({
+vi.mock('../../../server/utils/whatsapp', () => ({
   sendWhatsappFile: vi.fn()
 }))
 
@@ -113,7 +113,7 @@ describe('Midtrans Notification Handler', () => {
       })
 
       const { readBody: mockReadBody } = await import('h3') as unknown as { readBody: ReturnType<typeof vi.fn> }
-      vi.mocked(globalThis.readBody).mockResolvedValue(payload)
+      vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
 
       // Mock: participant exists with pending payment
       mockCommitteeUpdateOne.mockResolvedValue({ matchedCount: 0 })
@@ -126,7 +126,7 @@ describe('Midtrans Notification Handler', () => {
       mockParticipantUpdateOne.mockResolvedValue({ modifiedCount: 1 })
 
       // Import the handler
-      const handler = (await import('~~/server/api/payment/notification.post')).default
+      const handler = (await import('../../../server/api/payment/notification.post')).default
       const result = await handler({} as any)
 
       // ASSERTION: The expire notification MUST trigger payment update
@@ -145,7 +145,7 @@ describe('Midtrans Notification Handler', () => {
         transaction_status: 'deny',
       })
 
-      vi.mocked(globalThis.readBody).mockResolvedValue(payload)
+      vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
 
       mockCommitteeUpdateOne.mockResolvedValue({ matchedCount: 0 })
       mockParticipantFindById.mockResolvedValue({
@@ -156,7 +156,7 @@ describe('Midtrans Notification Handler', () => {
       })
       mockParticipantUpdateOne.mockResolvedValue({ modifiedCount: 1 })
 
-      const handler = (await import('~~/server/api/payment/notification.post')).default
+      const handler = (await import('../../../server/api/payment/notification.post')).default
       const result = await handler({} as any)
 
       expect(mockParticipantUpdateOne).toHaveBeenCalledWith(
@@ -176,7 +176,7 @@ describe('Midtrans Notification Handler', () => {
         fraud_status: 'accept',
       })
 
-      vi.mocked(globalThis.readBody).mockResolvedValue(payload)
+      vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
 
       // Mock: committee found
       mockCommitteeFindById.mockReturnValue({
@@ -191,7 +191,7 @@ describe('Midtrans Notification Handler', () => {
       mockCommitteeUpdateOne.mockResolvedValue({ modifiedCount: 1 })
       mockAgendaFindById.mockResolvedValue(null) // Skip ticket generation
 
-      const handler = (await import('~~/server/api/payment/notification.post')).default
+      const handler = (await import('../../../server/api/payment/notification.post')).default
       const result = await handler({} as any)
 
       expect(mockCommitteeUpdateOne).toHaveBeenCalledWith(

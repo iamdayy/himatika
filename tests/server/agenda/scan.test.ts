@@ -11,10 +11,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // --- Mocks ---
 
-vi.mock('~~/server/models/AgendaModel', () => ({
+vi.mock('../../../server/models/AgendaModel', () => ({
   AgendaModel: { findById: vi.fn() }
 }))
-vi.mock('~~/server/utils/agendaAuth', () => ({
+vi.mock('../../../server/utils/agendaAuth', () => ({
   ensureCommitteeOrOrganizer: vi.fn()
 }))
 
@@ -35,10 +35,10 @@ describe('Agenda QR Scan Handler', () => {
   it('should return 400 Bad Request when QR code is not valid JSON', async () => {
     // Malformed JSON (missing quotes)
     const payload = { code: '{ id: 123, role: Participant }' }
-    vi.mocked(globalThis.readBody).mockResolvedValue(payload)
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('agenda123')
+    vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
+    vi.mocked((globalThis as any).getRouterParam).mockReturnValue('agenda123')
 
-    const handler = (await import('~~/server/api/agenda/[id]/scan.post')).default
+    const handler = (await import('../../../server/api/agenda/[id]/scan.post')).default
     
     // The handler should throw a Nuxt Error with statusCode 400
     await expect(handler({ context: { user: { _id: 'u1' } } } as any)).rejects.toMatchObject({
@@ -50,10 +50,10 @@ describe('Agenda QR Scan Handler', () => {
   it('should return 400 Bad Request when QR code is missing required fields', async () => {
     // Valid JSON but missing 'role'
     const payload = { code: '{"id":"123"}' }
-    vi.mocked(globalThis.readBody).mockResolvedValue(payload)
-    vi.mocked(globalThis.getRouterParam).mockReturnValue('agenda123')
+    vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
+    vi.mocked((globalThis as any).getRouterParam).mockReturnValue('agenda123')
 
-    const handler = (await import('~~/server/api/agenda/[id]/scan.post')).default
+    const handler = (await import('../../../server/api/agenda/[id]/scan.post')).default
     
     await expect(handler({ context: { user: { _id: 'u1' } } } as any)).rejects.toMatchObject({
       statusCode: 400,

@@ -7,19 +7,19 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('~~/server/models/AgendaModel', () => ({
+vi.mock('../../../server/models/AgendaModel', () => ({
   AgendaModel: { findById: vi.fn() }
 }))
-vi.mock('~~/server/models/ParticipantModel', () => ({
+vi.mock('../../../server/models/ParticipantModel', () => ({
   ParticipantModel: { findById: vi.fn() }
 }))
-vi.mock('~~/server/models/CommitteeModel', () => ({
+vi.mock('../../../server/models/CommitteeModel', () => ({
   CommitteeModel: { findById: vi.fn() }
 }))
-vi.mock('~~/server/utils/himatikaPdfWorker', () => ({
+vi.mock('../../../server/utils/himatikaPdfWorker', () => ({
   himatikaPdfWorker: { generateTicket: vi.fn() }
 }))
-vi.mock('~~/server/utils/whatsapp', () => ({
+vi.mock('../../../server/utils/whatsapp', () => ({
   sendWhatsappFile: vi.fn()
 }))
 
@@ -41,12 +41,12 @@ describe('Payment Verification Idempotency', () => {
 
   it('should prevent double processing if payment is already success', async () => {
     const payload = { registeredId: 'reg123', status: 'success' }
-    vi.mocked(globalThis.readBody).mockResolvedValue(payload)
+    vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
 
     const mockSave = vi.fn()
     
     // Participant is ALREADY success
-    const { ParticipantModel } = await import('~~/server/models/ParticipantModel')
+    const { ParticipantModel } = await import('../../../server/models/ParticipantModel')
     vi.mocked(ParticipantModel.findById).mockReturnValue({
       populate: vi.fn().mockReturnValue({
         populate: vi.fn().mockResolvedValue({
@@ -58,10 +58,10 @@ describe('Payment Verification Idempotency', () => {
       })
     } as any)
 
-    const { AgendaModel } = await import('~~/server/models/AgendaModel')
+    const { AgendaModel } = await import('../../../server/models/AgendaModel')
     vi.mocked(AgendaModel.findById).mockResolvedValue({ _id: 'agenda123', title: 'Test' } as any)
 
-    const handler = (await import('~~/server/api/agenda/[id]/payment/verify.post')).default
+    const handler = (await import('../../../server/api/agenda/[id]/payment/verify.post')).default
     const event = { context: { params: { id: 'agenda123' } } }
 
     await expect(handler(event as any)).rejects.toMatchObject({
