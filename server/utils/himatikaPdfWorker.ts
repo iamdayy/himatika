@@ -34,7 +34,7 @@ async function fetchWithRetry<T>(url: string, options: any, retries = MAX_RETRIE
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return await $fetch<T>(url, { ...options, headers });
+      return (await $fetch<any>(url, { ...options, headers })) as T;
     } catch (error: any) {
       const isLastAttempt = attempt === retries;
       const isRetryable = error?.statusCode >= 500 || error?.code === 'ECONNREFUSED';
