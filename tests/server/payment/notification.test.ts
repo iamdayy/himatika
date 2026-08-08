@@ -54,17 +54,18 @@ vi.mock('../../../server/utils/whatsapp', () => ({
 }))
 
 // Mock Nuxt auto-imports
-vi.stubGlobal('defineEventHandler', (fn: Function) => fn)
-vi.stubGlobal('readBody', vi.fn())
-vi.stubGlobal('createError', (opts: { statusCode: number; statusMessage: string }) => {
+;(globalThis as any).defineEventHandler = (fn: Function) => fn;
+;(globalThis as any).readBody = vi.fn();
+;(globalThis as any).createError = (opts: { statusCode: number; statusMessage: string }) => {
   const err = new Error(opts.statusMessage) as Error & { statusCode: number }
   err.statusCode = opts.statusCode
   return err
-})
-vi.stubGlobal('useRuntimeConfig', () => ({
+};
+;(globalThis as any).useRuntimeConfig = () => ({
+  jwtSecret: 'test-secret',
   midtrans_server_key: 'test-server-key',
   public: { public_uri: 'http://localhost:3000' }
-}))
+});
 
 // Helper: generate valid Midtrans signature
 function generateSignature(orderId: string, statusCode: string, grossAmount: string, serverKey: string): string {

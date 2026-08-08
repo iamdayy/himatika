@@ -23,16 +23,17 @@ vi.mock('../../../server/utils/whatsapp', () => ({
   sendWhatsappFile: vi.fn()
 }))
 
-vi.stubGlobal('defineEventHandler', (fn: Function) => fn)
-vi.stubGlobal('readBody', vi.fn())
-vi.stubGlobal('createError', (opts: { statusCode: number; statusMessage: string }) => {
+;(globalThis as any).defineEventHandler = (fn: Function) => fn;
+;(globalThis as any).readBody = vi.fn();
+;(globalThis as any).createError = (opts: { statusCode: number; statusMessage: string }) => {
   const err = new Error(opts.statusMessage) as Error & { statusCode: number }
   err.statusCode = opts.statusCode
   return err
-})
-vi.stubGlobal('useRuntimeConfig', () => ({
+};
+;(globalThis as any).useRuntimeConfig = () => ({
+  jwtSecret: 'test-secret',
   public: { public_uri: 'http://localhost:3000' }
-}))
+});
 
 describe('Payment Verification Idempotency', () => {
   beforeEach(() => {

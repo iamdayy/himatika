@@ -2,16 +2,26 @@ import { describe, it, expect, vi } from 'vitest'
 import { verifySignature } from '../../../server/utils/midtrans'
 
 // Mock useRuntimeConfig
-vi.stubGlobal('useRuntimeConfig', () => ({
-  midtrans_server_key: 'dummy-server-key'
-}))
+;(globalThis as any).useRuntimeConfig = () => ({
+  midtrans_server_key: 'test-server-key',
+  midtrans_client_key: 'test-client-key',
+  public: {
+    appname: 'TestApp',
+    midtrans_production: false,
+  }
+});
+;(globalThis as any).createError = (opts: { statusCode: number; statusMessage: string }) => {
+  const err = new Error(opts.statusMessage) as Error & { statusCode: number }
+  err.statusCode = opts.statusCode
+  return err
+};
 
 describe('Midtrans Utils', () => {
   it('should verify a valid signature correctly', () => {
     // Generate a valid signature simulation
     const crypto = require('crypto')
     // We mocked useRuntimeConfig globally above, so the internal function will use this key
-    const serverKey = 'dummy-server-key'
+    const serverKey = 'test-server-key'
     
     const mockPayload = {
       order_id: 'order-123',

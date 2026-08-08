@@ -18,14 +18,14 @@ vi.mock('../../../server/utils/agendaAuth', () => ({
   ensureCommitteeOrOrganizer: vi.fn()
 }))
 
-vi.stubGlobal('defineEventHandler', (fn: Function) => fn)
-vi.stubGlobal('readBody', vi.fn())
-vi.stubGlobal('getRouterParam', vi.fn())
-vi.stubGlobal('createError', (opts: { statusCode: number; message: string }) => {
+;(globalThis as any).defineEventHandler = (fn: Function) => fn;
+;(globalThis as any).readBody = vi.fn();
+;(globalThis as any).getRouterParam = vi.fn();
+;(globalThis as any).createError = (opts: { statusCode: number; message: string }) => {
   const err = new Error(opts.message) as Error & { statusCode: number }
   err.statusCode = opts.statusCode
   return err
-})
+}
 
 describe('Agenda QR Scan Handler', () => {
   beforeEach(() => {
