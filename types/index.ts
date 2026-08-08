@@ -6,10 +6,16 @@ export type TRole =
   | "Public"
   | "Organizer"
   | "Member"
-  | string
   | "None"
   | "Committee"
   | "Participant";
+
+/**
+ * Extended role string yang mendukung dynamic role matching.
+ * Format: `field:value`, `field<value`, `field>value`
+ * Contoh: `semester:3`, `enteredYear>2023`
+ */
+export type TRoleOrExpression = TRole | `${string}:${string}` | `${string}<${string}` | `${string}>${string}`;
 export interface ICarousel {
   _id?: string | Types.ObjectId;
   title: string;
@@ -126,8 +132,8 @@ export interface IMember {
   organizersDepartmentMembers?: IOrganizer[];
   organizersDailyManagementStaff?: IOrganizer[];
   organizersDepartmentStaff?: IOrganizer[];
-  participantsData?: any[];
-  committeesData?: any[];
+  participantsData?: IParticipant[];
+  committeesData?: ICommittee[];
 }
 
 export interface IGuest {
@@ -330,7 +336,7 @@ export interface IAgendaCommitteeConfiguration {
   pay: boolean;
   amount: number;
   point: number;
-  canRegister?: TRole;
+  canRegister?: TRoleOrExpression;
   canRegisterUntil: {
     start: Date;
     end: Date;
@@ -346,7 +352,7 @@ export interface IAgendaParticipantConfiguration {
   amount: number;
   point: number;
   reqruitments?: IReqruitment[];
-  canRegister?: TRole;
+  canRegister?: TRoleOrExpression;
   canRegisterUntil: {
     start: Date;
     end: Date;
