@@ -10,13 +10,13 @@ interface IWorkerResponse<T> {
 }
 
 interface ISignatureLocation {
-    page: number;
-    role: string;
-    nim?: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+  page: number;
+  role: string;
+  nim?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 import jwt from "jsonwebtoken";
@@ -31,16 +31,16 @@ async function fetchWithRetry<T>(url: string, options: any, retries = MAX_RETRIE
     "Authorization": `Bearer ${serviceToken}`,
     ...options.headers,
   };
-  
+
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       return await $fetch<T>(url, { ...options, headers });
     } catch (error: any) {
       const isLastAttempt = attempt === retries;
       const isRetryable = error?.statusCode >= 500 || error?.code === 'ECONNREFUSED';
-      
+
       if (isLastAttempt || !isRetryable) throw error;
-      
+
       console.warn(`PDF Worker call failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${RETRY_DELAY_MS}ms...`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (attempt + 1)));
     }
@@ -88,8 +88,8 @@ export const himatikaPdfWorker = {
         signatureLocations: response.signatureLocations as ISignatureLocation[],
       };
     } catch (error) {
-        console.error("PDF Worker Error (Activiness Letter):", error);
-        throw error;
+      console.error("PDF Worker Error (Activiness Letter):", error);
+      throw error;
     }
   },
 
@@ -103,10 +103,40 @@ export const himatikaPdfWorker = {
     const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
 
     try {
+      const certConfig = payload.agenda.configuration?.certificate;
+      if (certConfig && certConfig.active && certConfig.templateUrl) {
+        const member = payload.role === 'participant' 
+                 ? ((payload.participant as any).member || (payload.participant as any).guest) 
+                 : (payload.participant as any).member;
+        
+        const certificateData = {
+          name: member?.fullName || "Peserta",
+          role: payload.role === 'participant' ? 'Peserta' : (payload.participant as any).job?.name || 'Panitia',
+          date: payload.agenda.date?.start?.toString().split('T')[0],
+          qr_data: `${config.public_url || 'https://himatika.org'}/verify/ticket/${payload.participant._id}`
+        };
+
+        const response = await fetchWithRetry<IWorkerResponse<any>>(`${workerUrl}/pdf/certificate`, {
+          method: "POST",
+          body: {
+            templateUrl: certConfig.templateUrl,
+            items: certConfig.items,
+            data: certificateData
+          }
+        });
+
+        if (response.error || !response.url) {
+          throw new Error(response.error || "Failed to generate certificate");
+        }
+
+        const pdfResponse = await fetch(response.url);
+        return await pdfResponse.blob();
+      }
+
       const response = await fetchWithRetry<Blob>(`${workerUrl}/pdf/ticket`, {
         method: "POST",
         body: payload,
-        responseType: "blob", 
+        responseType: "blob",
       });
 
       return response;
