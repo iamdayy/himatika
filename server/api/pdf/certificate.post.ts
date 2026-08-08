@@ -68,7 +68,7 @@ const codeItem = (items as any[])?.find((i: any) => i.type === 'code');
             items.find((i: any) => i.type === 'code').value = docNo;
         }
         // 2. Generate certificate PDF via Python worker
-        const response = await fetch(`${config.pdf_worker_api_url}/pdf/certificate`, {
+        const response = await fetch(`${config.pdf_worker_api_url}/api/pdf/certificate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ templateUrl, items, data })

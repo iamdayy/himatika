@@ -491,20 +491,10 @@ memberSchema.post("save", async function (next) {
         },
       }
     );
-    await AgendaModel.updateMany(
-      {
-        $or: [
-          { "committee.user": memberId },
-          { "registered.member": memberId },
-        ],
-      },
-      {
-        $pull: {
-          committee: { user: memberId },
-          registered: { member: memberId },
-        },
-      }
-    );
+    const { CommitteeModel } = await import("./CommitteeModel");
+    const { ParticipantModel } = await import("./ParticipantModel");
+    await CommitteeModel.deleteMany({ member: memberId });
+    await ParticipantModel.deleteMany({ member: memberId });
     await UserModel.findOneAndDelete({ member });
   }
 });
