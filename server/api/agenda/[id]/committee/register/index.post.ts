@@ -52,7 +52,7 @@ export default defineEventHandler(
         email = me.email;
         name = me.fullName;
         // Check if the user can register for the agenda
-        const canRegister = agenda.canMeRegisterAsCommittee(user as IUser);
+        const canRegister = await agenda.canMeRegisterAsCommittee(user as IUser);
         if (!canRegister) {
           throw createError({
             statusCode: 403,
@@ -89,15 +89,28 @@ export default defineEventHandler(
           }
         }
 
-        // Insert new committee member
-        await CommitteeModel.create({
-          _id: committeeId,
-          agendaId: id,
-          job: job,
-          member: me._id,
-          approved: false,
-          ticketModelId: ticketModelId || undefined,
-        });
+        // Insert new committee member (Atomic Upsert)
+        const existingCommittee = await CommitteeModel.findOneAndUpdate(
+          { agendaId: id, member: me._id },
+          {
+            $setOnInsert: {
+              _id: committeeId,
+              agendaId: id,
+              job: job,
+              member: me._id,
+              approved: false,
+              ticketModelId: ticketModelId || undefined,
+            }
+          },
+          { upsert: true, new: false }
+        );
+
+        if (existingCommittee) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "You are already registered for this agenda (duplicate detected).",
+          });
+        }
       } else {
         throw createError({
           statusCode: 401,

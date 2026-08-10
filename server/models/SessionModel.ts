@@ -34,7 +34,7 @@ const sessionSchema = new Schema<ISessionSchema>(
 // TTL index sesuai durasi refresh token (90 hari)
 sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
 
-export const SessionModel = mongoose.model<ISessionSchema>(
+export const SessionModel = mongoose.models.Session || mongoose.model<ISessionSchema>(
   "Session",
   sessionSchema
 );

@@ -18,28 +18,35 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, statusMessage: "Agenda not found" });
     }
 
-    let registration = await ParticipantModel.findById(body.registeredId).populate("member").populate("guest");
     let isCommittee = false;
 
+    // Use atomic update
+    const updateResult = await ParticipantModel.findOneAndUpdate(
+      { _id: body.registeredId, 'payment.status': 'pending', 'payment.method': 'manual_transfer' },
+      { $set: { 'payment.status': body.status } },
+      { new: true }
+    ).populate("member").populate("guest");
+
+    let registration = updateResult;
+
     if (!registration) {
-      registration = await CommitteeModel.findById(body.registeredId).populate("member") as any;
+      const committeeUpdateResult = await CommitteeModel.findOneAndUpdate(
+        { _id: body.registeredId, 'payment.status': 'pending', 'payment.method': 'manual_transfer' },
+        { $set: { 'payment.status': body.status } },
+        { new: true }
+      ).populate("member");
+      
+      registration = committeeUpdateResult as any;
       isCommittee = true;
     }
 
     if (!registration) {
-      throw createError({ statusCode: 404, statusMessage: "Registration not found" });
+       const existing = await ParticipantModel.findById(body.registeredId) || await CommitteeModel.findById(body.registeredId);
+       if (!existing) throw createError({ statusCode: 404, statusMessage: "Registration not found" });
+       if (!existing.payment || existing.payment.method !== "manual_transfer") throw createError({ statusCode: 400, statusMessage: "This registration does not use manual transfer" });
+       if (existing.payment.status === "success" || existing.payment.status === "failed") throw createError({ statusCode: 400, statusMessage: "Payment is already processed" });
+       throw createError({ statusCode: 400, statusMessage: "Could not verify payment" });
     }
-
-    if (!registration.payment || registration.payment.method !== "manual_transfer") {
-      throw createError({ statusCode: 400, statusMessage: "This registration does not use manual transfer" });
-    }
-
-    registration.payment = {
-      ...registration.payment,
-      status: body.status,
-    } as any;
-
-    await registration.save();
 
     if (body.status === 'success') {
       const { Client } = await import("@upstash/qstash");

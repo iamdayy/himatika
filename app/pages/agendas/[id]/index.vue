@@ -16,13 +16,9 @@ const router = useRouter();
 const toast = useToast()
 
 // Data Fetching
-const { data: agenda, pending, refresh } = useLazyAsyncData(`agenda-${id}`,
+const { data: agenda, pending, refresh } = await useAsyncData(`agenda-${id}`,
     () => $api<IAgendaResponse>(`/api/agenda/${id}`), {
     transform: (data) => data.data?.agenda
-});
-
-onMounted(() => {
-    refresh();
 });
 
 // Auth & Permissions
@@ -42,13 +38,17 @@ const {
 // --- COMPUTED PROPERTIES UNTUK UI ---
 
 // 1. Banner Image (Ambil dari foto pertama atau placeholder)
+const randomNum = ref(1);
+onMounted(() => {
+    randomNum.value = Math.floor(Math.random() * 3) + 1;
+});
 const bannerImage = computed(() => {
     if (agenda.value?.photos && agenda.value.photos.length > 0) {
         const firstPhoto = agenda.value.photos[0];
         // Pastikan tipe image adalah string URL
-        return typeof firstPhoto?.image === 'string' ? firstPhoto.image : `/img/placeholder-banner-${Math.floor(Math.random() * 3) + 1}.jpeg`;
+        return typeof firstPhoto?.image === 'string' ? firstPhoto.image : `/img/placeholder-banner-${randomNum.value}.jpeg`;
     }
-    return `/img/placeholder-banner-${Math.floor(Math.random() * 3) + 1}.jpeg`;
+    return `/img/placeholder-banner-${randomNum.value}.jpeg`;
 });
 
 // 2. Date Formatting (Handling DatePickerRangeObject)
@@ -281,7 +281,7 @@ useSeoMeta({
 });
 
 // --- RELATED AGENDAS ---
-const { data: relatedAgendas, pending: pendingRelated } = useLazyAsyncData('relatedAgendas',
+const { data: relatedAgendas, pending: pendingRelated } = await useAsyncData('relatedAgendas',
     () => $api<IAgendaResponse>('/api/agenda', {
         params: {
             category: (agenda.value?.category as ICategory)?._id,

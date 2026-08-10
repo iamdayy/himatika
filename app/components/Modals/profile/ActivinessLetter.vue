@@ -83,7 +83,7 @@ const downloadActivinessLetter = (point: IPointWithDisabledAndDoc) => {
     const ActivinessLetter = ActivinessLetters.value?.find(doc => doc.tags.includes(`Semester ${point.semester}`));
     if (!ActivinessLetter) {
         toast.add({ title: $ts('activity_letter_not_found'), color: 'error' });
-        return false;
+        return;
     }
     if (ActivinessLetter.signs?.some(sign => !sign.signed)) {
         toast.add({ title: $ts('document_not_signed'), color: 'error' });
@@ -119,14 +119,11 @@ const downloadActivinessLetter = (point: IPointWithDisabledAndDoc) => {
                             <p class="text-sm text-gray-500 dark:text-gray-400">{{ point.point }} Point</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <UButton class="!px-4 !py-2" :loading="loading" variant="outline" v-if="!point.disabled"
+                            <UButton class="!px-4 !py-2" :loading="loading" :variant="point.disabled ? 'outline' : 'solid'"
+                                :color="point.disabled ? 'neutral' : 'primary'" :disabled="point.disabled"
                                 @click="generate(point)">{{
                                     $ts('generate') }}</UButton>
-                            <UButton class="!px-4 !py-2" :loading="loading" variant="subtle" v-else
-                                :to="`/signatures/${point.doc}`" @click="close">{{
-                                    $ts('view') }}</UButton>
-                            <UButton class="!px-4 !py-2" v-if="canDownload(point)" variant="solid"
-                                :disabled="!canDownload(point)" :loading="loading"
+                            <UButton class="!px-4 !py-2" variant="solid" :disabled="!canDownload(point)" :loading="loading"
                                 @click="downloadActivinessLetter(point)">{{
                                     $ts('download') }}</UButton>
 

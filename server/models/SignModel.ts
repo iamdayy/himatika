@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import mongoose, {  model, Schema  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { ISignSchema } from "~~/types/ISchemas";
 
@@ -36,4 +36,4 @@ SignSchema.virtual("document", {
   justOne: true,
 });
 
-export default model<ISignSchema>("Sign", SignSchema);
+export default mongoose.models.Sign || model<ISignSchema>("Sign", SignSchema);

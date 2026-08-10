@@ -82,7 +82,7 @@ export default defineEventHandler(
 
       // Bypass permission check for guest registrations
       if (user) {
-        const canRegister = agenda.canMeRegisterAsParticipant(user as IUser);
+        const canRegister = await agenda.canMeRegisterAsParticipant(user as IUser);
         if (!canRegister) {
           throw createError({
             statusCode: 403,
@@ -94,6 +94,17 @@ export default defineEventHandler(
 
       const { ParticipantModel } =
         await import("~~/server/models/ParticipantModel");
+
+      if (agenda.quota && agenda.quota > 0) {
+        const currentCount = await ParticipantModel.countDocuments({ agendaId: id });
+        if (currentCount >= agenda.quota) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: "Mohon maaf, kuota peserta untuk agenda ini sudah penuh.",
+          });
+        }
+      }
+
       const { CommitteeModel } =
         await import("~~/server/models/CommitteeModel");
       const { GuestModel } = await import("~~/server/models/GuestModel");
@@ -214,8 +225,23 @@ export default defineEventHandler(
         });
       }
 
-      // Create Participant Record
-      await ParticipantModel.create(newParticipantData);
+      // Create Participant Record (Atomic Upsert to prevent race conditions)
+      const query: any = { agendaId: id };
+      if (newParticipantData.member) query.member = newParticipantData.member;
+      if (newParticipantData.guest) query.guest = newParticipantData.guest;
+
+      const existingRecord = await ParticipantModel.findOneAndUpdate(
+        query,
+        { $setOnInsert: newParticipantData },
+        { upsert: true, new: false }
+      );
+
+      if (existingRecord) {
+        throw createError({
+          statusCode: 409,
+          statusMessage: "Anda sudah terdaftar sebagai peserta pada agenda ini (terdeteksi duplikasi otomatis).",
+        });
+      }
 
       // Send confirmation email via QStash
       const { Client } = await import("@upstash/qstash");

@@ -40,11 +40,10 @@ const participantSchema = new Schema<IParticipantSchema>(
     },
     payment: {
       type: paymentSchema,
-      default: {
+      default: () => ({
         method: "cash",
         status: "pending",
-        time: Date.now(),
-      },
+      }),
     },
     certificateDoc: {
       type: Types.ObjectId,
@@ -55,6 +54,21 @@ const participantSchema = new Schema<IParticipantSchema>(
     },
   },
   { timestamps: true }
+);
+
+participantSchema.index(
+  { agendaId: 1, member: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { member: { $exists: true, $type: "objectId" } }
+  }
+);
+participantSchema.index(
+  { agendaId: 1, guest: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { guest: { $exists: true, $type: "objectId" } }
+  }
 );
 
 participantSchema.virtual("answers", {
@@ -69,7 +83,7 @@ participantSchema.plugin(mongooseAutoPopulate);
 /**
  * Mongoose model for the Participant collection.
  */
-export const ParticipantModel = model<IParticipantSchema>(
+export const ParticipantModel = mongoose.models.Participant || model<IParticipantSchema>(
   "Participant",
   participantSchema
 );

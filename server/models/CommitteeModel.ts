@@ -63,6 +63,8 @@ const committeeSchema = new Schema<ICommitteeSchema>(
   { timestamps: true }
 );
 
+committeeSchema.index({ agendaId: 1, member: 1 }, { unique: true, sparse: true });
+
 committeeSchema.virtual("answers", {
   ref: AnswerModel,
   localField: "_id",
@@ -75,7 +77,7 @@ committeeSchema.plugin(mongooseAutoPopulate);
 /**
  * Mongoose model for the Committee collection.
  */
-export const CommitteeModel = model<ICommitteeSchema>(
+export const CommitteeModel = mongoose.models.Committee || model<ICommitteeSchema>(
   "Committee",
   committeeSchema
 );

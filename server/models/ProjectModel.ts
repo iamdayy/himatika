@@ -85,7 +85,7 @@ projectSchema.virtual("photos", {
 /**
  * Mongoose model for the Project collection.
  */
-export const ProjectModel = mongoose.model<IProjectSchema>(
+export const ProjectModel = mongoose.models.Project || mongoose.model<IProjectSchema>(
   "Project",
   projectSchema
 );

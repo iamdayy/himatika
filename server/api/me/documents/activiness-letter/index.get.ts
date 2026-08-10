@@ -13,6 +13,7 @@ export default defineEventHandler(
           statusMessage: "You must be logged in to access this",
         });
       }
+      // console.log(user.member)
 
       const documents = await DocModel.find({
         uploader: (user.member as any)._id || (user.member as any).id,

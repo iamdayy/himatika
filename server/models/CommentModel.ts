@@ -1,4 +1,4 @@
-import { Schema, Types, model } from "mongoose";
+import mongoose, {  Schema, Types, model  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { ICommentSchema } from "~~/types/ISchemas";
 
@@ -35,4 +35,4 @@ const CommentSchema = new Schema<ICommentSchema>(
 
 CommentSchema.plugin(mongooseAutoPopulate);
 
-export const CommentModel = model<ICommentSchema>("Comment", CommentSchema);
+export const CommentModel = mongoose.models.Comment || model<ICommentSchema>("Comment", CommentSchema);

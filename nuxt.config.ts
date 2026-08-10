@@ -199,6 +199,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "nuxt-security",
     "@vite-pwa/nuxt",
+    "@nuxt/test-utils/module"
     // "@vercel/speed-insights",
   ],
   pwa: {
@@ -305,7 +306,6 @@ export default defineNuxtConfig({
     locales: [
       { code: "en", iso: "en-US", dir: "ltr" },
       { code: "id", iso: "id-ID", dir: "ltr" },
-      { code: "ar", iso: "ar-SA", dir: "rtl" },
     ],
     defaultLocale: "id",
     translationDir: "locales",

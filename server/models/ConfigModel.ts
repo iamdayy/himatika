@@ -48,7 +48,7 @@ configSchema.pre("save", async function (next) {
   }
 });
 
-export const ConfigModel = mongoose.model<IConfigSchema>(
+export const ConfigModel = mongoose.models.Config || mongoose.model<IConfigSchema>(
   "Config",
   configSchema
 );

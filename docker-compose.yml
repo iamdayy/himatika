@@ -1,3 +1,5 @@
+# ⚠️ DEPRECATED: This docker-compose file is NOT used in production.
+# Production deployment uses Vercel. Kept for local development reference only.
 version: '3.8'
 
 services:

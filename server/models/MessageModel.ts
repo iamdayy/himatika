@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import mongoose, {  Schema, model  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IMessageSchema } from "~~/types/ISchemas";
 
@@ -33,4 +33,4 @@ const messageSchema = new Schema<IMessageSchema>(
 );
 messageSchema.plugin(mongooseAutoPopulate);
 
-export const MessageModel = model<IMessageSchema>("Message", messageSchema);
+export const MessageModel = mongoose.models.Message || model<IMessageSchema>("Message", messageSchema);

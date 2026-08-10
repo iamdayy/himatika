@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import mongoose, {  model, Schema, Types  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import type { IVideoSchema } from "~~/types/ISchemas";
 
@@ -36,5 +36,5 @@ const videoSchema = new Schema<IVideoSchema>({
 videoSchema.index({ title: "text", description: "text", tags: "text" });
 videoSchema.plugin(mongooseAutoPopulate);
 
-export const VideoModel = model<IVideoSchema>("Video", videoSchema);
+export const VideoModel = mongoose.models.Video || model<IVideoSchema>("Video", videoSchema);
 

@@ -60,24 +60,11 @@ export interface IChargeRequestBody {
   };
 }
 
-const generateRandomString = (length: number): string => {
-  return crypto.randomBytes(length).toString("hex");
-};
 
 export const createCharge = async (
   body: IChargeRequestBody
 ): Promise<IChargeResponse> => {
-  const req_body = {
-    ...body,
-    transaction_details: {
-      ...body.transaction_details,
-      order_id: `${body.transaction_details.order_id}:${generateRandomString(
-        5
-      )}`,
-    },
-    bank_transfer: body.bank_transfer || undefined,
-    // credit_card: body.credit_card || undefined,
-  };
+
   return fetch(`${config.midtrans_url}/v2/charge`, {
     method: "POST",
     headers: {
@@ -85,7 +72,7 @@ export const createCharge = async (
       accept: "application/json",
       Authorization: `Basic ${toBase64(`${config.midtrans_server_key}:`)}`,
     },
-    body: JSON.stringify(req_body),
+    body: JSON.stringify(body),
   })
     .then(async (res) => {
       return res.json();

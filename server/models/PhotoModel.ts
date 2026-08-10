@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import mongoose, {  model, Schema, Types  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import type { IPhotoSchema } from "~~/types/ISchemas";
 
@@ -30,4 +30,4 @@ const photoSchema = new Schema<IPhotoSchema>({
 photoSchema.index({ title: "text", description: "text", tags: "text" });
 photoSchema.plugin(mongooseAutoPopulate);
 
-export const PhotoModel = model<IPhotoSchema>("Photo", photoSchema);
+export const PhotoModel = mongoose.models.Photo || model<IPhotoSchema>("Photo", photoSchema);

@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import mongoose, {  model, Schema  } from "mongoose";
 import { ICategorySchema } from "~~/types/ISchemas";
 
 const CategorySchema = new Schema<ICategorySchema>(
@@ -42,4 +42,4 @@ CategorySchema.virtual("news", {
   justOne: false,
 });
 
-export default model<ICategorySchema>("Category", CategorySchema);
+export default mongoose.models.Category || model<ICategorySchema>("Category", CategorySchema);

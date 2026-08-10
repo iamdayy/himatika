@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import mongoose, {  model, Schema, Types  } from "mongoose";
 import mongooseAutoPopulate from "mongoose-autopopulate";
 import { IAnswerSchema } from "~~/types/ISchemas";
 const AnswerSchema = new Schema<IAnswerSchema>({
@@ -26,4 +26,4 @@ const AnswerSchema = new Schema<IAnswerSchema>({
 });
 AnswerSchema.plugin(mongooseAutoPopulate);
 
-export const AnswerModel = model<IAnswerSchema>("Answer", AnswerSchema);
+export const AnswerModel = mongoose.models.Answer || model<IAnswerSchema>("Answer", AnswerSchema);

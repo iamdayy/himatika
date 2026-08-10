@@ -93,7 +93,7 @@ const signDocument = () => {
 
 const download = () => {
     const link = document.createElement('a');
-    link.href = doc.value.doc as string;
+    link.href = pdf.value;
     link.download = `Surat Keterangan Aktif ${user?.value?.member?.NIM} Semester ${user.value?.member?.semester}.pdf`;
     document.body.appendChild(link);
     link.click();
@@ -102,10 +102,20 @@ const download = () => {
 
 watch(doc, async (value) => {
     if (value.doc) {
-        const response = await fetch(value.doc as string);
-        const data = await response.arrayBuffer();
-        pdfBuffer.value = new Uint8Array(data);
-        pdf.value = value.doc as string;
+        try {
+            const proxyUrl = `/api/storage/proxy?url=${encodeURIComponent(value.doc as string)}`;
+            // Use $api to include authorization headers automatically, and request arrayBuffer
+            const data = await $api<ArrayBuffer>(proxyUrl, { responseType: 'arrayBuffer' });
+            
+            pdfBuffer.value = new Uint8Array(data);
+            
+            // Create a blob URL to feed the PDFViewer without triggering a second request
+            const blob = new Blob([data], { type: 'application/pdf' });
+            pdf.value = URL.createObjectURL(blob);
+        } catch (error) {
+            console.error("Failed to load PDF:", error);
+            toast.add({ title: $ts("error"), description: "Failed to load document", color: 'error' });
+        }
     }
 });
 definePageMeta({

@@ -126,7 +126,7 @@ export default defineEventHandler(
         const { Client } = await import("@upstash/qstash");
         const qstashClient = new Client({ token: process.env.QSTASH_TOKEN || "" });
         const config = useRuntimeConfig();
-        
+
         const customerName = participant.member ? (participant.member as any).fullName : (participant.guest as any)?.fullName || "";
         const customerEmail = participant.member ? (participant.member as any).email : (participant.guest as any)?.email || "";
 
@@ -163,7 +163,7 @@ export default defineEventHandler(
         bank_transfer: {
           bank: body.bank_transfer || "bca",
         },
-        credit_card: body.credit_card,
+        // credit_card: body.credit_card,
         transaction_details: {
           order_id: registeredId,
           gross_amount: totalAmount,
@@ -183,20 +183,30 @@ export default defineEventHandler(
               : (participant.guest as any)?.phone || "",
         },
       });
+
+      if (!['200', '201'].includes(payment.status_code)) {
+        throw createError({
+          statusCode: parseInt(payment.status_code) || 400,
+          statusMessage: payment.status_message || "Gagal membuat tagihan di Midtrans",
+        });
+      }
+
+      const existingPayment = (participant.payment as any)?.toObject?.() || participant.payment || {};
+
       // ✅ UPDATE: Logic penyimpanan ke DB
       participant.payment = {
-        ...participant.payment,
+        ...existingPayment,
         status: "pending",
         method: body.payment_method,
         order_id: payment.order_id,
         transaction_id: payment.transaction_id,
-        expiry: new Date(payment.expiry_time),
-        time: new Date(payment.transaction_time),
+        expiry: payment.expiry_time ? new Date(payment.expiry_time) : new Date(Date.now() + 24 * 60 * 60 * 1000),
+        time: payment.transaction_time ? new Date(payment.transaction_time) : new Date(),
         bank: payment.va_numbers?.[0]?.bank || body.bank_transfer || "midtrans",
         amount: totalAmount,
         va_number: payment.va_numbers?.[0]?.va_number || "",
         qris_png: payment.actions?.[1]?.url,
-      };
+      } as any;
 
       await participant.save();
 
@@ -212,7 +222,7 @@ export default defineEventHandler(
       const customerName = participant.member
         ? (participant.member as any).fullName
         : (participant.guest as any)?.fullName || "";
-        
+
       const customerEmail = participant.member
         ? (participant.member as any).email
         : (participant.guest as any)?.email || "";

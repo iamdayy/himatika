@@ -390,5 +390,134 @@
   "video_processing_hint": "Video is being compressed. This page will refresh automatically.",
   "video_processing_failed": "Video processing failed",
   "processing": "Processing",
-  "no_videos_yet": "No videos uploaded yet."
+  "no_videos_yet": "No videos uploaded yet.",
+  "emails": {
+    "agenda": {
+      "subject": "Agenda Baru!",
+      "category": "Pemberitahuan Agenda Baru",
+      "recipient_name": "Kawan Tika",
+      "email_title": "Psst... Ada Agenda Seru Nih di {orgName}",
+      "hero_title": "{agendaTitle} - {orgName}",
+      "hero_subtitle": "Ada agenda seru baru nih!",
+      "hero_button": "Lihat Detail",
+      "content_title": "Ada agenda seru baru nih! Jangan sampai kelewatan ya!",
+      "description": "Deskripsi",
+      "date": "Tanggal",
+      "location": "Lokasi",
+      "cta_title": "Klik di sini untuk melihat detailnya!",
+      "cta_subtitle": "Sampai jumpa di acara!",
+      "cta_button": "Lihat Detail"
+    },
+    "footer": {
+      "rights": "Hak cipta dilindungi undang-undang.",
+      "privacy": "Kebijakan Privasi",
+      "terms": "Syarat & Ketentuan",
+      "unsubscribe_reason": "Anda menerima email ini karena Anda berlangganan {serviceName}.",
+      "unsubscribe_action": "Jika Anda tidak ingin menerima email lagi, klik",
+      "here": "di sini"
+    },
+    "otp": {
+      "verify_account": {
+        "subject": "Verifikasi akun Anda",
+        "hero_title": "Selamat datang di Aplikasi {appName}",
+        "hero_subtitle": "Silakan verifikasi akun Anda",
+        "button": "Verifikasi Akun",
+        "content_title": "Verifikasi akun Anda",
+        "content_p1": "Untuk memverifikasi akun Anda, silakan klik tombol di bawah ini.",
+        "content_p2": "Jika Anda tidak membuat akun, silakan abaikan email ini."
+      },
+      "change_password": {
+        "subject": "Ubah kata sandi Anda",
+        "hero_title": "Ubah kata sandi Anda",
+        "hero_subtitle": "Silakan ubah kata sandi Anda",
+        "button": "Ubah Kata Sandi",
+        "content_title": "Ubah kata sandi Anda",
+        "content_p1": "Untuk mengubah kata sandi Anda, silakan klik tombol di bawah ini.",
+        "content_p2": "Jika Anda tidak meminta perubahan kata sandi, silakan abaikan email ini."
+      },
+      "reset_password": {
+        "subject": "Reset kata sandi Anda",
+        "hero_title": "Reset kata sandi Anda",
+        "hero_subtitle": "Silakan reset kata sandi Anda",
+        "button": "Reset Kata Sandi",
+        "content_title": "Reset kata sandi Anda",
+        "content_p1": "Untuk mereset kata sandi Anda, silakan klik tombol di bawah ini.",
+        "content_p2": "Jika Anda tidak meminta reset kata sandi, silakan abaikan email ini."
+      },
+      "change_email": {
+        "subject": "Ubah email Anda",
+        "hero_title": "Ubah email Anda",
+        "hero_subtitle": "Silakan ubah email Anda",
+        "button": "Ubah Email",
+        "content_title": "Ubah email Anda",
+        "content_p1": "Untuk mengubah email Anda, silakan klik tombol di bawah ini.",
+        "content_p2": "Jika Anda tidak meminta perubahan email, silakan abaikan email ini."
+      },
+      "verify_email": {
+        "subject": "Verifikasi email Anda",
+        "hero_title": "Verifikasi email Anda",
+        "hero_subtitle": "Silakan verifikasi email Anda",
+        "button": "Verifikasi Email",
+        "content_title": "Verifikasi email Anda",
+        "content_p1": "Untuk memverifikasi email Anda, silakan klik tombol di bawah ini.",
+        "content_p2": "Jika Anda tidak meminta verifikasi email, silakan abaikan email ini."
+      },
+      "help": {
+        "title": "Butuh bantuan?",
+        "content_1": "Jika Anda memiliki pertanyaan, jangan ragu untuk menghubungi kami.",
+        "content_2": "Kami di sini untuk membantu Anda.",
+        "cta_title": "Butuh bantuan?",
+        "cta_subtitle": "Hubungi kami di",
+        "button": "Hubungi Kami"
+      }
+    }
+  },
+  "messages": "Pesan",
+  "action": "Tindakan",
+  "already_have_account": "Sudah punya akun?",
+  "my_profile": "Profil Saya",
+  "select_tags": "Pilih Tag",
+  "batch_edit": "Edit Masal",
+  "approved": "Disetujui",
+  "unapproved": "Belum Disetujui",
+  "otp": "Kode OTP",
+  "achievement": "Pencapaian",
+  "achievement-management": "Manajemen Pencapaian",
+  "login_page": {
+    "login_failed": "Gagal masuk",
+    "user_not_found": "Pengguna tidak ditemukan",
+    "check_username": "Silakan periksa kembali nama pengguna Anda",
+    "email_not_verified": "Email Anda belum diverifikasi",
+    "verify_email": "Silakan verifikasi email Anda untuk melanjutkan",
+    "wrong_password": "Kata sandi salah",
+    "check_password": "Silakan periksa kembali kata sandi Anda",
+    "invalid_credentials": "Email atau Kata Sandi salah"
+  },
+  "register_page": {
+    "member_free": "Keanggotaan ditemukan dan bisa didaftarkan",
+    "nim_not_found": "NIM tidak ditemukan",
+    "check_nim": "Silakan periksa kembali NIM Anda. Pastikan NIM sudah sesuai!",
+    "email_already_registered": "Email sudah terdaftar",
+    "check_email": "Silakan periksa kembali email Anda. Pastikan email belum digunakan dan aktif atau periksa OTP Anda untuk verifikasi email!",
+    "member_not_free": "Keanggotaan tidak Ditemukan",
+    "check_member": "Silakan periksa kembali keanggotaan Anda. Pastikan anda adalah mahasiswa Informatika aktif dan NIM belum pernah mendaftar sebelumnya!",
+    "password_not_match": "Konfirmasi Password tidak sama",
+    "check_password": "Silakan periksa kembali kata sandi Anda",
+    "username_already_registered": "Username sudah didaftarkan",
+    "check_username": "Silakan periksa kembali nama pengguna Anda. Pastikan nama pengguna belum digunakan!",
+    "member_already_registered": "Keanggotaan sudah didaftarkan",
+    "registration_failed": "Pendaftaran gagal",
+    "registration_again": "Pendaftaran gagal. Silakan coba lagi nanti.",
+    "registration_success": "Pendaftaran berhasil"
+  },
+  "otp_page": {
+    "otp_not_found": "Kode OTP tidak ditemukan",
+    "otp_not_match": "Kode OTP tidak cocok",
+    "otp_expired": "Kode OTP telah kedaluwarsa",
+    "otp_invalid": "Kode OTP tidak valid",
+    "otp_verified": "Kode OTP berhasil diverifikasi"
+  },
+  "warning": "Peringatan",
+  "info": "Informasi",
+  "no_points_data": "Tidak ada data poin"
 }

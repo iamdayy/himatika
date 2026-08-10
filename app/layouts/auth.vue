@@ -33,9 +33,14 @@ useHead({
                 </NuxtLink>
 
                 <!-- Theme toggle -->
-                <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
-                    :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
-                    @click="isDarkMode = !isDarkMode" />
+                <ClientOnly>
+                    <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
+                        :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
+                        @click="isDarkMode = !isDarkMode" />
+                    <template #fallback>
+                        <UButton icon="i-lucide-sun" color="primary" variant="ghost" class="rounded-full opacity-0" />
+                    </template>
+                </ClientOnly>
             </div>
         </nav>
         <!-- Main container for the authentication layout -->

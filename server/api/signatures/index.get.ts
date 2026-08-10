@@ -25,6 +25,11 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
     const docs = await DocModel.find({
       signs: { $elemMatch: { user: userId, signed } },
     })
+      .populate({
+        path: 'uploader',
+        select: 'fullName NIM avatar email',
+
+      })
       .sort(sortOpt)
       .skip((page - 1) * perPage)
       .limit(perPage)
