@@ -345,13 +345,7 @@ const pageFrom = computed(() => pagination.value.pageIndex === 0 ? 0 : (paginati
 const pageTo = computed(() => Math.min(pagination.value.pageIndex * pagination.value.pageSize, pageTotal.value));
 const perPageOptions = computed(() => {
     const baseOptions = [5, 10, 20, 50, 100];
-    const filteredOptions = baseOptions.filter((option) => option <= pageTotal.value);
-
-    if (isMobile.value && filteredOptions.length > 3) {
-        return filteredOptions.slice(0, 3);
-    }
-
-    return filteredOptions;
+    return baseOptions;
 });
 
 /**
@@ -660,7 +654,7 @@ const links = computed(() => [{
                 <!-- Table -->
                 <div class="overflow-x-auto">
                     <UTable ref="table" v-model:column-visibility="columnVisibility" v-model:sort="sort"
-                        v-model:pagination="pagination" v-model:row-selection="selectedRows"
+                        v-model:row-selection="selectedRows"
                         v-model:column-pinning="columnPinning" :data="data.data?.members" :columns="columns"
                         :loading="pending" class="w-full">
                     </UTable>

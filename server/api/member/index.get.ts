@@ -174,11 +174,11 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
 
     // Apply filters based on query parameters
     if (deleted == "false") {
-      query.status = { $nin: "deleted" };
+      query.status = { $ne: "deleted" };
     }
     if (order && sort) {
       validateSortField("member", sort);
-      sortOpt[sort] = order as SortOrder;
+      sortOpt[sort] = order === "desc" ? -1 : 1;
     }
     if (filter && filterBy) {
       validateFilterByField("member", filterBy);

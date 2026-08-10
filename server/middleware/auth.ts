@@ -19,12 +19,12 @@ export default defineEventHandler(async (event) => {
     "/api/ip"
   ];
 
-  // Some endpoints are GET-only public
   const getOnlyWhitelist = [
     "/api/news",
     "/api/agenda",
     "/api/config",
-    "/api/stats"
+    "/api/stats",
+    "/api/payment"
   ];
 
   const isWhitelisted = whitelist.some(w => path.startsWith(w));

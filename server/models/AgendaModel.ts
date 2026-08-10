@@ -381,11 +381,10 @@ const CommitteeSchema = new Schema<ICommitteeSchema>({
   },
   payment: {
     type: paymentSchema,
-    default: {
+    default: () => ({
       method: "cash",
       status: "pending",
-      time: Date.now(),
-    },
+    }),
   },
   certificateDoc: {
     type: Types.ObjectId,
@@ -430,11 +429,10 @@ const participantSchema = new Schema<IParticipantSchema>({
   },
   payment: {
     type: paymentSchema,
-    default: {
+    default: () => ({
       method: "cash",
       status: "pending",
-      time: Date.now(),
-    },
+    }),
   },
   certificateDoc: {
     type: Types.ObjectId,

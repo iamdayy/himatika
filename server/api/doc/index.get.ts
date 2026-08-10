@@ -40,7 +40,7 @@ export default defineEventHandler(async (event): Promise<IDocResponse> => {
           statusMessage: "Unauthorized",
         };
       }
-      const doc = await DocModel.findById(id).lean();
+      const doc = await DocModel.findById(id).populate({ path: 'uploader', select: 'fullName NIM avatar email' }).populate({ path: 'signs.user', select: 'fullName NIM avatar email' }).populate({ path: 'trails.user', select: 'fullName NIM avatar email' }).lean();
       if (!doc) {
         return {
           statusCode: 404,

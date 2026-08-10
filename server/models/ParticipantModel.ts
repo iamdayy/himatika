@@ -40,11 +40,10 @@ const participantSchema = new Schema<IParticipantSchema>(
     },
     payment: {
       type: paymentSchema,
-      default: {
+      default: () => ({
         method: "cash",
         status: "pending",
-        time: Date.now(),
-      },
+      }),
     },
     certificateDoc: {
       type: Types.ObjectId,
@@ -57,8 +56,20 @@ const participantSchema = new Schema<IParticipantSchema>(
   { timestamps: true }
 );
 
-participantSchema.index({ agendaId: 1, member: 1 }, { unique: true, sparse: true });
-participantSchema.index({ agendaId: 1, guest: 1 }, { unique: true, sparse: true });
+participantSchema.index(
+  { agendaId: 1, member: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { member: { $exists: true, $type: "objectId" } }
+  }
+);
+participantSchema.index(
+  { agendaId: 1, guest: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { guest: { $exists: true, $type: "objectId" } }
+  }
+);
 
 participantSchema.virtual("answers", {
   ref: AnswerModel,

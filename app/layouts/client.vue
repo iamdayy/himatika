@@ -164,10 +164,14 @@ useHead({
                     <UDropdownMenu :items="languages" :modal="false" :popper="{ placement: 'bottom-start' }">
                         <UButton icon="i-heroicons-language" variant="ghost" class="rounded-full" color="neutral" />
                     </UDropdownMenu>
-                    <!-- Theme toggle -->
-                    <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
-                        :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
-                        @click="isDarkMode = !isDarkMode" />
+                    <ClientOnly>
+                        <UButton :icon="isDarkMode ? 'i-lucide-moon' : 'i-lucide-sun'"
+                            :color="isDarkMode ? 'neutral' : 'primary'" variant="ghost" class="rounded-full"
+                            @click="isDarkMode = !isDarkMode" />
+                        <template #fallback>
+                            <UButton icon="i-lucide-sun" color="primary" variant="ghost" class="rounded-full opacity-0" />
+                        </template>
+                    </ClientOnly>
                     <UDropdownMenu :items="items" :modal="false" :content="{ side: 'bottom' }">
                         <NuxtImg v-if="isLoggedIn" provider="localProvider" :src="userData.avatar"
                             class="object-cover rounded-full max-w-8 aspect-square" format="webp" preload
