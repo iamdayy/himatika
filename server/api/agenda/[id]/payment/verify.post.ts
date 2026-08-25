@@ -1,6 +1,7 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { himatikaPdfWorker } from "~~/server/utils/himatikaPdfWorker";
 import { sendWhatsappFile } from "~~/server/utils/whatsapp";
 
@@ -17,6 +18,9 @@ export default defineEventHandler(async (event) => {
     if (!agenda) {
       throw createError({ statusCode: 404, statusMessage: "Agenda not found" });
     }
+
+    // Authorization: only committee or organizer of this agenda may verify payments
+    await ensureCommitteeOrOrganizer(agenda._id.toString(), event.context.user);
 
     let isCommittee = false;
 

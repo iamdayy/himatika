@@ -26,7 +26,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
 
     await ensureCommitteeOrOrganizer(agenda._id.toString(), user);
 
-    const participants = await ParticipantModel.find({ _id: { $in: body.participants } });
+    // Scope to this agenda: without the agendaId filter, a committee member of
+    // agenda A could update participants belonging to agenda B.
+    const participants = await ParticipantModel.find({
+      _id: { $in: body.participants },
+      agendaId: agenda._id,
+    });
     
     const bulkOps = participants.map((participant) => {
       let updateDoc: any = {};

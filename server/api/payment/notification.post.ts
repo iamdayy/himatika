@@ -150,25 +150,48 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
       const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
       const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
 
-      let result = await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
+      // Atomic guard: a settled ("success") payment must NEVER be downgraded
+      // by a late, duplicated, or out-of-order failure notification.
+      const notPaid = { "payment.status": { $ne: "success" } };
 
-      if (result.matchedCount === 0) {
+      const committeeResult = await CommitteeModel.updateOne(
+        { _id: registeredId, ...notPaid },
+        updateDoc
+      );
+
+      if (committeeResult.matchedCount === 0) {
           const participant = await ParticipantModel.findById(registeredId);
 
           if (participant) {
-              // Atomic Deletion for Guest
+              if (participant.payment?.status === "success") {
+                  // Already paid — ignore stale failure notifications entirely.
+                  return {
+                      statusCode: 200,
+                      statusMessage: "Pendaftaran sudah terbayar; notifikasi kegagalan diabaikan",
+                  };
+              }
               if (participant.guest) {
-                  await ParticipantModel.deleteOne({ _id: registeredId });
-                  
-                  // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
-                  const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
-                  if (otherParticipationsCount === 0) {
-                      const { GuestModel } = await import("~~/server/models/GuestModel");
-                      await GuestModel.deleteOne({ _id: participant.guest as any });
+                  // Atomic Deletion for Guest — guarded so a concurrent settlement
+                  // (or an already-paid record) is never deleted.
+                  const deletion = await ParticipantModel.deleteOne({
+                      _id: registeredId,
+                      ...notPaid,
+                  });
+
+                  if (deletion.deletedCount > 0) {
+                      // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
+                      const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
+                      if (otherParticipationsCount === 0) {
+                          const { GuestModel } = await import("~~/server/models/GuestModel");
+                          await GuestModel.deleteOne({ _id: participant.guest as any });
+                      }
                   }
               } else {
-                  // Atomic Update for Registered User
-                  await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
+                  // Atomic Update for Registered User — same terminal-state guard.
+                  await ParticipantModel.updateOne(
+                      { _id: registeredId, ...notPaid },
+                      updateDoc
+                  );
               }
           }
       }
