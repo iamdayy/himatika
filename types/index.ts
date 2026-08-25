@@ -673,6 +673,10 @@ export interface IOTP {
     | "Verify Email"
     | "Verify Phone";
   expiresAt: Date;
+  /** Jumlah percobaan verifikasi gagal (lockout brute force) */
+  attempts?: number;
+  /** Waktu OTP dikonsumsi langkah akhir; terisi = tidak bisa dipakai ulang */
+  usedAt?: Date | null;
 }
 export interface IAnswer {
   _id?: string | Types.ObjectId;
