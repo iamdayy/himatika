@@ -449,3 +449,37 @@ De-poison caches · fix frontend guards/Stepper/store-reset/XSS nametag · isi `
 - Kuota per ticket-model (`ticketModels[].quota/sold`) masih tidak ditegakkan — butuh desain counter per model.
 - Upload bukti transfer masih tanpa cek kepemilikan (guest capability-URL) — menyatu dengan sprint authz berikutnya.
 - Backfill amount historis mustahil dari DB; opsional buat skrip rekon dari log Midtrans bila ada akses dashboard.
+
+---
+
+## Eksekusi Sprint 3 — SELESAI ✅
+
+### Fondasi keamanan & kualitas
+
+| # | Item | Perbaikan |
+|---|---|---|
+| 1 | §9-T1 regresi tests tak pernah jalan di CI | Workflow kini menjalankan `bun run test:server` (server-unit + regresi) dengan env `JWT_SECRET`/`ENCRYPTION_KEY`, di samping `test:e2e`. |
+| 2 | §1-H2 signout DoS (`jwt.decode` tanpa verifikasi) | `exitSession` kini **memverifikasi signature** sebelum aksi apa pun; payload palsu = no-op. Token bersid hanya menghapus sesinya. |
+| 3 | §1-H4 refresh token tidak dirotasi / revocation bocor | **Rotasi penuh**: setiap refresh mengganti refresh token & menandatangani access token baru dengan klaim `sid` terikat baris Session. `checkSession` memvalidasi sid eksak (fallback legacy utk token lama). **Deteksi reuse**: refresh token yang sudah dirotasi diputar lagi → seluruh sesi subjek dicabut. |
+| 4 | §1-H5/H3 OTP replay & brute force | Consume-once atomik via `usedAt` pada langkah akhir (`user/verify`, `reset-password`); `otp/verify` menolak kode bekas, lockout 5× gagal → kode dibakar, komparasi timing-safe (sha256 + `timingSafeEqual`). |
+| 5 | §2-M2/§6-T9 error laundering | `user/verify` & `reset-password` kini melempar HTTP error sungguhan (sebelumnya body error berbalut 200). Bonus temuan baru: `profile.put` mengakses `.errors` yang tak ada di Zod v4 → TypeError saat payload invalid; diganti `.issues`. |
+| 6 | §6-T4 drift profil (silent no-op) + §9-T4 test kontradiksi | `profile.put` memetakan payload flat → dot-path nested (`address.*`, `birth.place`, `phone`) sehingga benar-benar tersimpan; test ditulis ulang sebagai unit test handler (versi boot-server lama hang). |
+| 7 | §8-T1 rate limiter per-instance | Util `enforceRateLimit(key,max,window)` berbasis koleksi Mongo (atomic conditional-update + pipeline, TTL GC) — bucket dibagi lintas instance Vercel tanpa dependensi baru. Diterapkan pada signin (10/menit/IP), otp/verify (5/menit/email), register (10/menit/IP). |
+
+### Keputusan desain: httpOnly cookie sengaja TIDAK diterapkan
+
+Arsitektur `@sidebase/nuxt-auth` local-provider membaca token & refresh-token dari cookie via JS (untuk header `Authorization` dan body `/refresh`). Menjadikannya httpOnly merusak SPA. Mitigasi pengganti: rotasi + deteksi reuse (#3) membuat refresh token curian mati saat pemilik sah melakukan refresh pertama.
+
+### Test
+
+Baru: `tests/server/auth/session.test.ts` (6 — legacy fallback, revocation sid-bound, rotasi, reuse-detection, forged-signout no-op), `tests/server/auth/otp-verify.test.ts` (4), rewrite `member-profile.test.ts` (3). Perbaikan mock `.lean()` chainable dihilangkan dari kode produksi.
+
+### Hasil verifikasi
+
+**29/29 hijau di 9 file** server-unit (auth 10 · quota 3 · payment-verify 3 · notification 4 · member-profile 3 · encrypt 3 · scan 3 · custom-pdf 3... termasuk seluruh suite ringan lain).
+
+### Residual Sprint 3
+
+- Zod menyeluruh di semua endpoint tulis masih bertahap (helper `rateLimit`/pattern sudah ada; sweep massal masuk sprint kualitas).
+- Limiter nuxt-security (lruCache) tetap sebagai layer-1; layer Mongo adalah sumber kebenaran lintas instance.
+- Suite e2e lokal tetap butuh chromium + build penuh; CI kini mencakup keduanya.
