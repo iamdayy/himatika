@@ -614,3 +614,9 @@ Whitelist baru `guestCapabilityPatterns` (POST exact-leaf): register, register/:
 - HMAC-signing payload QR (saat ini integritas bergantung pada otorisasi scan).
 - `attend` self check-in masih tanpa gate waktu/bayar; `onlyParticipantCanVisit` tetap dead control.
 - Sweep serupa utk option-CRUD answer collector committee twin; cache nearest fresh-token collapse (mitigasi: klaim `_id` kini ada di token baru).
+
+---
+
+## Eksekusi Sprint 6 — Tindak Lanjut Deep-Dive ✅ (lihat bagian "Deep-Dive Modul Agenda")
+
+Commit `e141bd1`: AG-C1 root fix (member._id di klaim signin + validasi create committee), scan QR multi-format + atomik (6 test), guest capability whitelist POST + hardening handler (bypass lama dihapus, Zod, anti-orphan), authz 12 endpoint question builder + scoping PUT, perbaikan 4 endpoint lookup rusak, gate verifying queue. Verifikasi: 36/36 test hijau (9 file).
