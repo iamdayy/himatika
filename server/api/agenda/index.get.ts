@@ -1,4 +1,5 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { clampInt, escapeRegex } from "~~/server/utils/safeQuery";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqAgendaQuery } from "~~/types/IRequestPost";
@@ -37,18 +38,19 @@ export default defineEventHandler(
       let query: any = {
         "configuration.canSee": { $in: roles },
       };
-      let skip: number = (page - 1) * perPage;
-      let limit: number = perPage;
-      if (page == 0 && perPage == 0) {
-        skip = 0;
-        limit = 0;
-      }
+      // Clamp pagination: NaN/absurd values previously produced empty pages
+      // or unbounded scans. page=0 & perPage=0 stays "fetch all" for admin.
+      const clampedPerPage =
+        Number(perPage) === 0 ? 0 : clampInt(perPage, { min: 1, max: 100, fallback: 10 });
+      const clampedPage = Number(page) === 0 ? 0 : clampInt(page, { min: 1, fallback: 1 });
+      let skip: number = (clampedPage - 1) * clampedPerPage;
+      let limit: number = clampedPerPage;
       let sortOpt: any = {};
 
       if (search) {
         query = {
           ...query,
-          $or: [{ title: { $regex: search, $options: "i" } }],
+          $or: [{ title: { $regex: escapeRegex(String(search)), $options: "i" } }],
         };
       }
       if (!showMissed || showMissed === "false") {

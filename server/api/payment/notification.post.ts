@@ -73,10 +73,57 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
             };
         }
 
+        // Superseded-charge guard: ignore settlements for a charge this
+        // registration has moved past (locally cancelled / replaced by a new
+        // attempt or a manual transfer). Without this, a stale VA payment
+        // could resurrect a canceled registration.
+        const storedOrderId = participantDoc.payment?.order_id;
+        if (storedOrderId && storedOrderId !== body.order_id) {
+            console.warn(
+                `[midtrans-webhook] Ignoring settlement for superseded order ${body.order_id} on registration ${registeredId}`
+            );
+            return {
+                statusCode: 200,
+                statusMessage: "Order tidak sesuai dengan tagihan aktif; diabaikan",
+            };
+        }
+
+        // Amount reconciliation: the signature only proves Midtrans origin,
+        // not that this settlement belongs to the expected amount.
+        const expectedAmount = Number(participantDoc.payment?.amount ?? 0);
+        const paidAmount = parseFloat(body.gross_amount);
+        if (expectedAmount > 0 && Math.abs(expectedAmount - paidAmount) >= 1) {
+            console.error(
+                `[midtrans-webhook] Amount mismatch for ${registeredId}: expected ${expectedAmount}, got ${paidAmount}`
+            );
+            return {
+                statusCode: 200,
+                statusMessage: "Nominal pembayaran tidak sesuai tagihan; perlu verifikasi manual",
+            };
+        }
+
+        // Atomic transition — also serves as distributed idempotency:
+        // duplicate parallel notifications see modifiedCount === 0.
+        let updated = false;
         if (isCommittee) {
-            await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
+            const r = await CommitteeModel.updateOne(
+                { _id: registeredId, "payment.order_id": body.order_id, "payment.status": { $ne: "success" } },
+                updateDoc
+            );
+            updated = r.modifiedCount === 1;
         } else {
-            await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
+            const r = await ParticipantModel.updateOne(
+                { _id: registeredId, "payment.order_id": body.order_id, "payment.status": { $ne: "success" } },
+                updateDoc
+            );
+            updated = r.modifiedCount === 1;
+        }
+
+        if (!updated) {
+            return {
+                statusCode: 200,
+                statusMessage: "Notification already processed or order mismatch. Ignored",
+            };
         }
 
         const agenda = await AgendaModel.findById(participantDoc.agendaId);

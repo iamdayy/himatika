@@ -617,6 +617,25 @@ Whitelist baru `guestCapabilityPatterns` (POST exact-leaf): register, register/:
 
 ---
 
+## Eksekusi Sprint 7 — Webhook Integrity, QR Signing, Check-in Hardening ✅
+
+| Item | Perbaikan |
+|---|---|
+| §3-M1/M6 webhook | Success transition kini **atomik + terkondisi**: filter `{order_id, status ≠ success}` — duplikasi paralel & stale-VA resurrection tertutup; side-effect email/ticket hanya bila `modifiedCount===1`. **Guard superseded order**: settlement dengan order_id ≠ tagihan aktif diabaikan. **Reconciliasi amount**: gross_amount vs payment.amount (toleransi < Rp1) — mismatch → 200 "perlu verifikasi manual" (tanpa retry-storm). |
+| QR signing (AG-H5) | Util `qrToken.ts`: format v2 `<id>.<HMAC-SHA256(id)[0..22]>`. Tiket PDF kini membawa QR bertanda tangan (`qr_data` diteruskan ke worker; worker memakai bila ada). Scan menolak payload berbentuk-v2 dengan signature salah; format legacy layar tetap diterima. |
+| Self check-in (AG-M1) | Gate pembayaran (mirror scanner), window acara ±12 jam, update atomik — unpaid tak bisa presensi, presensi sebelum/ sesudah acara diblok, racing aman. |
+| GET /api/payment | Read-only: polling anonim tidak lagi MENULIS status ke DB (webhook = satu-satunya sumber mutasi); respons kini memuat `midtrans_status` terpisah. |
+| Answer per-question (AG-H6) | Scope agenda pada registrasi, validasi questionId anggota kuesioner agenda, filter `{answerer, question}` — overwrite antar-pertanyaan hilang. |
+| ReDoS/pagination | `safeQuery.ts` (`escapeRegex`, `clampInt`) diterapkan pada pencarian & paging list agenda (page=0&perPage=0 admin tetap didukung). |
+| Worker H1 | `utils/fetch_guard.safe_fetch`: https-only, blokir private/link-local/localhost (opsional ALLOW_LOCAL_FETCH), allowlist opsional `ALLOWED_FETCH_HOSTS`, timeout default — dipasang di search-text, certificate template, sign/process. |
+| Worker H4 | `sanitize_key()` di storage: strip leading `/`, collapse traversal & `./`, whitespace→`_` — berlaku untuk semua put_object (outputBlobPath sign, NIM surat keaktifan). |
+
+Verifikasi: Nuxt **42/42 test hijau (10 file)** — termasuk 6 test baru (qrToken ×4, webhook guard ×2) dan assertion webhook yang diperbarui utk filter atomik. Worker: pytest 2/2, smoke import, unit sanitize_key & blokir private-IP.
+
+Sisa: HMAC utk QR layar (butuh mekanisme distribusi secret ke klien — tidak praktis; capability-model saat ini cukup), sweep option-CRUD committee twin answer loop, rotasi kredensial worker.
+
+---
+
 ## Eksekusi Sprint 6 — Tindak Lanjut Deep-Dive ✅ (lihat bagian "Deep-Dive Modul Agenda")
 
 Commit `e141bd1`: AG-C1 root fix (member._id di klaim signin + validasi create committee), scan QR multi-format + atomik (6 test), guest capability whitelist POST + hardening handler (bypass lama dihapus, Zod, anti-orphan), authz 12 endpoint question builder + scoping PUT, perbaikan 4 endpoint lookup rusak, gate verifying queue. Verifikasi: 36/36 test hijau (9 file).

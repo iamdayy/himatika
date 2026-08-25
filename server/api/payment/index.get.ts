@@ -29,14 +29,17 @@ export default defineEventHandler(
           statusMessage: "Pembayaran tidak ditemukan",
         });
       }
-      registered.payment.status = response;
-      await registered.save();
+      // READ-ONLY status probe. The old code persisted the polled Midtrans
+      // status here from an anonymous, unauthenticated request — bypassing
+      // the signed-webhook state machine (could resurrect `pending` over
+      // `verifying`, etc.). The webhook remains the sole mutation source.
       return {
         statusCode: 200,
         statusMessage: "Transaksi ditemukan",
         data: {
           payment: {
             status: registered?.payment?.status || "pending",
+            midtrans_status: response,
           },
         },
       };

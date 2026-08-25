@@ -1,5 +1,6 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
+import { isTicketQRValidV2 } from "~~/server/utils/qrToken";
 import { ICommittee, IGuest, IMember, IParticipant } from "~~/types";
 
 export default defineEventHandler(async (event) => {
@@ -10,12 +11,18 @@ export default defineEventHandler(async (event) => {
   const { code } = payload;
 
   // Parse every QR format produced by the platform:
+  //   - "<id>.<hmac>" (v2, server-signed PDF tickets — bad signature = reject)
   //   - JSON {id, role}            (legacy spec)
   //   - JSON {a, p, t: "p"}        (participant ticket screen)
   //   - JSON {a, c, t: "c"}        (committee ticket screen)
   //   - plain "<ObjectId>"         (raw id)
   //   - ".../verify/ticket/<ObjectId>" (PDF ticket URL)
   let id: string | undefined;
+  if (isTicketQRValidV2(String(code ?? "")) === false) {
+    // v2-shaped payload with an invalid signature: reject instead of
+    // silently falling back to legacy acceptance.
+    throw createError({ statusCode: 400, message: "QR Code tidak valid (tanda tangan salah)" });
+  }
   try {
     const parsed = JSON.parse(code);
     if (parsed && typeof parsed === "object") {
@@ -25,7 +32,7 @@ export default defineEventHandler(async (event) => {
     // Not JSON — fall through to plain/URL handling below.
   }
   if (!id) {
-    const match = String(code ?? "").match(/([0-9a-fA-F]{24})\/?$/);
+    const match = String(code ?? "").match(/([0-9a-fA-F]{24})(?:\.[A-Za-z0-9_-]+)?\/?$/);
     if (match) id = match[1];
   }
 

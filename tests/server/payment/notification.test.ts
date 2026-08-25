@@ -224,11 +224,70 @@ describe('Midtrans Notification Handler', () => {
       const result = await handler({} as any)
 
       expect(mockCommitteeUpdateOne).toHaveBeenCalledWith(
-        { _id: 'reg123' },
+        {
+          _id: 'reg123',
+          'payment.order_id': 'reg123:abc',
+          'payment.status': { $ne: 'success' },
+        },
         expect.objectContaining({
           'payment.status': 'success',
         })
       )
+    })
+  })
+
+  describe('Superseded-charge guard', () => {
+    it('ignores a settlement whose order_id does not match the stored active charge', async () => {
+      const payload = createNotificationPayload({
+        status_code: '200',
+        transaction_status: 'settlement',
+        fraud_status: 'accept',
+        order_id: 'reg123-STALE',
+      })
+      vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
+
+      // Stored charge points at a DIFFERENT (current) order id.
+      mockCommitteeFindById.mockReturnValue({
+        populate: vi.fn().mockReturnValue({
+          populate: vi.fn().mockResolvedValue({
+            _id: 'reg123',
+            payment: { status: 'pending', amount: 50000, order_id: 'reg123-CURRENT' },
+            member: { fullName: 'Test', email: 't@e.com' },
+          })
+        })
+      })
+
+      const handler = (await import('../../../server/api/payment/notification.post')).default
+      const result = await handler({} as any)
+
+      expect(String(result.statusMessage)).toContain('diabaikan')
+      expect(mockCommitteeUpdateOne).not.toHaveBeenCalled()
+    })
+
+    it('ignores a settlement whose gross_amount mismatches the expected amount', async () => {
+      const payload = createNotificationPayload({
+        status_code: '200',
+        transaction_status: 'settlement',
+        fraud_status: 'accept',
+        gross_amount: '999999',
+      })
+      vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
+
+      mockCommitteeFindById.mockReturnValue({
+        populate: vi.fn().mockReturnValue({
+          populate: vi.fn().mockResolvedValue({
+            _id: 'reg123',
+            payment: { status: 'pending', amount: 50000, order_id: 'reg123:abc' },
+            member: { fullName: 'Test', email: 't@e.com' },
+          })
+        })
+      })
+
+      const handler = (await import('../../../server/api/payment/notification.post')).default
+      const result = await handler({} as any)
+
+      expect(String(result.statusMessage)).toContain('manual')
+      expect(mockCommitteeUpdateOne).not.toHaveBeenCalled()
     })
   })
 })

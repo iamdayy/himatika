@@ -1,4 +1,5 @@
 import { IAgenda, ICommittee, IMember, IParticipant, IPoint, SignatureBox } from "~~/types";
+import { signTicketQR } from "~~/server/utils/qrToken";
 
 interface IWorkerResponse<T> {
   success?: boolean;
