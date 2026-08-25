@@ -31,10 +31,11 @@ export const useMakeDocs = (agenda?: IAgenda | undefined) => {
     try {
       const blob = await $api<Blob>("/api/agenda/ticket/make", {
         method: "POST",
+        // Server loads entities by id and derives the amount itself —
+        // client-supplied payloads would allow forged tickets.
         body: {
-          agenda,
-          participant,
-          amount: agenda.configuration[role].amount,
+          id: agenda._id as string,
+          registeredId: participant._id as string,
           role,
         },
         responseType: "blob",

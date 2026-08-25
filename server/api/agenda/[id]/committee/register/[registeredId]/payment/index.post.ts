@@ -1,5 +1,9 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { createCharge } from "~~/server/utils/midtrans";
+import {
+  ensureCommitteeOrOrganizer,
+  userOwnsRegistration,
+} from "~~/server/utils/agendaAuth";
 import { IMember } from "~~/types";
 import { IPaymentBody } from "~~/types/IRequestPost";
 import { IError, IPaymentResponse } from "~~/types/IResponse";
@@ -37,6 +41,7 @@ export default defineEventHandler(
         id: string;
         registeredId: string;
       };
+      const user = ev.context.user;
       const body = await readBody<IPaymentBody>(ev);
 
       const agenda = await AgendaModel.findById(id);
@@ -73,6 +78,21 @@ export default defineEventHandler(
             payment: committee.payment,
           },
         };
+      }
+
+      // Ownership: only the registrant (or committee/organizer) may charge.
+      const isOwner = await userOwnsRegistration(user, committee);
+      if (!isOwner) {
+        await ensureCommitteeOrOrganizer(id, user);
+      }
+
+      // Respect the agenda's payment-method allowlist when configured.
+      const allowedMethods = (agenda.configuration as any)?.allowedPaymentMethods;
+      if (Array.isArray(allowedMethods) && allowedMethods.length > 0 && !allowedMethods.includes(body.payment_method)) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Metode pembayaran tidak diizinkan untuk agenda ini.",
+        });
       }
       // --- LOGIC HARGA BARU ---
       const ticketPrice = agenda.configuration?.committee?.amount || 0;
@@ -167,6 +187,14 @@ export default defineEventHandler(
           phone: committee.member ? (committee.member as IMember).phone || "" : "",
         },
       });
+
+      if (!['200', '201'].includes(payment.status_code)) {
+        throw createError({
+          statusCode: parseInt(payment.status_code) || 400,
+          statusMessage: payment.status_message || "Gagal membuat tagihan di Midtrans",
+        });
+      }
+
       // ✅ UPDATE: Logic penyimpanan ke DB
       committee.payment = {
         ...committee.payment,

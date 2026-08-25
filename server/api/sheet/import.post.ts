@@ -1,6 +1,6 @@
 
 import { ParsedFile } from "~~/server/utils/customReadMultipartFormData";
-const config = useRuntimeConfig();
+import { pdfWorkerFetch } from "~~/server/utils/himatikaPdfWorker";
 /**
  * Represents a row of data from the Excel sheet.
  */
@@ -39,23 +39,21 @@ export default defineEventHandler(async (event) => {
     const blob = new Blob([new Uint8Array(uploadedFile.data)], { type: uploadedFile.type });
     formData.append('file', blob, uploadedFile.name);
 
-    const response = await fetch(`${config.pdf_worker_api_url}/api/sheet/import`, {
+    const result = await pdfWorkerFetch<{ data: DataRow[] }>("/api/sheet/import", {
         method: 'POST',
         body: formData
     });
-
-    if (!response.ok) {
-         throw new Error(`Worker Error: ${response.statusText}`);
-    }
-
-    const result = await response.json();
 
     return {
       statusCode: 200,
       statusMessage: "Data berhasil diimpor",
       data: result.data,
     };
-  } catch (error) {
-    return error;
+  } catch (error: any) {
+    // Re-throw real HTTP errors instead of resolving with an error object.
+    throw createError({
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || error.message || "Gagal mengimpor data",
+    });
   }
 });

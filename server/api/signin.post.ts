@@ -145,8 +145,7 @@ export default defineEventHandler(async (event) => {
       user: user._id as Types.ObjectId,
     });
     
-    // Audit Log
-    const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
+    // Audit Log (reuses `ip` captured for the rate-limit key above)
     await AuditLogModel.create({
         action: 'LOGIN',
         user: user.member || user.guest || user._id,

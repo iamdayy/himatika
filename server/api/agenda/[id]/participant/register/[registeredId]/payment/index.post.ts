@@ -1,5 +1,9 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { createCharge } from "~~/server/utils/midtrans";
+import {
+  ensureCommitteeOrOrganizer,
+  userOwnsRegistration,
+} from "~~/server/utils/agendaAuth";
 import { IPaymentBody } from "~~/types/IRequestPost";
 import { IError, IPaymentResponse } from "~~/types/IResponse";
 // --- KONFIGURASI BIAYA ADMIN (Sesuaikan dengan Dashboard Midtrans) ---
@@ -42,6 +46,7 @@ export default defineEventHandler(
         id: string;
         registeredId: string;
       };
+      const user = ev.context.user;
       const body = await readBody<IPaymentBody>(ev);
       const agenda = await AgendaModel.findById(id);
       if (!agenda) {
@@ -63,6 +68,14 @@ export default defineEventHandler(
           statusCode: 400,
           statusMessage: "Pembayaran untuk pendaftaran ini sudah berhasil diselesaikan. Anda tidak dapat membuat tagihan baru.",
         });
+      }
+
+      // Ownership: only the registrant (or committee/organizer of this
+      // agenda) may mint charges — previously any user could invoice or
+      // clobber someone else's in-flight payment.
+      const isOwner = await userOwnsRegistration(user, participant);
+      if (!isOwner) {
+        await ensureCommitteeOrOrganizer(id, user);
       }
       if (
         participant.payment?.status === "pending" &&
@@ -89,6 +102,15 @@ export default defineEventHandler(
 
       // Hitung Admin Fee berdasarkan tipe pembayaran yang dipilih user
       const adminFee = calculateAdminFee(ticketPrice, body.payment_method);
+
+      // Respect the agenda's payment-method allowlist when configured.
+      const allowedMethods = (agenda.configuration as any)?.allowedPaymentMethods;
+      if (Array.isArray(allowedMethods) && allowedMethods.length > 0 && !allowedMethods.includes(body.payment_method)) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Metode pembayaran tidak diizinkan untuk agenda ini.",
+        });
+      }
 
       // Total yang harus dibayar user ke Midtrans
       const totalAmount = ticketPrice + adminFee;

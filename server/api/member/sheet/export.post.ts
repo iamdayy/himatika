@@ -1,5 +1,6 @@
 import { MemberModel } from "~~/server/models/MemberModel";
 import { IMember } from "~~/types";
+import { pdfWorkerFetch } from "~~/server/utils/himatikaPdfWorker";
 
 /**
  * Handles POST requests for exporting data to Excel.
@@ -39,27 +40,15 @@ export default defineEventHandler(async (event) => {
         "Status",
       ];
 
-      const config = useRuntimeConfig();
-      // Call Worker
-      const response = await fetch(`${config.pdf_worker_api_url}/api/sheet/export`, {
+      const buffer = await pdfWorkerFetch<ArrayBuffer>("/api/sheet/export", {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+        responseType: 'blob',
+        body: {
             title: "Member",
             data: excelData,
             headers: headers
-        })
+        }
       });
-
-      if (!response.ok) {
-        throw new Error(`Worker Error: ${response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
 
       const title = `exported-${membersCounts}${new Date()
         .toString()

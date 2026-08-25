@@ -42,6 +42,7 @@ vi.mock('../../../server/models/CommitteeModel', () => ({
 vi.mock('../../../server/models/AgendaModel', () => ({
   AgendaModel: {
     findById: (...args: unknown[]) => mockAgendaFindById(...args),
+    updateOne: vi.fn().mockResolvedValue({ modifiedCount: 1 }),
   }
 }))
 

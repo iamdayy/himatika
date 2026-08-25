@@ -78,7 +78,8 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         const jwt = await import("jsonwebtoken");
         const serviceToken = jwt.default.sign({ service: 'himatika-backend' }, config.jwtSecret, { expiresIn: '5m' });
         
-        $fetch(`${config.pdf_worker_api_url}/api/media/compress-video`, {
+        const { getWorkerBaseUrl } = await import("~~/server/utils/himatikaPdfWorker");
+        $fetch(`${getWorkerBaseUrl()}/api/media/compress-video`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

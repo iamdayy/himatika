@@ -523,3 +523,56 @@ JSON locale valid & paritas (413 global / 35 register). Suite server-unit penuh:
 
 - ±570 hardcoded string UI masih tersebar (administrator & Modals terbesar) — ekstraksi bertahap per modul.
 - Stepper masih index-keyed untuk step completion — refactor ke id-key saat wizard disentuh lagi.
+
+---
+
+## Deep-Dive Modul Agenda & PDF Worker — Agustus 2026
+
+Audit pass kedua (63 file `server/api/agenda/**` + frontend agenda + seluruh repo `himatika-pdf-worker`). Fix sprint 1–4 terverifikasi masih utuh.
+
+### Temuan baru paling penting (belum semua diperbaiki)
+
+| ID | Severity | Temuan |
+|----|----------|--------|
+| AG-C1 | KRITIS [baru] | **Split-brain bentuk token**: JWT dari `signin` TIDAK memuat `member._id` (refresh memuatnya) → query `{member: user.member._id}` menjadi `{member: null}` (Mongoose melewatkan undefined; BSON meng-encode null). Efek: upload media committee ditolak 60 mnt pertama, cek duplikasi registrasi rusak, dan bila ada baris committee `member:null` (bisa dibuat via POST committee tanpa validasi member) → **privilege escalation** hapus peserta/upload sembarang agenda. Perbaikan arah: resolve member by NIM server-side (helper baru `resolveMemberId`), satu bentuk klaim kanonik. |
+| AG-C2 | KRITIS ✅FIXED | `payment/verify` tidak menscope `agendaId` — panitia event A bisa menyetujui pembayaran manual event B. Ditambahkan `agendaId: id` ke kedua filter atomic. |
+| AG-H1 | HIGH | Email hijack guest (`email.put.ts`) tanpa ownership — kini butuh sesi guest pemilik atau committee/organizer (+validasi format email). |
+| AG-H2 | HIGH [baru] | **Kursi kuota tidak pernah dilepas** di jalur delete/webhook-expire → event permanen "penuh". Kini decrement atomik pada delete peserta & penghapusan guest oleh webhook. |
+| AG-H3 | HIGH | Charge creation tanpa ownership + `allowedPaymentMethods` tidak pernah dipakai + twin committee tanpa guard `status_code`. Kini: ownership-or-committee, allowlist dihormati bila dikonfigurasi, guard status ditambahkan. |
+| AG-H4 | HIGH | Upload bukti bisa menurunkan `success→verifying` & tanpa kepemilikan. Kini blokir status processed + ownership check. |
+| AG-H5 | HIGH | 12 endpoint question builder terbuka untuk user mana pun; PUT question bersifat GLOBAL by questionId lintas agenda. Belum difix (butuh sweep `ensureCommitteeOrOrganizer`). |
+| AG-H6 | HIGH | Answer collector: read publik by ObjectId, tulis tanpa kepemilikan, `forEach(async)` menelan error (200 meski gagal), upload abaikan limit tipe/ukuran, overwrite antar-pertanyaan (filter `{answerer}` tanpa question). |
+| AG-H7 | HIGH | `participant/me?participantId=` anonim membocorkan PII+payment — ObjectId = capability. Perlu signed token atau hapus fallback. |
+| AG-H8 | HIGH ✅FIXED | `ticket/make` merender tiket dari body 100% klien (+SSRF templateUrl ke worker). Kini derive dari DB (agenda+registration+amount), otorisasi owner/committee. |
+| AG-M* | MEDIUM tersisa | Self check-in tanpa gate waktu/bayar; scan QR non-atomik & payload tak cocok dengan QR yang diproduksi (lihat FE); ticket-lookup endpoints broken (`isRegisterdById` tak eksis, twins baca array lama); DELETE payment 412 (kini direkonsiliasi ✅); verifying queue tanpa gate internal; webhook success tanpa guard order_id/amount (stale VA resurrection); guest flow inkonsisten (branch bypass jadi dead code); cache nearest collapse utk fresh tokens; default Committee literal; CSRF disabled di /api/agenda/**. |
+
+### Kontrak frontend ↔ server yang putus (ditemukan pass ini)
+
+1. **Guest flow terblokir total oleh whitelist GET-only (regresi sprint 1)**: semua POST yang dibutuhkan tamu anonim (register, charge, answer, verify, proof) 401 di middleware sebelum handler capability-tolerant jalan. Butuh keputusan desain: signed guest-invite token vs whitelist POST selektif — JANGAN sekadar buka kembali branch bypass lama.
+2. **QR scan tak pernah cocok**: server parse `{id, role}`, tiket layar memproduksi `{a,p,t}`, PDF ticket berisi URL `/verify/ticket/<pid>` → scan organizer pasti 400. Perlu standardisasi payload + HMAC.
+3. **manual_target mismatch**: frontend kirim NAME, server match `_id` → target transfer hilang di record & antrean verifikasi.
+4. `$fetch` tanpa Bearer di 5 titik (committee payment, cancel, proof di detail.vue, sheet/export ×2) → 401 permanen; plus `/api/category` GET tidak whitelisted untuk tamu.
+
+### PDF Worker (`../himatika-pdf-worker`) — 24 temuan; verdict auth
+
+**Verdict**: worker mem-verifikasi HS256 + claim `service='himatika-backend'`; token user biasa DITOLAK (403) — tidak ada bypass. Risiko sisa: shared-secret = shared-fate + fallback diam-diam ke `JWT_SECRET`.
+
+Diperbaiki sekarang:
+- ✅ **C1**: 4 endpoint mati karena NameError (PIL/zxingcpp/load_workbook tidak diimport — `scan-qr`, `compress-image`, `upload-image`, `sheet/import`) → import diperbaiki, verifikasi import + pytest 2/2 hijau.
+- ✅ **H2**: semua `requests.get()` outbound kini punya `timeout=(5,30)` (mencegah hang thread waitress).
+- ✅ **M6**: `PUBLIC_URL` None-guard pada surat keaktifan.
+- ✅ **M7**: `utils/db.py` lazy connection (import-time crash saat env Mongo kosong hilang; fungsi memang tak pernah dipakai).
+- ✅ **H5 parsial**: Pillow 10.2.0 → 10.3.0 (CVE-2024-28219).
+- ✅ `.dockerignore`: `.env` (sebelumnya ikut ter-COPY).
+
+Belum diperbaiki (prioritas berikutnya): SSRF fetch URL arbitrer (H1), R2 arbitrary-key write/delete via `outputBlobPath`/`fileKey` (H4), resource caps (H3), video-compress structurally impossible di Vercel + callback 401 (M1, dobel-rusak), error disclosure (M4), multi-page certificate drop (M5), rotasi kredensial R2/Atlas yang ter ekspos di `.env` lokal worker.
+
+### Integrasi Nuxt↔Worker — diperbaiki sekarang
+
+- ✅ Split-brain path: base URL dinormalisasi (`getWorkerBaseUrl` membuang sufiks `/api`), semua panggilan memakai prefix `/api/...` eksplisit.
+- ✅ Enam caller langsung tanpa token (`pdf/scan`, `pdf/certificate-preview`, `pdf/certificate`, `sheet/import`, `sheet/export`, `member/sheet/export`) kini lewat `pdfWorkerFetch` (service JWT + retry + timeout konsisten).
+- ⏳ Callback `webhook-media` tetap 401 (butuh keputusan shared-secret/HMAC khusus webhook).
+
+### Verifikasi
+
+Nuxt: 9 file / **32 test hijau** (termasuk 4 smoke baru: normalisasi URL worker & kontrak ticket/make). Worker: pytest 2/2 + smoke import semua handler modul.

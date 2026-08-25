@@ -1,24 +1,36 @@
 import { GuestModel } from "~~/server/models/GuestModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
+import {
+  ensureCommitteeOrOrganizer,
+  userOwnsRegistration,
+} from "~~/server/utils/agendaAuth";
 
 export default defineEventHandler(async (ev) => {
     try {
-        const { registeredId } = ev.context.params as { registeredId: string };
+        const { id, registeredId } = ev.context.params as { id: string; registeredId: string };
         const { email } = await readBody(ev);
-        
-        if (!email) {
-            throw createError({ statusCode: 400, statusMessage: "Email is required" });
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            throw createError({ statusCode: 400, statusMessage: "A valid email is required" });
         }
-        
+
         const participant = await ParticipantModel.findById(registeredId).populate('guest');
         if (!participant) {
             throw createError({ statusCode: 404, statusMessage: "Participant not found" });
         }
-        
+
         if (!participant.guest) {
             throw createError({ statusCode: 403, statusMessage: "Only guest participants can change their email here" });
         }
-        
+
+        // Ownership: the session's guest must own this registration; otherwise
+        // only committee/organizer of the agenda may change it. (Previously any
+        // authenticated user could hijack ticket delivery for any guest.)
+        const isOwner = await userOwnsRegistration(ev.context.user, { guest: participant.guest._id });
+        if (!isOwner) {
+            await ensureCommitteeOrOrganizer(id, ev.context.user);
+        }
+
         const { MemberModel } = await import("~~/server/models/MemberModel");
         const existingMember = await MemberModel.findOne({ email });
         if (existingMember) {

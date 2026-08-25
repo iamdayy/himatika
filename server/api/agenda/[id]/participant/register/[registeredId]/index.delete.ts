@@ -61,7 +61,16 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
     
     await ParticipantModel.findByIdAndDelete(registeredId);
-    
+
+    // Release the reserved seat so quota events don't stay permanently "full"
+    // after cancellations (the register endpoint reserves atomically).
+    if ((agenda.quota ?? 0) > 0) {
+      await AgendaModel.updateOne(
+        { _id: agenda._id, seatsTaken: { $gt: 0 } },
+        { $inc: { seatsTaken: -1 } }
+      );
+    }
+
     return {
       statusCode: 200,
       statusMessage: "Success deleted " + fullName + " from participant",

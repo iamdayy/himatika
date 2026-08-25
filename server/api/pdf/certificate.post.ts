@@ -3,6 +3,7 @@ import { DocModel } from "~~/server/models/DocModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
+import { pdfWorkerFetch } from "~~/server/utils/himatikaPdfWorker";
 
 // Resolve member ObjectId from NIM string/number
 async function findMemberByNim(nim: string | number) {
@@ -67,19 +68,11 @@ const codeItem = (items as any[])?.find((i: any) => i.type === 'code');
             docNo = `${(lastNumber + 1).toString().padStart(3, "0")}/${docNo}`
             items.find((i: any) => i.type === 'code').value = docNo;
         }
-        // 2. Generate certificate PDF via Python worker
-        const response = await fetch(`${config.pdf_worker_api_url}/api/pdf/certificate`, {
+        // 2. Generate certificate PDF via Python worker (authenticated call)
+        const result = await pdfWorkerFetch<{ url: string }>("/api/pdf/certificate", {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ templateUrl, items, data })
+            body: { templateUrl, items, data }
         });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw createError({ statusCode: response.status, statusMessage: errorData.error || "Worker Error" });
-        }
-
-        const result = await response.json();
         const pdfUrl: string = result.url;
         
 

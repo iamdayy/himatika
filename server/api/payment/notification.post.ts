@@ -183,6 +183,12 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
                   });
 
                   if (deletion.deletedCount > 0) {
+                      // Release the quota seat this registration consumed.
+                      await AgendaModel.updateOne(
+                          { _id: participant.agendaId, quota: { $gt: 0 }, seatsTaken: { $gt: 0 } },
+                          { $inc: { seatsTaken: -1 } }
+                      );
+
                       // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
                       const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
                       if (otherParticipationsCount === 0) {
