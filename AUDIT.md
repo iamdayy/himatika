@@ -483,3 +483,43 @@ Baru: `tests/server/auth/session.test.ts` (6 — legacy fallback, revocation sid
 - Zod menyeluruh di semua endpoint tulis masih bertahap (helper `rateLimit`/pattern sudah ada; sweep massal masuk sprint kualitas).
 - Limiter nuxt-security (lruCache) tetap sebagai layer-1; layer Mongo adalah sumber kebenaran lintas instance.
 - Suite e2e lokal tetap butuh chromium + build penuh; CI kini mencakup keduanya.
+
+---
+
+## Eksekusi Sprint 4 — SELESAI ✅
+
+### Cache poisoning & personalization leak (§6-T2, §2-M8)
+
+| Endpoint | Masalah | Perbaikan |
+|---|---|---|
+| `news`, `project`, `photo` GET | Respons organizer (draft/arsip) ter-cache by-path lalu disajikan ke anonim | Cache key berbucket `org:`/`pub:` via `event.context.organizer` |
+| `agenda/nearest` | Respons personal (exclusion-set user) disajikan lintas user | Key memuat identitas user (`member._id`/`guest._id`/`anon`) |
+| `agenda` list | `myParticipant`/`myCommittee` + visibility per-user di-cache default SWR | Caching dihapus total (+ catatan alasan); personalization tidak kompatibel dengan path-cache |
+
+### Frontend (§7-T1/T2/T3/T4/T6)
+
+- **committee.ts**: fetch kini di-`await` via `$api`; guard menilai status dari data nyata (sebelumnya ref selalu undefined → navigasi salah abort). Organizer tetap lolos via composable.
+- **Stepper.vue**: deep-watcher `props.steps` yang memanggil `resetAllValidation()` tiap keystroke dihapus; reset eksplisit via method exposed.
+- **useStatsStore**: aksi `clear()` baru; dipanggil di signOut kedua layout, guest dashboard, dan dua jalur force-logout `plugins/api.ts` → data profil/poin/aspirasi user sebelumnya tak lagi bocor ke user berikutnya.
+- **printNametags**: semua interpolasi (`name`, `subInfo`, judul agenda, `_id`) di-escape HTML → stored XSS via nama guest tertutup.
+- **Homepage**: shuffle foto dipindah ke client-only (`onMounted` + watch) — tidak lagi mismatch hydration akibat `Math.random()` di SSR.
+
+### i18n (§7-T5)
+
+- `locales/pages/agendas-id-register/en.json` (0 byte, korup) ditulis ulang lengkap — 35 key EN paritas dengan id.json.
+- Key hilang `no_agenda_yet`, `no_project_yet`, `check` ditambahkan ke `id.json` + `en.json` (413=413 paritas); pola rusak `$ts('x') || 'fallback'` di dashboard diganti panggilan `$ts` polos (fallback tak pernah terjangkau karena `$ts` mengembalikan key saat missing).
+- Terjemahan massal 192 key en.json yang masih identik dengan id: **dibiarkan** sebagai kerja berkelanjutan.
+
+### Repo hygiene (§9-M2, §8-L1)
+
+- Dihapus: `vitest_out.txt`, `tests/find_unused_fields.js`, `tests/find_missing_docs.cjs`, `tests/single_usage_fields.json`, `id_keys.json`.
+- README dikoreksi: Nuxt 4, Bun-only install/build, Mailtrap→Resend, NEXTAUTH_* dihapus, klaim pdf-lib/exceljs/Vercel Blob/locale AR dihapus, contoh env diselaraskan `.env.example`.
+
+### Verifikasi
+
+JSON locale valid & paritas (413 global / 35 register). Suite server-unit penuh: **29/29 hijau (9 file)**. Perubahan frontend bersifat targeted dan tidak menyentuh kontrak API.
+
+### Residual Sprint 4 (berkelanjutan)
+
+- ±570 hardcoded string UI masih tersebar (administrator & Modals terbesar) — ekstraksi bertahap per modul.
+- Stepper masih index-keyed untuk step completion — refactor ke id-key saat wizard disentuh lagi.
