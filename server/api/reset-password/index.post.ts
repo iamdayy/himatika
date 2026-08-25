@@ -1,5 +1,6 @@
 import { MemberModel } from "~~/server/models/MemberModel";
 import { OTPModel } from "~~/server/models/OTPModel";
+import { SessionModel } from "~~/server/models/SessionModel";
 import { UserModel } from "~~/server/models/UserModel";
 import { validatePassword } from "~~/server/utils/validatePassword";
 import { FormError } from "~~/types/component/stepper";
@@ -73,6 +74,11 @@ export default defineEventHandler(
       user.password = password;
       await user.save();
       await OTPModel.deleteOne({ code, type: "Reset Password" });
+
+      // Revoke every session: a stolen refresh token must not survive
+      // a password reset.
+      await SessionModel.deleteMany({ user: user._id });
+
       return {
         statusCode: 200,
         statusMessage: "Succesfully reset password for " + user.username,

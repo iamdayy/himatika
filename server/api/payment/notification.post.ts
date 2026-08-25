@@ -18,7 +18,11 @@ interface midtransNotificationBody {
 export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
   const body = await readBody<midtransNotificationBody>(ev);
   const { status_code, transaction_status, order_id, fraud_status } = body;
-  const registeredId = order_id.split(":")[0];
+  // order_id formats: "<registeredId>" (legacy), "<registeredId>:<suffix>"
+  // (anticipated but never produced), and the current
+  // "<registeredId>-<attempt timestamp>". ObjectIds contain neither
+  // separator, so splitting on the first one is safe.
+  const registeredId = order_id.split(/[:-]/)[0];
   try {
     // Midtrans sends status_code "200" for settlement and "202" for expire/deny/cancel.
     // Verify signature for ALL valid notification status codes.

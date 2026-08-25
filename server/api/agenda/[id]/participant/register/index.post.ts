@@ -95,16 +95,6 @@ export default defineEventHandler(
       const { ParticipantModel } =
         await import("~~/server/models/ParticipantModel");
 
-      if (agenda.quota && agenda.quota > 0) {
-        const currentCount = await ParticipantModel.countDocuments({ agendaId: id });
-        if (currentCount >= agenda.quota) {
-          throw createError({
-            statusCode: 400,
-            statusMessage: "Mohon maaf, kuota peserta untuk agenda ini sudah penuh.",
-          });
-        }
-      }
-
       const { CommitteeModel } =
         await import("~~/server/models/CommitteeModel");
       const { GuestModel } = await import("~~/server/models/GuestModel");
@@ -225,22 +215,60 @@ export default defineEventHandler(
         });
       }
 
-      // Create Participant Record (Atomic Upsert to prevent race conditions)
-      const query: any = { agendaId: id };
-      if (newParticipantData.member) query.member = newParticipantData.member;
-      if (newParticipantData.guest) query.guest = newParticipantData.guest;
+      // --- Capacity: atomic seat reservation (quota) ---
+      // The old code counted documents then inserted (read-check-write), and
+      // `quota` did not even exist on the schema, so capacity was never
+      // enforced. Reserve a seat atomically instead; release it if the
+      // registration subsequently fails.
+      const quota = agenda.quota ?? 0;
+      let seatReserved = false;
+      if (quota > 0) {
+        // Lazy-init the counter for agendas created before seatsTaken existed.
+        const currentCount = await ParticipantModel.countDocuments({ agendaId: id });
+        await AgendaModel.updateOne(
+          { _id: agenda._id, seatsTaken: null as any },
+          { $set: { seatsTaken: currentCount } }
+        );
 
-      const existingRecord = await ParticipantModel.findOneAndUpdate(
-        query,
-        { $setOnInsert: newParticipantData },
-        { upsert: true, new: false }
-      );
+        const reservation = await AgendaModel.updateOne(
+          { _id: agenda._id, $expr: { $lt: ["$seatsTaken", "$quota"] } },
+          { $inc: { seatsTaken: 1 } }
+        );
+        if (reservation.modifiedCount === 0) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: "Mohon maaf, kuota peserta untuk agenda ini sudah penuh.",
+          });
+        }
+        seatReserved = true;
+      }
 
-      if (existingRecord) {
-        throw createError({
-          statusCode: 409,
-          statusMessage: "Anda sudah terdaftar sebagai peserta pada agenda ini (terdeteksi duplikasi otomatis).",
-        });
+      try {
+        // Create Participant Record (Atomic Upsert to prevent race conditions)
+        const query: any = { agendaId: id };
+        if (newParticipantData.member) query.member = newParticipantData.member;
+        if (newParticipantData.guest) query.guest = newParticipantData.guest;
+
+        const existingRecord = await ParticipantModel.findOneAndUpdate(
+          query,
+          { $setOnInsert: newParticipantData },
+          { upsert: true, new: false }
+        );
+
+        if (existingRecord) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "Anda sudah terdaftar sebagai peserta pada agenda ini (terdeteksi duplikasi otomatis).",
+          });
+        }
+      } catch (error) {
+        if (seatReserved) {
+          await AgendaModel.updateOne(
+            { _id: agenda._id, seatsTaken: { $gt: 0 } },
+            { $inc: { seatsTaken: -1 } }
+          ).catch(() => {});
+        }
+        throw error;
       }
 
       // Send confirmation email via QStash

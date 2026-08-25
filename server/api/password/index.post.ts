@@ -1,3 +1,4 @@
+import { SessionModel } from "~~/server/models/SessionModel";
 import { UserModel } from "~~/server/models/UserModel";
 import { validatePassword } from "~~/server/utils/validatePassword";
 
@@ -48,6 +49,11 @@ export default defineEventHandler(async (event) => {
 
     user.password = newPassword;
     await user.save();
+
+    // Revoke every session: a stolen refresh token must not survive
+    // a password change.
+    await SessionModel.deleteMany({ user: user._id });
+
     return {
       statusCode: 200,
       statusMessage: "Kata sandi berhasil diperbarui",

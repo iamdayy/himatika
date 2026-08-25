@@ -427,6 +427,10 @@ export interface IAgenda {
   atLink: string;
   description: string;
   configuration: IAgendaConfiguration;
+  /** Kapasitas peserta maksimum; undefined/0 = tak dibatasi */
+  quota?: number;
+  /** Jumlah kursi peserta yang sudah terpakai (counter reservasi atomik) */
+  seatsTaken?: number;
   presences?: {
     committees?: ICommittee[];
     participants?: IParticipant[];

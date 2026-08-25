@@ -1,3 +1,4 @@
+import { SessionModel } from "~~/server/models/SessionModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { IResponse } from "~~/types/IResponse";
 
@@ -60,6 +61,9 @@ export default defineEventHandler(
 
     member.email = email;
     await member.save();
+
+    // Force re-authentication so JWT claims (member.email snapshot) refresh.
+    await SessionModel.deleteMany({ user: sessionUser._id as any });
 
     return {
       statusCode: 200,

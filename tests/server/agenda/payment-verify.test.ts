@@ -144,7 +144,7 @@ describe('Payment Verification Idempotency', () => {
     expect(vi.mocked(ParticipantModel.findOneAndUpdate)).toHaveBeenCalledWith(
       expect.objectContaining({
         _id: 'reg123',
-        'payment.status': 'pending',
+        'payment.status': { $in: ['pending', 'verifying'] },
         'payment.method': 'manual_transfer'
       }),
       { $set: { 'payment.status': 'success' } },

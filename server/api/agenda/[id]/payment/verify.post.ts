@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
 
     // Use atomic update
     const updateResult = await ParticipantModel.findOneAndUpdate(
-      { _id: body.registeredId, 'payment.status': 'pending', 'payment.method': 'manual_transfer' },
+        { _id: body.registeredId, 'payment.status': { $in: ['pending', 'verifying'] }, 'payment.method': 'manual_transfer' },
       { $set: { 'payment.status': body.status } },
       { new: true }
     ).populate("member").populate("guest");
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 
     if (!registration) {
       const committeeUpdateResult = await CommitteeModel.findOneAndUpdate(
-        { _id: body.registeredId, 'payment.status': 'pending', 'payment.method': 'manual_transfer' },
+      { _id: body.registeredId, 'payment.status': { $in: ['pending', 'verifying'] }, 'payment.method': 'manual_transfer' },
         { $set: { 'payment.status': body.status } },
         { new: true }
       ).populate("member");

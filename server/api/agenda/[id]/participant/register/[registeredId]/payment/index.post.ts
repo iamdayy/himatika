@@ -158,6 +158,9 @@ export default defineEventHandler(
         };
       }
 
+      // Midtrans requires a unique order_id per charge; reusing the
+      // registration id bricks retries after an expired/failed attempt.
+      const orderId = `${registeredId}-${Date.now()}`;
       const payment = await createCharge({
         payment_type: body.payment_method,
         bank_transfer: {
@@ -165,7 +168,7 @@ export default defineEventHandler(
         },
         // credit_card: body.credit_card,
         transaction_details: {
-          order_id: registeredId,
+          order_id: orderId,
           gross_amount: totalAmount,
         },
         customer_details: {
