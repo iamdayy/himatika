@@ -20,13 +20,15 @@ beforeAll(async () => {
   const member = await MemberModel.create({
     NIM: 123456,
     fullName: 'Test Member',
-    email: 'test@example.com'
+    email: 'test@example.com',
+    enteredYear: 2024
   })
   
   await MemberModel.create({
     NIM: 654321,
     fullName: 'Test Unregistered Member',
-    email: 'unregistered@example.com'
+    email: 'unregistered@example.com',
+    enteredYear: 2024
   })
 
   const hashedPassword = await bcrypt.hash('password123', 10)

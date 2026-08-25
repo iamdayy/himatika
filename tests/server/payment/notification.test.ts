@@ -133,7 +133,7 @@ describe('Midtrans Notification Handler', () => {
       // ASSERTION: The expire notification MUST trigger payment update
       // With the bug, this will NOT be called because status_code "202" skips all logic
       expect(mockParticipantUpdateOne).toHaveBeenCalledWith(
-        { _id: 'reg123' },
+        { _id: 'reg123', 'payment.status': { $ne: 'success' } },
         expect.objectContaining({
           'payment.status': 'canceled',
         })
@@ -161,11 +161,38 @@ describe('Midtrans Notification Handler', () => {
       const result = await handler({} as any)
 
       expect(mockParticipantUpdateOne).toHaveBeenCalledWith(
-        { _id: 'reg123' },
+        { _id: 'reg123', 'payment.status': { $ne: 'success' } },
         expect.objectContaining({
           'payment.status': 'canceled',
         })
       )
+    })
+
+    it('must NOT downgrade or delete an already-paid registration on a late failure notification', async () => {
+      const payload = createNotificationPayload({
+        status_code: '202',
+        transaction_status: 'expire',
+      })
+      vi.mocked((globalThis as any).readBody).mockResolvedValue(payload)
+
+      // Atomic guard blocks the committee update (status already "success"),
+      // then the participant lookup confirms the paid state.
+      mockCommitteeUpdateOne.mockResolvedValue({ matchedCount: 0 })
+      mockParticipantFindById.mockResolvedValue({
+        _id: 'reg123',
+        payment: { status: 'success', method: 'bank_transfer' },
+        member: { _id: 'member1' },
+        guest: null,
+      })
+
+      const handler = (await import('../../../server/api/payment/notification.post')).default
+      const result = await handler({} as any)
+
+      expect(result.statusCode).toBe(200)
+      expect(String(result.statusMessage)).toContain('terbayar')
+      expect(mockParticipantDeleteOne).not.toHaveBeenCalled()
+      expect(mockParticipantUpdateOne).not.toHaveBeenCalled()
+      expect(mockParticipantCountDocuments).not.toHaveBeenCalled()
     })
   })
 

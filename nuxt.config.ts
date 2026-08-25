@@ -3,7 +3,10 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   hooks: {
     close: (nuxt) => {
-      if (!nuxt.options._prepare) process.exit();
+      // Never force-exit inside vitest: @nuxt/test-utils closes its own Nuxt
+      // instance while loading the config, and process.exit() here killed the
+      // whole test run silently with code 0 (false-green suites).
+      if (!nuxt.options._prepare && !process.env.VITEST) process.exit();
     },
   },
   routeRules: {
