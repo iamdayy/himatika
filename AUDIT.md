@@ -419,3 +419,33 @@ De-poison caches · fix frontend guards/Stepper/store-reset/XSS nametag · isi `
 
 - GET prefix `/api/payment` masih publik (dipakai polling status guest) — sprint 2.
 - `participant/me` & `question/answer/<regId>` tetap capability-public demi alur registrasi tamu — sprint 2 (bind ke signed token).
+
+---
+
+## Eksekusi Sprint 2 — SELESAI ✅
+
+### Integritas data & uang
+
+| # | Temuan | Perbaikan |
+|---|---|---|
+| 1 | §2-M2 `payment.amount`/`biller_code` dibuang strict mode (e-ticket "Rp 0", invoice tanpa nominal) | Field ditambahkan ke `paymentSchema` (`AgendaModel.ts`); nilai yang sudah ditulis endpoint kini tersimpan. Catatan migrasi: tagihan historis tidak bisa di-backfill (amount memang tak pernah persisten) — tampil sebagai 0. |
+| 2 | §2.2 kuota dead code + race | `quota` + `seatsTaken` ditambahkan ke `agendaSchema`/`IAgenda`. Registrasi peserta kini: lazy-init counter dari hitungan nyata → reservasi atomik `$expr { $lt: [seatsTaken, quota] }` + `$inc` → **release kursi otomatis** bila upsert gagal/deteksi duplikasi (409). Penuh = 400 tanpa insert. Panitia tidak mengonsumsi kuota peserta (semantik sama dengan countDocuments lama). |
+| 3 | §3.3 state machine manual-transfer rusak (`verifying` tak pernah bisa disetujui) | `payment/verify.post.ts` kini menerima transisi dari `{ $in: ['pending','verifying'] }` untuk Participant & Committee. |
+| 4 | §2-M4 order_id reuse → retry charge ditolak Midtrans | Kedua endpoint charge memakai `` `${registeredId}-${Date.now()}` ``; parser webhook `notification.post.ts` split `/[:-]/` — kompatibel format legacy (`id`, `id:suffix`) maupun baru. |
+| 5 | §1.7 kredensial diganti tapi sesi tidak dicabut | `SessionModel.deleteMany({ user })` pada ganti password, reset password, dan ganti email (klaim JWT ikut ter-refresh). |
+
+### Test
+
+- `agenda-quota.test.ts` **ditulis ulang** sebagai unit test handler (sebelumnya butuh boot server penuh yang membuatnya hang 120 dtk + OOM): reservasi atomik saat tersedia, 400 + tanpa insert saat penuh, release kursi saat duplikasi.
+- `payment-verify.test.ts`: assertion filter transisi diperbarui ke `$in ['pending','verifying']`.
+
+### Hasil verifikasi
+
+- Target: **10/10 hijau** (quota 3 · payment-verify 3 · notification 4).
+- Regresi lingkungan: encrypt/scan/agenda-custom-pdf **6/6 hijau** setelah perubahan schema.
+
+### Residual Sprint 2 (catatan lanjutan)
+
+- Kuota per ticket-model (`ticketModels[].quota/sold`) masih tidak ditegakkan — butuh desain counter per model.
+- Upload bukti transfer masih tanpa cek kepemilikan (guest capability-URL) — menyatu dengan sprint authz berikutnya.
+- Backfill amount historis mustahil dari DB; opsional buat skrip rekon dari log Midtrans bila ada akses dashboard.
