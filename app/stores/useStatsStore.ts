@@ -114,6 +114,16 @@ export const useStatsStore = defineStore("stats", () => {
   });
 
   // --- Return ---
+  /** Wipe all cached personal data (call on logout to prevent cross-user leakage). */
+  function clear() {
+    memberProfile.value = undefined;
+    rawAgendas.value = [];
+    rawAgendasCount.value = 0;
+    aspirations.value = [];
+    points.value = [];
+    loading.value = false;
+  }
+
   return {
     // State
     rawAgendas,
@@ -127,6 +137,7 @@ export const useStatsStore = defineStore("stats", () => {
     fetchPoints,
     fetchMemberProfile,
     init,
+    clear,
     // Getters
     agendasMe,
     projectsMe,

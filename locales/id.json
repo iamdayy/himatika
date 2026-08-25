@@ -519,5 +519,8 @@
   "processing": "Sedang Diproses",
   "no_videos_yet": "Belum ada video yang diunggah.",
   "otp_code": "OTP Code",
-  "non_student_guest": "Non-Student Guest"
+  "non_student_guest": "Non-Student Guest",
+  "no_agenda_yet": "Belum ada agenda",
+  "no_project_yet": "Belum ada proyek",
+  "check": "Periksa"
 }

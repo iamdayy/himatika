@@ -663,9 +663,10 @@ watch(() => props.targetStep, async (newTarget) => {
     }
 }, { immediate: true });
 
-watch(() => props.steps, () => {
-    resetAllValidation();
-}, { deep: true });
+// NOTE: no deep watcher on props.steps. Callers pass computed step arrays
+// containing reactive form objects, so a deep watch fired resetAllValidation()
+// on every keystroke and wiped the wizard's progress mid-flow. Reset
+// explicitly via the exposed method instead.
 
 onMounted(() => {
     // Reset all validation when the component is mounted

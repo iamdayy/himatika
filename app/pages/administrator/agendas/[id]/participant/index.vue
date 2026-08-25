@@ -359,22 +359,30 @@ const printNametags = () => {
     `;
 
     // 4. Generate HTML Content (Looping Data)
+    // Escape every interpolated value: guest-supplied names must never reach
+    // innerHTML unescaped (stored XSS in the admin's origin).
+    const escapeHtml = (value: unknown) =>
+        String(value ?? "").replace(/[&<>"']/g, (c) => (
+            { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string
+        ));
+
     const cardsHtml = targets.map(p => {
         // Handle data aman (null safety)
         const member = p.member as IMember | undefined;
         const guest = p.guest as IGuest | undefined;
 
-        const name = member?.fullName || guest?.fullName || 'Peserta';
-        const subInfo = member?.NIM || guest?.instance || '-';
+        const name = escapeHtml(member?.fullName || guest?.fullName || 'Peserta');
+        const subInfo = escapeHtml(member?.NIM || guest?.instance || '-');
         const type = member ? 'MEMBER' : 'GUEST';
+        const agendaTitle = escapeHtml(agenda.value?.title || 'EVENT CARD');
 
         return `
             <div class="card">
-                <div class="header">${agenda.value?.title || 'EVENT CARD'}</div>
+                <div class="header">${agendaTitle}</div>
                 <h1 class="name">${name}</h1>
                 <p class="meta">${subInfo}</p>
                 <div class="badge">${type}</div>
-                <div class="footer">ID: ${p._id}</div>
+                <div class="footer">ID: ${escapeHtml(p._id)}</div>
             </div>
         `;
     }).join('');

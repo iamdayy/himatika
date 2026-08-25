@@ -35,13 +35,19 @@ const responsiveUISizes = useResponsiveUiSizes();
  * @type {Ref<InstanceType<typeof UCarousel>>}
  * 
  */
-const randomPhotos = computed<ICarousel[]>(() => {
-    if (carouselData.value?.data) {
-        const shuffled = [...carouselData.value.data].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, 12) as ICarousel[];
-    }
-    return [];
-});
+/**
+ * Carousel photos. Shuffling happens client-side only (after mount) — a
+ * Math.random computed ran on both server and client and produced different
+ * orders, breaking hydration.
+ */
+const randomPhotos = ref<ICarousel[]>([]);
+const reshufflePhotos = () => {
+    const photos = carouselData.value?.data ?? [];
+    const shuffled = [...photos].sort(() => 0.5 - Math.random());
+    randomPhotos.value = shuffled.slice(0, 12) as ICarousel[];
+};
+watch(carouselData, reshufflePhotos);
+onMounted(reshufflePhotos);
 
 /**
  * SEO Meta tags for the home page

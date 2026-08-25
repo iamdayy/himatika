@@ -519,5 +519,8 @@
   },
   "warning": "Peringatan",
   "info": "Informasi",
-  "no_points_data": "Tidak ada data poin"
+  "no_points_data": "Tidak ada data poin",
+  "no_agenda_yet": "No agendas yet",
+  "no_project_yet": "No projects yet",
+  "check": "Check"
 }

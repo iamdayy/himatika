@@ -1,26 +1,31 @@
+import type { IAgenda } from "~~/types";
 import type { IAgendaResponse } from "~~/types/IResponse";
 
-export default defineNuxtRouteMiddleware(async (to, from) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   if (!process.client) {
     return;
   }
-  if (to.path.includes("/agendas/") && !to.params.id) {
+  const agendaId = to.params.id as string | undefined;
+  if (to.path.includes("/agendas/") && !agendaId) {
     return;
   }
-  const { data: agenda } = useFetch("/api/agenda", {
-    method: "GET",
-    query: {
-      id: to.params.id,
-    },
-    transform: (data: IAgendaResponse) => data.data?.agenda,
-  });
+
+  // Resolve authorization from REAL data. The previous implementation read an
+  // un-awaited useFetch ref (always undefined at this point), so the guard
+  // aborted navigation regardless of committee status.
+  const agenda = ref<IAgenda | undefined>(undefined);
+  try {
+    const { $api } = useNuxtApp();
+    const res = await $api<IAgendaResponse>("/api/agenda", {
+      query: { id: agendaId },
+    });
+    agenda.value = res.data?.agenda;
+  } catch {
+    return abortNavigation();
+  }
+
   const { isCommittee } = useAgendas(agenda);
-  const organizerState = useOrganizerStore();
-  const { isOrganizer } = storeToRefs(organizerState);
   if (!isCommittee.value) {
-    if (isOrganizer.value) {
-      return;
-    }
     return abortNavigation();
   }
 });
