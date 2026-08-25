@@ -5,6 +5,7 @@ import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { UserModel, UserPopulateOptions } from "~~/server/models/UserModel";
 import { MemberModel } from "../models/MemberModel";
 import { setSession } from "../utils/Sessions";
+import { enforceRateLimit } from "~~/server/utils/rateLimit";
 
 const loginSchema = z.object({
   username: z.string().optional(),
@@ -28,6 +29,10 @@ const getSecretKey = () => {
  */
 export default defineEventHandler(async (event) => {
   try {
+    // Shared (cross-instance) brute-force gate, keyed by source IP.
+    const ip = getRequestIP(event, { xForwardedFor: true }) || "unknown";
+    await enforceRateLimit(`signin:${ip}`, 10, 60_000);
+
     const rawBody = await readBody(event);
     const validation = loginSchema.safeParse(rawBody);
     const t = await useTranslationServerMiddleware(event);

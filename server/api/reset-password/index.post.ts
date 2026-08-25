@@ -73,22 +73,37 @@ export default defineEventHandler(
 
       user.password = password;
       await user.save();
-      await OTPModel.deleteOne({ code, type: "Reset Password" });
 
       // Revoke every session: a stolen refresh token must not survive
       // a password reset.
       await SessionModel.deleteMany({ user: user._id });
+
+      // Consume-once (atomic): the OTP cannot drive a second reset.
+      const consumed = await OTPModel.findOneAndUpdate(
+        { _id: otp._id, usedAt: null },
+        { $set: { usedAt: new Date() } },
+        { new: true }
+      );
+      if (!consumed) {
+        throw {
+          statusCode: 400,
+          statusMessage: "Kode OTP sudah pernah digunakan",
+          data: { message: "OTP already used", path: "otp" },
+        };
+      }
 
       return {
         statusCode: 200,
         statusMessage: "Succesfully reset password for " + user.username,
       };
     } catch (error: any) {
-      return {
-        statusCode: error.statusCode,
-        statusMessage: error.statusMessage,
+      // Throw real HTTP errors instead of resolving with an error body
+      // under HTTP 200 — clients could not tell success from failure.
+      throw createError({
+        statusCode: error.statusCode || 500,
+        statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
         data: error.data,
-      };
+      });
     }
   }
 );

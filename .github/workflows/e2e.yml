@@ -45,4 +45,12 @@ jobs:
         env:
           NUXT_MONGODB_URI: mongodb://127.0.0.1:27017/himatika_test
           JWT_SECRET: testing-jwt-secret-123
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
         run: bun run test:e2e
+
+      - name: Run Server Unit & Regression Tests
+        env:
+          NUXT_MONGODB_URI: mongodb://127.0.0.1:27017/himatika_test
+          JWT_SECRET: testing-jwt-secret-123
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        run: bun run test:server

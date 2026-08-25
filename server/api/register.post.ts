@@ -3,6 +3,7 @@ import { z } from "zod";
 import { UserModel } from "~~/server/models/UserModel";
 import { IRegisterResponse } from "~~/types/IResponse";
 import { MemberModel } from "../models/MemberModel";
+import { enforceRateLimit } from "~~/server/utils/rateLimit";
 
 const registerSchema = z.object({
   username: z.string().min(1, "Username diperlukan"),
@@ -24,6 +25,10 @@ export default defineEventHandler(async (event): Promise<IRegisterResponse> => {
   session.startTransaction();
   
   try {
+    // Shared brute-force/abuse gate per IP (cross-instance, Mongo-backed).
+    const ip = getRequestIP(event, { xForwardedFor: true }) || "unknown";
+    await enforceRateLimit(`register:${ip}`, 10, 60_000);
+
     const rawBody = await readBody(event);
     const validation = registerSchema.safeParse(rawBody);
     const t = await useTranslationServerMiddleware(event);
