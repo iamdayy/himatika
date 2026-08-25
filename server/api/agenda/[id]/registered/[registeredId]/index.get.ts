@@ -23,10 +23,16 @@ export default defineEventHandler(
           statusMessage: "Unauthorized access",
         });
       }
-      const isRegisterd = agenda?.isRegisterdById(registeredId);
+      // `isRegisterdById` never existed on the model and was unawaited —
+      // this endpoint always 500'd. Resolve from the real collections.
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const isRegisterd =
+        (await ParticipantModel.findOne({ _id: registeredId, agendaId: id }).populate("member")) ??
+        (await CommitteeModel.findOne({ _id: registeredId, agendaId: id }).populate("member"));
       if (!isRegisterd) {
         throw createError({
-          statusCode: 403,
+          statusCode: 404,
           statusMessage: "Registration not found for this agenda",
         });
       }

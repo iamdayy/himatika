@@ -83,6 +83,7 @@ describe('Agenda Quota Enforcement', () => {
     title: 'Test Quota Agenda',
     quota: 1,
     seatsTaken: null,
+    configuration: { participant: { canRegister: 'Public' } },
     ...overrides,
   })
 

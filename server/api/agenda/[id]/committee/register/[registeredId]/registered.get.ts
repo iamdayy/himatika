@@ -17,9 +17,12 @@ export default defineEventHandler(
           statusMessage: "Agenda not found",
         });
       }
-      const registered = agenda?.committees?.find(
-        (r) => r._id?.toString() === registeredId
-      );
+      const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
+      const registered: any = await CommitteeModel.findOne({
+        _id: registeredId,
+        agendaId: id,
+      });
+      
       if (!registered) {
         throw createError({
           statusCode: 404,

@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { z } from "zod";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import Email from "~~/server/utils/mailTemplate";
 import { generateQRCode } from "~~/server/utils/qrcode";
@@ -80,7 +81,7 @@ export default defineEventHandler(
         });
       }
 
-      // Bypass permission check for guest registrations
+      const participantConfig = agenda.configuration?.participant;
       if (user) {
         const canRegister = await agenda.canMeRegisterAsParticipant(user as IUser);
         if (!canRegister) {
@@ -88,6 +89,24 @@ export default defineEventHandler(
             statusCode: 403,
             statusMessage:
               "Anda tidak memenuhi syarat pendaftaran untuk agenda ini berdasarkan aturan yang ditetapkan oleh panitia.",
+          });
+        }
+      } else {
+        // Anonymous guests may register ONLY when the event is explicitly
+        // public and the registration window has not closed. The old
+        // unconditional bypass is gone.
+        if (participantConfig?.canRegister !== "Public") {
+          throw createError({
+            statusCode: 403,
+            statusMessage: "Pendaftaran tanpa akun hanya tersedia untuk agenda publik.",
+          });
+        }
+        const now = new Date();
+        const until = participantConfig?.canRegisterUntil;
+        if (until?.end && now > new Date(until.end)) {
+          throw createError({
+            statusCode: 403,
+            statusMessage: "Periode pendaftaran untuk agenda ini telah ditutup.",
           });
         }
       }
@@ -164,12 +183,32 @@ export default defineEventHandler(
         }
         newParticipantData.guest = g._id;
       } else if (guest) {
-        name = guest.fullName;
-        email = guest.email;
+        name = String(guest.fullName ?? "").trim();
+        email = String(guest.email ?? "").trim().toLowerCase();
+
+        // Validate the guest payload before touching the database.
+        const guestSchema = z.object({
+          fullName: z.string().trim().min(1),
+          email: z.string().email(),
+          phone: z.string().trim().min(1),
+          instance: z.string().optional(),
+          NIM: z.union([z.string(), z.number()]).transform(v => Number(v)).optional(),
+          semester: z.union([z.string(), z.number()]).transform(v => Number(v)).optional(),
+          class: z.string().optional(),
+          prodi: z.string().optional(),
+        });
+        const parsedGuest = guestSchema.safeParse(guest);
+        if (!parsedGuest.success) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: "Data tamu tidak lengkap atau tidak valid.",
+            data: parsedGuest.error.format(),
+          });
+        }
 
         const { MemberModel } = await import("~~/server/models/MemberModel");
         const existingMember = await MemberModel.findOne({
-          email: guest.email,
+          email,
         });
 
         if (existingMember) {
@@ -180,33 +219,35 @@ export default defineEventHandler(
           });
         }
 
-        let existingGuest = await GuestModel.findOne({ email: guest.email });
-        if (!existingGuest) {
-          // If not found, create a new guest safely
-          existingGuest = await GuestModel.create({
-            fullName: guest.fullName,
-            email: guest.email,
-            phone: guest.phone,
-            instance: guest.instance,
-            NIM: guest.NIM,
-            prodi: guest.prodi,
-            class: guest.class,
-            semester: guest.semester,
+        let existingGuest = await GuestModel.findOne({ email });
+        if (existingGuest) {
+          const isRegisteredParticipant = await ParticipantModel.exists({
+            agendaId: id,
+            guest: existingGuest._id,
           });
+          if (isRegisteredParticipant) {
+            throw createError({
+              statusCode: 409,
+              statusMessage: "Email ini sudah terdaftar sebagai peserta dalam agenda ini.",
+            });
+          }
         }
 
-
-        const isRegisteredParticipant = await ParticipantModel.exists({
-          agendaId: id,
-          guest: existingGuest._id,
-        });
-        if (isRegisteredParticipant) {
-          throw createError({
-            statusCode: 409,
-            statusMessage: "Email ini sudah terdaftar sebagai peserta dalam agenda ini.",
-          });
-        }
-        newParticipantData.guest = existingGuest._id;
+        // Create the guest only after every duplicate check passed, so failed
+        // registrations no longer leave orphan guest PII rows behind.
+        const guestDoc =
+          existingGuest ??
+          (await GuestModel.create({
+            fullName: parsedGuest.data.fullName,
+            email,
+            phone: parsedGuest.data.phone,
+            instance: parsedGuest.data.instance,
+            NIM: parsedGuest.data.NIM,
+            prodi: parsedGuest.data.prodi,
+            class: parsedGuest.data.class,
+            semester: parsedGuest.data.semester,
+          }));
+        newParticipantData.guest = guestDoc._id;
       } else {
         throw createError({
           statusCode: 400,

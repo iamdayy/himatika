@@ -70,10 +70,17 @@ export default defineEventHandler(async (event) => {
     }
 
     // Ownership: only the registrant (or committee/organizer) may attach
-    // proof — previously any user could sabotage someone else's review.
+    // proof. Anonymous guests may submit for their own (guest) registration
+    // via the email-link id while it is still open for review.
     const isOwner = await userOwnsRegistration(event.context.user, registration);
     if (!isOwner) {
-      await ensureCommitteeOrOrganizer(id, event.context.user);
+      const anonymousGuestCapability =
+        !event.context.user &&
+        !!registration.guest &&
+        !["success", "failed"].includes(registration.payment.status);
+      if (!anonymousGuestCapability) {
+        await ensureCommitteeOrOrganizer(id, event.context.user);
+      }
     }
 
     if (!filePart.type?.startsWith("image/")) {

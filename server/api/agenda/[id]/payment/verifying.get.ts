@@ -2,12 +2,16 @@ import { AgendaModel } from "~~/server/models/AgendaModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { IPaymentVerificationResponse } from "~~/types/IResponse";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 
 export default defineEventHandler(async (event): Promise<IPaymentVerificationResponse> => {
   try {
     const { id } = event.context.params as { id: string };
 
     const agenda = await AgendaModel.findById(id);
+
+  // Manual-payment queue contains payer PII — committee/organizer only.
+  await ensureCommitteeOrOrganizer(id, event.context.user);
     if (!agenda) {
       throw createError({ statusCode: 404, statusMessage: "Agenda not found" });
     }

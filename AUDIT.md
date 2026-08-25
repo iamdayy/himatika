@@ -576,3 +576,41 @@ Belum diperbaiki (prioritas berikutnya): SSRF fetch URL arbitrer (H1), R2 arbitr
 ### Verifikasi
 
 Nuxt: 9 file / **32 test hijau** (termasuk 4 smoke baru: normalisasi URL worker & kontrak ticket/make). Worker: pytest 2/2 + smoke import semua handler modul.
+
+---
+
+## Eksekusi Sprint 6 — Tindak Lanjut Deep-Dive Agenda ✅
+
+### AG-C1 split-brain token — root cause dibereskan
+- `signin.post.ts`: klaim JWT kini menyertakan **`member._id`** (sumber masalah: payload signin menghilangkannya sehingga query `user.member._id` menjadi `{member: null}` sampai refresh pertama).
+- `committee/index.post.ts` (create): `body.member` kini divalidasi — member harus ada & belum jadi panitia agenda tsb → jalur eskalasi via baris `member:null` tertutup di sumbernya.
+- Helper `resolveMemberId`/`userOwnsRegistration` tetap sebagai fallback untuk token lama yang masih beredar (<60 mnt).
+
+### Scan QR — format & atomik (AG-M2)
+- Parser menerima **semua format produksi**: `{id, role}` legacy, `{a,p,t:"p"}` tiket peserta, `{a,c,t:"c"}` panitia, ObjectId polos, dan URL `.../verify/ticket/<id>` dari PDF.
+- Check-in kini atomic (`updateOne({visiting: {$ne: true}})`) + set `visitTime` konsisten; dua pemindai racing tak lagi dobel-sukses/dobel-email.
+- Test scan ditulis ulang: 6 kasus (payload invalid, non-ObjectId, 3 format produksi, duplikat 409).
+
+### Guest flow — dibuka kembali dengan aman (menutup regresi sprint 1)
+Whitelist baru `guestCapabilityPatterns` (POST exact-leaf): register, register/:rid/payment, question/answer (dua bentuk), participant/:pid/verify. Hardening handler:
+- Registrasi anonim hanya saat `canRegister === "Public"` + window end terlewati → **bypass lama dihapus**, Zod validasi body tamu, email di-lowercase, guest dibuat SETELAH cek duplikat (tidak ada lagi orphan PII saat 409).
+- Charge/proof/answer untuk anonim hanya jika registrasi milik guest & status masih terbuka (`success`/`verifying` ditolak).
+- Answer collector: ownership sama, `forEach(async)` → loop sekuensial (error benar-benar propagate), catch melempar HTTP error sungguhan.
+
+### Question builder (AG-H5)
+- 12 endpoint CRUD kini memanggil `ensureCommitteeOrOrganizer(id, user)` (sebelumnya cukup login).
+- PUT `[questionId]` tidak lagi global lintas agenda: diverifikasi pertanyaan termasuk daftar `configuration.<side>.questions` agenda param.
+
+### Lookup endpoints (AG-M3/M7)
+- `[id]/registered.get.ts`: filter by caller (memberId resolved / session guest) — bukan baris pertama sembarang.
+- Dua twin `register/:rid/registered.get.ts`: baca koleksi Participant/Committee nyata (dulu membaca array inline yang sudah tak eksis → selalu 404).
+- `[id]/registered/[registeredId]/index.get.ts`: panggilan `isRegisterdById` (tak eksis, tak di-await → selalu 500) diganti lookup koleksi sesungguhnya; 403→404.
+- `payment/verifying.get.ts`: gate committee/organizer.
+
+### Verifikasi
+9 file / **36 test hijau** (scan 6 · quota 3 · payment-verify 3 · notification 4 · auth 10 · member-profile 3 · hardening 4 · encrypt 3 · custom-pdf... total sesuai run). Syntax esbuild lulus utk semua file berubah.
+
+### Sisa (terdokumentasi, butuh keputusan/kerja lanjut)
+- HMAC-signing payload QR (saat ini integritas bergantung pada otorisasi scan).
+- `attend` self check-in masih tanpa gate waktu/bayar; `onlyParticipantCanVisit` tetap dead control.
+- Sweep serupa utk option-CRUD answer collector committee twin; cache nearest fresh-token collapse (mitigasi: klaim `_id` kini ada di token baru).

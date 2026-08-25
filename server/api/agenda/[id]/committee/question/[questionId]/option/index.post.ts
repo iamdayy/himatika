@@ -1,18 +1,16 @@
 import { QuestionModel } from "~~/server/models/QuestionModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 
 export default defineEventHandler(async (event) => {
   try {
     const user = event.context.user;
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
-    }
-    const { id, questionId } = event.context.params as {
+        const { id, questionId } = event.context.params as {
       id: string;
       questionId: string;
     };
+
+    // Only committee/organizer of THIS agenda may modify its questionnaire.
+    await ensureCommitteeOrOrganizer(id as string, user);
     const body = {
       value: "New Options",
     };

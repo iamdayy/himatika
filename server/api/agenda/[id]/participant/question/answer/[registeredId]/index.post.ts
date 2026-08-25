@@ -1,5 +1,10 @@
 import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
+import {
+  ensureCommitteeOrOrganizer,
+  userOwnsRegistration,
+} from "~~/server/utils/agendaAuth";
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { AnswerModel } from "~~/server/models/AnswerModel";
 import { IQuestion } from "~~/types";
 
@@ -29,6 +34,21 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Agenda not found",
       });
     }
+    // Ownership: members answer only their own registration; anonymous
+    // callers must target a guest registration (capability = link id).
+    const registration = await ParticipantModel.findById(registeredId).select("_id guest member agendaId");
+    if (!registration || String(registration.agendaId) !== id) {
+      throw createError({ statusCode: 404, statusMessage: "Registration not found" });
+    }
+    const isOwner = await userOwnsRegistration(event.context.user, registration);
+    if (!isOwner) {
+      const anonymousGuestCapability =
+        !event.context.user && !!registration.guest;
+      if (!anonymousGuestCapability) {
+        await ensureCommitteeOrOrganizer(id, event.context.user);
+      }
+    }
+
     const questions =
       (agenda.configuration.participant.questions as IQuestion[] | undefined) ||
       [];
@@ -54,7 +74,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Question not found",
       });
     }
-    answers?.forEach(async (q) => {
+    for (const q of answers) {
       const questionId = q.questionId;
       const question = questions.find(
         (question) => question._id?.toString() === questionId
@@ -121,16 +141,18 @@ export default defineEventHandler(async (event) => {
           });
         }
       }
-    });
+    }
     return {
       statusCode: 200,
       statusMessage: "Answers submitted successfully",
     };
   } catch (error: any) {
     console.error(error);
-    return createError({
+    // Throw real HTTP errors — previously failures were returned as bodies
+    // under HTTP 200 (or swallowed by the async forEach entirely).
+    throw createError({
       statusCode: error.statusCode || 500,
-      statusMessage: error.statusMessage || "Internal Server Error",
+      statusMessage: error.statusMessage || error.message || "Internal Server Error",
     });
   }
 });

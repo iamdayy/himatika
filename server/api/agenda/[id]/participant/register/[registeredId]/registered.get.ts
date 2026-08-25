@@ -17,9 +17,12 @@ export default defineEventHandler(
           statusMessage: "Agenda not found",
         });
       }
-      const registered = agenda?.participants?.find(
-        (r) => r._id?.toString() === registeredId
-      );
+      const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
+      const registered: any = await ParticipantModel.findOne({
+        _id: registeredId,
+        agendaId: id,
+      });
+      
       if (!registered) {
         throw createError({
           statusCode: 404,

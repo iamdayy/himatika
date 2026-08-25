@@ -106,6 +106,9 @@ export default defineEventHandler(async (event) => {
     if (user.member) {
       const m = user.member as any;
       memberPayload = {
+        // _id MUST be present: authorization checks across the agenda module
+        // compare user.member._id against registration.member.
+        _id: m._id,
         NIM: m.NIM,
         fullName: m.fullName,
         avatar: m.avatar,

@@ -75,7 +75,15 @@ export default defineEventHandler(
       // clobber someone else's in-flight payment.
       const isOwner = await userOwnsRegistration(user, participant);
       if (!isOwner) {
-        await ensureCommitteeOrOrganizer(id, user);
+        // Anonymous guests complete payment with the registration id from
+        // their email link — allowed only while the payment is still open.
+        const anonymousGuestCapability =
+          !user &&
+          !!participant.guest &&
+          !["success", "verifying"].includes(participant.payment?.status);
+        if (!anonymousGuestCapability) {
+          await ensureCommitteeOrOrganizer(id, user);
+        }
       }
       if (
         participant.payment?.status === "pending" &&
