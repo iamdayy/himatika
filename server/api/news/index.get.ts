@@ -127,6 +127,9 @@ export default defineCachedEventHandler(
     maxAge: 60 * 15, // Cache selama 15 Menit
     name: "news-cache",
     swr: true,
-    getKey: (event) => event.path,
+    // Bucket pub/org terpisah: respons organizer (berisi draft/archived)
+    // tidak boleh menghanguskan cache yang dibaca anonim pada URL sama.
+    getKey: (event) =>
+      `${(event.context as any)?.organizer ? "org" : "pub"}:${event.path}`,
   }
 );

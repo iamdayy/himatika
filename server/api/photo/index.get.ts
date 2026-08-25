@@ -92,7 +92,10 @@ export default defineCachedEventHandler(
     maxAge: 60 * 30, // Cache selama 30 Menit
     name: "photo-cache",
     swr: true,
-    getKey: (event) => event.path,
+    // Bucket pub/org terpisah agar foto arsip (organizer-only) tidak
+    // ter-cache di bawah URL yang dibaca anonim.
+    getKey: (event) =>
+      `${(event.context as any)?.organizer ? "org" : "pub"}:${event.path}`,
   }
 );
 

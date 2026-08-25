@@ -10,7 +10,7 @@ import { IAgendaResponse, IError } from "~~/types/IResponse";
  * @returns {Promise<Event | Event[]>} The event data or an array of agendas.
  * @throws {H3Error} If an error occurs during the process.
  */
-export default defineCachedEventHandler(
+export default defineEventHandler(
   async (event): Promise<IAgendaResponse | IError> => {
     try {
       const {
@@ -161,3 +161,6 @@ export default defineCachedEventHandler(
     }
   }
 );
+// NOTE: intentionally NOT cached. The response embeds per-user
+// personalization (myParticipant/myCommittee, role-gated visibility), which
+// the default path-keyed cache served to other users.

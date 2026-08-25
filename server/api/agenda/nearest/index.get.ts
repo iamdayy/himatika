@@ -54,5 +54,12 @@ export default defineCachedEventHandler(
     maxAge: 60 * 10, // Cache selama 10 Menit
     name: "nearest-agenda-cache",
     swr: true,
+    // Respons bersifat personal (mengecualikan agenda yang diikuti user),
+    // sehingga cache key wajib memuat identitas user.
+    getKey: (event) => {
+      const user = (event.context as any)?.user;
+      const uid = user?.member?._id ?? user?.guest?._id ?? "anon";
+      return `nearest:${uid}:${event.path}`;
+    },
   }
 );

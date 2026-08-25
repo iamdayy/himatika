@@ -117,5 +117,7 @@ export default defineCachedEventHandler(
   maxAge: 60 * 15,
   name: "project-list-cache",
   swr: true,
-  getKey: (event: any) => event.path,
+  // Bucket pub/org terpisah agar draft proyek tidak bocor ke anonim via cache.
+  getKey: (event: any) =>
+    `${event?.context?.organizer ? "org" : "pub"}:${event.path}`,
 });
