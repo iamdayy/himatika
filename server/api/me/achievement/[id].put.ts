@@ -6,8 +6,11 @@ import { IResponse } from "~~/types/IResponse";
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
-    if (!user)
-      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    if (!user?.member)
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Hanya member yang dapat mengubah klaim poin",
+      });
 
     const id = getRouterParam(event, "id");
     if (!id)
@@ -23,6 +26,17 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       throw createError({
         statusCode: 404,
         statusMessage: "Achievement not found",
+      });
+    }
+
+    // Ledger integrity: records already processed by an organizer are
+    // immutable to members (previously editable/deletable, letting a member
+    // shift approved points across semesters or erase the audit trail).
+    if (existingAchievement.status !== "pending") {
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          "Poin yang sudah diproses organizer tidak dapat diubah. Hubungi organizer untuk koreksi.",
       });
     }
 
@@ -76,6 +90,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     };
   } catch (e: any) {
     console.error(e);
-    throw createError({ statusCode: 500, statusMessage: e.message });
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || e.message || "Terjadi Kesalahan Server",
+    });
   }
 });

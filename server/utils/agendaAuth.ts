@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { IMember, IUser } from "~~/types";
 import { IAgendaSchema } from "~~/types/ISchemas";
 
@@ -74,6 +75,49 @@ export async function resolveMemberId(
     .select("_id")
     .lean();
   return member ? String((member as any)._id) : null;
+}
+
+/**
+ * Authoritative organizer check against the DB, covering ALL six position
+ * shapes (the JWT claim only populates four of the six virtuals, so staff
+ * roles were previously rejected). A demoted organizer also loses access
+ * immediately instead of after token expiry.
+ */
+export async function isUserOrganizerDb(user: IUser | undefined): Promise<boolean> {
+  if (!user?.member) return false;
+  if (isUserOrganizer(user)) return true; // fast path from fresh claims
+
+  const memberId = await resolveMemberId(user);
+  if (!memberId) return false;
+  const memberObjectId = new (mongoose.Types.ObjectId)(memberId);
+
+  const { OrganizerModel } = await import("~~/server/models/OrganizerModel");
+  const now = new Date();
+  const active = await OrganizerModel.exists({
+    "period.end": { $gte: now },
+    $or: [
+      { considerationBoard: memberObjectId },
+      { dailyManagement: { $elemMatch: { member: memberObjectId } } },
+      { dailyManagement: { $elemMatch: { staff: memberObjectId } } },
+      { department: { $elemMatch: { coordinator: memberObjectId } } },
+      { department: { $elemMatch: { members: memberObjectId } } },
+      { department: { $elemMatch: { staff: memberObjectId } } },
+    ],
+  });
+  return !!active;
+}
+
+/**
+ * Gate for organizer-only actions (manual point awards, approvals).
+ */
+export async function ensureOrganizer(user: IUser | undefined): Promise<void> {
+  ensureAuthenticated(user);
+  if (!(await isUserOrganizerDb(user))) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: "Hanya organizer yang dapat melakukan aksi ini",
+    });
+  }
 }
 
 /**

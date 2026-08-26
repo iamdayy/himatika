@@ -17,6 +17,7 @@ const pointSchema = new Schema<IPointLogSchema>(
       // Admin bisa mengedit ini saat approval
       type: Number,
       required: true,
+      min: 0, // koreksi negatif harus lewat proses admin yang eksplisit
       default: 0,
     },
     reason: {
@@ -50,5 +51,10 @@ const pointSchema = new Schema<IPointLogSchema>(
   },
   { timestamps: true }
 );
+
+// Hot paths: achievement list per member (filter status+sort date),
+// organizer queue by status, dan virtual manualPoints per member.
+pointSchema.index({ member: 1, status: 1, date: -1 });
+pointSchema.index({ status: 1, date: -1 });
 
 export const PointModel = mongoose.models.PointLog || mongoose.model("PointLog", pointSchema);

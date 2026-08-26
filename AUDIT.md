@@ -734,3 +734,24 @@ claim.post memaksa amount=0 & status=pending server-side (tak bisa dipalsukan); 
 
 ### Prioritas remediasi
 1. Gate organizer + minimize populate (PT-H1) · 2. Approved log immutable utk member (PT-H2) · 3. Harden decide: Zod enum/amount/pending-only + atomic + notify + AuditLog (PT-H4) · 4. Fix populate project & ekstrak SATU helper hitung poin bersama (PT-H3+M9) · 5. Validasi amount + index PointModel (M2/M4) · 6. Dedup/rate-limit claim (M3) · 7. Authorize organizer via DB bukan klaim JWT (M6).
+
+---
+
+## Eksekusi Perbaikan Modul Poin ✅ (semua HIGH + sebagian besar M/L)
+
+| ID | Perbaikan |
+|----|-----------|
+| PT-H1 | `admin/achievement` GET: `ensureOrganizer` (DB-backed) + populate disanitasi (`fullName NIM avatar semester`) + limit 500 + status tervalidasi. Kontrak array-raw dipertahankan demi frontend. |
+| PT-H2 | PUT/DELETE klaim kini menolak log berstatus non-pending (403) — ledger approved immutable bagi member; guard guest (`user.member` kosong → 403 bersih). |
+| PT-H4 | `decide.post` ditulis ulang: Zod (id 24-hex, action enum, amount int 0–255), transisi **pending-only via findOneAndUpdate atomik** (re-decide/reject-resurrection → 409), admin-id defensif, berita prestasi hanya pada pending→approve & gagal-berita tak menggagalkan keputusan, AuditLog POINT_APPROVE/REJECT + IP. |
+| PT-M2/M4 | `point/add`: Zod penuh (int 1–255, reason ≤200, type enum, memberId hex+eksistensi), self-award tetap diblok, status approved eksplisit. PointModel: `min:0` amount + index `{member,status,date}` & `{status,date}`. |
+| PT-H3/M9 | Util `pointCalculator.ts` = satu sumber aturan (agenda wajib utuh dalam window; project published+dated 75pt; aspirasi 50pt; manual approved saja) — dipakai oleh virtual `calculatePoints`, endpoint `/api/member`, dan bisa dipakai permukaan baru. Populate project diperbaiki (`date`+`published`, bukan `deadline` fiktif). Bonus fix: versi inline lama tidak memfilter status manual log & reduce tanpa guard NaN. |
+| PT-M6 | `ensureOrganizer`/`isUserOrganizerDb`: cek DB meliputi keenam bentuk jabatan (termasuk staff) dengan period aktif — staff tak lagi ditolak, demosi efektif seketika. Dipakai point/add, decide, admin GET. |
+| PT-M8 | `seed/local`: wajib header `x-seed-token` cocok dengan env `SEED_TOKEN`; password tak lagi dikembalikan di respons. |
+| PT-M3/L1/L6 | Cap 10 klaim pending per member; guard guest di semua endpoint achievement; error-laundering dibereskan (statusCode asli dipertahankan). |
+
+### Verifikasi
+Test baru `tests/server/points/points-module.test.ts` (**10 kasus**: authz admin GET, state-machine decide termasuk enum/negatif/re-decide-409, immutability PUT/DELETE, kalkulator murni dengan agenda multi-day/unpaid/unapproved/pending eksklusi). Suite penuh ringan: **55/55 hijau (12 file)**.
+
+### Sisa modul poin (dokumentasi)
+Badge trigger otomatis + basis all-time vs semester + revocation (M7); leaderboard agregasi tunggal & tie-break (M5); kalender September/TZ (L4); dedup deduplikasi klaim identik (M3 lanjutan).

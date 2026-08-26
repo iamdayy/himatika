@@ -68,11 +68,14 @@ export default defineEventHandler(async (event): Promise<IMeResponse> => {
         },
         {
           path: "projects",
-          select: "title deadline description -_id",
+          // date + published are REQUIRED by calculatePoints — selecting the
+          // nonexistent `deadline` silently zeroed every project's points.
+          select: "title date description published -_id",
           transform: (doc: IProject) => ({
             title: doc.title,
             date: doc.date,
             description: doc.description,
+            published: doc.published,
           }),
         },
         {
