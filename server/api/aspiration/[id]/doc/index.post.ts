@@ -6,6 +6,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { IMember } from "~~/types";
 import { IReqAspirationDoc } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const {
@@ -58,7 +59,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       on: aspiration._id,
       onModel: "Aspiration",
       no: no as string,
-      tags: tags ? JSON.parse(tags as string) : [],
+      tags: safeJsonParse(tags, []),
       doc: docUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

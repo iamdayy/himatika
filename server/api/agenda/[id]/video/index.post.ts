@@ -6,6 +6,7 @@ import { R2_PUBLIC_DOMAIN } from "~~/server/utils/r2";
 import { StoragePaths, uploadToR2 } from "~~/server/utils/storage";
 import { IVideo } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
@@ -129,7 +130,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       const saved = await VideoModel.create({
         on: agenda._id,
         onModel: "Agenda",
-        tags: video.tags ? JSON.parse(video.tags as string) : [],
+        tags: safeJsonParse(video.tags, []),
         video: videoUrl,
         uploader: uploaderId,
         processingStatus: "completed",

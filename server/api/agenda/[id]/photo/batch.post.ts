@@ -5,6 +5,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { customReadMultipartFormData, ParsedFile } from "~~/server/utils/customReadMultipartFormData";
 import { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 export default defineEventHandler(async (event): Promise<IResponse & { data?: any }> => {
   try {
@@ -84,7 +85,7 @@ export default defineEventHandler(async (event): Promise<IResponse & { data?: an
       let tags: string[] = [];
       if (tagStr && typeof tagStr === 'string') {
         try {
-           tags = JSON.parse(tagStr);
+           tags = safeJsonParse(tagStr, []);
         } catch(e) {}
       } else if (Array.isArray(tagStr)) {
          // Fallback if somehow array

@@ -14,3 +14,14 @@ export function clampInt(
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, Math.trunc(n)));
 }
+
+/** JSON.parse that never throws: returns `fallback` on malformed input. */
+export function safeJsonParse<T = any>(raw: unknown, fallback: T): T {
+  if (raw === undefined || raw === null) return fallback;
+  if (typeof raw !== "string") return raw as unknown as T;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}

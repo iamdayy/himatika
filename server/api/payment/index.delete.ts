@@ -86,7 +86,10 @@ export default defineEventHandler(
         // Midtrans refuses modification: the transaction already settled or
         // expired. Reconcile against the authoritative status instead of
         // blindly marking it canceled while money was captured.
-        const authoritative = await getTransactionStatus(transaction_id);
+        // Status endpoint is keyed by ORDER id — never the transaction id.
+        const reconcileId =
+          registered.payment.order_id || registered.payment.transaction_id;
+        const authoritative = await getTransactionStatus(reconcileId);
         if (authoritative === "success") {
           registered.payment = { ...registered.payment, status: "success" } as any;
           await registered.save();

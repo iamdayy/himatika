@@ -5,6 +5,7 @@ import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IProject } from "~~/types";
 import { IReqProjectQuery } from "~~/types/IRequestPost";
 import { IProjectsResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 type ISortable = {
   [key: string]: SortOrder;

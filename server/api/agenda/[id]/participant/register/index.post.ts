@@ -147,7 +147,23 @@ export default defineEventHandler(
             statusMessage: "Anda sudah terdaftar sebagai panitia atau peserta pada agenda ini.",
           });
         }
-        newParticipantData.member = user.member._id;
+        // Fresh access tokens minted at signin DO carry member._id now, but
+        // tokens issued before that fix do not — an undefined value would be
+        // serialized as null and poison the upsert (memberless participant
+        // consuming a quota seat). Resolve from NIM whenever necessary.
+        if ((user.member as any)._id) {
+          newParticipantData.member = (user.member as any)._id;
+        } else {
+          const { resolveMemberId } = await import("~~/server/utils/agendaAuth");
+          const resolved = await resolveMemberId(user);
+          if (!resolved) {
+            throw createError({
+              statusCode: 403,
+              statusMessage: "Akun member Anda tidak ditemukan. Silakan hubungi administrator.",
+            });
+          }
+          newParticipantData.member = resolved;
+        }
 
         // Auto update empty member fields
         const { memberUpdate } = await readBody(ev);
@@ -285,6 +301,11 @@ export default defineEventHandler(
       }
 
       try {
+        // Strip undefined values — Mongoose/BSON would serialize them as null.
+        for (const key of Object.keys(newParticipantData)) {
+          if (newParticipantData[key] === undefined) delete newParticipantData[key];
+        }
+
         // Create Participant Record (Atomic Upsert to prevent race conditions)
         const query: any = { agendaId: id };
         if (newParticipantData.member) query.member = newParticipantData.member;

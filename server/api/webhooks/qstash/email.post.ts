@@ -1,6 +1,7 @@
 import { Receiver } from "@upstash/qstash";
 import Email from "~~/server/utils/mailTemplate";
 import { sendEmail } from "~~/server/utils/mailer";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 export default defineEventHandler(async (event) => {
   const signature = getHeader(event, "upstash-signature");
@@ -27,7 +28,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: err.message });
   }
 
-  const payload = JSON.parse(rawBody || "{}");
+  // QStash signs the request but a malformed body would still 500 — parse safely.
+  const payload = safeJsonParse<Record<string, any>>(rawBody || "{}", {});
   const config = useRuntimeConfig();
   const sender = {
     email: config.resend_from,

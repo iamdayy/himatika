@@ -5,6 +5,7 @@ import { NewsModel } from "~~/server/models/NewsModel";
 import { INews } from "~~/types";
 import { IReqNews } from "~~/types/IRequestPost";
 import type { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 /**
  * Handles NEWS requests for creating a new news.
@@ -63,7 +64,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     const authorsIds = body.authors
-      ? await getAuthorsIds(JSON.parse(body.authors as string))
+      ? await getAuthorsIds(safeJsonParse(body.authors, []))
       : [];
 
     // Prepare news data

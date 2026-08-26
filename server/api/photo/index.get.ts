@@ -4,6 +4,7 @@ import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda, IPhoto, IPhotoGrouped, IProject } from "~~/types";
 import { IReqPhotoQuery } from "~~/types/IRequestPost";
 import { IPhotoResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 type ISortable = {
   [key: string]: SortOrder;
 };
@@ -45,8 +46,9 @@ export default defineCachedEventHandler(
         query.title = { $regex: search, $options: "i" };
       }
 
-      if (tags && JSON.parse(tags).length > 0) {
-        query.tags = { $in: JSON.parse(tags) };
+      const parsedTags = safeJsonParse<string[]>(tags, []);
+      if (Array.isArray(parsedTags) && parsedTags.length > 0) {
+        query.tags = { $in: parsedTags };
       }
       if (sort && order) {
         validateSortField("photo", sort);

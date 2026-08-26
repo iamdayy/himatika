@@ -1,6 +1,7 @@
 import { uploadToR2, deleteFromR2 } from "~~/server/utils/storage";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { IReqPhoto } from "~~/types/IRequestPost";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -67,7 +68,7 @@ export default defineEventHandler(async (event) => {
     // safe parsing for tags if it comes as string
     if (typeof body.tags === 'string') {
         try {
-             photo.tags = JSON.parse(body.tags);
+             photo.tags = safeJsonParse(body.tags, []);
         } catch (e) {
             // if not json, maybe just a single tag or comma separated?
             // keeping as is if matches Schema.

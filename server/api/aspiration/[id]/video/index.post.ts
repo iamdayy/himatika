@@ -5,6 +5,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { VideoModel } from "~~/server/models/VideoModel";
 import { IMember, IVideo } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
@@ -59,7 +60,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await VideoModel.create({
       on: aspiration._id,
       onModel: "Aspiration",
-      tags: video.tags ? JSON.parse(video.tags as string) : [],
+      tags: safeJsonParse(video.tags, []),
       video: videoUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

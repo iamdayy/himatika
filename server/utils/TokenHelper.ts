@@ -47,6 +47,10 @@ export const verifyToken = async (
   const calculated = createHmac("sha256", getSecret())
     .update(data)
     .digest("hex");
-  // Use timingSafeEqual to prevent timing attacks
-  return timingSafeEqual(Buffer.from(token, "hex"), Buffer.from(calculated, "hex"));
+  // Constant-time compare that tolerates malformed/short tokens —
+  // raw timingSafeEqual throws RangeError on length mismatch (500s).
+  const provided = Buffer.from(String(token ?? ""), "hex");
+  const expected = Buffer.from(calculated, "hex");
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(provided, expected);
 };

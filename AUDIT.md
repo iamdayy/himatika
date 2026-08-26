@@ -654,3 +654,25 @@ Commit `e141bd1`: AG-C1 root fix (member._id di klaim signin + validasi create c
 - `createError` diimpor eksplisit dari `h3` (auto-import tak tersedia di luar runtime Nitro).
 
 **Test regresi baru**: `tests/server/utils/rate-limit.test.ts` (3 kasus — budget normal+habis, 429, restart window kedaluwarsa) berjalan melawan Mongo nyata. Verifikasi: 3/3 hijau.
+
+---
+
+## Bug Hunt Terarah (pasca-laporan runtime) ✅
+
+Perburuan sistematis kelas bug "kekeliruan pemakaian API yang baru muncul saat runtime" + kritikal lainnya.
+
+### Ditemukan & diperbaiki
+
+| # | Bug | Dampak | Fix |
+|---|-----|--------|-----|
+| 1 | **`getTransactionStatus` dipanggil dengan `transaction_id`** padahal endpoint Midtrans berkunci **order_id** (`payment/index.get.ts` pra-eksisten; `payment/index.delete.ts` dari reconciliasi sprint-2) | Status selalu salah-map ke `pending`; jalur 412 memverifikasi transaksi yang salah | GET: cari registrasi dulu → probe remote hanya bila `payment.order_id` nyata (skip `MANUAL-*`). DELETE: rekonsiliasi pakai `order_id`. Grep konfirmasi tak ada pemanggil salah-id tersisa |
+| 2 | **TokenHelper RangeError** — `timingSafeEqual` melempar saat panjang buffer beda (token rusak/malformed) | Verifikasi OTP/token malformed → 500 alih-alih `false` | Length-guard sebelum compare |
+| 3 | **Sisa AG-C1 di register**: token lama tanpa `member._id` membuat `$setOnInsert` menyimpan `member:null` yang mengonsumsi kursi kuota | Peserta hantu permanen di event berkuota | Resolve memberId via NIM bila klaim kosong + strip key undefined sebelum upsert |
+| 4 | **forEach(async) committee answer collector** | Error validasi/upload hilang setelah response 200 | Loop for..of sekuensial (paritas dengan fix sisi participant) |
+| 5 | **15 titik JSON.parse tanpa guard** pada query/body (category/tags list endpoints ×6, news authors ×2, aspiration photo/video/doc, agenda photo/batch/video/doc signs, organizer post/put, qstash payload) | Body/query malformed → 500 + error laundering | Helper safeJsonParse(raw, fallback) diterapkan merata |
+
+### Diverifikasi bersih
+jwt.decode (0 sisa), gaya-Zod-v3 `.errors[]` (sudah difix sebelumnya), verifySignature midtrans (length-check benar), array-pipeline update lain (tidak ada).
+
+### Verifikasi
+**45/45 test hijau di 11 file** + syntax esbuild lulus untuk semua file berubah.

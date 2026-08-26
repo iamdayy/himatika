@@ -3,6 +3,7 @@ import { NewsModel } from "~~/server/models/NewsModel";
 import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqNewsQuery } from "~~/types/IRequestPost";
 import type { INewsResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 /**
  * Handles GET requests for retrieving newss.
@@ -59,12 +60,14 @@ export default defineEventHandler(
       // Set up query for multiple newss
       let query: any = {};
 
-      if (category && JSON.parse(category).length > 0) {
-        query.category = { $in: JSON.parse(category) };
+      const parsedCategory = safeJsonParse<string[]>(category, []);
+      if (Array.isArray(parsedCategory) && parsedCategory.length > 0) {
+        query.category = { $in: parsedCategory };
       }
 
-      if (tags && JSON.parse(tags).length > 0) {
-        query.tags = { $in: JSON.parse(tags) };
+      const parsedTags = safeJsonParse<string[]>(tags, []);
+      if (Array.isArray(parsedTags) && parsedTags.length > 0) {
+        query.tags = { $in: parsedTags };
       }
 
       if (search) {

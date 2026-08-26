@@ -3,6 +3,7 @@ import OrganizerModel from "~~/server/models/OrganizerModel";
 import { deleteFromR2, StoragePaths, uploadToR2 } from "~~/server/utils/storage";
 import { IOrganizer } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 const config = useRuntimeConfig();
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
@@ -76,7 +77,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         ? uploadedData.organizerData
         : uploadedData.organizerData.data.toString();
 
-    const body = JSON.parse(organizerDataStr) as IOrganizer;
+    const body = safeJsonParse<IOrganizer>(organizerDataStr, {} as IOrganizer);
 
     const councilPromises = body.council.map(async (council, index) => {
       const filePart = uploadedData[`council-image-${index}`];
