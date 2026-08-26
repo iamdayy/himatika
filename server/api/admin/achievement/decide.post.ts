@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import { PointModel } from "~~/server/models/PointModel";
 import { NewsModel } from "~~/server/models/NewsModel";
-import { CategoryModel } from "~~/server/models/CategoryModel";
+import CategoryModel from "~~/server/models/CategoryModel";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { ensureOrganizer } from "~~/server/utils/agendaAuth";
 import { IResponse } from "~~/types/IResponse";
