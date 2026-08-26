@@ -799,3 +799,28 @@ Alur capability-link tamu · refresh rotation + replay-revocation · rate limit 
 
 ### Klaim yang perlu konfirmasi produk sebelum dirilis ulang
 Export Excel audit-log (11.audit-logs:61) · default "10 Poin" pencapaian (kelola-pencapaian:34) · auto-logout pasca ganti password (:54 ganti-email-password) · menu "Riwayat Transaksi" dasbor (pembayaran:62) · Waitress (pdf-worker:12) · domain verifikasi signatures.* · nomor WhatsApp placeholder (bantuan-kontak:28).
+
+---
+
+## Dokumentasi himatika-docs — Perbaikan besar ✅ (commit 73aed92)
+
+### Perubahan yang dibuat (24 file, 19 modified, 2 added, 1 deleted)
+| Kategori | File | Isi perubahan |
+|---|---|---|
+| **SALAH→rewrite** | `3.panduan-tamu/1.akses-tamu.md` | Hapus model akun berpassword; dokumentasikan registrasi anonim + tautan capability-link |
+| **SALAH→fix** | `5.panduan-agenda/2.detail-agenda.md:30` | Roster komentar 403, bukan "publik bisa lihat" |
+| **SALAH→fix** | `5.panduan-agenda/3.halaman-daftar-panitia.md` | Hapus "Tampilan Pengunjung" (403) |
+| **SALAH→fix** | `5.panduan-agenda/4.halaman-daftar-peserta.md` | Hapus "Tampilan Pengunjung" (403) |
+| **SALAH→fix** | `7.referensi-teknis/3.integrasi-pdf-worker.md` | Secret JWT, route /api/sign/process, tambah hardening |
+| **SALAH→fix** | `2.panduan-anggota/8.aspirasi.md:105` | Semua anggota bisa buat (bukan hanya pengurus) |
+| **KADALUARSA→fix** | `7.referensi-teknis/1.arsitektur-sistem.md` | Nuxt 3→4, SMTP→Resend, auth rotation, +compress-video |
+| **KADALUARSA→fix** | `2.panduan-anggota/6.poin-dan-berjenjang.md` | Range statis → aturan on-read, badge=all-time, leaderboard=1h cache |
+| **KADALUARSA→fix** | `5.panduan-agenda/8.pendaftaran-panitia.md` | Hapus 3 screenshot rusak |
+| **STUB→expand** | `1.getting-started/4.news.md` | Isi konten nyata |
+| **Link fix** | 10 file | 17 internal links rusak (prefix, numeric, main-app routes) |
+| **Hygiene** | `.navigation.yml` ×2 | Tambah untuk seksi 4 & 7 |
+| **Hygiene** | `Dockerfile` | npm→bun |
+| **Hygiene** | `README.md` | Rewrite: struktur aktual, bun, Vercel |
+| **Hygiene** | `package-lock.json` | Dihapus (drift risk) |
+
+Build verification: `bun run build` exit 0 (sharp warning pre-existing, non-blocking).
