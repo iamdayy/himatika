@@ -755,3 +755,47 @@ Test baru `tests/server/points/points-module.test.ts` (**10 kasus**: authz admin
 
 ### Sisa modul poin (dokumentasi)
 Badge trigger otomatis + basis all-time vs semester + revocation (M7); leaderboard agregasi tunggal & tie-break (M5); kalender September/TZ (L4); dedup deduplikasi klaim identik (M3 lanjutan).
+
+---
+
+## Peta Relevansi Dokumentasi (`../himatika-docs`) ✅ analisa
+
+Repo: Docus/Nuxt Content v3, 51 halaman konten, 9 seksi. Build sehat, tanpa hardcoded localhost.
+
+### Rekap status per seksi
+| Seksi | File | RELEVAN | KADALUARSA | SALAH | STUB |
+|---|---:|---:|---:|---:|---:|
+| root | 3 | 3 | 0 | 0 | 0 |
+| 1.getting-started | 6 | 5 | 0 | 0 | 1 |
+| 2.panduan-anggota | 12 | 10 | 0 | 2 | 0 |
+| 3.panduan-tamu | 1 | 0 | 0 | 1 | 0 |
+| 4.panduan-admin | 11 | 11 | 0 | 0 | 0 |
+| 5.panduan-agenda | 11 | 7 | 1 | 3 | 0 |
+| 6.tanda-tangan-digital | 3 | 3 | 0 | 0 | 0 |
+| 7.referensi-teknis | 4 | 2 | 1 | 1 | 0 |
+| **Total** | **51** | **41** | **2** | **7** | **1** |
+
+### SALAH — mendeskripsikan sistem yang tidak ada (wajib rewrite)
+1. `3.panduan-tamu/1.akses-tamu.md` — model "akun tamu berpassword + Login Tamu + Dashboard Tamu" (:21,:25–57); realita: registrasi anonim hanya agenda Public dalam window, identitas = ObjectId di link email, akses capability-scoped.
+2. `5.panduan-agenda/2.detail-agenda.md:30–31`, `3.halaman-daftar-panitia.md:58–68`, `4.halaman-daftar-peserta.md:44–56` — klaim "pengunjung melihat daftar nama panitia/peserta"; realita: roster 403 kecuali committee/organizer.
+3. `7.referensi-teknis/3.integrasi-pdf-worker.md` — secret `HIMATIKA_JWT_SECRET` (aktual: shared JWT_SECRET + claim service=himatika-backend), route `/api/pdf/overlay-qr` tak eksis, `/api/sign/apply` → `/api/sign/process`; SSRF guard & sanitasi key belum didokumentasikan.
+4. `2.panduan-anggota/8.aspirasi.md:110` kontradiksi internal ("hanya pengurus bisa buat" vs alur member buat aspirasi :24).
+
+### KADALUARSA / STUB
+- `7.referensi-teknis/1.arsitektur-sistem.md`: Nuxt 3→4, SMTP→Resend, auth flow rotasi refresh belum disinggung.
+- `5.panduan-agenda/8.pendaftaran-panitia.md`: 3 screenshot dirujuk tapi hilang dari public/agenda.
+- `1.getting-started/4.news.md`: stub 12 baris tanpa isi.
+- `2.panduan-anggota/6.poin-dan-berjenjang.md`: range poin statis (10–50/100–300/50–500) ≠ aturan hitung aktual; badge "otomatis ambang minPoints" ≠ realita (evaluate tak pernah dipanggil, basis all-time manual approved); leaderboard diklaim live padahal cache 1 jam.
+
+### Konsistensi internal
+- 18 link internal rusak: 6× prefix `/agenda/*` (harusnya `/panduan-agenda/*`), 12× sisa prefix numerik (`/panduan-anggota/1.registrasi-akun` dll).
+- 6 link menuju route main-app (`/login`, `/contact`, `/gallery`, `/guest/register`) → harus absolut atau diganti.
+- 3 screenshot hilang: `/agenda/daftar-agenda-step-{2,3,5}.jpeg`.
+- `.navigation.yml` tidak ada untuk seksi 4 & 7 (judul sidebar fallback slug).
+- Dual lockfile: bun.lock + package-lock.json (drift risk); README masih boilerplate npm.
+
+### GAP dokumentasi fitur baru (belum tertulis di mana pun)
+Alur capability-link tamu · refresh rotation + replay-revocation · rate limit (signin 10/mnt/IP, otp 5/mnt/email, register 10/mnt/IP) + OTP consume-once/burnout · aturan immutable log approved & cap 10 klaim · spesifikasi payload QR 6 format + v2 HMAC · organizer gate DB incl staff · PDF worker hardening (SSRF guard/sanitasi key/video route) · leaderboard cache-1-jam + wajib login.
+
+### Klaim yang perlu konfirmasi produk sebelum dirilis ulang
+Export Excel audit-log (11.audit-logs:61) · default "10 Poin" pencapaian (kelola-pencapaian:34) · auto-logout pasca ganti password (:54 ganti-email-password) · menu "Riwayat Transaksi" dasbor (pembayaran:62) · Waitress (pdf-worker:12) · domain verifikasi signatures.* · nomor WhatsApp placeholder (bantuan-kontak:28).
