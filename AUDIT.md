@@ -700,3 +700,37 @@ Perbaikan yang lahir dari verifikasi ini:
 Homepage SSR · list/detail/tags/category publik · nearest auth · signin sukses/gagal · **guest: register→dup-409→payload-invalid-400→charge manual→method-allowlist-400→proof upload**· verify: member-403 / verifying-queue-403 / organizer-200 / cross-agenda-404 · roster gated 403 · scan: legacy+screen+plain+URL+v2-signed (200 lalu duplikat-409) + v2-palsu-400 · refresh: rotasi ✓ chain ✓ replay-401 ✓ · brute-force signin → 429.
 
 Catatan perilaku baru yang disengaja: replay refresh token lama kini mencabut SELURUH sesi user bersangkutan (reuse-detection) — trade-off standar industri.
+
+---
+
+## Deep-Dive Modul Poin Keaktifan Member ✅ (analisa — belum difix)
+
+Cakupan: PointModel/BadgeModel, /api/point/**, /api/me/achievement/**, /api/admin/achievement/**, badge evaluate, leaderboard, MemberModel.calculatePoints, konsumen frontend.
+
+### Cara kerja (end-to-end)
+Tidak ada saldo tersimpan — total poin dihitung saat dibaca dari 5 sumber: (1) peserta `visiting=true` × config.participant.point (+ panitia approved × committee.point) dalam window semester; (2) project published dalam window = 75pt; (3) aspirasi aktif = 50pt; (4) PointLog manual berstatus approved dalam window; (5) window semester disintesis dari enteredYear + kalender September hardcoded. Leaderboard = recompute cohort per semester (cache 1 jam). Badge = sum approved ALL-TIME (basis beda dari tampilan!).
+
+### Temuan (semua diverifikasi langsung)
+
+| ID | Severity | Temuan |
+|----|----------|--------|
+| PT-H1 | HIGH ✅ver | `GET /api/admin/achievement` **tanpa cek organizer** — member biasa bisa menarik seluruh riwayat poin + PII lengkap (populate("member") tanpa select: phone, address, birth). Respons juga array mentah tanpa envelope. |
+| PT-H2 | HIGH ✅ver | Member dapat **mengedit/menghapus log yang sudah APPROVED organizer**: PUT me-reset status→pending & memutar tanggal (pindah semester/leaderboard), DELETE menghapus jejak audit; badge yang sudah didapat tidak dicabut. |
+| PT-H3 | HIGH ✅ver | **Poin project selalu 0** di `/api/me` & `/api/member?NIM=`: populate memilih field `deadline` yang tak eksis (yang benar `date`) dan membuang `published` — calculatePoints menuntut keduanya. Angka dashboard/profile ≠ leaderboard. |
+| PT-H4 | HIGH ✅ver | `decide.post`: `action !== "reject"` ⇒ approve (typo = approve); `amount \|\| 0` menerima negatif/fraksional/kosong; tidak ada guard status pending (re-decide tanpa batas → duplikasi berita prestasi); read-modify-save non-atomik; tanpa notifikasi & AuditLog. |
+| PT-M1 | MEDIUM | Nol Zod + error laundering 500 di seluruh endpoint modul (403/400 tampil sebagai "Terjadi Kesalahan Server"). |
+| PT-M2 | MEDIUM | Amount negatif/fraksional diterima di point/add & decide; skema tanpa min:0/integer. |
+| PT-M3 | MEDIUM | Claim tanpa dedup/rate-limit per member; upload R2 tanpa rollback bila create gagal; content-length check bypassable via chunked. |
+| PT-M4 | MEDIUM | PointModel tanpa index sekunder (hot query by member/status/date = collection scan; virtual manualPoints jalan di tiap serialisasi member). |
+| PT-M5 | MEDIUM | Leaderboard: populate 6 relasi × semua member (autopopulate fan-out), tie-break nondeterministik, cache per-instance. |
+| PT-M6 | MEDIUM | Staff (dailyManagement.staff / department.staff) ditolak sebagai organizer karena UserPopulateOptions hanya populate 4 dari 6 virtual; sekaligus flag di JWT basi hingga 60 menit. |
+| PT-M7 | MEDIUM | Badge dead-ended: tak ada trigger pemanggilan evaluate, basis all-time ≠ per-semester, tanpa revocation; test badge stale. |
+| PT-M8 | MEDIUM | `/api/seed/local`: cukup login akun apa pun di non-production → mass-seed 50 user + respons membocorkan kredensial admin (`password123`). |
+| PT-M9 | MEDIUM | **3 implementasi hitung poin berbeda** (model vs inline member-list vs populate-transform) — multi-day agenda & project sudah menyebabkan angka berbeda antar permukaan. |
+| PT-L* | LOW | Guest crash 500 di 4 endpoint achievement; panitia+peserta dobel-poin agenda sama; default status PointModel "approved"; kalender September + TZ server; leaderboard tanpa pagination; e.message bocor; query.status tak divalidasi; soft-fail hapus R2. |
+
+### Positif
+claim.post memaksa amount=0 & status=pending server-side (tak bisa dipalsukan); ownership PUT/DELETE scoped by member; seed/local diblokir di production; leaderboard hanya untuk authenticated.
+
+### Prioritas remediasi
+1. Gate organizer + minimize populate (PT-H1) · 2. Approved log immutable utk member (PT-H2) · 3. Harden decide: Zod enum/amount/pending-only + atomic + notify + AuditLog (PT-H4) · 4. Fix populate project & ekstrak SATU helper hitung poin bersama (PT-H3+M9) · 5. Validasi amount + index PointModel (M2/M4) · 6. Dedup/rate-limit claim (M3) · 7. Authorize organizer via DB bukan klaim JWT (M6).
