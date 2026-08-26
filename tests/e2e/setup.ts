@@ -6,6 +6,12 @@ import { MemberModel } from '../../server/models/MemberModel'
 import CategoryModel from '../../server/models/CategoryModel'
 import { AgendaModel } from '../../server/models/AgendaModel'
 
+// Vitest v4 sets process.env.TEST = "true" for Jest compatibility.
+// nuxt-i18n-micro skips its plugin registration (including $ts/$t)
+// when process.env.TEST is truthy, breaking all SSR pages.
+// Delete it before the Nuxt build starts in setup({ server: true }).
+delete process.env.TEST
+
 beforeAll(async () => {
   const uri = process.env.NUXT_MONGODB_URI || 'mongodb://127.0.0.1:27017/himatika_test'
   if (mongoose.connection.readyState === 0) {
