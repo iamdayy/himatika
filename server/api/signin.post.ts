@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { z } from "zod";
@@ -138,9 +139,11 @@ export default defineEventHandler(async (event) => {
       expiresIn: "60m", // Stateless JWT with shorter expiry
     });
     
-    const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
-      expiresIn: "90d",
-    });
+    const refreshToken = jwt.sign(
+      { user: user._id, jti: crypto.randomBytes(16).toString("hex") },
+      getSecretKey(),
+      { expiresIn: "90d" }
+    );
 
     // Set up session (Only saves refreshToken)
     await setSession({

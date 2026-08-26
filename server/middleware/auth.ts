@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
     "/api/reset-password",
     "/api/otp",
     "/api/signout",
+    "/api/refresh",
     "/api/payment/notification",
     "/api/webhooks/qstash",
     "/api/sign/verify",
@@ -32,6 +33,7 @@ export default defineEventHandler(async (event) => {
     // verification queues, Zoom redirects, ...) requires authentication.
     /^\/api\/agenda$/,
     /^\/api\/agenda\/tags$/,
+    /^\/api\/category$/,
     /^\/api\/agenda\/[0-9a-f]{24}$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/committee$/i,
     // Capability-scoped: guests complete registration without a session,
@@ -54,6 +56,7 @@ export default defineEventHandler(async (event) => {
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/register\/[0-9a-f]{24}\/question\/answer$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/question\/answer\/[0-9a-f]{24}$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/[0-9a-f]{24}\/verify$/i,
+    /^\/api\/agenda\/[0-9a-f]{24}\/payment\/[0-9a-f]{24}\/proof$/i,
   ];
   const isGuestCapabilityRoute =
     event.method === "POST" &&

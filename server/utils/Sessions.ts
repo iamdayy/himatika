@@ -1,3 +1,4 @@
+import crypto, { randomBytes } from "crypto";
 import { H3Error } from "h3";
 import jwt from "jsonwebtoken";
 import { ISetSessionParams } from "~~/types/IParam";
@@ -156,8 +157,10 @@ export const refreshSession = async (payload: string) => {
     const newToken = signAccessToken(tokenPayload, String(session._id));
 
     // Rotate: the presented refresh token becomes invalid immediately.
+    // A random jti is REQUIRED — signing identical static claims yields a
+    // byte-identical JWT, which would make the rotation a no-op.
     session.refreshToken = jwt.sign(
-      { user: session.user, guest: session.guest },
+      { user: session.user, guest: session.guest, jti: randomBytes(16).toString("hex") },
       getSecretKey(),
       { expiresIn: "90d" }
     );

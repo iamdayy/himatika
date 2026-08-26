@@ -676,3 +676,27 @@ jwt.decode (0 sisa), gaya-Zod-v3 `.errors[]` (sudah difix sebelumnya), verifySig
 
 ### Verifikasi
 **45/45 test hijau di 11 file** + syntax esbuild lulus untuk semua file berubah.
+
+---
+
+## Verifikasi Fungsional Menyeluruh (Runtime E2E) ✅
+
+Metode: dev server asli di-boot (port terisolasi, Mongo fungsional terpisah), lalu **31 skenario HTTP nyata** dijalankan mencakup portal publik, autentikasi, alur tamu end-to-end, presensi QR, verifikasi pembayaran, dan probe keamanan.
+
+### Hasil: 30/31 PASS — 1 "FAIL" adalah perilaku keamanan by-design
+
+Perbaikan yang lahir dari verifikasi ini:
+
+| # | Temuan | Fix |
+|---|--------|-----|
+| 1 | **Rotasi refresh token = no-op**: `jwt.sign` deterministik atas klaim statis menghasilkan token identik byte-per-byte, sehingga "token baru" == token lama (berlaku juga di produksi!) | `jti` acak (randomBytes 16) pada refresh token signin & rotasi. Terverifikasi: rantai 5× refresh sukses, replay token lama → 401 + reuse-detection mencabut seluruh sesi |
+| 2 | `/api/refresh` tidak ada di whitelist → client memanggil refresh justru 401 saat access token mati | Masuk whitelist utama |
+| 3 | Roster peserta (`participant` GET) masih terbuka untuk user biasa (M5) | `ensureCommitteeOrOrganizer` + catch tidak lagi melaburkan 403 menjadi 500 |
+| 4 | Detail agenda: gate `canSee` membandingkan string vs array → 403 untuk anonim padahal Public | Normalisasi string/array |
+| 5 | `/api/category` (data referensi dropdown) 401 untuk tamu | Whitelist GET exact |
+| 6 | Upload bukti tamu terblokir middleware | Path proof masuk guest-capability patterns |
+
+### Matriks akhir (semua PASS)
+Homepage SSR · list/detail/tags/category publik · nearest auth · signin sukses/gagal · **guest: register→dup-409→payload-invalid-400→charge manual→method-allowlist-400→proof upload**· verify: member-403 / verifying-queue-403 / organizer-200 / cross-agenda-404 · roster gated 403 · scan: legacy+screen+plain+URL+v2-signed (200 lalu duplikat-409) + v2-palsu-400 · refresh: rotasi ✓ chain ✓ replay-401 ✓ · brute-force signin → 429.
+
+Catatan perilaku baru yang disengaja: replay refresh token lama kini mencabut SELURUH sesi user bersangkutan (reuse-detection) — trade-off standar industri.
