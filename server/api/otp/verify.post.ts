@@ -1,9 +1,20 @@
+import crypto from "crypto";
 import { z } from "zod";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { OTPModel } from "~~/server/models/OTPModel";
 import { UserModel } from "~~/server/models/UserModel";
 import { generateToken } from "~~/server/utils/TokenHelper";
+import { enforceRateLimit } from "~~/server/utils/rateLimit";
 import { IVerifyOTPResponse } from "~~/types/IResponse";
+
+const MAX_ATTEMPTS = 5;
+
+/** Constant-time comparison that tolerates differing input lengths. */
+const safeEqual = (a: string, b: string): boolean => {
+  const da = crypto.createHash("sha256").update(a).digest();
+  const db = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(da, db);
+};
 
 const verifyOTPSchema = z.object({
   email: z.string().email("Format email tidak valid"),
@@ -35,6 +46,10 @@ export default defineEventHandler(
       }
 
       const { code, email, type } = validation.data;
+
+      // Shared brute-force gate per email (cross-instance, Mongo-backed).
+      await enforceRateLimit(`otp-verify:${email}`, 5, 60_000);
+
       const otp = await OTPModel.findOne({ email, type });
 
       if (!otp) {
@@ -44,7 +59,27 @@ export default defineEventHandler(
         });
       }
 
-      if (otp.code !== code) {
+      // Consume-once: a code already used by its final step cannot be
+      // verified again (no replay within the TTL window).
+      if (otp.usedAt) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Kode OTP sudah pernah digunakan. Silakan minta kode baru.",
+        });
+      }
+
+      if (!safeEqual(otp.code, code)) {
+        const attempts = (otp.attempts ?? 0) + 1;
+        await OTPModel.updateOne({ _id: otp._id }, { $inc: { attempts: 1 } });
+        if (attempts >= MAX_ATTEMPTS) {
+          // Lockout: burn the code so further guesses are impossible.
+          await OTPModel.deleteOne({ _id: otp._id });
+          throw createError({
+            statusCode: 429,
+            statusMessage:
+              "Terlalu banyak percobaan salah. Kode telah diblokir — silakan minta kode OTP baru.",
+          });
+        }
         throw createError({
           statusCode: 400,
           statusMessage: t("otp_page.otp_not_match"),

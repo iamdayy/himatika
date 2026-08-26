@@ -51,6 +51,28 @@ export default defineEventHandler(async (event) => {
 
   const userDataInAgenda = participant || committee;
 
+  // Payment gate — mirrors the committee scanner flow (previously anyone
+  // could self-check-in without paying).
+  const roleConfig = committee
+    ? agenda.configuration?.committee
+    : agenda.configuration?.participant;
+  if (roleConfig?.pay && userDataInAgenda?.payment?.status !== "success") {
+    throw createError({
+      statusCode: 402,
+      message: "Presensi belum dapat dilakukan karena pembayaran belum terverifikasi.",
+    });
+  }
+
+  // Event time window (with a 12h buffer on each side) when dates are set.
+  const now = Date.now();
+  const BUFFER_MS = 12 * 60 * 60 * 1000;
+  if (agenda.date?.start && now < new Date(agenda.date.start).getTime() - BUFFER_MS) {
+    throw createError({ statusCode: 409, message: "Presensi belum dibuka — acara belum dimulai." });
+  }
+  if (agenda.date?.end && now > new Date(agenda.date.end).getTime() + BUFFER_MS) {
+    throw createError({ statusCode: 409, message: "Presensi sudah ditutup — acara telah berakhir." });
+  }
+
   if (userDataInAgenda?.visiting) {
     return {
       status: "already_checked_in",
@@ -59,17 +81,21 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  // 6. Update Database: Set visited = true
-  if (participant) {
-    participant.visiting = true;
-    participant.visitAt = new Date().toISOString();
-    participant.visitTime = new Date();
-    await participant.save();
-  } else if (committee) {
-    committee.visiting = true;
-    committee.visitAt = new Date().toISOString();
-    committee.visitTime = new Date();
-    await committee.save();
+  // 6. Update Database atomically — racing requests cannot both succeed.
+  const scanTime = new Date();
+  const Model: any = participant
+    ? (await import("~~/server/models/ParticipantModel")).ParticipantModel
+    : (await import("~~/server/models/CommitteeModel")).CommitteeModel;
+  const checkIn = await Model.updateOne(
+    { _id: userDataInAgenda._id, visiting: { $ne: true } },
+    { $set: { visiting: true, visitAt: scanTime.toISOString(), visitTime: scanTime } }
+  );
+  if (checkIn.modifiedCount === 0) {
+    return {
+      status: "already_checked_in",
+      message: "Anda sudah presensi sebelumnya",
+      visitedAt: userDataInAgenda.visitAt,
+    };
   }
 
   return {

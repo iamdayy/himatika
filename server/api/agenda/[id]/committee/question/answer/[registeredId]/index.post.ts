@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: "Question not found",
       });
     }
-    answers?.forEach(async (q) => {
+    for (const q of answers) {
       const questionId = q.questionId;
       const question = questions.find(
         (question) => question._id?.toString() === questionId
@@ -121,7 +121,7 @@ export default defineEventHandler(async (event) => {
           });
         }
       }
-    });
+    }
     return {
       statusCode: 200,
       statusMessage: "Answers submitted successfully",

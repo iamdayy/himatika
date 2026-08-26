@@ -53,7 +53,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (!roles.includes(eventDataDoc.configuration.canSee as string)) {
+    const canSee = [].concat(eventDataDoc.configuration.canSee ?? []) as string[];
+    if (!canSee.some((r) => roles.includes(r))) {
       throw createError({
         statusCode: 403,
         statusMessage: "You do not have permission to view this agenda",

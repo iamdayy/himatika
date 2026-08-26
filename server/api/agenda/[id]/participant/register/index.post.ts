@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { z } from "zod";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import Email from "~~/server/utils/mailTemplate";
 import { generateQRCode } from "~~/server/utils/qrcode";
@@ -80,7 +81,7 @@ export default defineEventHandler(
         });
       }
 
-      // Bypass permission check for guest registrations
+      const participantConfig = agenda.configuration?.participant;
       if (user) {
         const canRegister = await agenda.canMeRegisterAsParticipant(user as IUser);
         if (!canRegister) {
@@ -90,20 +91,28 @@ export default defineEventHandler(
               "Anda tidak memenuhi syarat pendaftaran untuk agenda ini berdasarkan aturan yang ditetapkan oleh panitia.",
           });
         }
+      } else {
+        // Anonymous guests may register ONLY when the event is explicitly
+        // public and the registration window has not closed. The old
+        // unconditional bypass is gone.
+        if (participantConfig?.canRegister !== "Public") {
+          throw createError({
+            statusCode: 403,
+            statusMessage: "Pendaftaran tanpa akun hanya tersedia untuk agenda publik.",
+          });
+        }
+        const now = new Date();
+        const until = participantConfig?.canRegisterUntil;
+        if (until?.end && now > new Date(until.end)) {
+          throw createError({
+            statusCode: 403,
+            statusMessage: "Periode pendaftaran untuk agenda ini telah ditutup.",
+          });
+        }
       }
 
       const { ParticipantModel } =
         await import("~~/server/models/ParticipantModel");
-
-      if (agenda.quota && agenda.quota > 0) {
-        const currentCount = await ParticipantModel.countDocuments({ agendaId: id });
-        if (currentCount >= agenda.quota) {
-          throw createError({
-            statusCode: 400,
-            statusMessage: "Mohon maaf, kuota peserta untuk agenda ini sudah penuh.",
-          });
-        }
-      }
 
       const { CommitteeModel } =
         await import("~~/server/models/CommitteeModel");
@@ -138,7 +147,23 @@ export default defineEventHandler(
             statusMessage: "Anda sudah terdaftar sebagai panitia atau peserta pada agenda ini.",
           });
         }
-        newParticipantData.member = user.member._id;
+        // Fresh access tokens minted at signin DO carry member._id now, but
+        // tokens issued before that fix do not — an undefined value would be
+        // serialized as null and poison the upsert (memberless participant
+        // consuming a quota seat). Resolve from NIM whenever necessary.
+        if ((user.member as any)._id) {
+          newParticipantData.member = (user.member as any)._id;
+        } else {
+          const { resolveMemberId } = await import("~~/server/utils/agendaAuth");
+          const resolved = await resolveMemberId(user);
+          if (!resolved) {
+            throw createError({
+              statusCode: 403,
+              statusMessage: "Akun member Anda tidak ditemukan. Silakan hubungi administrator.",
+            });
+          }
+          newParticipantData.member = resolved;
+        }
 
         // Auto update empty member fields
         const { memberUpdate } = await readBody(ev);
@@ -174,12 +199,32 @@ export default defineEventHandler(
         }
         newParticipantData.guest = g._id;
       } else if (guest) {
-        name = guest.fullName;
-        email = guest.email;
+        name = String(guest.fullName ?? "").trim();
+        email = String(guest.email ?? "").trim().toLowerCase();
+
+        // Validate the guest payload before touching the database.
+        const guestSchema = z.object({
+          fullName: z.string().trim().min(1),
+          email: z.string().email(),
+          phone: z.string().trim().min(1),
+          instance: z.string().optional(),
+          NIM: z.union([z.string(), z.number()]).transform(v => Number(v)).optional(),
+          semester: z.union([z.string(), z.number()]).transform(v => Number(v)).optional(),
+          class: z.string().optional(),
+          prodi: z.string().optional(),
+        });
+        const parsedGuest = guestSchema.safeParse(guest);
+        if (!parsedGuest.success) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: "Data tamu tidak lengkap atau tidak valid.",
+            data: parsedGuest.error.format(),
+          });
+        }
 
         const { MemberModel } = await import("~~/server/models/MemberModel");
         const existingMember = await MemberModel.findOne({
-          email: guest.email,
+          email,
         });
 
         if (existingMember) {
@@ -190,33 +235,35 @@ export default defineEventHandler(
           });
         }
 
-        let existingGuest = await GuestModel.findOne({ email: guest.email });
-        if (!existingGuest) {
-          // If not found, create a new guest safely
-          existingGuest = await GuestModel.create({
-            fullName: guest.fullName,
-            email: guest.email,
-            phone: guest.phone,
-            instance: guest.instance,
-            NIM: guest.NIM,
-            prodi: guest.prodi,
-            class: guest.class,
-            semester: guest.semester,
+        let existingGuest = await GuestModel.findOne({ email });
+        if (existingGuest) {
+          const isRegisteredParticipant = await ParticipantModel.exists({
+            agendaId: id,
+            guest: existingGuest._id,
           });
+          if (isRegisteredParticipant) {
+            throw createError({
+              statusCode: 409,
+              statusMessage: "Email ini sudah terdaftar sebagai peserta dalam agenda ini.",
+            });
+          }
         }
 
-
-        const isRegisteredParticipant = await ParticipantModel.exists({
-          agendaId: id,
-          guest: existingGuest._id,
-        });
-        if (isRegisteredParticipant) {
-          throw createError({
-            statusCode: 409,
-            statusMessage: "Email ini sudah terdaftar sebagai peserta dalam agenda ini.",
-          });
-        }
-        newParticipantData.guest = existingGuest._id;
+        // Create the guest only after every duplicate check passed, so failed
+        // registrations no longer leave orphan guest PII rows behind.
+        const guestDoc =
+          existingGuest ??
+          (await GuestModel.create({
+            fullName: parsedGuest.data.fullName,
+            email,
+            phone: parsedGuest.data.phone,
+            instance: parsedGuest.data.instance,
+            NIM: parsedGuest.data.NIM,
+            prodi: parsedGuest.data.prodi,
+            class: parsedGuest.data.class,
+            semester: parsedGuest.data.semester,
+          }));
+        newParticipantData.guest = guestDoc._id;
       } else {
         throw createError({
           statusCode: 400,
@@ -225,22 +272,65 @@ export default defineEventHandler(
         });
       }
 
-      // Create Participant Record (Atomic Upsert to prevent race conditions)
-      const query: any = { agendaId: id };
-      if (newParticipantData.member) query.member = newParticipantData.member;
-      if (newParticipantData.guest) query.guest = newParticipantData.guest;
+      // --- Capacity: atomic seat reservation (quota) ---
+      // The old code counted documents then inserted (read-check-write), and
+      // `quota` did not even exist on the schema, so capacity was never
+      // enforced. Reserve a seat atomically instead; release it if the
+      // registration subsequently fails.
+      const quota = agenda.quota ?? 0;
+      let seatReserved = false;
+      if (quota > 0) {
+        // Lazy-init the counter for agendas created before seatsTaken existed.
+        const currentCount = await ParticipantModel.countDocuments({ agendaId: id });
+        await AgendaModel.updateOne(
+          { _id: agenda._id, seatsTaken: null as any },
+          { $set: { seatsTaken: currentCount } }
+        );
 
-      const existingRecord = await ParticipantModel.findOneAndUpdate(
-        query,
-        { $setOnInsert: newParticipantData },
-        { upsert: true, new: false }
-      );
+        const reservation = await AgendaModel.updateOne(
+          { _id: agenda._id, $expr: { $lt: ["$seatsTaken", "$quota"] } },
+          { $inc: { seatsTaken: 1 } }
+        );
+        if (reservation.modifiedCount === 0) {
+          throw createError({
+            statusCode: 400,
+            statusMessage: "Mohon maaf, kuota peserta untuk agenda ini sudah penuh.",
+          });
+        }
+        seatReserved = true;
+      }
 
-      if (existingRecord) {
-        throw createError({
-          statusCode: 409,
-          statusMessage: "Anda sudah terdaftar sebagai peserta pada agenda ini (terdeteksi duplikasi otomatis).",
-        });
+      try {
+        // Strip undefined values — Mongoose/BSON would serialize them as null.
+        for (const key of Object.keys(newParticipantData)) {
+          if (newParticipantData[key] === undefined) delete newParticipantData[key];
+        }
+
+        // Create Participant Record (Atomic Upsert to prevent race conditions)
+        const query: any = { agendaId: id };
+        if (newParticipantData.member) query.member = newParticipantData.member;
+        if (newParticipantData.guest) query.guest = newParticipantData.guest;
+
+        const existingRecord = await ParticipantModel.findOneAndUpdate(
+          query,
+          { $setOnInsert: newParticipantData },
+          { upsert: true, new: false }
+        );
+
+        if (existingRecord) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: "Anda sudah terdaftar sebagai peserta pada agenda ini (terdeteksi duplikasi otomatis).",
+          });
+        }
+      } catch (error) {
+        if (seatReserved) {
+          await AgendaModel.updateOne(
+            { _id: agenda._id, seatsTaken: { $gt: 0 } },
+            { $inc: { seatsTaken: -1 } }
+          ).catch(() => {});
+        }
+        throw error;
       }
 
       // Send confirmation email via QStash

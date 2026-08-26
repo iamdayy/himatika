@@ -84,7 +84,11 @@ const itemsIsLogged = computed<DropdownMenuItem[][]>(() => [
     [{
         label: $ts('logout'),
         color: 'error',
-        onSelect: () => signOut({ callbackUrl: '/login' }),
+        onSelect: async () => {
+            // Wipe cached personal state before signing out.
+            useStatsStore().clear();
+            await signOut({ callbackUrl: '/login' });
+        },
         icon: 'i-heroicons-arrow-right-start-on-rectangle'
     }]
 ]) satisfies ComputedRef<DropdownMenuItem[][]>;

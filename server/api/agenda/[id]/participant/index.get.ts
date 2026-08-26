@@ -5,6 +5,7 @@ import { IGuest, IMember } from "~~/types";
 import { IReqAgendaParticipantQuery } from "~~/types/IRequestPost";
 import { IAgendaParticipantResponse } from "~~/types/IResponse";
 import { IParticipantSchema } from "~~/types/ISchemas";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 
 export default defineEventHandler(
   async (event): Promise<IAgendaParticipantResponse> => {
@@ -22,6 +23,9 @@ export default defineEventHandler(
           statusMessage: "Agenda not found",
         };
       }
+
+      // Roster contains member PII + form answers — committee/organizer only.
+      await ensureCommitteeOrOrganizer(id, event.context.user);
 
       const allParticipants = await ParticipantModel.find({ agendaId: id })
         .populate("member", "fullName NIM email")
@@ -70,10 +74,12 @@ export default defineEventHandler(
         },
       };
     } catch (error: any) {
-      return {
-        statusCode: 500,
-        statusMessage: error.statusMessage || error.message,
-      };
+      // Preserve intentional HTTP statuses (401/403/404) instead of
+      // laundering every failure into a 500.
+      throw createError({
+        statusCode: error.statusCode || 500,
+        statusMessage: error.statusMessage || error.message || "Internal Server Error",
+      });
     }
   }
 );

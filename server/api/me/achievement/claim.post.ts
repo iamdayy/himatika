@@ -6,8 +6,24 @@ import { IResponse } from "~~/types/IResponse";
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
-    if (!user)
-      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    if (!user?.member)
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Hanya member yang dapat mengklaim poin prestasi",
+      });
+
+    // Anti-spam: batasi klaim pending yang mengantre per member.
+    const openClaims = await PointModel.countDocuments({
+      member: user.member._id,
+      status: "pending",
+    });
+    if (openClaims >= 10) {
+      throw createError({
+        statusCode: 429,
+        statusMessage:
+          "Anda masih memiliki 10 klaim menunggu validasi. Tunggu proses organizer sebelum mengklaim lagi.",
+      });
+    }
 
     const body = await customReadMultipartFormData<IPointLog & { file: File }>(
       event,
@@ -57,6 +73,12 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     };
   } catch (e: any) {
     console.error(e);
-    throw createError({ statusCode: 500, statusMessage: e.message });
+    // Preserve intentional HTTP statuses (400/403/429) — previously every
+    // failure surfaced as a generic 500.
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || e.message || "Terjadi Kesalahan Server",
+      data: e.data,
+    });
   }
 });

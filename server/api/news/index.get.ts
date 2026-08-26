@@ -3,6 +3,7 @@ import { NewsModel } from "~~/server/models/NewsModel";
 import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IReqNewsQuery } from "~~/types/IRequestPost";
 import type { INewsResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 /**
  * Handles GET requests for retrieving newss.
@@ -59,12 +60,14 @@ export default defineCachedEventHandler(
       // Set up query for multiple newss
       let query: any = {};
 
-      if (category && JSON.parse(category).length > 0) {
-        query.category = { $in: JSON.parse(category) };
+      const parsedCategory = safeJsonParse<string[]>(category, []);
+      if (Array.isArray(parsedCategory) && parsedCategory.length > 0) {
+        query.category = { $in: parsedCategory };
       }
 
-      if (tags && JSON.parse(tags).length > 0) {
-        query.tags = { $in: JSON.parse(tags) };
+      const parsedTags = safeJsonParse<string[]>(tags, []);
+      if (Array.isArray(parsedTags) && parsedTags.length > 0) {
+        query.tags = { $in: parsedTags };
       }
 
       if (search) {
@@ -127,6 +130,9 @@ export default defineCachedEventHandler(
     maxAge: 60 * 15, // Cache selama 15 Menit
     name: "news-cache",
     swr: true,
-    getKey: (event) => event.path,
+    // Bucket pub/org terpisah: respons organizer (berisi draft/archived)
+    // tidak boleh menghanguskan cache yang dibaca anonim pada URL sama.
+    getKey: (event) =>
+      `${(event.context as any)?.organizer ? "org" : "pub"}:${event.path}`,
   }
 );

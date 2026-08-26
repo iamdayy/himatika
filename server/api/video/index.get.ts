@@ -4,6 +4,7 @@ import { validateSortField } from "~~/server/utils/validateQueryParams";
 import { IAgenda, IProject, IVideo, IVideoGrouped } from "~~/types";
 import { IReqVideoQuery } from "~~/types/IRequestPost";
 import { IVideoResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 type ISortable = {
   [key: string]: SortOrder;
 };

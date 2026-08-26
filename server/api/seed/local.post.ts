@@ -11,11 +11,22 @@ import { PointModel } from "~~/server/models/PointModel";
 import mongoose from "mongoose";
 
 export default defineEventHandler(async (event) => {
-  // Hanya jalankan seed di mode development/lokal
+  // Hanya jalankan seed di mode development/lokal, dan (bila SEED_TOKEN
+  // diset) wajib menyertakan header x-seed-token yang cocok. Tanpa ini,
+  // akun apa pun di staging bisa mem-seed kredensial admin yang diketahui.
   if (process.env.NODE_ENV === "production") {
     throw createError({
       statusCode: 403,
       statusMessage: "Forbidden: Seeding is not allowed in production",
+    });
+  }
+  const seedToken = process.env.SEED_TOKEN;
+  const provided = getHeader(event, "x-seed-token");
+  if (!seedToken || provided !== seedToken) {
+    throw createError({
+      statusCode: 403,
+      statusMessage:
+        "Forbidden: set env SEED_TOKEN and send header x-seed-token to seed",
     });
   }
 
@@ -194,7 +205,9 @@ export default defineEventHandler(async (event) => {
       statusMessage: "Comprehensive Local Seeding Completed Successfully",
       data: {
         username: "admin",
-        password: "password123",
+        // Password TIDAK dikembalikan — kredensial dev sudah diketahui
+        // lewat skrip seed; membocorkannya di respons hanya mempermudah
+        // penyalahgunaan di staging.
         membersCount: membersList.length,
         message: "Data lengkap beserta organizer, guests, agendas, dan projects telah disiapkan!"
       }

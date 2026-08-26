@@ -5,6 +5,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { PhotoModel } from "~~/server/models/PhotoModel";
 import { IMember, IPhoto } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
@@ -62,7 +63,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     const saved = await PhotoModel.create({
       on: aspiration._id,
       onModel: "Aspiration",
-      tags: photo.tags ? JSON.parse(photo.tags as string) : [],
+      tags: safeJsonParse(photo.tags, []),
       image: imageUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
     });

@@ -382,7 +382,7 @@ const color = computed(() => {
                     </template>
                     <div v-if="recentAgendas.length === 0" class="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
                         <UIcon name="i-heroicons-calendar" class="w-12 h-12 mb-2 opacity-50" />
-                        <p>{{ $ts('no_agenda_yet') || 'Belum ada agenda' }}</p>
+                        <p>{{ $ts('no_agenda_yet') }}</p>
                     </div>
                     <div v-else>
                         <UCarousel ref="carouselRef"
@@ -449,7 +449,7 @@ const color = computed(() => {
                     </template>
                     <div v-if="projectsMe.length === 0" class="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
                         <UIcon name="i-heroicons-code-bracket" class="w-12 h-12 mb-2 opacity-50" />
-                        <p>{{ $ts('no_project_yet') || 'Belum ada proyek' }}</p>
+                        <p>{{ $ts('no_project_yet') }}</p>
                     </div>
                     <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <UCard v-for="project, i in projectsMe.slice(0, 4)" :key="i" class="">

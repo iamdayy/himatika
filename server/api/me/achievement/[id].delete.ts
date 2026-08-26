@@ -5,8 +5,11 @@ import { IResponse } from "~~/types/IResponse";
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
-    if (!user)
-      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    if (!user?.member)
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Hanya member yang dapat menghapus klaim poin",
+      });
 
     const id = getRouterParam(event, "id");
     if (!id)
@@ -21,6 +24,16 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       throw createError({
         statusCode: 404,
         statusMessage: "Achievement not found",
+      });
+    }
+
+    // Same immutability rule as PUT: organizer-processed logs are audit
+    // records and cannot be removed by the member.
+    if (achievement.status !== "pending") {
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          "Poin yang sudah diproses organizer tidak dapat dihapus. Hubungi organizer untuk koreksi.",
       });
     }
 
@@ -41,6 +54,9 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       statusMessage: "Prestasi berhasil dihapus",
     };
   } catch (e: any) {
-    throw createError({ statusCode: 500, statusMessage: e.message });
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || e.message || "Terjadi Kesalahan Server",
+    });
   }
 });

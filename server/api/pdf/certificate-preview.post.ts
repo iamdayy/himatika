@@ -1,6 +1,7 @@
+import { pdfWorkerFetch } from "~~/server/utils/himatikaPdfWorker";
+
 export default defineEventHandler(async (event) => {
     try {
-        const config = useRuntimeConfig();
         const files = await readMultipartFormData(event);
         if (!files || files.length === 0) {
            throw createError({ statusCode: 400, statusMessage: "File is required" });
@@ -14,17 +15,10 @@ export default defineEventHandler(async (event) => {
         const blob = new Blob([uploadedFile.data as any], { type: uploadedFile.type });
         formData.append('file', blob, uploadedFile.filename);
 
-        const response = await fetch(`${config.pdf_worker_api_url}/api/pdf/certificate-preview`, {
+        const data = await pdfWorkerFetch<any>("/api/pdf/certificate-preview", {
             method: 'POST',
             body: formData
         });
-
-        if (!response.ok) {
-             const errorData = await response.json();
-             throw createError({ statusCode: response.status, statusMessage: errorData.error || "Worker Error" });
-        }
-
-        const data = await response.json();
         return data; // Worker returns { success, url, pdfUrl, width, height }
 
     } catch (error: any) {

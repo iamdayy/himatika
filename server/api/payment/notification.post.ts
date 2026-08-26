@@ -18,7 +18,11 @@ interface midtransNotificationBody {
 export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
   const body = await readBody<midtransNotificationBody>(ev);
   const { status_code, transaction_status, order_id, fraud_status } = body;
-  const registeredId = order_id.split(":")[0];
+  // order_id formats: "<registeredId>" (legacy), "<registeredId>:<suffix>"
+  // (anticipated but never produced), and the current
+  // "<registeredId>-<attempt timestamp>". ObjectIds contain neither
+  // separator, so splitting on the first one is safe.
+  const registeredId = order_id.split(/[:-]/)[0];
   try {
     // Midtrans sends status_code "200" for settlement and "202" for expire/deny/cancel.
     // Verify signature for ALL valid notification status codes.
@@ -69,10 +73,57 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
             };
         }
 
+        // Superseded-charge guard: ignore settlements for a charge this
+        // registration has moved past (locally cancelled / replaced by a new
+        // attempt or a manual transfer). Without this, a stale VA payment
+        // could resurrect a canceled registration.
+        const storedOrderId = participantDoc.payment?.order_id;
+        if (storedOrderId && storedOrderId !== body.order_id) {
+            console.warn(
+                `[midtrans-webhook] Ignoring settlement for superseded order ${body.order_id} on registration ${registeredId}`
+            );
+            return {
+                statusCode: 200,
+                statusMessage: "Order tidak sesuai dengan tagihan aktif; diabaikan",
+            };
+        }
+
+        // Amount reconciliation: the signature only proves Midtrans origin,
+        // not that this settlement belongs to the expected amount.
+        const expectedAmount = Number(participantDoc.payment?.amount ?? 0);
+        const paidAmount = parseFloat(body.gross_amount);
+        if (expectedAmount > 0 && Math.abs(expectedAmount - paidAmount) >= 1) {
+            console.error(
+                `[midtrans-webhook] Amount mismatch for ${registeredId}: expected ${expectedAmount}, got ${paidAmount}`
+            );
+            return {
+                statusCode: 200,
+                statusMessage: "Nominal pembayaran tidak sesuai tagihan; perlu verifikasi manual",
+            };
+        }
+
+        // Atomic transition — also serves as distributed idempotency:
+        // duplicate parallel notifications see modifiedCount === 0.
+        let updated = false;
         if (isCommittee) {
-            await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
+            const r = await CommitteeModel.updateOne(
+                { _id: registeredId, "payment.order_id": body.order_id, "payment.status": { $ne: "success" } },
+                updateDoc
+            );
+            updated = r.modifiedCount === 1;
         } else {
-            await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
+            const r = await ParticipantModel.updateOne(
+                { _id: registeredId, "payment.order_id": body.order_id, "payment.status": { $ne: "success" } },
+                updateDoc
+            );
+            updated = r.modifiedCount === 1;
+        }
+
+        if (!updated) {
+            return {
+                statusCode: 200,
+                statusMessage: "Notification already processed or order mismatch. Ignored",
+            };
         }
 
         const agenda = await AgendaModel.findById(participantDoc.agendaId);
@@ -150,25 +201,54 @@ export default defineEventHandler(async (ev): Promise<IResponse | IError> => {
       const { ParticipantModel } = await import("~~/server/models/ParticipantModel");
       const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
 
-      let result = await CommitteeModel.updateOne({ _id: registeredId }, updateDoc);
+      // Atomic guard: a settled ("success") payment must NEVER be downgraded
+      // by a late, duplicated, or out-of-order failure notification.
+      const notPaid = { "payment.status": { $ne: "success" } };
 
-      if (result.matchedCount === 0) {
+      const committeeResult = await CommitteeModel.updateOne(
+        { _id: registeredId, ...notPaid },
+        updateDoc
+      );
+
+      if (committeeResult.matchedCount === 0) {
           const participant = await ParticipantModel.findById(registeredId);
 
           if (participant) {
-              // Atomic Deletion for Guest
+              if (participant.payment?.status === "success") {
+                  // Already paid — ignore stale failure notifications entirely.
+                  return {
+                      statusCode: 200,
+                      statusMessage: "Pendaftaran sudah terbayar; notifikasi kegagalan diabaikan",
+                  };
+              }
               if (participant.guest) {
-                  await ParticipantModel.deleteOne({ _id: registeredId });
-                  
-                  // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
-                  const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
-                  if (otherParticipationsCount === 0) {
-                      const { GuestModel } = await import("~~/server/models/GuestModel");
-                      await GuestModel.deleteOne({ _id: participant.guest as any });
+                  // Atomic Deletion for Guest — guarded so a concurrent settlement
+                  // (or an already-paid record) is never deleted.
+                  const deletion = await ParticipantModel.deleteOne({
+                      _id: registeredId,
+                      ...notPaid,
+                  });
+
+                  if (deletion.deletedCount > 0) {
+                      // Release the quota seat this registration consumed.
+                      await AgendaModel.updateOne(
+                          { _id: participant.agendaId, quota: { $gt: 0 }, seatsTaken: { $gt: 0 } },
+                          { $inc: { seatsTaken: -1 } }
+                      );
+
+                      // Garbage Collection: Cek apakah guest ini memiliki pendaftaran di agenda lain
+                      const otherParticipationsCount = await ParticipantModel.countDocuments({ guest: participant.guest });
+                      if (otherParticipationsCount === 0) {
+                          const { GuestModel } = await import("~~/server/models/GuestModel");
+                          await GuestModel.deleteOne({ _id: participant.guest as any });
+                      }
                   }
               } else {
-                  // Atomic Update for Registered User
-                  await ParticipantModel.updateOne({ _id: registeredId }, updateDoc);
+                  // Atomic Update for Registered User — same terminal-state guard.
+                  await ParticipantModel.updateOne(
+                      { _id: registeredId, ...notPaid },
+                      updateDoc
+                  );
               }
           }
       }

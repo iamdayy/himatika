@@ -1,4 +1,5 @@
 import { IAgenda, ICommittee, IMember, IParticipant, IPoint, SignatureBox } from "~~/types";
+import { signTicketQR } from "~~/server/utils/qrToken";
 
 interface IWorkerResponse<T> {
   success?: boolean;
@@ -23,6 +24,30 @@ import jwt from "jsonwebtoken";
 
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
+
+/**
+ * Worker base URL WITHOUT the /api suffix — every call site then includes
+ * `/api/...` explicitly. This removes the split-brain where some callers
+ * built `${base}/pdf/...` (requires env ending in /api) while others built
+ * `${base}/api/...` (double prefix with that same env value).
+ */
+export function getWorkerBaseUrl(): string {
+  const config = useRuntimeConfig();
+  const raw = (config.pdf_worker_api_url || "http://localhost:5000").trim();
+  return raw.replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+}
+
+/**
+ * Authenticated fetch against the PDF worker. Attaches the short-lived
+ * service JWT required by the worker's global auth gate and resolves
+ * `path` (must start with /api/) against the normalized base URL.
+ */
+export async function pdfWorkerFetch<T>(path: string, options: any = {}): Promise<T> {
+  if (!path.startsWith("/api/")) {
+    throw new Error(`pdfWorkerFetch path must start with /api/: got ${path}`);
+  }
+  return fetchWithRetry<T>(`${getWorkerBaseUrl()}${path}`, options);
+}
 
 async function fetchWithRetry<T>(url: string, options: any, retries = MAX_RETRIES): Promise<T> {
   const config = useRuntimeConfig();
@@ -69,11 +94,8 @@ export const himatikaPdfWorker = {
       aspirations: { title: string; date: string | null; role: string; job: string; point: number }[];
     };
   }) {
-    const config = useRuntimeConfig();
-    const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
-
     try {
-      const response = await fetchWithRetry<IWorkerResponse<any>>(`${workerUrl}/pdf/activiness-letter`, {
+      const response = await fetchWithRetry<IWorkerResponse<any>>(`${getWorkerBaseUrl()}/api/pdf/activiness-letter`, {
         method: "POST",
         body: payload,
       });
@@ -99,9 +121,6 @@ export const himatikaPdfWorker = {
     amount: number;
     role: "participant" | "committee";
   }): Promise<Blob> {
-    const config = useRuntimeConfig();
-    const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
-
     try {
       const certConfig = payload.agenda.configuration?.certificate;
       if (certConfig && certConfig.active && certConfig.templateUrl) {
@@ -116,7 +135,7 @@ export const himatikaPdfWorker = {
           qr_data: `${config.public_url || 'https://himatika.org'}/verify/ticket/${payload.participant._id}`
         };
 
-        const response = await fetchWithRetry<IWorkerResponse<any>>(`${workerUrl}/pdf/certificate`, {
+        const response = await fetchWithRetry<IWorkerResponse<any>>(`${getWorkerBaseUrl()}/api/pdf/certificate`, {
           method: "POST",
           body: {
             templateUrl: certConfig.templateUrl,
@@ -133,7 +152,7 @@ export const himatikaPdfWorker = {
         return await pdfResponse.blob();
       }
 
-      const response = await fetchWithRetry<Blob>(`${workerUrl}/pdf/ticket`, {
+      const response = await fetchWithRetry<Blob>(`${getWorkerBaseUrl()}/api/pdf/ticket`, {
         method: "POST",
         body: payload,
         responseType: "blob",
@@ -154,11 +173,8 @@ export const himatikaPdfWorker = {
     signerName?: string; // nama member (dicetak di bawah QR)
     signerAs?: string;   // jabatan penandatangan
   }) {
-    const config = useRuntimeConfig();
-    const workerUrl = config.pdf_worker_api_url || "http://localhost:5000";
-
     try {
-      const response = await fetchWithRetry<IWorkerResponse<string>>(`${workerUrl}/sign/process`, {
+      const response = await fetchWithRetry<IWorkerResponse<string>>(`${getWorkerBaseUrl()}/api/sign/process`, {
         method: "POST",
         body: payload,
       });

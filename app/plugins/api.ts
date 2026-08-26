@@ -32,6 +32,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         // If no refresh token is available, logout immediately
         if (!refreshToken.value) {
+          useStatsStore().clear();
           await signOut({ callbackUrl: "/login", redirect: true });
           throw error;
         }
@@ -50,6 +51,7 @@ export default defineNuxtPlugin((nuxtApp) => {
             .catch(async (e) => {
               // If refresh fails, logout and throw existing error
               isRefreshing = null;
+              useStatsStore().clear();
               await signOut({ callbackUrl: "/login", redirect: true });
               throw error; // Throw the original 401 (or the refresh error 'e')
             });

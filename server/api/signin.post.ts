@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { z } from "zod";
@@ -5,6 +6,7 @@ import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { UserModel, UserPopulateOptions } from "~~/server/models/UserModel";
 import { MemberModel } from "../models/MemberModel";
 import { setSession } from "../utils/Sessions";
+import { enforceRateLimit } from "~~/server/utils/rateLimit";
 
 const loginSchema = z.object({
   username: z.string().optional(),
@@ -28,6 +30,10 @@ const getSecretKey = () => {
  */
 export default defineEventHandler(async (event) => {
   try {
+    // Shared (cross-instance) brute-force gate, keyed by source IP.
+    const ip = getRequestIP(event, { xForwardedFor: true }) || "unknown";
+    await enforceRateLimit(`signin:${ip}`, 10, 60_000);
+
     const rawBody = await readBody(event);
     const validation = loginSchema.safeParse(rawBody);
     const t = await useTranslationServerMiddleware(event);
@@ -101,6 +107,9 @@ export default defineEventHandler(async (event) => {
     if (user.member) {
       const m = user.member as any;
       memberPayload = {
+        // _id MUST be present: authorization checks across the agenda module
+        // compare user.member._id against registration.member.
+        _id: m._id,
         NIM: m.NIM,
         fullName: m.fullName,
         avatar: m.avatar,
@@ -130,9 +139,11 @@ export default defineEventHandler(async (event) => {
       expiresIn: "60m", // Stateless JWT with shorter expiry
     });
     
-    const refreshToken = jwt.sign({ user: user._id }, getSecretKey(), {
-      expiresIn: "90d",
-    });
+    const refreshToken = jwt.sign(
+      { user: user._id, jti: crypto.randomBytes(16).toString("hex") },
+      getSecretKey(),
+      { expiresIn: "90d" }
+    );
 
     // Set up session (Only saves refreshToken)
     await setSession({
@@ -140,8 +151,7 @@ export default defineEventHandler(async (event) => {
       user: user._id as Types.ObjectId,
     });
     
-    // Audit Log
-    const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
+    // Audit Log (reuses `ip` captured for the rate-limit key above)
     await AuditLogModel.create({
         action: 'LOGIN',
         user: user.member || user.guest || user._id,

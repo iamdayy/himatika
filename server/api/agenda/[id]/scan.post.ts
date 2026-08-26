@@ -1,25 +1,42 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
+import { isTicketQRValidV2 } from "~~/server/utils/qrToken";
 import { ICommittee, IGuest, IMember, IParticipant } from "~~/types";
 
 export default defineEventHandler(async (event) => {
   // 1. Validasi Auth & Input
   const user = event.context.user;
-  const payload = await readBody(event);
   const agendaId = getRouterParam(event, "id");
-  const { code } = payload; // code = registeredId (misal: "REG-123456")
+  const payload = await readBody(event);
+  const { code } = payload;
 
-  let id: string;
-  let role: string;
+  // Parse every QR format produced by the platform:
+  //   - "<id>.<hmac>" (v2, server-signed PDF tickets — bad signature = reject)
+  //   - JSON {id, role}            (legacy spec)
+  //   - JSON {a, p, t: "p"}        (participant ticket screen)
+  //   - JSON {a, c, t: "c"}        (committee ticket screen)
+  //   - plain "<ObjectId>"         (raw id)
+  //   - ".../verify/ticket/<ObjectId>" (PDF ticket URL)
+  let id: string | undefined;
+  if (isTicketQRValidV2(String(code ?? "")) === false) {
+    // v2-shaped payload with an invalid signature: reject instead of
+    // silently falling back to legacy acceptance.
+    throw createError({ statusCode: 400, message: "QR Code tidak valid (tanda tangan salah)" });
+  }
   try {
     const parsed = JSON.parse(code);
-    id = parsed.id;
-    role = parsed.role;
+    if (parsed && typeof parsed === "object") {
+      id = parsed.id ?? parsed.p ?? parsed.c;
+    }
   } catch {
-    throw createError({ statusCode: 400, message: "QR Code tidak valid (format JSON salah)" });
+    // Not JSON — fall through to plain/URL handling below.
+  }
+  if (!id) {
+    const match = String(code ?? "").match(/([0-9a-fA-F]{24})(?:\.[A-Za-z0-9_-]+)?\/?$/);
+    if (match) id = match[1];
   }
 
-  if (!code || !id || !role) {
+  if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
     throw createError({ statusCode: 400, message: "QR Code tidak valid" });
   }
 
@@ -67,21 +84,22 @@ export default defineEventHandler(async (event) => {
     // Atau sekadar warning di frontend nanti
   }
 
-  // 5. Cek apakah sudah presensi (visited)
-  if (participant.visiting) {
+  // 5. Update Status Presensi secara atomik — dua pemindai yang berlomba
+  // tidak lagi sama-sama berhasil dan mengirim email dobel.
+  const scanTime = new Date();
+  const Model: any = roleFound === "Participant" ? ParticipantModel : CommitteeModel;
+  const checkIn = await Model.updateOne(
+    { _id: participant._id, visiting: { $ne: true } },
+    { $set: { visiting: true, visitAt: scanTime.toISOString(), visitTime: scanTime } }
+  );
+  if (checkIn.modifiedCount === 0) {
     throw createError({
       statusCode: 409, // Conflict
       message: `Sudah check-in pada: ${new Date(
-        participant.visitAt || Date.now()
+        participant.visitAt || participant.visitTime || Date.now()
       ).toLocaleTimeString()}`,
     });
   }
-
-  // 6. Update Status Presensi
-  const scanTime = new Date();
-  participant.visiting = true;
-  participant.visitAt = scanTime.toISOString();
-  await participant.save();
 
   let memberData: IMember | IGuest | undefined;
   if (roleFound === "Participant") {

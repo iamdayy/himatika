@@ -2,17 +2,15 @@ import { Types } from "mongoose";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { QuestionModel } from "~~/server/models/QuestionModel";
 import { IQuestion } from "~~/types";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 
 export default defineEventHandler(async (event) => {
   try {
     const user = event.context.user;
-    if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
-    }
-    const { id } = event.context.params as { id: string };
+        const { id } = event.context.params as { id: string };
+
+    // Only committee/organizer of THIS agenda may modify its questionnaire.
+    await ensureCommitteeOrOrganizer(id as string, user);
     const body: IQuestion = {
       question: "New Question",
       type: "text",

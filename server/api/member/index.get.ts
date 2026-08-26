@@ -6,6 +6,7 @@ import { validateFilterByField, validateSortField } from "~~/server/utils/valida
 import { IAgenda, IMember, IOrganizer, IProject } from "~~/types";
 import { IReqMemberQuery } from "~~/types/IRequestPost";
 import { IMemberResponse } from "~~/types/IResponse";
+import { computeActivityPoints } from "~~/server/utils/pointCalculator";
 
 type ISortable = {
   [key: string]: SortOrder;
@@ -65,12 +66,8 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
         })
         .populate({
           path: "projects",
-          select: "title deadline description -_id",
-          transform: (doc: IProject) => ({
-            title: doc.title,
-            date: doc.date,
-            description: doc.description,
-          }),
+          // date + published are REQUIRED by the point calculation.
+          select: "title date description published -_id",
         })
         .populate({
           path: "organizersDailyManagement",
@@ -383,26 +380,29 @@ export default defineEventHandler(async (event): Promise<IMemberResponse> => {
           return d >= start && d <= end;
       };
 
-      const agendasCommittee = (raw.committeesData || []).filter((c: any) => c.approved && c.visiting && c.agendaId?.date && filterDate(c.agendaId?.date?.start));
-      const agendasMember = (raw.participantsData || []).filter((p: any) => p.visiting && p.agendaId?.date && filterDate(p.agendaId?.date?.start));
-      const projects = (raw.projects || []).filter((p: any) => p.published && filterDate(p.date));
-      const aspirations = (raw.aspirations || []).filter((a: any) => !a.deleted && !a.archived && filterDate(a.createdAt));
-      const manualPoints = (raw.manualPoints || []).filter((m: any) => filterDate(m.date));
-
-      const cPts = agendasCommittee.reduce((acc: number, c: any) => acc + (c.agendaId?.configuration?.committee?.point || 0), 0);
-      const pPts = agendasMember.reduce((acc: number, p: any) => acc + (p.agendaId?.configuration?.participant?.point || 0), 0);
-      const prjPts = projects.length * 75;
-      const aspPts = aspirations.length * 50;
-      const manPts = manualPoints.reduce((acc: number, m: any) => acc + (m.amount || 0), 0);
+      const pts = computeActivityPoints(
+        {
+          committeeAgendas: raw.committeesData || [],
+          participantAgendas: raw.participantsData || [],
+          projects: raw.projects || [],
+          aspirations: raw.aspirations || [],
+          manualLogs: (raw.manualPoints || []).map((m: any) => ({
+            status: m.status,
+            date: m.date,
+            amount: m.amount,
+          })),
+        },
+        { start, end }
+      );
 
       // Structure points as an array to match virtual mapping for frontend
       const pointArr = [{
           semester: semester,
           range: { start, end },
-          point: cPts + pPts + prjPts + aspPts + manPts
+          point: pts,
       }];
 
-      // Determine organizer role
+            // Determine organizer role
       let organizer: any = undefined;
       if (raw.orgCB?.length) organizer = { role: "Consideration Board", period: raw.orgCB[0].period };
       else if (raw.orgDC?.length) organizer = { role: "Coordinator Departement", period: raw.orgDC[0].period };

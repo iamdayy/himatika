@@ -5,6 +5,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { StoragePaths, uploadToR2 } from "~~/server/utils/storage";
 import { IDoc, IRequestSign } from "~~/types";
 import { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
@@ -64,13 +65,13 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
       on: agenda._id,
       onModel: "Agenda",
       no: no as string,
-      tags: tags ? JSON.parse(tags as string) : [],
+      tags: safeJsonParse(tags, []),
       doc: docUrl,
       uploader: (await getIdByNim(user.member.NIM)) as Types.ObjectId,
       signs:
         signs && typeof signs === "string"
           ? await Promise.all(
-              (JSON.parse(signs) as IRequestSign[]).map(async (request) => ({
+              (safeJsonParse<IRequestSign[]>(signs, [])).map(async (request) => ({
                 user: request.user
                   ? ((await findMemberByNim(
                       request.user as number

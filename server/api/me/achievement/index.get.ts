@@ -3,8 +3,11 @@ import { PointModel } from "~~/server/models/PointModel";
 export default defineEventHandler(async (event) => {
   try {
     const user = event.context.user;
-    if (!user) {
-      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    if (!user?.member) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Hanya member yang memiliki riwayat poin",
+      });
     }
 
     // Mengambil data achievement milik user yang sedang login, diurutkan dari yang terbaru
@@ -14,6 +17,9 @@ export default defineEventHandler(async (event) => {
 
     return achievements;
   } catch (e: any) {
-    throw createError({ statusCode: 500, statusMessage: e.message });
+    throw createError({
+      statusCode: e.statusCode || 500,
+      statusMessage: e.statusMessage || e.message || "Terjadi Kesalahan Server",
+    });
   }
 });

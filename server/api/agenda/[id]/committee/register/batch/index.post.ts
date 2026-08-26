@@ -1,17 +1,11 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { IReqCommitteeBatch } from "~~/types/IRequestPost";
 import { IResponse } from "~~/types/IResponse";
 
 export default defineEventHandler(async (event): Promise<IResponse> => {
   try {
     const user = event.context.user;
-    const organizer = event.context.organizer;
-    if (!user && !organizer) {
-      return {
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      };
-    }
     const { id } = event.context.params as { id: string };
     const body = await readBody<IReqCommitteeBatch>(event);
     if (!body || !body.committees || !body.field) {
@@ -27,6 +21,11 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
         statusMessage: "Agenda not found",
       };
     }
+
+    // Only committee members or organizers of THIS agenda may bulk-update.
+    // (Previously `!user && !organizer` allowed any authenticated user through.)
+    await ensureCommitteeOrOrganizer(agenda._id.toString(), user);
+
     const { CommitteeModel } = await import("~~/server/models/CommitteeModel");
     const committees = await CommitteeModel.find({ _id: { $in: body.committees }, agendaId: agenda._id });
     

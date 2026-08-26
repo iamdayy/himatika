@@ -1,6 +1,7 @@
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
+import { ensureCommitteeOrOrganizer } from "~~/server/utils/agendaAuth";
 import { himatikaPdfWorker } from "~~/server/utils/himatikaPdfWorker";
 import { sendWhatsappFile } from "~~/server/utils/whatsapp";
 
@@ -18,11 +19,21 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, statusMessage: "Agenda not found" });
     }
 
+    // Authorization: only committee or organizer of this agenda may verify payments
+    await ensureCommitteeOrOrganizer(agenda._id.toString(), event.context.user);
+
     let isCommittee = false;
 
-    // Use atomic update
+    // Use atomic update — scoped to THIS agenda so a committee member of one
+    // event cannot approve payments belonging to another event.
+    const updateFilter = {
+      _id: body.registeredId,
+      agendaId: id,
+      'payment.status': { $in: ['pending', 'verifying'] },
+      'payment.method': 'manual_transfer',
+    };
     const updateResult = await ParticipantModel.findOneAndUpdate(
-      { _id: body.registeredId, 'payment.status': 'pending', 'payment.method': 'manual_transfer' },
+      updateFilter,
       { $set: { 'payment.status': body.status } },
       { new: true }
     ).populate("member").populate("guest");
@@ -31,7 +42,7 @@ export default defineEventHandler(async (event) => {
 
     if (!registration) {
       const committeeUpdateResult = await CommitteeModel.findOneAndUpdate(
-        { _id: body.registeredId, 'payment.status': 'pending', 'payment.method': 'manual_transfer' },
+        updateFilter,
         { $set: { 'payment.status': body.status } },
         { new: true }
       ).populate("member");

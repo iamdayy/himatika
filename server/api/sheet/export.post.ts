@@ -1,5 +1,4 @@
-
-const config = useRuntimeConfig();
+import { pdfWorkerFetch } from "~~/server/utils/himatikaPdfWorker";
 
 interface DataRow {
   [key: string]: string | number | boolean | object | null;
@@ -14,22 +13,10 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     
-    // Call Worker
-    const response = await fetch(`${config.pdf_worker_api_url}/api/sheet/export`, {
+    const buffer = await pdfWorkerFetch<ArrayBuffer>("/api/sheet/export", {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
+        responseType: 'blob'
     });
-
-    if (!response.ok) {
-        throw new Error(`Worker Error: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
     const title = `${body.title}-${new Date()
       .toString()

@@ -97,6 +97,15 @@ export const paymentSchema = new Schema<IPaymentSchema>({
   qris_png: {
     type: String,
   },
+  // Nominal tagihan (harga tiket + biaya admin). Tanpa path ini Mongoose
+  // strict mode membuang nilai yang ditulis endpoint pembayaran.
+  amount: {
+    type: Number,
+    default: 0,
+  },
+  biller_code: {
+    type: String,
+  },
 });
 
 const reqruitmentSchema = new Schema<IReqruitmentSchema>({
@@ -490,6 +499,17 @@ const agendaSchema = new Schema<IAgendaSchema, IAgendaModel, IAgendaMethods>(
     configuration: {
       type: configurationSchema,
       default: {},
+    },
+    // Kuota peserta (kapasitas total). Tidak diset / 0 = tidak dibatasi.
+    quota: {
+      type: Number,
+      min: 0,
+    },
+    // Counter kursi terpakai; di-lazy-init dari hitungan nyata saat kuota
+    // pertama kali dipakai, lalu di-reserve secara atomik ($inc + $expr).
+    seatsTaken: {
+      type: Number,
+      min: 0,
     },
     certificates: {
       type: [Types.ObjectId],

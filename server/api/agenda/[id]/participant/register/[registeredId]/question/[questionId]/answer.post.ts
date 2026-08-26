@@ -18,14 +18,30 @@ export default defineEventHandler(async (event) => {
       });
     }
     const participant = await ParticipantModel.findById(registeredId);
-    if (!participant) {
+    if (!participant || String(participant.agendaId) !== id) {
       throw createError({
         statusCode: 404,
         statusMessage: "Participant not found",
       });
     }
+
+    // Scope the answer to THIS agenda's questionnaire and the exact question
+    // — previously findOne({answerer}) without a question filter made Q2
+    // overwrite Q1 whenever a single answer row existed.
+    const questions = (agenda.configuration.participant.questions ?? []) as Array<{
+      toString: () => string;
+    }>;
+    if (!questions.some((q) => q.toString() === questionId)) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Question not found in this agenda",
+      });
+    }
     let answerId: string | undefined = undefined;
-    const answer = await AnswerModel.findOne({ answerer: participant._id });
+    const answer = await AnswerModel.findOne({
+      answerer: participant._id,
+      question: questionId,
+    });
     if (!answer) {
       const newAnswer = await AnswerModel.create({
         question: questionId,

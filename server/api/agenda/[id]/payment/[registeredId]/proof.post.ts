@@ -1,4 +1,8 @@
 import { uploadToR2, StoragePaths } from "~~/server/utils/storage";
+import {
+  ensureCommitteeOrOrganizer,
+  userOwnsRegistration,
+} from "~~/server/utils/agendaAuth";
 import { AgendaModel } from "~~/server/models/AgendaModel";
 import { ParticipantModel } from "~~/server/models/ParticipantModel";
 import { CommitteeModel } from "~~/server/models/CommitteeModel";
@@ -55,6 +59,28 @@ export default defineEventHandler(async (event) => {
         statusCode: 400,
         statusMessage: "This registration does not use manual transfer",
       });
+    }
+
+    // Never drag a settled payment back into review.
+    if (registration.payment.status === "success" || registration.payment.status === "failed") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Payment is already processed",
+      });
+    }
+
+    // Ownership: only the registrant (or committee/organizer) may attach
+    // proof. Anonymous guests may submit for their own (guest) registration
+    // via the email-link id while it is still open for review.
+    const isOwner = await userOwnsRegistration(event.context.user, registration);
+    if (!isOwner) {
+      const anonymousGuestCapability =
+        !event.context.user &&
+        !!registration.guest &&
+        !["success", "failed"].includes(registration.payment.status);
+      if (!anonymousGuestCapability) {
+        await ensureCommitteeOrOrganizer(id, event.context.user);
+      }
     }
 
     if (!filePart.type?.startsWith("image/")) {

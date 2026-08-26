@@ -4,6 +4,7 @@ import { MemberModel } from "~~/server/models/MemberModel";
 import { NewsModel } from "~~/server/models/NewsModel";
 import { IReqNews } from "~~/types/IRequestPost";
 import type { IResponse } from "~~/types/IResponse";
+import { safeJsonParse } from "~~/server/utils/safeQuery";
 const config = useRuntimeConfig();
 
 /**
@@ -68,7 +69,7 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     }
 
     const authorsIds = body.authors
-      ? await getAuthorsIds(JSON.parse(body.authors as string))
+      ? await getAuthorsIds(safeJsonParse(body.authors, []))
       : [];
 
     // Update news properties

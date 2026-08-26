@@ -20,7 +20,22 @@ const generateOTPSchema = z.object({
     "Verify Email",
     "Verify Phone",
   ]),
-  link: z.string().min(1, "Link diperlukan"),
+  link: z
+    .string()
+    .min(1, "Link diperlukan")
+    .max(2048)
+    // Must be an app-relative path — never an absolute or protocol-relative URL.
+    // The OTP code is appended to this link inside the email, so an attacker
+    // controlled origin here would exfiltrate the code via phishing.
+    .refine(
+      (value) =>
+        value.startsWith("/") &&
+        !value.startsWith("//") &&
+        !value.includes("://") &&
+        !value.includes("\\") &&
+        !/[\u0000-\u001f\u007f]/.test(value),
+      { message: "Link harus berupa path relatif aplikasi" }
+    ),
 });
 
 export default defineEventHandler(

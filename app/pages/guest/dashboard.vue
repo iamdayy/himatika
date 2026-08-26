@@ -133,6 +133,8 @@ const { data: session, signOut } = useAuth();
 const guest = computed(() => (session.value as any)?.guest as IGuest | undefined);
 
 const handleLogout = async () => {
+    // Wipe cached personal state before signing out.
+    useStatsStore().clear();
     await signOut({ callbackUrl: '/login' });
 };
 

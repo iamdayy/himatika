@@ -1,3 +1,4 @@
+import crypto, { randomBytes } from "crypto";
 import { H3Error } from "h3";
 import jwt from "jsonwebtoken";
 import { ISetSessionParams } from "~~/types/IParam";
@@ -13,11 +14,15 @@ const getSecretKey = () => {
 };
 
 /**
- * Checks the validity of a session token (Stateless).
+ * Checks the validity of an access token (Stateless + Stateful).
+ *
+ * Tokens issued after the rotation upgrade carry a `sid` claim bound to a
+ * specific Session row, so revocation of one session no longer leaves every
+ * other access token valid (the old code only checked that ANY row existed
+ * for the user).
  */
 export const checkSession = async (payload: string) => {
   try {
-    // Verifikasi Signature JWT murni tanpa DB hit
     const decoded = jwt.verify(payload, getSecretKey()) as jwt.JwtPayload;
     if (!decoded || (!decoded.user && !decoded.guest)) {
       throw createError({
@@ -26,14 +31,29 @@ export const checkSession = async (payload: string) => {
       });
     }
 
-    // Stateful check to ensure the session hasn't been revoked
-    const query = decoded.user ? { user: decoded.user } : { guest: decoded.guest };
-    const sessionExists = await SessionModel.exists(query);
-    if (!sessionExists) {
-      throw createError({
-        statusMessage: "Session revoked",
-        statusCode: 401,
-      });
+    if (decoded.sid) {
+      // Bound to an exact session: revoked session == revoked token.
+      const session = await SessionModel.findOne({ _id: decoded.sid });
+      if (
+        !session ||
+        (decoded.user && String((session.user as any)?._id ?? session.user) !== String(decoded.user)) ||
+        (decoded.guest && String((session.guest as any)?._id ?? session.guest) !== String(decoded.guest))
+      ) {
+        throw createError({
+          statusMessage: "Session revoked",
+          statusCode: 401,
+        });
+      }
+    } else {
+      // Legacy tokens without `sid`: fall back to per-subject existence.
+      const query = decoded.user ? { user: decoded.user } : { guest: decoded.guest };
+      const sessionExists = await SessionModel.exists(query);
+      if (!sessionExists) {
+        throw createError({
+          statusMessage: "Session revoked",
+          statusCode: 401,
+        });
+      }
     }
 
     return {
@@ -55,8 +75,17 @@ export const checkSession = async (payload: string) => {
   }
 };
 
+const signAccessToken = (tokenPayload: Record<string, unknown>, sid?: string) =>
+  jwt.sign({ ...tokenPayload, ...(sid ? { sid } : {}) }, getSecretKey(), {
+    expiresIn: "60m",
+  });
+
 /**
- * Refreshes a session with heavy populate & lean payload injection.
+ * Refreshes a session: rotates the refresh token and issues a fresh access
+ * token bound (`sid`) to the rotated session row.
+ *
+ * Presenting a refresh token that is no longer stored is treated as reuse
+ * (theft signal): every session of that subject is revoked.
  */
 export const refreshSession = async (payload: string) => {
   try {
@@ -70,6 +99,11 @@ export const refreshSession = async (payload: string) => {
     });
 
     if (!session) {
+      // Reuse detection: this refresh token was rotated away already.
+      // Assume theft and kill every session for the subject.
+      await SessionModel.deleteMany(
+        decoded.user ? { user: decoded.user } : { guest: decoded.guest }
+      );
       throw createError({
         statusMessage: "Session not found or invalid",
         statusCode: 401,
@@ -86,7 +120,7 @@ export const refreshSession = async (payload: string) => {
         .populate(UserPopulateOptions);
 
       if (!user) throw createError({ statusCode: 401 });
-      
+
       username = user.username;
       if (user.member) {
         const m = user.member as any;
@@ -119,16 +153,24 @@ export const refreshSession = async (payload: string) => {
       username: username,
       member: memberPayload,
     };
-    
-    const newToken = jwt.sign(tokenPayload, getSecretKey(), {
-      expiresIn: "60m",
-    });
 
-    return { token: newToken, refreshToken: payload };
+    const newToken = signAccessToken(tokenPayload, String(session._id));
+
+    // Rotate: the presented refresh token becomes invalid immediately.
+    // A random jti is REQUIRED — signing identical static claims yields a
+    // byte-identical JWT, which would make the rotation a no-op.
+    session.refreshToken = jwt.sign(
+      { user: session.user, guest: session.guest, jti: randomBytes(16).toString("hex") },
+      getSecretKey(),
+      { expiresIn: "90d" }
+    );
+    await session.save();
+
+    return { token: newToken, refreshToken: session.refreshToken };
   } catch (error: any) {
     console.error("Error refreshing session:", error);
     throw createError({
-      statusMessage: error.message || "Failed to refresh session",
+      statusMessage: error.statusMessage || "Failed to refresh session",
       statusCode: 401,
     });
   }
@@ -166,11 +208,21 @@ export const exitSession = async (accessToken: string, refreshToken?: string) =>
     }
 
     if (accessToken) {
-      // Fallback: hapus semua session user jika refresh token tidak ditemukan
-      const decoded = jwt.decode(accessToken) as any;
-      if (decoded?.user) {
+      // Signature MUST be verified before trusting any claim — the previous
+      // jwt.decode() allowed anyone to revoke arbitrary users' sessions with
+      // a forged payload. Invalid signatures simply mean nothing to revoke.
+      let decoded: jwt.JwtPayload | null = null;
+      try {
+        decoded = jwt.verify(accessToken, getSecretKey()) as jwt.JwtPayload;
+      } catch {
+        return true;
+      }
+
+      if (decoded.sid) {
+        await SessionModel.deleteOne({ _id: decoded.sid });
+      } else if (decoded.user) {
         await SessionModel.deleteMany({ user: decoded.user });
-      } else if (decoded?.guest) {
+      } else if (decoded.guest) {
         await SessionModel.deleteMany({ guest: decoded.guest });
       }
     }

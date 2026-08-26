@@ -91,15 +91,30 @@ export default defineEventHandler(async (event): Promise<IResponse> => {
     await findMemberAndMarkRegister(member._id as Types.ObjectId, email);
     user.verified = true;
     await user.save();
-    await OTPModel.deleteOne({ email });
+
+    // Consume-once (atomic): only the FIRST final step may burn this OTP;
+    // concurrent replays of the same token lose the race here.
+    const consumed = await OTPModel.findOneAndUpdate(
+      { _id: otpData._id, usedAt: null },
+      { $set: { usedAt: new Date() } },
+      { new: true }
+    );
+    if (!consumed) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Kode OTP sudah pernah digunakan",
+      });
+    }
     return {
       statusCode: 200,
       statusMessage: `Pengguna berhasil diverifikasi, selamat datang di keluarga!, ${user.username}`,
     };
   } catch (error: any) {
-    return {
+    // Throw real HTTP errors — returning error bodies with HTTP 200 made
+    // every failure indistinguishable from success for clients.
+    throw createError({
       statusCode: error.statusCode || 500,
       statusMessage: error.statusMessage || "Terjadi Kesalahan Server",
-    };
+    });
   }
 });

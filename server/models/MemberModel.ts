@@ -6,6 +6,7 @@ import { ProjectModel } from "./ProjectModel";
 import { UserModel } from "./UserModel";
 import "./ParticipantModel";
 import "./CommitteeModel";
+import { computeActivityPoints } from "~~/server/utils/pointCalculator";
 interface MemberMethods {
   calculatePoints: (
     rangeDate: { start: Date; end: Date },
@@ -131,132 +132,41 @@ const memberSchema = new Schema<IMemberSchema, MemberModel, MemberMethods>(
  * This is a placeholder and should be implemented based on your logic.
  */
 memberSchema.methods.calculatePoints = function (rangeDate, semester): IPoint {
-  const agendasCommittee = (this.committeesData || [])
-    .filter((c: any) => c.approved === true && c.visiting === true)
-    .map((c: any) => c.agendaId)
-    .filter((agenda: IAgenda) => {
-      if (!agenda || !agenda.date) return false;
-      if (agenda.date.start < rangeDate.start) {
-        return false; // Skip agendas before the start date
-      }
-      if (agenda.date.end > rangeDate.end) {
-        return false; // Skip agendas after the end date
-      }
-      if (rangeDate.start && rangeDate.end) {
-        // If both start and end dates are provided, check if the agenda falls within this range
-        return (
-          agenda.date.start >= rangeDate.start &&
-          agenda.date.end <= rangeDate.end
-        );
-      }
-      return false;
-    });
+    // Single source of truth: shared calculator (see utils/pointCalculator).
+    const rows = {
+      committeeAgendas: this.committeesData || [],
+      participantAgendas: this.participantsData || [],
+      projects: this.projects || [],
+      aspirations: this.aspirations || [],
+      manualLogs: this.manualPoints || [],
+    };
+    const point = computeActivityPoints(rows, rangeDate);
 
-  const agendasMember = (this.participantsData || [])
-    .filter((p: any) => p.visiting === true)
-    .map((p: any) => p.agendaId)
-    .filter((agenda: IAgenda) => {
-      if (!agenda || !agenda.date) return false;
-      if (agenda.date.start < rangeDate.start) {
-        return false; // Skip agendas before the start date
-      }
-      if (agenda.date.end > rangeDate.end) {
-        return false; // Skip agendas after the end date
-      }
-      if (rangeDate.start && rangeDate.end) {
-        // If both start and end dates are provided, check if the agenda falls within this range
-        return (
-          agenda.date.start >= rangeDate.start &&
-          agenda.date.end <= rangeDate.end
-        );
-      }
-      return false;
-    });
-
-  const committeesAgenda =
-    agendasCommittee?.reduce(
-      (acc: number, agenda: IAgenda) =>
-        acc + agenda.configuration.committee.point,
-      0
-    ) || 0;
-  const membersAgenda =
-    agendasMember?.reduce(
-      (acc: number, agenda: IAgenda) =>
-        acc + agenda.configuration.participant.point,
-      0
-    ) || 0;
-  const projects = (this.projects || []).filter((project) => {
-    if (!project.published) {
-      return false; // Skip unpublished projects
-    }
-    if (!project.date) {
-      return false; // Skip projects without a date
-    }
-    const projectDate = new Date(project.date);
-    if (projectDate >= rangeDate.start && projectDate <= rangeDate.end) {
-      return true; // Include projects that fall within the date range
-    }
-    // If both start and end dates are provided, check if the project
-  });
-  const projectsPoint =
-    projects.reduce((acc: number, project) => acc + 75, 0) || 0;
-  const aspirations = (this.aspirations || []).filter((asp) => {
-    if (asp.deleted) {
-      return false; // Skip deleted aspirations
-    }
-    if (asp.archived) {
-      return false; // Skip archived aspirations
-    }
-    const aspDate = new Date(asp.createdAt!);
-    if (
-      asp.createdAt &&
-      aspDate >= rangeDate.start &&
-      aspDate <= rangeDate.end
-    ) {
-      return true; // Include aspirations that fall within the date range
-    }
-  });
-  const aspirationsPoint =
-    aspirations.reduce((acc: number, asp) => acc + 50, 0) || 0;
-
-  // Ambil dari virtual 'manualPoints'
-  const manualPointsLog = (this.manualPoints || []).filter((p: IPointLog) => {
-    // 1. Cek Tanggal (Semester)
-    if (!p.date) return false;
-    const pDate = new Date(p.date);
-    const isDateValid = pDate >= rangeDate.start && pDate <= rangeDate.end;
-
-    // 2. Cek Status (WAJIB APPROVED)
-    const isApproved = p.status === "approved";
-
-    return isDateValid && isApproved;
-  });
-
-  const manualTotal =
-    manualPointsLog.reduce((acc: number, p: IPointLog) => acc + (p.amount || 0), 0) ||
-    0;
-
-  const total =
-    committeesAgenda +
-    membersAgenda +
-    projectsPoint +
-    aspirationsPoint +
-    manualTotal;
-  return {
-    semester: semester,
-    range: rangeDate,
-    point: total,
-    activities: {
-      agendas: {
-        committees: agendasCommittee.length,
-        participants: agendasMember.length,
+    return {
+      semester: semester,
+      range: rangeDate,
+      point,
+      activities: {
+        agendas: {
+          committees: rows.committeeAgendas.filter(
+            (c: any) => c.approved === true && c.visiting === true && agendaInWindow(c.agendaId, rangeDate)
+          ).length,
+          participants: rows.participantAgendas.filter(
+            (p: any) => p.visiting === true && agendaInWindow(p.agendaId, rangeDate)
+          ).length,
+        },
+        projects: rows.projects.filter(
+          (p: any) => p.published === true && dateInWindow(p.date, rangeDate)
+        ).length,
+        aspirations: rows.aspirations.filter(
+          (a: any) => !a.deleted && !a.archived && dateInWindow(a.createdAt, rangeDate)
+        ).length,
+        manualPoints: rows.manualLogs.filter(
+          (m: any) => m.status === "approved" && dateInWindow(m.date, rangeDate)
+        ).length,
       },
-      projects: projects?.length || 0,
-      aspirations: aspirations?.length || 0,
-      manualPoints: manualPointsLog.length,
-    },
-  };
-};
+    };
+  };;
 
 /**
  * Virtual field to get the projects associated with the member.

@@ -1,6 +1,6 @@
 # Himatika - Student Association Platform
 
-A comprehensive web application built with **Nuxt 3** for managing the Himatika student association. This platform includes features for event management, news distribution, member profiles, and administrative tools.
+A comprehensive web application built with **Nuxt 4** for managing the Himatika student association. This platform includes features for event management, news distribution, member profiles, and administrative tools.
 
 ## 🚀 Features
 
@@ -17,22 +17,21 @@ A comprehensive web application built with **Nuxt 3** for managing the Himatika 
   - **PDF Generation**: Auto-generate tickets and documents.
   - **QR Codes**: For event attendance and ticketing.
   - **Payments**: Integrated with **Midtrans**.
-  - **Media**: Image uploads (S3/R2/Vercel Blob) and video playback.
-  - **Localization**: Support for ID, EN, and AR.
+   - **Media**: Image uploads (S3/R2) and video playback.
+   - **Localization**: Support for ID (default) and EN.
 
 ## 🛠 Tech Stack
 
-- **Framework**: [Nuxt 3](https://nuxt.com/)
+- **Framework**: [Nuxt 4](https://nuxt.com/)
 - **Language**: TypeScript
 - **Database**: MongoDB (via [Mongoose](https://mongoosejs.com/))
 - **UI Framework**: [Nuxt UI](https://ui.nuxt.com/) (Tailwind CSS)
 - **State Management**: [Pinia](https://pinia.vuejs.org/)
 - **Authentication**: [@sidebase/nuxt-auth](https://sidebase.io/nuxt-auth)
-- **File Storage**: AWS S3 / Cloudflare R2 / Vercel Blob
+- **File Storage**: AWS S3 / Cloudflare R2 (PDF documents via the separate `himatika-pdf-worker` service)
 - **Utilities**:
-  - `pdf-lib` for PDF handling
-  - `sheetjs` (exceljs) for data export
   - `nuxt-i18n-micro` for internationalization
+  - `zod` for request validation
 
 ## 📦 Setup & Installation
 
@@ -43,18 +42,14 @@ A comprehensive web application built with **Nuxt 3** for managing the Himatika 
    cd himatika
    ```
 
-2. **Install dependencies**:
+2. **Install dependencies** (Bun is the only supported package manager — the repo ships `bun.lock` and CI uses Bun):
 
    ```bash
-   npm install
-   # or
-   pnpm install
-   # or
    bun install
    ```
 
 3. **Environment Setup**:
-   Create a `.env` file in the root directory. You can copy the `.env.example` if available, or ensure the following variables are set:
+   Create a `.env` file in the root directory. Copy `.env.example` and fill in the values (see that file for the full variable list).
 
    ```env
    # App & Security
@@ -66,40 +61,35 @@ A comprehensive web application built with **Nuxt 3** for managing the Himatika 
    NODE_ENV="development"
 
    # Database
-   HIMATIKA_MONGODB_URI="mongodb+srv://..."
-   DBNAME="himatika_db"
+   HIMATIKA_MONGODB_URI="mongodb://localhost:27017"
+   DBNAME="himatika"
 
-   # Authentication
-   NEXTAUTH_URL="http://localhost:3000"
-   NEXTAUTH_SECRET="your_nextauth_secret"
-
-   # Storage (Choose your provider credentials)
-   BLOB_READ_WRITE_TOKEN="..."
-   BLOB_URI="..."
+   # Storage (Cloudflare R2)
    R2_ACCOUNT_ID="..."
    R2_ACCESS_KEY_ID="..."
    R2_SECRET_ACCESS_KEY="..."
    R2_BUCKET_NAME="..."
    R2_PUBLIC_DOMAIN="..."
 
-   # Mail (Mailtrap)
-   MAILTRAP_TOKEN="..."
-   MAILTRAP_DOMAIN="..."
+   # Mail (Resend)
+   RESEND_API_KEY="..."
+   RESEND_FROM="..."
 
    # Payment (Midtrans)
    MIDTRANS_URL="https://app.sandbox.midtrans.com/snap/v1/transactions"
    MIDTRANS_CLIENT_KEY="..."
    MIDTRANS_SERVER_KEY="..."
 
-   # Recaptcha
-   RECAPTCHA_SITE_KEY="..."
-   RECAPTCHA_SECRET_KEY="..."
+   # Encryption (openssl rand -hex 32) — rotating it makes old encrypted data unreadable
+   ENCRYPTION_KEY="..."
    ```
+
+   See `.env.example` for additional optional variables (reCAPTCHA, Google OAuth, QStash, WAHA, PDF worker).
 
 4. **Run Development Server**:
 
    ```bash
-   npm run dev
+   bun run dev
    ```
 
    Access the app at `http://localhost:3000`.
@@ -109,19 +99,19 @@ A comprehensive web application built with **Nuxt 3** for managing the Himatika 
 The application uses different rendering strategies (`routeRules`) for optimization:
 
 - **SPA**: Dashboard, Profile, Admin pages.
-- **SWR**: News, Agendas.
-- **Prerender**: Auth pages (Login, Register).
+- **SSR + SWR**: News, Agendas.
+- **SPA**: Auth pages (Login, Register).
 
-To build for production:
+To build for production (memory-hungry — the script raises Node's heap automatically):
 
 ```bash
-npm run build
+bun run build
 ```
 
 Preview the production build locally:
 
 ```bash
-npm run preview
+bun run preview
 ```
 
 ## 📂 Project Structure
