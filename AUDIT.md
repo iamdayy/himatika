@@ -639,3 +639,18 @@ Sisa: HMAC utk QR layar (butuh mekanisme distribusi secret ke klien — tidak pr
 ## Eksekusi Sprint 6 — Tindak Lanjut Deep-Dive ✅ (lihat bagian "Deep-Dive Modul Agenda")
 
 Commit `e141bd1`: AG-C1 root fix (member._id di klaim signin + validasi create committee), scan QR multi-format + atomik (6 test), guest capability whitelist POST + hardening handler (bypass lama dihapus, Zod, anti-orphan), authz 12 endpoint question builder + scoping PUT, perbaikan 4 endpoint lookup rusak, gate verifying queue. Verifikasi: 36/36 test hijau (9 file).
+
+---
+
+## Hotfix Runtime (laporan pengguna): rate limiter Mongoose 9
+
+**Gejala**: `Cannot pass an array to query updates unless the updatePipeline option is set` saat login.
+
+**Akar**: `enforceRateLimit` memakai aggregation-pipeline update (array) tanpa opt-in yang diwajibkan Mongoose 9; plus upsert bertabrakan E11000 saat budget habis.
+
+**Perbaikan** (`server/utils/rateLimit.ts`):
+- Opsi `updatePipeline: true` pada findOneAndUpdate.
+- E11000 ditangkap: racer pertama-kali-masuk diberi satu kesempatan increment sisa slot, sisanya 429.
+- `createError` diimpor eksplisit dari `h3` (auto-import tak tersedia di luar runtime Nitro).
+
+**Test regresi baru**: `tests/server/utils/rate-limit.test.ts` (3 kasus — budget normal+habis, 429, restart window kedaluwarsa) berjalan melawan Mongo nyata. Verifikasi: 3/3 hijau.

@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { createError } from "h3";
 import { IResponse } from "~~/types/IResponse";
 
 /**
@@ -42,29 +43,48 @@ export const enforceRateLimit = async (
   windowMs: number
 ): Promise<void> => {
   const windowStart = new Date(Date.now() - windowMs);
-  const doc = await RateLimitModel.findOneAndUpdate(
-    {
-      _id: key,
-      $or: [{ updatedAt: { $lt: windowStart } }, { count: { $lt: max } }],
-    },
-    [
-      {
-        $set: {
-          // Fresh window restarts at 1; otherwise increment.
-          count: {
-            $cond: [{ $gt: ["$updatedAt", windowStart] }, { $add: ["$count", 1] }, 1],
-          },
-          updatedAt: "$$NOW",
-        },
-      },
-    ],
-    { upsert: true, returnDocument: "after" }
-  );
-
-  if (!doc) {
-    throw createError({
+  const rejected = () =>
+    createError({
       statusCode: 429,
       statusMessage: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
     });
+
+  try {
+    const doc = await RateLimitModel.findOneAndUpdate(
+      {
+        _id: key,
+        $or: [{ updatedAt: { $lt: windowStart } }, { count: { $lt: max } }],
+      },
+      [
+        {
+          $set: {
+            // Fresh window restarts at 1; otherwise increment.
+            count: {
+              $cond: [{ $gt: ["$updatedAt", windowStart] }, { $add: ["$count", 1] }, 1],
+            },
+            updatedAt: "$$NOW",
+          },
+        },
+      ],
+      // Mongoose 9 requires explicit opt-in for aggregation-pipeline updates.
+      { upsert: true, returnDocument: "after", updatePipeline: true }
+    );
+
+    if (!doc) throw rejected();
+    return;
+  } catch (error: any) {
+    // Budget exhausted: the filter didn't match and upsert collided with the
+    // existing row (E11000). Two racers losing the very first insert also
+    // land here — give them one chance to consume a remaining slot.
+    const isDupKey =
+      error?.code === 11000 || error?.codeName === "DuplicateKey";
+    if (!isDupKey) throw error;
+
+    const lateIncrement = await RateLimitModel.updateOne(
+      { _id: key, updatedAt: { $gt: windowStart }, count: { $lt: max } },
+      { $inc: { count: 1 } }
+    );
+    if (lateIncrement.modifiedCount === 1) return;
+    throw rejected();
   }
 };
