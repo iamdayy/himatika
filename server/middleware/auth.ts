@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const whitelist = [
     "/api/auth",
     "/api/signin",
-    "/api/signup",
+    "/api/register",
     "/api/reset-password",
     "/api/otp",
     "/api/signout",
@@ -17,7 +17,10 @@ export default defineEventHandler(async (event) => {
     "/api/payment/notification",
     "/api/webhooks/qstash",
     "/api/sign/verify",
-    "/api/ip"
+    "/api/ip",
+    "/api/member/verifyNIM",
+    "/api/user/verify",
+    "/api/storage/webhook-media",
   ];
 
   // GET-only whitelist. NOTE: entries are prefix-matched, so each pattern must
@@ -40,6 +43,32 @@ export default defineEventHandler(async (event) => {
     // access is bounded to their own registration record / answers.
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/me$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/question\/answer\/[0-9a-f]{24}$/i,
+    // Carousel: homepage slider images.
+    /^\/api\/carousel$/,
+    // Organizer: team/about page data.
+    /^\/api\/organizer$/,
+    /^\/api\/organizer\/now$/,
+    // Project: public portfolio listing.
+    /^\/api\/project(?:\/|$)/,
+    /^\/api\/project\/tags$/,
+    // Video: public gallery.
+    /^\/api\/video(?:\/|$)/,
+    /^\/api\/video\/tags$/,
+    // Photo: public gallery.
+    /^\/api\/photo(?:\/|$)/,
+    /^\/api\/photo\/tags$/,
+    // Doc: public document listing.
+    /^\/api\/doc(?:\/|$)/,
+    /^\/api\/doc\/tags$/,
+    // Enscryption: public key listing.
+    /^\/api\/enscryption(?:\/|$)/,
+    /^\/api\/enscryption\/tags$/,
+    // Gamification: badge definitions.
+    /^\/api\/gamification\/badges$/,
+    // Agenda: nearest upcoming event.
+    /^\/api\/agenda\/nearest$/,
+    // Storage: R2 file proxy (SSRF-protected).
+    /^\/api\/storage\/proxy$/,
   ];
 
   const isWhitelisted = whitelist.some(w => path.startsWith(w));
@@ -57,6 +86,9 @@ export default defineEventHandler(async (event) => {
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/question\/answer\/[0-9a-f]{24}$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/[0-9a-f]{24}\/verify$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/payment\/[0-9a-f]{24}\/proof$/i,
+    // News: anonymous commenting and liking (handlers gracefully handle missing user).
+    /^\/api\/news\/[0-9a-f]{24}\/comments$/i,
+    /^\/api\/news\/[0-9a-f]{24}\/likes$/i,
   ];
   const isGuestCapabilityRoute =
     event.method === "POST" &&
