@@ -2,8 +2,8 @@
  * Unit tests for session lifecycle: sid-bound access tokens, refresh-token
  * rotation, reuse detection, and signature-verified signout.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../server/models/SessionModel', () => ({
   SessionModel: {
@@ -107,16 +107,65 @@ describe('Sessions', () => {
     expect(decoded.user).toBe(USER_ID)
   })
 
-  it('reuse of a rotated refresh token revokes every session of the user', async () => {
+  it('reuse inside the grace window returns fresh tokens without revoking', async () => {
     const { SessionModel } = await import('../../../server/models/SessionModel')
     const { refreshSession } = await import('../../../server/utils/Sessions')
 
+    const oldRefresh = jwt.sign({ user: USER_ID }, SECRET, { expiresIn: '90d' })
+    const currentRefresh = jwt.sign({ user: USER_ID }, SECRET, { expiresIn: '90d' })
+    const rotatedDoc: any = {
+      _id: 'session-abc',
+      user: USER_ID,
+      guest: null,
+      refreshToken: currentRefresh,
+      previousRefreshToken: oldRefresh,
+      rotatedAt: new Date(),
+    }
+    vi.mocked(SessionModel.findOne).mockImplementation(async (query: any) => {
+      if (query?.refreshToken) return null // already rotated away
+      if (query?.previousRefreshToken === oldRefresh) return rotatedDoc
+      return null
+    })
+
+    // Heavy populate path for the grace branch
+    const UserModelMod = await import('../../../server/models/UserModel')
+    ;(UserModelMod.UserModel as any).findById = vi.fn().mockReturnValue({
+      populate: vi.fn().mockResolvedValue({
+        _id: USER_ID,
+        username: 'u',
+        member: { _id: 'm1', NIM: 123, fullName: 'Test', organizer: null },
+        guest: null,
+      }),
+    })
+
+    const result = await refreshSession(oldRefresh)
+
+    expect(result.refreshToken).toBe(currentRefresh) // no new rotation
+    const decoded = jwt.verify(result.token, SECRET) as any
+    expect(decoded.sid).toBe('session-abc')
+    expect(vi.mocked(SessionModel.deleteOne)).not.toHaveBeenCalled()
+    expect(vi.mocked(SessionModel.deleteMany)).not.toHaveBeenCalled()
+  })
+
+  it('reuse outside the grace window revokes only the affected session', async () => {
+    const { SessionModel } = await import('../../../server/models/SessionModel')
+    const { refreshSession, REFRESH_GRACE_WINDOW_MS } = await import('../../../server/utils/Sessions')
+
     const rotatedAway = jwt.sign({ user: USER_ID }, SECRET, { expiresIn: '90d' })
-    vi.mocked(SessionModel.findOne).mockResolvedValue(null as any) // no longer stored
-    vi.mocked(SessionModel.deleteMany).mockResolvedValue({ deletedCount: 2 } as any)
+    const staleDoc: any = {
+      _id: 'session-abc',
+      rotatedAt: new Date(Date.now() - REFRESH_GRACE_WINDOW_MS - 1000),
+    }
+    vi.mocked(SessionModel.findOne).mockImplementation(async (query: any) => {
+      if (query?.refreshToken) return null // no longer stored
+      if (query?.previousRefreshToken === rotatedAway) return staleDoc
+      return null
+    })
+    vi.mocked(SessionModel.deleteOne).mockResolvedValue({ deletedCount: 1 } as any)
 
     await expect(refreshSession(rotatedAway)).rejects.toMatchObject({ statusCode: 401 })
-    expect(vi.mocked(SessionModel.deleteMany)).toHaveBeenCalledWith({ user: USER_ID })
+    expect(vi.mocked(SessionModel.deleteOne)).toHaveBeenCalledWith({ _id: 'session-abc' })
+    expect(vi.mocked(SessionModel.deleteMany)).not.toHaveBeenCalled()
   })
 
   it('exitSession ignores forged access payloads instead of wiping sessions', async () => {

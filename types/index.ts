@@ -166,6 +166,10 @@ export interface IUser {
  */
 export interface ISession {
   refreshToken: string;
+  /** Previous refresh token, honored during the rotation grace window. */
+  previousRefreshToken?: string;
+  /** When the current refresh token was issued via rotation. */
+  rotatedAt?: Date;
   user?: Types.ObjectId | IUser;
   guest?: Types.ObjectId | IGuest;
 }

@@ -371,7 +371,9 @@ export default defineNuxtConfig({
         type: "Bearer",
         cookieName: "auth.token",
         headerName: "Authorization",
-        maxAgeInSeconds: 604800,
+        // Must match the access-token JWT lifetime (60m). A longer cookie
+        // keeps a stale expired JWT that triggers repeated 401s.
+        maxAgeInSeconds: 3600,
         sameSiteAttribute:
           process.env.NODE_ENV === "production" ? "none" : "lax",
         secureCookieAttribute: process.env.NODE_ENV === "production",
@@ -380,6 +382,9 @@ export default defineNuxtConfig({
       refresh: {
         isEnabled: true,
         endpoint: { path: "/refresh", method: "post" },
+        // Default is true: nuxt-auth would keep sending the already-rotated
+        // refresh token, tripping server reuse-detection and wiping sessions.
+        refreshOnlyToken: false,
         token: {
           cookieName: "auth.refresh-token",
           signInResponseRefreshTokenPointer: "/refreshToken",
@@ -424,8 +429,12 @@ export default defineNuxtConfig({
       },
     },
     sessionRefresh: {
+      // Single owner for rotation is app/plugins/api.ts (on-401). The
+      // periodic nuxt-auth refresh stays as a safety net but must not race
+      // it: window-focus refresh fires concurrently with in-flight
+      // interactions and reuses an already-rotated token.
       enablePeriodically: 1000 * 60 * 15,
-      enableOnWindowFocus: true,
+      enableOnWindowFocus: false,
     },
   },
   telemetry: false,

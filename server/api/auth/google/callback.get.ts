@@ -1,19 +1,16 @@
-import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { GuestModel } from "~~/server/models/GuestModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { UserModel, UserPopulateOptions } from "~~/server/models/UserModel";
 import { getGoogleUser } from "~~/server/utils/googleAuth";
-import { setSession } from "~~/server/utils/Sessions";
-
-const getSecretKey = () => {
-  const secretKey = useRuntimeConfig().jwtSecret;
-  if (!secretKey) {
-    throw new Error("JWT secret key is not configured.");
-  }
-  return secretKey;
-};
+import {
+    ACCESS_TOKEN_TTL_SECONDS,
+    REFRESH_TOKEN_TTL_SECONDS,
+    setSession,
+    signAccessToken,
+    signRefreshToken,
+} from "~~/server/utils/Sessions";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -39,27 +36,24 @@ export default defineEventHandler(async (event) => {
         // If member is not active, try to find if they are a guest
         const guest = await GuestModel.findOne({ email: googleUser.email });
         if (guest) {
-          // Generate Tokens (Guest)
-          const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
-            expiresIn: "1d",
-          });
-          const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
-            expiresIn: "30d",
-          });
+          const refreshToken = signRefreshToken({ guest: guest._id });
 
           // Set Session (Guest)
-          await setSession({
+          const createdSession = await setSession({
             refreshToken,
             guest: guest._id as Types.ObjectId,
           });
 
+          // Generate Tokens (Guest)
+          const token = signAccessToken({ guest: guest._id }, String(createdSession._id));
+
           setCookie(event, 'auth.token', token, {
-            maxAge: 60 * 60 * 24,
+            maxAge: ACCESS_TOKEN_TTL_SECONDS,
             secure: process.env.NODE_ENV === "production",
             sameSite: 'lax'
           });
           setCookie(event, 'auth.refresh-token', refreshToken, {
-            maxAge: 60 * 60 * 24 * 30,
+            maxAge: REFRESH_TOKEN_TTL_SECONDS,
             secure: process.env.NODE_ENV === "production",
             sameSite: 'lax'
           });
@@ -118,6 +112,14 @@ export default defineEventHandler(async (event) => {
         guestPayload = user.guest;
       }
 
+      const refreshToken = signRefreshToken({ user: user!._id });
+
+      // Set Session (User)
+      const createdSession = await setSession({
+        refreshToken,
+        user: user!._id as Types.ObjectId,
+      });
+
       const tokenPayload = {
         user: user!._id,
         username: user!.username,
@@ -126,18 +128,7 @@ export default defineEventHandler(async (event) => {
       };
 
       // Generate Tokens (User)
-      const token = jwt.sign(tokenPayload, getSecretKey(), {
-        expiresIn: "60m",
-      });
-      const refreshToken = jwt.sign({ user: user!._id }, getSecretKey(), {
-        expiresIn: "90d",
-      });
-
-      // Set Session (User)
-      await setSession({
-        refreshToken,
-        user: user!._id as Types.ObjectId,
-      });
+      const token = signAccessToken(tokenPayload, String(createdSession._id));
 
       // Audit Log (User)
       const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
@@ -150,12 +141,12 @@ export default defineEventHandler(async (event) => {
       });
 
       setCookie(event, 'auth.token', token, {
-        maxAge: 60 * 60 * 24,
+        maxAge: ACCESS_TOKEN_TTL_SECONDS,
         secure: process.env.NODE_ENV === "production",
         sameSite: 'lax'
       });
       setCookie(event, 'auth.refresh-token', refreshToken, {
-        maxAge: 60 * 60 * 24 * 90,
+        maxAge: REFRESH_TOKEN_TTL_SECONDS,
         secure: process.env.NODE_ENV === "production",
         sameSite: 'lax'
       });
@@ -167,31 +158,28 @@ export default defineEventHandler(async (event) => {
       const guest = await GuestModel.findOne({ email: googleUser.email });
 
       if (guest) {
-        // Generate Tokens (Guest)
-        const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
-          expiresIn: "1d",
-        });
-        const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
-          expiresIn: "30d",
-        });
+        const refreshToken = signRefreshToken({ guest: guest._id });
 
         // Set Session (Guest)
-        await setSession({
+        const createdGuestSession = await setSession({
           refreshToken,
           guest: guest._id as Types.ObjectId,
         });
+
+        // Generate Tokens (Guest)
+        const token = signAccessToken({ guest: guest._id }, String(createdGuestSession._id));
 
         // Audit Log (Guest - simplified or skipped depending on model)
         // AuditLog usually links to Member. We might need to update AuditLog to support Guest or just skip / store string.
         // For now, let's skip or try to conform.
 
         setCookie(event, 'auth.token', token, {
-          maxAge: 60 * 60 * 24,
+          maxAge: ACCESS_TOKEN_TTL_SECONDS,
           secure: process.env.NODE_ENV === "production",
           sameSite: 'lax'
         });
         setCookie(event, 'auth.refresh-token', refreshToken, {
-          maxAge: 60 * 60 * 24 * 30,
+          maxAge: REFRESH_TOKEN_TTL_SECONDS,
           secure: process.env.NODE_ENV === "production",
           sameSite: 'lax'
         });

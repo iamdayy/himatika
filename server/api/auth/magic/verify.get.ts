@@ -3,7 +3,13 @@ import { Types } from "mongoose";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { MemberModel } from "~~/server/models/MemberModel";
 import { UserModel } from "~~/server/models/UserModel";
-import { setSession } from "~~/server/utils/Sessions";
+import {
+    ACCESS_TOKEN_TTL_SECONDS,
+    REFRESH_TOKEN_TTL_SECONDS,
+    setSession,
+    signAccessToken,
+    signRefreshToken,
+} from "~~/server/utils/Sessions";
 
 const getSecretKey = () => {
   const secretKey = useRuntimeConfig().jwtSecret;
@@ -87,20 +93,16 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: "Invalid role in token" });
     }
 
-    // Generate Session Tokens
-    const accessToken = jwt.sign(sessionPayload, getSecretKey(), {
-      expiresIn: "1d",
-    });
-    const refreshToken = jwt.sign(sessionPayload, getSecretKey(), {
-      expiresIn: "90d",
-    });
-
-    // Set Session
-    await setSession({
-      token: accessToken,
-      refreshToken,
+    // Create the session row first so the access token can be bound to the
+    // exact session via the `sid` claim.
+    const createdSession = await setSession({
+      refreshToken: signRefreshToken(sessionPayload),
       ...sessionPayload
     });
+
+    // Generate Session Tokens (60m access / 90d refresh, same as signin)
+    const accessToken = signAccessToken(sessionPayload, String(createdSession._id));
+    const refreshToken = createdSession.refreshToken as string;
 
     // Audit Log (Only for members for now)
     if (auditLogUser) {
@@ -116,13 +118,13 @@ export default defineEventHandler(async (event) => {
 
     // Set Cookies
     setCookie(event, 'auth.token', accessToken, {
-        maxAge: 60 * 60 * 24,
+        maxAge: ACCESS_TOKEN_TTL_SECONDS,
         secure: process.env.NODE_ENV === "production",
         sameSite: 'lax'
     });
-    
+
     setCookie(event, 'auth.refresh-token', refreshToken, {
-        maxAge: 60 * 60 * 24 * 90,
+        maxAge: REFRESH_TOKEN_TTL_SECONDS,
         secure: process.env.NODE_ENV === "production",
         sameSite: 'lax'
     });

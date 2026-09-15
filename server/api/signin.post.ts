@@ -1,12 +1,10 @@
-import crypto from "crypto";
-import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { z } from "zod";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
 import { UserModel, UserPopulateOptions } from "~~/server/models/UserModel";
-import { MemberModel } from "../models/MemberModel";
-import { setSession } from "../utils/Sessions";
 import { enforceRateLimit } from "~~/server/utils/rateLimit";
+import { MemberModel } from "../models/MemberModel";
+import { setSession, signAccessToken, signRefreshToken } from "../utils/Sessions";
 
 const loginSchema = z.object({
   username: z.string().optional(),
@@ -16,14 +14,6 @@ const loginSchema = z.object({
   message: "Username atau Email wajib diisi",
   path: ["username"],
 });
-
-const getSecretKey = () => {
-  const secretKey = useRuntimeConfig().jwtSecret;
-  if (!secretKey) {
-    throw new Error("JWT secret key is not configured.");
-  }
-  return secretKey;
-};
 
 /**
  * Handles user sign-in process.
@@ -128,6 +118,15 @@ export default defineEventHandler(async (event) => {
         guestPayload = user.guest; 
     }
 
+    const refreshToken = signRefreshToken({ user: user._id });
+
+    // Create the session row first so the access token can be bound to the
+    // exact session via the `sid` claim (exact-row checks from the start).
+    const createdSession = await setSession({
+      refreshToken,
+      user: user._id as Types.ObjectId,
+    });
+
     const tokenPayload = {
       user: user._id,
       username: user.username,
@@ -135,21 +134,7 @@ export default defineEventHandler(async (event) => {
       guest: guestPayload
     };
 
-    const token = jwt.sign(tokenPayload, getSecretKey(), {
-      expiresIn: "60m", // Stateless JWT with shorter expiry
-    });
-    
-    const refreshToken = jwt.sign(
-      { user: user._id, jti: crypto.randomBytes(16).toString("hex") },
-      getSecretKey(),
-      { expiresIn: "90d" }
-    );
-
-    // Set up session (Only saves refreshToken)
-    await setSession({
-      refreshToken,
-      user: user._id as Types.ObjectId,
-    });
+    const token = signAccessToken(tokenPayload, String(createdSession._id));
     
     // Audit Log (reuses `ip` captured for the rate-limit key above)
     await AuditLogModel.create({

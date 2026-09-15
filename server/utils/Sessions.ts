@@ -1,5 +1,4 @@
-import crypto, { randomBytes } from "crypto";
-import { H3Error } from "h3";
+import { randomBytes } from "crypto";
 import jwt from "jsonwebtoken";
 import { ISetSessionParams } from "~~/types/IParam";
 import { SessionModel } from "../models/SessionModel";
@@ -75,17 +74,83 @@ export const checkSession = async (payload: string) => {
   }
 };
 
-const signAccessToken = (tokenPayload: Record<string, unknown>, sid?: string) =>
+export const ACCESS_TOKEN_TTL_SECONDS = 3600; // 60m
+export const REFRESH_TOKEN_TTL_SECONDS = 7776000; // 90d
+/** Window where a just-rotated refresh token is still honored. */
+export const REFRESH_GRACE_WINDOW_MS = 10 * 60 * 1000;
+
+export const signAccessToken = (tokenPayload: Record<string, unknown>, sid?: string) =>
   jwt.sign({ ...tokenPayload, ...(sid ? { sid } : {}) }, getSecretKey(), {
     expiresIn: "60m",
   });
+
+export const signRefreshToken = (subject: { user?: unknown; guest?: unknown }) =>
+  jwt.sign(
+    { ...subject, jti: randomBytes(16).toString("hex") },
+    getSecretKey(),
+    { expiresIn: "90d" }
+  );
+
+const buildTokenPayload = async (session: {
+  user?: unknown;
+  guest?: unknown;
+}) => {
+  let memberPayload = null;
+  let guestPayload = null;
+  let username = null;
+
+  if (session.user) {
+    // Do the heavy populate once per refresh
+    const user = await UserModel.findById(session.user).populate(
+      UserPopulateOptions
+    );
+
+    if (!user) throw createError({ statusCode: 401 });
+
+    username = user.username;
+    if (user.member) {
+      const m = user.member as any;
+      memberPayload = {
+        _id: m._id,
+        NIM: m.NIM,
+        fullName: m.fullName,
+        avatar: m.avatar,
+        email: m.email,
+        status: m.status,
+        semester: m.semester,
+        class: m.class,
+        sex: m.sex,
+        phone: m.phone,
+        organizer: m.organizer
+          ? { role: m.organizer.role, period: m.organizer.period }
+          : null,
+      };
+    }
+    if (user.guest) {
+      guestPayload = user.guest;
+    }
+  } else if (session.guest) {
+    const { GuestModel } = await import("~~/server/models/GuestModel");
+    const guest = await GuestModel.findById(session.guest);
+    guestPayload = guest;
+  }
+
+  return {
+    user: session.user,
+    guest: session.guest,
+    username,
+    member: memberPayload,
+  };
+};
 
 /**
  * Refreshes a session: rotates the refresh token and issues a fresh access
  * token bound (`sid`) to the rotated session row.
  *
- * Presenting a refresh token that is no longer stored is treated as reuse
- * (theft signal): every session of that subject is revoked.
+ * A just-rotated refresh token is still honored inside the grace window so
+ * concurrent refreshes (multi-tab, periodic + on-401 racing) do not nuke
+ * the session. Outside the window, reuse is treated as a theft signal and
+ * only the affected session is revoked.
  */
 export const refreshSession = async (payload: string) => {
   try {
@@ -99,71 +164,43 @@ export const refreshSession = async (payload: string) => {
     });
 
     if (!session) {
-      // Reuse detection: this refresh token was rotated away already.
-      // Assume theft and kill every session for the subject.
-      await SessionModel.deleteMany(
-        decoded.user ? { user: decoded.user } : { guest: decoded.guest }
-      );
+      // Maybe a concurrent refresh already rotated this token: honor the
+      // previous token inside the grace window by returning fresh tokens
+      // for the already-rotated session instead of revoking anything.
+      const rotated = await SessionModel.findOne({
+        previousRefreshToken: payload,
+      });
+      if (
+        rotated?.rotatedAt &&
+        Date.now() - new Date(rotated.rotatedAt).getTime() <= REFRESH_GRACE_WINDOW_MS
+      ) {
+        const retryPayload = await buildTokenPayload(rotated);
+        const retryToken = signAccessToken(retryPayload, String(rotated._id));
+        return { token: retryToken, refreshToken: rotated.refreshToken };
+      }
+
+      // Outside the grace window this looks like real reuse: revoke only
+      // the affected session instead of every session of the subject.
+      if (rotated) {
+        await SessionModel.deleteOne({ _id: rotated._id });
+      }
       throw createError({
         statusMessage: "Session not found or invalid",
         statusCode: 401,
       });
     }
 
-    let memberPayload = null;
-    let guestPayload = null;
-    let username = null;
-
-    if (session.user) {
-      // Do the heavy populate once per refresh
-      const user = await UserModel.findById(session.user)
-        .populate(UserPopulateOptions);
-
-      if (!user) throw createError({ statusCode: 401 });
-
-      username = user.username;
-      if (user.member) {
-        const m = user.member as any;
-        memberPayload = {
-          _id: m._id,
-          NIM: m.NIM,
-          fullName: m.fullName,
-          avatar: m.avatar,
-          email: m.email,
-          status: m.status,
-          semester: m.semester,
-          class: m.class,
-          sex: m.sex,
-          phone: m.phone,
-          organizer: m.organizer ? { role: m.organizer.role, period: m.organizer.period } : null
-        };
-      }
-      if (user.guest) {
-        guestPayload = user.guest;
-      }
-    } else if (session.guest) {
-      const { GuestModel } = await import("~~/server/models/GuestModel");
-      const guest = await GuestModel.findById(session.guest);
-      guestPayload = guest;
-    }
-
-    const tokenPayload = {
-      user: session.user,
-      guest: session.guest,
-      username: username,
-      member: memberPayload,
-    };
+    const tokenPayload = await buildTokenPayload(session);
 
     const newToken = signAccessToken(tokenPayload, String(session._id));
 
-    // Rotate: the presented refresh token becomes invalid immediately.
+    // Rotate with grace: keep the presented token as previousRefreshToken so
+    // concurrent refreshes racing each other still succeed inside the window.
     // A random jti is REQUIRED — signing identical static claims yields a
     // byte-identical JWT, which would make the rotation a no-op.
-    session.refreshToken = jwt.sign(
-      { user: session.user, guest: session.guest, jti: randomBytes(16).toString("hex") },
-      getSecretKey(),
-      { expiresIn: "90d" }
-    );
+    session.previousRefreshToken = payload;
+    session.refreshToken = signRefreshToken({ user: session.user, guest: session.guest });
+    session.rotatedAt = new Date();
     await session.save();
 
     return { token: newToken, refreshToken: session.refreshToken };
@@ -177,16 +214,15 @@ export const refreshSession = async (payload: string) => {
 };
 
 /**
- * Creates or updates a session for a user.
+ * Creates a session row for a user/guest and returns it so callers can bind
+ * the access token to the exact session via the `sid` claim.
  */
-export const setSession = async (
-  payload: ISetSessionParams
-): Promise<true | H3Error> => {
+export const setSession = async (payload: ISetSessionParams) => {
   try {
     const createdSession = await SessionModel.create({
-        refreshToken: payload.refreshToken,
-        user: payload.user,
-        guest: payload.guest,
+      refreshToken: payload.refreshToken,
+      user: payload.user,
+      guest: payload.guest,
     });
     if (!createdSession) {
       throw createError({
@@ -194,7 +230,7 @@ export const setSession = async (
         statusMessage: "Error creating session",
       });
     }
-    return true;
+    return createdSession;
   } catch (error: any) {
     throw error;
   }
