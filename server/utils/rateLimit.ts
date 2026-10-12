@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import { createError } from "h3";
-import { IResponse } from "~~/types/IResponse";
+import { createHash } from "crypto";
+import { redisIncrementWithExpiry } from "./upstashRedis";
 
 /**
  * Cross-instance rate limiting backed by MongoDB.
@@ -42,12 +43,23 @@ export const enforceRateLimit = async (
   max: number,
   windowMs: number
 ): Promise<void> => {
-  const windowStart = new Date(Date.now() - windowMs);
   const rejected = () =>
     createError({
       statusCode: 429,
       statusMessage: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
     });
+
+  const redisKey = `rate:${createHash("sha256").update(key).digest("hex")}`;
+  const redisCount = await redisIncrementWithExpiry(
+    redisKey,
+    Math.ceil(windowMs / 1000)
+  );
+  if (redisCount !== null) {
+    if (redisCount > max) throw rejected();
+    return;
+  }
+
+  const windowStart = new Date(Date.now() - windowMs);
 
   try {
     const doc = await RateLimitModel.findOneAndUpdate(

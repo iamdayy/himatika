@@ -53,6 +53,9 @@ export interface IUserSchema extends Omit<IUser, "id">, Document {
  * Extends the ISession interface with Document and adds timestamp fields.
  */
 export interface ISessionSchema extends ISession, Document {
+  refreshTokenHash?: string;
+  previousRefreshTokenHashes?: string[];
+  previousRefreshTokenExpiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

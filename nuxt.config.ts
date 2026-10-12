@@ -159,6 +159,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     encryptionKey: process.env.ENCRYPTION_KEY,
     jwtSecret: process.env.JWT_SECRET,
+    upstashRedisRestUrl: process.env.UPSTASH_REDIS_REST_URL,
+    upstashRedisRestToken: process.env.UPSTASH_REDIS_REST_TOKEN,
     mongodb_uri: process.env.HIMATIKA_MONGODB_URI,
     dbName: process.env.DBNAME,
     vercelBlobToken: process.env.BLOB_READ_WRITE_TOKEN,
@@ -425,7 +427,12 @@ export default defineNuxtConfig({
     },
     sessionRefresh: {
       enablePeriodically: 1000 * 60 * 15,
-      enableOnWindowFocus: true,
+      // Disabled: every window focus triggered a full token rotation plus
+      // a session fetch. On serverless (Vercel) a focus during a cold start
+      // turns a slow response into a client-side logout, and N tabs focusing
+      // at once stampede the rotation endpoint. The 15-minute periodic
+      // refresh plus on-401 refresh already keep the 60-minute token fresh.
+      enableOnWindowFocus: false,
     },
   },
   telemetry: false,

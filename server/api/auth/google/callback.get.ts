@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
@@ -40,18 +41,20 @@ export default defineEventHandler(async (event) => {
         const guest = await GuestModel.findOne({ email: googleUser.email });
         if (guest) {
           // Generate Tokens (Guest)
-          const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
-            expiresIn: "1d",
-          });
-          const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
+          const refreshToken = jwt.sign({ guest: guest._id, jti: crypto.randomBytes(16).toString("hex") }, getSecretKey(), {
             expiresIn: "30d",
           });
 
           // Set Session (Guest)
-          await setSession({
+          const session = await setSession({
             refreshToken,
             guest: guest._id as Types.ObjectId,
           });
+          const token = jwt.sign(
+            { guest: guest._id, sid: String(session._id) },
+            getSecretKey(),
+            { expiresIn: "1d" }
+          );
 
           setCookie(event, 'auth.token', token, {
             maxAge: 60 * 60 * 24,
@@ -100,6 +103,7 @@ export default defineEventHandler(async (event) => {
       if (user && user.member) {
         const m = user.member as any;
         memberPayload = {
+          _id: m._id,
           NIM: m.NIM,
           fullName: m.fullName,
           avatar: m.avatar,
@@ -126,18 +130,20 @@ export default defineEventHandler(async (event) => {
       };
 
       // Generate Tokens (User)
-      const token = jwt.sign(tokenPayload, getSecretKey(), {
-        expiresIn: "60m",
-      });
-      const refreshToken = jwt.sign({ user: user!._id }, getSecretKey(), {
+      const refreshToken = jwt.sign({ user: user!._id, jti: crypto.randomBytes(16).toString("hex") }, getSecretKey(), {
         expiresIn: "90d",
       });
 
       // Set Session (User)
-      await setSession({
+      const session = await setSession({
         refreshToken,
         user: user!._id as Types.ObjectId,
       });
+      const token = jwt.sign(
+        { ...tokenPayload, sid: String(session._id) },
+        getSecretKey(),
+        { expiresIn: "60m" }
+      );
 
       // Audit Log (User)
       const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown';
@@ -168,18 +174,20 @@ export default defineEventHandler(async (event) => {
 
       if (guest) {
         // Generate Tokens (Guest)
-        const token = jwt.sign({ guest: guest._id }, getSecretKey(), {
-          expiresIn: "1d",
-        });
-        const refreshToken = jwt.sign({ guest: guest._id }, getSecretKey(), {
+        const refreshToken = jwt.sign({ guest: guest._id, jti: crypto.randomBytes(16).toString("hex") }, getSecretKey(), {
           expiresIn: "30d",
         });
 
         // Set Session (Guest)
-        await setSession({
+        const session = await setSession({
           refreshToken,
           guest: guest._id as Types.ObjectId,
         });
+        const token = jwt.sign(
+          { guest: guest._id, sid: String(session._id) },
+          getSecretKey(),
+          { expiresIn: "1d" }
+        );
 
         // Audit Log (Guest - simplified or skipped depending on model)
         // AuditLog usually links to Member. We might need to update AuditLog to support Guest or just skip / store string.

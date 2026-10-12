@@ -8,8 +8,25 @@ const sessionSchema = new Schema<ISessionSchema>(
   {
     refreshToken: {
       type: String,
-      required: true,
+      required: false,
       index: true,
+    },
+    refreshTokenHash: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    previousRefreshTokenHashes: {
+      type: [String],
+      required: false,
+      default: undefined,
+      index: true,
+    },
+    previousRefreshTokenExpiresAt: {
+      type: Date,
+      required: false,
     },
     user: {
       type: Types.ObjectId,

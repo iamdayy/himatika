@@ -60,6 +60,8 @@ export default defineEventHandler(async (event) => {
     // Doc: public document listing.
     /^\/api\/doc(?:\/|$)/,
     /^\/api\/doc\/tags$/,
+    // Message: contact-form tag suggestions on the public homepage.
+    /^\/api\/message\/tags$/,
     // Enscryption: public key listing.
     /^\/api\/enscryption(?:\/|$)/,
     /^\/api\/enscryption\/tags$/,
@@ -86,6 +88,9 @@ export default defineEventHandler(async (event) => {
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/question\/answer\/[0-9a-f]{24}$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/participant\/[0-9a-f]{24}\/verify$/i,
     /^\/api\/agenda\/[0-9a-f]{24}\/payment\/[0-9a-f]{24}\/proof$/i,
+    // Message: public contact form on the homepage (exact path only —
+    // inbox listing, archive and delete stay authenticated).
+    /^\/api\/message$/i,
     // News: anonymous commenting and liking (handlers gracefully handle missing user).
     /^\/api\/news\/[0-9a-f]{24}\/comments$/i,
     /^\/api\/news\/[0-9a-f]{24}\/likes$/i,

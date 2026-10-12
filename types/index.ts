@@ -165,7 +165,16 @@ export interface IUser {
  * Represents a user session with authentication tokens.
  */
 export interface ISession {
-  refreshToken: string;
+  refreshToken?: string;
+  refreshTokenHash?: string;
+  /**
+   * Hashes of recently rotated-out refresh tokens. A token whose hash is
+   * listed here (and not expired per `previousRefreshTokenExpiresAt`) is
+   * a benign concurrent retry — e.g. two tabs refreshing at once — and
+   * must be rotated again, NOT treated as theft.
+   */
+  previousRefreshTokenHashes?: string[];
+  previousRefreshTokenExpiresAt?: Date;
   user?: Types.ObjectId | IUser;
   guest?: Types.ObjectId | IGuest;
 }

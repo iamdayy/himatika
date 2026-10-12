@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import { AuditLogModel } from "~~/server/models/AuditLogModel";
@@ -88,19 +89,24 @@ export default defineEventHandler(async (event) => {
     }
 
     // Generate Session Tokens
-    const accessToken = jwt.sign(sessionPayload, getSecretKey(), {
-      expiresIn: "1d",
-    });
-    const refreshToken = jwt.sign(sessionPayload, getSecretKey(), {
-      expiresIn: "90d",
-    });
+    const refreshToken = jwt.sign(
+      { ...sessionPayload, jti: crypto.randomBytes(16).toString("hex") },
+      getSecretKey(),
+      {
+        expiresIn: "90d",
+      }
+    );
 
     // Set Session
-    await setSession({
-      token: accessToken,
+    const session = await setSession({
       refreshToken,
       ...sessionPayload
     });
+    const accessToken = jwt.sign(
+      { ...sessionPayload, sid: String(session._id) },
+      getSecretKey(),
+      { expiresIn: "1d" }
+    );
 
     // Audit Log (Only for members for now)
     if (auditLogUser) {

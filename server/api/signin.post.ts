@@ -135,10 +135,6 @@ export default defineEventHandler(async (event) => {
       guest: guestPayload
     };
 
-    const token = jwt.sign(tokenPayload, getSecretKey(), {
-      expiresIn: "60m", // Stateless JWT with shorter expiry
-    });
-    
     const refreshToken = jwt.sign(
       { user: user._id, jti: crypto.randomBytes(16).toString("hex") },
       getSecretKey(),
@@ -146,9 +142,13 @@ export default defineEventHandler(async (event) => {
     );
 
     // Set up session (Only saves refreshToken)
-    await setSession({
+    const session = await setSession({
       refreshToken,
       user: user._id as Types.ObjectId,
+    });
+
+    const token = jwt.sign({ ...tokenPayload, sid: String(session._id) }, getSecretKey(), {
+      expiresIn: "60m",
     });
     
     // Audit Log (reuses `ip` captured for the rate-limit key above)
