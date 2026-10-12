@@ -1,3 +1,5 @@
+import { ensureDbConnection } from "../utils/db";
+
 export default defineEventHandler(async (event) => {
   const path = event.path.split("?")[0];
 
@@ -5,6 +7,12 @@ export default defineEventHandler(async (event) => {
   if (!path?.startsWith("/api")) {
     return;
   }
+
+  // Serverless freeze/thaw kills sockets mid-life and cold-start connects
+  // can fail (the Nitro plugin runs only once per instance start). Reconnect
+  // on demand so no handler ever queries on a dead connection. A failure
+  // here 500s fast and the client retries it as transient.
+  await ensureDbConnection();
 
   const whitelist = [
     "/api/auth",
