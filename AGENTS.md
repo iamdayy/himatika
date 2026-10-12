@@ -18,7 +18,9 @@ bun run seed           # scripts/seed.ts against local Mongo
 
 - There is **no lint or typecheck script** and no ESLint/Prettier config — don't invent one.
 - Single file/project: `bunx vitest run tests/e2e/login.test.ts --project e2e` (projects: `e2e`, `server-unit`, `nuxt`; see `vitest.config.ts`).
-- `test:e2e` and `test:server` require a **local MongoDB** on `127.0.0.1:27017` (override via `NUXT_MONGODB_URI`). Shared setup (`tests/e2e/setup.ts`) wipes and reseeds User/Member/Category/Agenda collections on every run. Utils tests additionally need `ENCRYPTION_KEY` (64 hex chars); auth flows need `JWT_SECRET`.
+- `test:e2e` and `test:server` require a **local MongoDB** on `127.0.0.1:27017` (seed side override via `NUXT_MONGODB_URI`). Shared setup (`tests/e2e/setup.ts`) wipes and reseeds User/Member/Category/Agenda collections on every run. Utils tests additionally need `ENCRYPTION_KEY` (64 hex chars); auth flows need `JWT_SECRET`.
+- The e2e **server** reads `HIMATIKA_MONGODB_URI`/`DBNAME` (`NUXT_` does not override the underscore key), and plain-HTTP e2e needs host-only, non-Secure cookies. Local single-file run example:
+  `HIMATIKA_MONGODB_URI=mongodb://127.0.0.1:27017 DBNAME=himatika_test COOKIE_DOMAIN= COOKIE_SECURE=false NODE_OPTIONS=--max-old-space-size=4096 bunx vitest run tests/e2e/login.test.ts --project e2e`.
 - First e2e run needs: `npx playwright install chromium --with-deps`.
 - CI (`.github/workflows/e2e.yml`) runs e2e tests on push/PR to `main` and `preview` with a Mongo service container.
 

@@ -29,6 +29,8 @@ export default defineEventHandler(async (event) => {
     "/api/member/verifyNIM",
     "/api/user/verify",
     "/api/storage/webhook-media",
+    // Nuxt Icon server bundle (static icon JSON, no auth needed).
+    "/api/_nuxt_icon",
   ];
 
   // GET-only whitelist. NOTE: entries are prefix-matched, so each pattern must

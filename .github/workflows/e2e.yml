@@ -44,6 +44,13 @@ jobs:
       - name: Run E2E Tests
         env:
           NUXT_MONGODB_URI: mongodb://127.0.0.1:27017/himatika_test
+          # The app server reads HIMATIKA_MONGODB_URI/DBNAME (NUXT_ does not
+          # override the underscore key), and plain-HTTP e2e needs
+          # host-only, non-Secure cookies or sessions never persist.
+          HIMATIKA_MONGODB_URI: mongodb://127.0.0.1:27017
+          DBNAME: himatika_test
+          COOKIE_DOMAIN: ""
+          COOKIE_SECURE: "false"
           JWT_SECRET: testing-jwt-secret-123
           ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
         run: bun run test:e2e

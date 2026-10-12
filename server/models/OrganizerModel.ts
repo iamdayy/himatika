@@ -125,4 +125,5 @@ const OrganizerSchema = new Schema<IOrganizerSchema>({
 
 OrganizerSchema.plugin(mongooseAutoPopulate);
 
-export default mongoose.model<IOrganizerSchema>("Organizer", OrganizerSchema);
+export default mongoose.models.Organizer ||
+  mongoose.model<IOrganizerSchema>("Organizer", OrganizerSchema);

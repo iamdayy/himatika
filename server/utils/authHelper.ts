@@ -84,7 +84,9 @@ export const refreshAuth = async (event: H3Event) => {
     return token;
   } catch (error: any) {
     throw createError({
-      statusCode: 401,
+      // Preserve deliberate non-401 statuses from the session layer (e.g.
+      // 429 rotation contention, which the client retries with backoff).
+      statusCode: error.statusCode || 401,
       statusMessage:
         error.statusMessage || "Anda harus login untuk menggunakan endpoint ini",
     });

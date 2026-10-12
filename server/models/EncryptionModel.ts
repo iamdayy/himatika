@@ -36,4 +36,5 @@ export const EncryptionSchema = new Schema<IEncryptionSchema>(
   }
 );
 
-export default  model<IEncryptionSchema>("Encryption", EncryptionSchema);
+export default mongoose.models.Encryption ||
+  model<IEncryptionSchema>("Encryption", EncryptionSchema);

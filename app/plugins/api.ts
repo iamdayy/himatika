@@ -1,27 +1,14 @@
 // app/plugins/api.ts
 import { defineNuxtPlugin } from "#app";
+import {
+  REFRESH_RETRY_DELAYS_MS,
+  getRefreshErrorStatus,
+  isRetryableRefreshError,
+} from "~/utils/refreshPolicy";
 
 export default defineNuxtPlugin((nuxtApp) => {
   // Lock variable to manage refresh token concurrency
   let isRefreshing: Promise<any> | null = null;
-
-  // Delays between refresh retries for transient (non-401) failures such
-  // as cold starts, timeouts, or 5xx responses.
-  const REFRESH_RETRY_DELAYS_MS = [500, 1500];
-
-  const getRefreshErrorStatus = (refreshError: unknown): number | null => {
-    if (typeof refreshError !== "object" || refreshError === null) return null;
-    const fromResponse = (refreshError as { response?: { status?: unknown } })
-      .response?.status;
-    if (typeof fromResponse === "number") return fromResponse;
-    const direct = (refreshError as { statusCode?: unknown }).statusCode;
-    return typeof direct === "number" ? direct : null;
-  };
-
-  const isRetryableRefreshError = (refreshError: unknown): boolean => {
-    const status = getRefreshErrorStatus(refreshError);
-    return status === null || status === 429 || status >= 500;
-  };
 
   // Create a fetcher instance with base configuration
   const fetcher = $fetch.create({

@@ -1,4 +1,22 @@
 import tailwindcss from "@tailwindcss/vite";
+
+// Auth cookie attributes must match the SERVED context, and they are baked
+// at build time (auth module options, not runtimeConfig):
+// - Production HTTPS (Vercel): Secure + SameSite=None + explicit domain.
+// - Local dev / plain-HTTP e2e: host-only Lax cookies — browsers silently
+//   drop Secure/cross-domain cookies on HTTP, so every full page load
+//   would look "logged out".
+// COOKIE_SECURE=true|false overrides the NODE_ENV default; an empty
+// COOKIE_DOMAIN means a host-only cookie (any host, incl. 127.0.0.1).
+const cookieSecure =
+  process.env.COOKIE_SECURE === "true"
+    ? true
+    : process.env.COOKIE_SECURE === "false"
+      ? false
+      : process.env.NODE_ENV === "production";
+const cookieSameSite = cookieSecure ? "none" : "lax";
+const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   hooks: {
@@ -374,10 +392,9 @@ export default defineNuxtConfig({
         cookieName: "auth.token",
         headerName: "Authorization",
         maxAgeInSeconds: 604800,
-        sameSiteAttribute:
-          process.env.NODE_ENV === "production" ? "none" : "lax",
-        secureCookieAttribute: process.env.NODE_ENV === "production",
-        cookieDomain: process.env.COOKIE_DOMAIN,
+        sameSiteAttribute: cookieSameSite,
+        secureCookieAttribute: cookieSecure,
+        cookieDomain: cookieDomain,
       },
       refresh: {
         isEnabled: true,
@@ -388,10 +405,9 @@ export default defineNuxtConfig({
           refreshResponseTokenPointer: "/token",
           refreshRequestTokenPointer: "/refreshToken",
           maxAgeInSeconds: 7776000,
-          sameSiteAttribute:
-            process.env.NODE_ENV === "production" ? "none" : "lax",
-          secureCookieAttribute: process.env.NODE_ENV === "production",
-          cookieDomain: process.env.COOKIE_DOMAIN,
+          sameSiteAttribute: cookieSameSite,
+          secureCookieAttribute: cookieSecure,
+          cookieDomain: cookieDomain,
         },
       },
       session: {

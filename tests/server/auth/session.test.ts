@@ -276,6 +276,79 @@ describe('Sessions', () => {
     expect(vi.mocked(SessionModel.deleteMany)).not.toHaveBeenCalled()
   })
 
+  it('converges across several lost races without revoking', async () => {
+    const { SessionModel } = await import('../../../server/models/SessionModel')
+    const { refreshSession } = await import('../../../server/utils/Sessions')
+
+    const refreshToken = jwt.sign({ user: USER_ID, jti: 'stampede' }, SECRET, { expiresIn: '90d' })
+    const presentedHash = hashToken(refreshToken)
+    const mkDoc = (cur: string, prev: string[]): any => ({
+      _id: 'session-abc',
+      user: USER_ID,
+      guest: null,
+      refreshTokenHash: cur,
+      previousRefreshTokenHashes: prev,
+      previousRefreshTokenExpiresAt: new Date(Date.now() + 60_000),
+    })
+    // Three racers ahead of us rotate H0 -> H1 -> H2 before our CAS lands.
+    const docs = [mkDoc(presentedHash, []), mkDoc('winner-1', [presentedHash]), mkDoc('winner-2', ['winner-1', presentedHash])]
+    let findOneCalls = 0
+    vi.mocked(SessionModel.findOne).mockImplementation(async () => docs[Math.min(findOneCalls++, docs.length - 1)])
+    vi.mocked(SessionModel.findOneAndUpdate)
+      .mockResolvedValueOnce(null as any)
+      .mockResolvedValueOnce(null as any)
+      .mockResolvedValue({ ...docs[2], refreshTokenHash: 'recovered-hash' } as any)
+
+    const UserModelMod = await import('../../../server/models/UserModel')
+    ;(UserModelMod.UserModel as any).findById = vi.fn().mockReturnValue({
+      populate: vi.fn().mockResolvedValue({
+        _id: USER_ID,
+        username: 'u',
+        member: { _id: 'm1', NIM: 123, fullName: 'Test', organizer: null },
+        guest: null,
+      }),
+    })
+
+    const result = await refreshSession(refreshToken)
+
+    expect(result.token).toBeTruthy()
+    expect(result.refreshToken).not.toBe(refreshToken)
+    expect(vi.mocked(SessionModel.deleteMany)).not.toHaveBeenCalled()
+  })
+
+  it('reports 429 (without revoking) when a grace-verified token keeps losing', async () => {
+    const { SessionModel } = await import('../../../server/models/SessionModel')
+    const { refreshSession } = await import('../../../server/utils/Sessions')
+
+    const refreshToken = jwt.sign({ user: USER_ID, jti: 'contended' }, SECRET, { expiresIn: '90d' })
+    const presentedHash = hashToken(refreshToken)
+    const doc: any = {
+      _id: 'session-abc',
+      user: USER_ID,
+      guest: null,
+      refreshTokenHash: 'someone-elses-win',
+      previousRefreshTokenHashes: [presentedHash],
+      previousRefreshTokenExpiresAt: new Date(Date.now() + 60_000),
+    }
+    vi.mocked(SessionModel.findOne).mockResolvedValue(doc)
+    vi.mocked(SessionModel.findOneAndUpdate).mockResolvedValue(null as any)
+    vi.mocked(SessionModel.deleteMany).mockResolvedValue({ deletedCount: 0 } as any)
+
+    const UserModelMod = await import('../../../server/models/UserModel')
+    ;(UserModelMod.UserModel as any).findById = vi.fn().mockReturnValue({
+      populate: vi.fn().mockResolvedValue({
+        _id: USER_ID,
+        username: 'u',
+        member: { _id: 'm1', NIM: 123, fullName: 'Test', organizer: null },
+        guest: null,
+      }),
+    })
+
+    await expect(refreshSession(refreshToken)).rejects.toMatchObject({ statusCode: 429 })
+    // Contention is transient: the session row must survive for the retry.
+    expect(vi.mocked(SessionModel.deleteMany)).not.toHaveBeenCalled()
+  })
+
   it('exitSession ignores forged access payloads instead of wiping sessions', async () => {
     const { SessionModel } = await import('../../../server/models/SessionModel')
     const { exitSession } = await import('../../../server/utils/Sessions')

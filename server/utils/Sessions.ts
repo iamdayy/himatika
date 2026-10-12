@@ -18,8 +18,19 @@ const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 90;
 // requests whose response was lost) present an already-rotated token.
 // Honoring those within the window prevents false "theft" revocations
 // that log users out of every device at once.
-const PREVIOUS_HASH_KEEP_COUNT = 10;
+//
+// The window is a time-pruned sliding list (not just the single previous
+// hash) plus a bounded compare-and-swap retry loop, so even N-way
+// concurrent refreshes converge instead of revoking each other: every
+// presented hash that was valid inside the window is rotated again, and
+// only a completely unknown hash is treated as theft.
+const PREVIOUS_HASH_KEEP_COUNT = 50;
 const PREVIOUS_HASH_TTL_MS = 24 * 60 * 60 * 1000;
+// Upper bound on rotation compare-and-swap rounds per refresh call. Each
+// round lets at least one concurrent refresher win; stragglers re-read the
+// latest state and retry. Exhaustion with a grace-verified token is
+// reported as 429 (transient, client retries) — never as revocation.
+const MAX_ROTATION_ATTEMPTS = 10;
 
 const hashRefreshToken = (token: string): string =>
   createHash("sha256").update(token).digest("hex");
@@ -234,7 +245,6 @@ export const refreshSession = async (payload: string) => {
     const previousExpiresAt = new Date(Date.now() + PREVIOUS_HASH_TTL_MS);
     // The superseded hash stays honored for the grace window so concurrent
     // refreshes presenting it are rotated again instead of treated as theft.
-    const supersededHash = session.refreshTokenHash ?? tokenHash;
     const buildRotationUpdate = (hashToSupersede: string) => ({
       $set: {
         refreshTokenHash: newTokenHash,
@@ -248,48 +258,77 @@ export const refreshSession = async (payload: string) => {
       },
       $unset: { refreshToken: 1 },
     });
-    const currentTokenFilter =
-      usedGraceWindow && session.refreshTokenHash
-        ? // Grace path: compare-and-swap on the stored current hash, since
-          // the presented hash is already superseded.
-          { refreshTokenHash: session.refreshTokenHash }
-        : session.refreshTokenHash
-          ? { refreshTokenHash: tokenHash }
-          : { refreshToken: payload };
-    let rotatedSession = await SessionModel.findOneAndUpdate(
-      { _id: session._id, ...currentTokenFilter },
-      buildRotationUpdate(supersededHash),
-      { new: true }
-    );
 
-    if (!rotatedSession) {
-      // The compare-and-swap missed: either another request won the race
-      // (benign, when the presented hash is still inside the grace window)
-      // or the token is genuinely unknown (theft signal).
-      const freshSession = await SessionModel.findOne({ _id: session._id });
-      const currentHashFilter = freshSession?.refreshTokenHash
-        ? {
-            _id: session._id,
-            refreshTokenHash: freshSession.refreshTokenHash,
-          }
-        : { _id: session._id };
-      if (freshSession && isPreviousHashUsable(freshSession, tokenHash)) {
+    // Compare-and-swap loop: key each attempt on the latest known current
+    // hash. Exactly one concurrent refresher wins per hash generation; the
+    // rest re-read the winner's state and converge in later rounds instead
+    // of being mistaken for theft.
+    let filterHash: string | null = null;
+    let usePlaintextFilter = false;
+    if (usedGraceWindow) {
+      // The presented hash is already superseded: swap on the stored one.
+      if (typeof session.refreshTokenHash === "string") {
+        filterHash = session.refreshTokenHash;
+      }
+    } else if (session.refreshTokenHash) {
+      filterHash = tokenHash;
+    } else {
+      // Legacy plaintext row: match it directly on the first attempt.
+      usePlaintextFilter = true;
+    }
+    let supersededHash = filterHash ?? tokenHash;
+    // True once the presented token is proven recently-valid (current or
+    // inside the grace window). Only a token that was NEVER verified may
+    // trigger mass revocation; a verified one that keeps losing the race
+    // is reported as transient contention (429) so the client retries.
+    let graceVerified = usedGraceWindow;
+    let rotatedSession = null;
+    for (
+      let attempt = 0;
+      attempt < MAX_ROTATION_ATTEMPTS && !rotatedSession;
+      attempt++
+    ) {
+      if (attempt > 0) {
+        const freshSession = await SessionModel.findOne({ _id: session._id });
+        if (!freshSession) break;
+        if (isPreviousHashUsable(freshSession, tokenHash)) {
+          graceVerified = true;
+        } else if (!graceVerified) {
+          break;
+        }
+        if (typeof freshSession.refreshTokenHash === "string") {
+          filterHash = freshSession.refreshTokenHash;
+          supersededHash = freshSession.refreshTokenHash;
+          usePlaintextFilter = false;
+        } else if (!graceVerified) {
+          break;
+        }
+      }
+      const currentTokenFilter = usePlaintextFilter
+        ? { refreshToken: payload }
+        : { refreshTokenHash: filterHash as string };
+      rotatedSession = await SessionModel.findOneAndUpdate(
+        { _id: session._id, ...currentTokenFilter },
+        buildRotationUpdate(supersededHash),
+        { new: true }
+      );
+      if (!rotatedSession && attempt === 0) {
         console.warn(
-          "Concurrent refresh lost the rotation race; rotating from the current token."
-        );
-        rotatedSession = await SessionModel.findOneAndUpdate(
-          currentHashFilter,
-          buildRotationUpdate(
-            typeof freshSession.refreshTokenHash === "string"
-              ? freshSession.refreshTokenHash
-              : tokenHash
-          ),
-          { new: true }
+          "Refresh lost the rotation race; retrying from the current token."
         );
       }
     }
 
     if (!rotatedSession) {
+      if (graceVerified) {
+        // Recently-valid token that could not win a rotation slot:
+        // transient contention, NOT theft. The client backs off and
+        // retries with the same token; the session row is untouched.
+        throw createError({
+          statusMessage: "Rotation contention, please retry",
+          statusCode: 429,
+        });
+      }
       // Genuinely unknown token: treat as reuse and revoke every session
       // for the subject.
       await SessionModel.deleteMany(
@@ -328,7 +367,9 @@ export const refreshSession = async (payload: string) => {
     console.error("Error refreshing session:", error);
     throw createError({
       statusMessage: error.statusMessage || "Failed to refresh session",
-      statusCode: 401,
+      // Preserve deliberate non-401 statuses (e.g. 429 rotation contention
+      // so the client backs off and retries instead of logging out).
+      statusCode: error.statusCode || 401,
     });
   }
 };

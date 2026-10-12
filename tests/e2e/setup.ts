@@ -1,6 +1,5 @@
 import mongoose from 'mongoose'
 import { beforeAll, afterAll } from 'vitest'
-import bcrypt from 'bcryptjs'
 import { UserModel } from '../../server/models/UserModel'
 import { MemberModel } from '../../server/models/MemberModel'
 import CategoryModel from '../../server/models/CategoryModel'
@@ -37,11 +36,12 @@ beforeAll(async () => {
     enteredYear: 2024
   })
 
-  const hashedPassword = await bcrypt.hash('password123', 10)
-
+  // NOTE: pass the PLAINTEXT password — UserModel's pre-save hook hashes it.
+  // Pre-hashing here would double-hash (create() runs save hooks, unlike
+  // insertMany) and make login fail with 401 forever.
   await UserModel.create({
     username: 'testuser',
-    password: hashedPassword,
+    password: 'password123',
     member: member._id,
     verified: true
   })
